@@ -16,7 +16,7 @@ fn check_protobuf_schema() {
 
 #[tokio::test]
 async fn parse_sell_ix() {
-    let parser = pump_fun::InstructionParser;
+    let parser = pump_fun::InstructionParser.with_raw_logs();
 
     let ixs = tx_fixture!(
         "4GtxzHLTW8ZqhhHLqXPK2DSqtqaMXBvknpkXqgtfGjxaPvBC6AdHnzvX6X8EgMo9V4Ua4osroEpk7Q3f3oernYTQ",
@@ -100,7 +100,7 @@ async fn parse_sell_ix() {
 
 #[tokio::test]
 async fn parse_buy_ix() {
-    let parser = pump_fun::InstructionParser;
+    let parser = pump_fun::InstructionParser.with_raw_logs();
 
     let ixs = tx_fixture!(
         "3tkxRjNDfth6NxXpYbbLKmPkPYyAD4jjXfNnDCYtCKSPN2zSpJXT29reowKtFKz1puY1fHmBFVAskkK2A7o8cZgJ",

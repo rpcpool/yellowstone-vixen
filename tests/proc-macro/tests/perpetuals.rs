@@ -247,7 +247,7 @@ async fn parse_pool_account() {
 
 #[tokio::test]
 async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
-    let parser = perpetuals::InstructionParser;
+    let parser = perpetuals::InstructionParser.with_raw_logs();
 
     let ixs = tx_fixture!(
         "3MnCnWjL83RBYGe8ADwhxFHTvbXmDEPyi2mxHQ2211kmQ4NAqBFvhjPexgiCy8o6mGPztnZwjbcxRi4WMGZDeah8",
@@ -392,7 +392,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
 
 #[tokio::test]
 async fn parse_borrow_from_custody_ix() {
-    let parser = perpetuals::InstructionParser;
+    let parser = perpetuals::InstructionParser.with_raw_logs();
 
     let ixs = tx_fixture!(
         "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj",

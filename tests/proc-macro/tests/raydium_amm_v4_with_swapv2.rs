@@ -54,7 +54,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
         }
     }
 
-    let parser = raydium_amm::CustomInstructionParser(RaydiumResolver);
+    let parser = raydium_amm::CustomInstructionParser::new(RaydiumResolver).with_raw_logs();
 
     let ixs = tx_fixture!(
         "3J7xWK1gZTyk6GQJUopbP34Z1GxRSN1dLEmq3PyUrbMVYjkjfvMSLNRDVDggVrneJJGt1cdXsgfRUGYnavP75XQR",
@@ -146,7 +146,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
 ///
 #[tokio::test]
 async fn parse_swap_base_in_with_default_parser() {
-    let parser = raydium_amm::InstructionParser;
+    let parser = raydium_amm::InstructionParser.with_raw_logs();
 
     let ixs = tx_fixture!(
         "3J7xWK1gZTyk6GQJUopbP34Z1GxRSN1dLEmq3PyUrbMVYjkjfvMSLNRDVDggVrneJJGt1cdXsgfRUGYnavP75XQR",

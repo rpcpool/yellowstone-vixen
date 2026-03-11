@@ -502,8 +502,29 @@ pub fn instruction_parser(
         /// let parser = program::CustomInstructionParser(MyResolver);
         /// ```
         ///
+        /// Instruction parser with a custom resolver.
+        ///
+        /// Raw logs are excluded by default; call
+        /// [`.with_raw_logs()`](Self::with_raw_logs) to include them.
         #[derive(Debug, Copy, Clone)]
-        pub struct CustomInstructionParser<R: InstructionResolver>(pub R);
+        pub struct CustomInstructionParser<R: InstructionResolver> {
+            /// The resolver used to disambiguate instructions.
+            pub resolver: R,
+            include_raw_logs: bool,
+        }
+
+        impl<R: InstructionResolver> CustomInstructionParser<R> {
+            /// Create a new parser with the given resolver.
+            pub fn new(resolver: R) -> Self {
+                Self { resolver, include_raw_logs: false }
+            }
+
+            /// Include raw logs in the parsed output.
+            pub fn with_raw_logs(mut self) -> Self {
+                self.include_raw_logs = true;
+                self
+            }
+        }
 
         impl<R: InstructionResolver> Parser for CustomInstructionParser<R> {
             type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
@@ -528,8 +549,12 @@ pub fn instruction_parser(
                     return Err(ParseError::Filtered);
                 }
 
-                let mut result = self.0.resolve(&ix_update.accounts, &ix_update.data)?;
-                result.raw_logs = ix_update.log_messages.clone();
+                let mut result = self.resolver.resolve(&ix_update.accounts, &ix_update.data)?;
+
+                if self.include_raw_logs {
+                    result.raw_logs = ix_update.log_messages.clone();
+                }
+
                 Ok(result)
             }
         }
@@ -542,7 +567,20 @@ pub fn instruction_parser(
         }
 
         #[derive(Debug, Copy, Clone)]
-        pub struct InstructionParser;
+        pub struct InstructionParser {
+            include_raw_logs: bool,
+        }
+
+        #[allow(non_upper_case_globals)]
+        pub const InstructionParser: InstructionParser = InstructionParser { include_raw_logs: false };
+
+        impl InstructionParser {
+            /// Include raw logs in the parsed output.
+            pub fn with_raw_logs(mut self) -> Self {
+                self.include_raw_logs = true;
+                self
+            }
+        }
 
         impl Parser for InstructionParser {
             type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
@@ -568,12 +606,15 @@ pub fn instruction_parser(
                 }
 
                 let mut result = resolve_instruction_default(&ix_update.accounts, &ix_update.data)?;
-                result.raw_logs = ix_update.log_messages.clone();
+
+                if self.include_raw_logs {
+                    result.raw_logs = ix_update.log_messages.clone();
+                }
+
                 Ok(result)
             }
         }
 
-        // Implement the trait for Mock
         impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
             #[inline]
             fn program_id(&self) -> yellowstone_vixen_core::KeyBytes::<32> {

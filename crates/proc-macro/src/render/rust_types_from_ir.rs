@@ -452,6 +452,7 @@ fn render_instruction_dispatch(
                 ::core::result::Result::Ok(Self { #field_ident, raw_logs: vec![] })
             }
         }
+
     }
 }
 
