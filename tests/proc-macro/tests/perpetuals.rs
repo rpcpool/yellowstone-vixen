@@ -5,7 +5,7 @@ use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("idls/perp_idl.json");
+include_vixen_parser!("idls/perpetuals.json");
 
 #[test]
 fn check_protobuf_schema() {
@@ -481,4 +481,33 @@ async fn parse_borrow_from_custody_ix() {
     };
 
     assert_eq!(borrow_ix, &expected);
+
+    // The same transaction also contains a CPI event instruction (borrowFromCustodyEvent).
+    {
+        let event_args = ixs
+            .iter()
+            .find_map(|ix| match &ix.as_ref()?.instruction {
+                perpetuals::instruction::Instruction::BorrowFromCustodyEvent {
+                    accounts: _,
+                    args,
+                } => Some(args),
+                _ => None,
+            })
+            .expect("no borrow from custody event ix found");
+
+        let expected_event_args = perpetuals::instruction::BorrowFromCustodyEventArgs {
+            owner: pubkey("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC"),
+            pool: pubkey("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
+            position_key: pubkey("iUzDVme5Mc21GdULKK2JFuvjNWY4TaULF2kNGTcoXf9"),
+            position_mint: pubkey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+            position_custody: pubkey("G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa"),
+            size_custody_token: 8_463_144_037,
+            collateral_amount: 3_000_000_000_000,
+            collateral_amount_usd: 11_148_464_949_892,
+            margin_usd: 10_033_618_454_902,
+            update_time: 1_772_150_417,
+        };
+
+        assert_eq!(event_args, &expected_event_args);
+    }
 }
