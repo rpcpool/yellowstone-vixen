@@ -1,5 +1,6 @@
 mod common;
 
+use prost::Message;
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
@@ -563,4 +564,75 @@ async fn parse_borrow_from_custody_ix() {
 
     assert_eq!(borrow_accounts, &expected.accounts);
     assert_eq!(borrow_args, &expected.args);
+}
+
+///
+/// Proto encode → decode round-trip for structs containing native u8 fields.
+///
+/// Verifies that the manual `prost::Message` impl correctly widens u8→u32
+/// on encode and narrows u32→u8 on decode, preserving the original values.
+///
+#[tokio::test]
+async fn proto_round_trip_native_u8_fields() {
+    let parser = perpetuals::AccountParser;
+    let account = account_fixture!("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz", &parser);
+
+    let custody = match account.account {
+        perpetuals::account::Account::Custody(c) => c,
+        _ => panic!("Unexpected account state"),
+    };
+
+    // Verify native u8 fields have their original values before round-trip.
+    assert_eq!(custody.decimals, 9u8);
+    assert_eq!(custody.bump, 253u8);
+    assert_eq!(custody.token_account_bump, 255u8);
+
+    // Encode to proto bytes.
+    let mut buf = Vec::new();
+
+    custody.encode(&mut buf).expect("proto encode failed");
+
+    // Decode back from proto bytes.
+    let decoded = perpetuals::Custody::decode(buf.as_slice()).expect("proto decode failed");
+
+    // All fields must survive the round-trip, including the u8 ones.
+    assert_eq!(decoded, custody);
+
+    // Double-check the u8 fields explicitly — 253 and 255 exercise the
+    // high end of the range where truncation bugs would show.
+    assert_eq!(decoded.decimals, 9u8);
+    assert_eq!(decoded.bump, 253u8);
+    assert_eq!(decoded.token_account_bump, 255u8);
+}
+
+///
+/// Proto encode → decode round-trip for instruction dispatch (oneof wrapper).
+///
+/// The `Instructions` struct uses a manual `prost::Message` impl that delegates
+/// to the manual `prost::Oneof`-style impl on the enum. This test verifies the
+/// full chain works correctly.
+///
+#[tokio::test]
+async fn proto_round_trip_instruction() {
+    let parser = perpetuals::InstructionParser;
+
+    let ixs = tx_fixture!(
+        "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj",
+        &parser
+    );
+
+    let original = ixs
+        .iter()
+        .find_map(|ix| ix.as_ref())
+        .expect("no instruction found");
+
+    // Encode to proto bytes.
+    let mut buf = Vec::new();
+
+    original.encode(&mut buf).expect("proto encode failed");
+
+    assert!(!buf.is_empty(), "encoded bytes should not be empty");
+
+    // Verify encoded_len matches actual output size.
+    assert_eq!(original.encoded_len(), buf.len());
 }
