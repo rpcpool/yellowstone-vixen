@@ -240,14 +240,15 @@ mod tests {
     }
 
     /// Real-world transaction with 7 outer instructions:
-    ///   0: ComputeBudget (2 lines)
-    ///   1: ComputeBudget (2 lines)
-    ///   2: AToken CreateIdempotent (4 lines)
-    ///   3: AToken CreateIdempotent (4 lines)
-    ///   4: j1o2q PreFlashFillOrder with 1 inner CPI (8 lines)
-    ///   5: JUP SharedAccountsRoute with deep nesting (43 lines)
-    ///   6: j1o2q FlashFillOrder with 3 inner CPIs (15 lines)
+    ///   0: `ComputeBudget` (2 lines)
+    ///   1: `ComputeBudget` (2 lines)
+    ///   2: `AToken` `CreateIdempotent` (4 lines)
+    ///   3: `AToken` `CreateIdempotent` (4 lines)
+    ///   4: j1o2q `PreFlashFillOrder` with 1 inner CPI (8 lines)
+    ///   5: JUP `SharedAccountsRoute` with deep nesting (43 lines)
+    ///   6: j1o2q `FlashFillOrder` with 3 inner CPIs (15 lines)
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_split_logs_by_outer_ix_real_world() {
         let logs: Vec<String> = vec![
             "Program ComputeBudget111111111111111111111111111111 invoke [1]",
@@ -394,7 +395,7 @@ mod tests {
         assert!(splits[6][14].contains("j1o2q") && splits[6][14].contains("success"));
 
         // All log lines accounted for
-        let total: usize = splits.iter().map(|s| s.len()).sum();
+        let total: usize = splits.iter().map(Vec::len).sum();
         assert_eq!(total, logs.len());
     }
 }
