@@ -590,11 +590,13 @@ pub fn read_instructions_fixture(data: &[u8]) -> Result<FixtureData, Box<dyn std
     let fixture: SerializableTransactionFixture =
         serde_json::from_slice::<SerializableTransactionFixture>(data).or_else(|_| {
             let instructions: Vec<SerializableInstructionUpdate> = serde_json::from_slice(data)?;
+
             Ok::<_, serde_json::Error>(SerializableTransactionFixture {
                 instructions,
                 log_messages: vec![],
             })
         })?;
+
     Ok(FixtureData::Instructions(fixture))
 }
 

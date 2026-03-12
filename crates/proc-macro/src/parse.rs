@@ -28,10 +28,15 @@ pub fn load_codama_idl<P: AsRef<Path>>(path: P) -> Result<ParsedIdl, IdlError> {
 
     // Pre-pass: extract instruction names with `isEvent: true` from raw JSON.
     // codama-nodes doesn't have the `isEvent` field, so we grab it ourselves.
+    //
+    // codama-nodes doesn't have this field because we forked codama in TypeScript
+    // to generate isEvent but haven't forked the Rust crate for simplicity's sake.
     let event_names = {
-        let raw: serde_json::Value =
-            serde_json::from_str(&data).map_err(IdlError::ParseFile)?;
+        let raw: serde_json::Value = serde_json::from_str(&data).map_err(IdlError::ParseFile)?;
 
+        // In the Codama IDL, events live alongside regular instructions in
+        // `program.instructions` (distinguished by `isEvent: true`), so that's
+        // where we look. `.pointer()` is serde_json's JSON Pointer accessor.
         raw.pointer("/program/instructions")
             .and_then(|v| v.as_array())
             .map(|instructions| {

@@ -106,6 +106,7 @@ pub fn proto_schema_string(
     if let Some(ev) = event_oneof {
         if !ev.variants.is_empty() {
             render_oneof_parent(&mut out, ev);
+
             message_count += 1;
         }
     }

@@ -595,7 +595,7 @@ pub fn instruction_parser(
         ///
         /// # Example
         ///
-        /// ```rust,ignore
+        /// ```rust, ignore
         /// #[derive(Debug, Copy, Clone)]
         /// struct MyResolver;
         ///
@@ -615,8 +615,8 @@ pub fn instruction_parser(
         ///
         /// Instruction parser with a custom resolver.
         ///
-        /// Raw logs are excluded by default; call
-        /// [`.with_raw_logs()`](Self::with_raw_logs) to include them.
+        /// Raw logs are excluded by default; call with_raw_logs() to include them.
+        ///
         #[derive(Debug, Copy, Clone)]
         pub struct CustomInstructionParser<R: InstructionResolver> {
             /// The resolver used to disambiguate instructions.
