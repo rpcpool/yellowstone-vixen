@@ -35,7 +35,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
     impl raydium_amm::InstructionResolver for RaydiumResolver {
         fn resolve(
             &self,
-            accounts: &[yellowstone_vixen_core::KeyBytes<32>],
+            accounts: &[yellowstone_vixen_core::Pubkey],
             data: &[u8],
         ) -> Result<raydium_amm::Instructions, ParseError> {
             // SwapBaseIn discriminator is 0x09 — both variants share it.

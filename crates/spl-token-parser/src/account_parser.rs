@@ -172,7 +172,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(test)]

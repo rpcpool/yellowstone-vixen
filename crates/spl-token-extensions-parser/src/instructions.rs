@@ -308,7 +308,7 @@ pub fn reallocate_args_from_spl(extension_types: Vec<ExtensionType>) -> Realloca
 #[inline]
 pub fn set_authority_args_from_spl(
     authority_type: SplAuthorityType,
-    new_authority: Option<yellowstone_vixen_core::KeyBytes<32>>,
+    new_authority: Option<yellowstone_vixen_core::Pubkey>,
 ) -> SetAuthorityArgs {
     SetAuthorityArgs {
         authority_type: authority_type as i32,

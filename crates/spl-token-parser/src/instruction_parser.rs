@@ -6,7 +6,7 @@ use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
 use crate::PublicKey;
 
-fn pk(key: &yellowstone_vixen_core::KeyBytes<32>) -> PublicKey { PublicKey::new(key.0) }
+fn pk(key: &yellowstone_vixen_core::Pubkey) -> PublicKey { PublicKey::new(key.0) }
 
 fn pk_from_key(key: &spl_token::solana_program::pubkey::Pubkey) -> PublicKey {
     PublicKey::new(key.to_bytes())
@@ -39,7 +39,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[inline]
