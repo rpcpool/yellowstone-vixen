@@ -2,12 +2,15 @@
 
 This example is a minimal raw Yellowstone gRPC client for reproducing stream idleness.
 
-It subscribes to:
+By default it subscribes to:
 
 - `entries`
 - `blockMeta`
 - `slotStatus` with `interslot_updates = true`
 - `transactions`
+
+You can also run it in a `slot-updates-only` subscription profile to subscribe only to
+`slotStatus` updates.
 
 It does not run the Vixen runtime or the block coordinator. It only connects, subscribes, and
 logs:
@@ -17,10 +20,15 @@ logs:
 - a running summary every `--log-every` updates
 - idle gaps after `--idle-warn-secs`
 
-It supports two modes:
+It supports two runtime modes:
 
 - `continuous`: keep one subscription open and log idle/resume events
 - `subscription-idle`: keep opening fresh subscriptions until one goes idle during a startup window, then stay on that stream
+
+It also supports two subscription profiles:
+
+- `full`: subscribe to `entries`, `blockMeta`, `slotStatus`, and `transactions`
+- `slot-updates-only`: subscribe only to `slotStatus`
 
 ## Config
 
@@ -49,6 +57,12 @@ Example with faster idle reporting:
 
 ```bash
 RUST_LOG=info cargo run -p yellowstone-vixen-example-grpc-idle-client -- --config ./Vixen.example.toml --idle-warn-secs 10 --log-every 100
+```
+
+Slot updates only:
+
+```bash
+RUST_LOG=info cargo run -p yellowstone-vixen-example-grpc-idle-client -- --config ./Vixen.example.toml --subscription-profile slot-updates-only
 ```
 
 Subscription-idle mode:

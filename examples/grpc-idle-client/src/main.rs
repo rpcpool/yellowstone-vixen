@@ -33,6 +33,12 @@ enum Mode {
     SubscriptionIdle,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+enum SubscriptionProfile {
+    Full,
+    SlotUpdatesOnly,
+}
+
 #[derive(clap::Parser)]
 #[command(
     version,
@@ -55,6 +61,10 @@ struct Opts {
     /// Run continuously, or keep resubscribing until the stream goes idle during its startup window.
     #[arg(long, value_enum, default_value_t = Mode::Continuous)]
     mode: Mode,
+
+    /// Subscribe to the full filter set, or only the slot update filter.
+    #[arg(long, value_enum, default_value_t = SubscriptionProfile::Full)]
+    subscription_profile: SubscriptionProfile,
 
     /// Delay between subscription attempts in subscription-idle mode.
     #[arg(long, default_value_t = 1000)]
@@ -159,32 +169,49 @@ impl Stats {
     }
 }
 
-fn build_subscribe_request(config: &YellowstoneGrpcConfig) -> SubscribeRequest {
+fn build_subscribe_request(
+    config: &YellowstoneGrpcConfig,
+    subscription_profile: SubscriptionProfile,
+) -> SubscribeRequest {
+    let slots = HashMap::from([(
+        "slotStatus".to_string(),
+        SubscribeRequestFilterSlots {
+            filter_by_commitment: None,
+            interslot_updates: Some(true),
+        },
+    )]);
+
+    let (transactions, blocks_meta, entry) = match subscription_profile {
+        SubscriptionProfile::Full => (
+            HashMap::from([(
+                "transactions".to_string(),
+                SubscribeRequestFilterTransactions {
+                    vote: None,
+                    failed: None,
+                    signature: None,
+                    account_include: vec![],
+                    account_exclude: vec![],
+                    account_required: vec![],
+                },
+            )]),
+            HashMap::from([(
+                "blockMeta".to_string(),
+                SubscribeRequestFilterBlocksMeta {},
+            )]),
+            HashMap::from([("entries".to_string(), SubscribeRequestFilterEntry {})]),
+        ),
+        SubscriptionProfile::SlotUpdatesOnly => (HashMap::new(), HashMap::new(), HashMap::new()),
+    };
+
     SubscribeRequest {
         accounts: HashMap::new(),
         // Keep slot lifecycle events unfiltered so idle diagnosis sees intra-slot transitions.
-        slots: HashMap::from([("slotStatus".to_string(), SubscribeRequestFilterSlots {
-            filter_by_commitment: None,
-            interslot_updates: Some(true),
-        })]),
-        transactions: HashMap::from([(
-            "transactions".to_string(),
-            SubscribeRequestFilterTransactions {
-                vote: None,
-                failed: None,
-                signature: None,
-                account_include: vec![],
-                account_exclude: vec![],
-                account_required: vec![],
-            },
-        )]),
+        slots,
+        transactions,
         transactions_status: HashMap::new(),
         blocks: HashMap::new(),
-        blocks_meta: HashMap::from([(
-            "blockMeta".to_string(),
-            SubscribeRequestFilterBlocksMeta {},
-        )]),
-        entry: HashMap::from([("entries".to_string(), SubscribeRequestFilterEntry {})]),
+        blocks_meta,
+        entry,
         commitment: config.commitment_level.map(|level| level as i32),
         accounts_data_slice: vec![],
         ping: None,
@@ -259,6 +286,7 @@ async fn run_subscription_attempt(
     idle_warn_secs: u64,
     log_every: u64,
     mode: Mode,
+    subscription_profile: SubscriptionProfile,
     attempt: u64,
     subscription_idle_window: Option<Duration>,
 ) -> Result<AttemptOutcome, DynError> {
@@ -279,16 +307,21 @@ async fn run_subscription_attempt(
         ),
     }
 
-    let subscribe_request = build_subscribe_request(&config);
+    let subscribe_request = build_subscribe_request(&config, subscription_profile);
 
     tracing::info!(
         attempt,
         endpoint = %config.endpoint,
+        subscription_profile = ?subscription_profile,
+        has_entries = !subscribe_request.entry.is_empty(),
+        has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
+        has_slots = !subscribe_request.slots.is_empty(),
+        has_transactions = !subscribe_request.transactions.is_empty(),
         from_slot = ?subscribe_request.from_slot,
         commitment = ?subscribe_request.commitment,
         idle_warn_secs,
         log_every,
-        "subscribing to entries, blockMeta, slotStatus, and transactions"
+        "subscribing to gRPC stream"
     );
 
     let (_subscribe_tx, stream) = client
@@ -508,6 +541,7 @@ async fn main() -> Result<(), DynError> {
         idle_warn_secs,
         log_every,
         mode,
+        subscription_profile,
         resubscribe_delay_ms,
         subscription_idle_window_secs,
     } = Opts::parse();
@@ -546,6 +580,7 @@ async fn main() -> Result<(), DynError> {
             idle_warn_secs,
             log_every,
             mode,
+            subscription_profile,
             attempt,
             subscription_idle_window,
         )
@@ -576,8 +611,23 @@ async fn main() -> Result<(), DynError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{StartupWindowStatus, startup_window_status};
+    use super::{
+        StartupWindowStatus, SubscriptionProfile, build_subscribe_request, startup_window_status,
+    };
     use std::time::Duration;
+    use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
+
+    fn config() -> YellowstoneGrpcConfig {
+        YellowstoneGrpcConfig {
+            endpoint: "https://example.invalid".to_string(),
+            x_token: None,
+            timeout: 60,
+            commitment_level: None,
+            from_slot: Some(42),
+            max_decoding_message_size: None,
+            accept_compression: None,
+        }
+    }
 
     #[test]
     fn startup_window_is_open_before_deadline() {
@@ -593,5 +643,27 @@ mod tests {
             startup_window_status(Duration::from_secs(6), Some(Duration::from_secs(5))),
             StartupWindowStatus::Elapsed
         );
+    }
+
+    #[test]
+    fn builds_full_subscription_request() {
+        let request = build_subscribe_request(&config(), SubscriptionProfile::Full);
+
+        assert!(!request.transactions.is_empty());
+        assert!(!request.blocks_meta.is_empty());
+        assert!(!request.entry.is_empty());
+        assert!(!request.slots.is_empty());
+        assert_eq!(request.from_slot, Some(42));
+    }
+
+    #[test]
+    fn builds_slot_updates_only_subscription_request() {
+        let request = build_subscribe_request(&config(), SubscriptionProfile::SlotUpdatesOnly);
+
+        assert!(request.transactions.is_empty());
+        assert!(request.blocks_meta.is_empty());
+        assert!(request.entry.is_empty());
+        assert_eq!(request.slots.len(), 1);
+        assert_eq!(request.from_slot, Some(42));
     }
 }
