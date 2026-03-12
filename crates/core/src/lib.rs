@@ -382,19 +382,19 @@ macro_rules! pubkey_convert_helpers {
             keybytes.into_bytes().into()
         }
 
-         pub(crate) fn into_vixen_pubkey2(pubkey: $ty) -> $crate::PublicKey {
+         pub(crate) fn into_vixen_publickey(pubkey: $ty) -> $crate::PublicKey {
             let bytes: Vec<u8> = pubkey.to_bytes().into();
             $crate::PublicKey::new(bytes)
         }
 
-        pub(crate) fn from_vixen_pubkey2(vixen_publickey: $crate::PublicKey) -> $ty {
-            let bytes: [u8; 32] = vixen_publickey
+        pub(crate) fn from_vixen_publickey(vixen_publickey: $crate::PublicKey) -> Option<$ty> {
+            let bytes: Option<[u8; 32]> = vixen_publickey
                 .value
                 .as_slice()
                 .try_into()
-            // FIXME
-                .expect("PublicKey must be 32 bytes");
-            bytes.into()
+                .ok();
+
+            bytes.map(|bytes| bytes.into())
         }
     };
 }
