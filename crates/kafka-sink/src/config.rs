@@ -271,32 +271,40 @@ mod tests {
 
     #[test]
     fn validate_credentials_rejects_partial_sasl() {
-        let mut config = KafkaSinkConfig::default();
-
-        config.sasl_username = Some("user".into());
-        config.sasl_password = None;
+        let config = KafkaSinkConfig {
+            sasl_username: Some("user".into()),
+            sasl_password: None,
+            ..KafkaSinkConfig::default()
+        };
         let err = config.validate_credentials().unwrap_err();
         assert!(err.to_string().contains("KAFKA_SASL_PASSWORD is missing"));
 
-        config.sasl_username = None;
-        config.sasl_password = Some("pass".into());
+        let config = KafkaSinkConfig {
+            sasl_username: None,
+            sasl_password: Some("pass".into()),
+            ..KafkaSinkConfig::default()
+        };
         let err = config.validate_credentials().unwrap_err();
         assert!(err.to_string().contains("KAFKA_SASL_USERNAME is missing"));
     }
 
     #[test]
     fn validate_credentials_rejects_partial_schema_registry() {
-        let mut config = KafkaSinkConfig::default();
-
-        config.schema_registry_username = Some("user".into());
-        config.schema_registry_password = None;
+        let config = KafkaSinkConfig {
+            schema_registry_username: Some("user".into()),
+            schema_registry_password: None,
+            ..KafkaSinkConfig::default()
+        };
         let err = config.validate_credentials().unwrap_err();
         assert!(err
             .to_string()
             .contains("SCHEMA_REGISTRY_PASSWORD is missing"));
 
-        config.schema_registry_username = None;
-        config.schema_registry_password = Some("pass".into());
+        let config = KafkaSinkConfig {
+            schema_registry_username: None,
+            schema_registry_password: Some("pass".into()),
+            ..KafkaSinkConfig::default()
+        };
         let err = config.validate_credentials().unwrap_err();
         assert!(err
             .to_string()
@@ -305,24 +313,27 @@ mod tests {
 
     #[test]
     fn validate_credentials_accepts_complete_pairs() {
-        let mut config = KafkaSinkConfig::default();
-
         // Both unset → Ok
-        config.validate_credentials().unwrap();
+        KafkaSinkConfig::default().validate_credentials().unwrap();
 
         // Both set → Ok
-        config.sasl_username = Some("user".into());
-        config.sasl_password = Some("pass".into());
-        config.schema_registry_username = Some("sr-user".into());
-        config.schema_registry_password = Some("sr-pass".into());
+        let config = KafkaSinkConfig {
+            sasl_username: Some("user".into()),
+            sasl_password: Some("pass".into()),
+            schema_registry_username: Some("sr-user".into()),
+            schema_registry_password: Some("sr-pass".into()),
+            ..KafkaSinkConfig::default()
+        };
         config.validate_credentials().unwrap();
     }
 
     #[test]
     fn validate_credentials_accepts_sasl_only_no_sr_override() {
-        let mut config = KafkaSinkConfig::default();
-        config.sasl_username = Some("user".into());
-        config.sasl_password = Some("pass".into());
+        let config = KafkaSinkConfig {
+            sasl_username: Some("user".into()),
+            sasl_password: Some("pass".into()),
+            ..KafkaSinkConfig::default()
+        };
         config.validate_credentials().unwrap();
     }
 }
