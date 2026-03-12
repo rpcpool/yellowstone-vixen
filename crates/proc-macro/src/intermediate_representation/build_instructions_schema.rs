@@ -1,4 +1,6 @@
-use codama_nodes::{DiscriminatorNode, InstructionNode};
+use std::collections::HashSet;
+
+use codama_nodes::InstructionNode;
 
 use crate::intermediate_representation::{
     helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr,
@@ -98,7 +100,11 @@ use crate::intermediate_representation::{
 ///
 /// This allows a single protobuf message to represent any instruction.
 ///
-pub fn build_instructions_schema(instructions: &[InstructionNode], ir: &mut SchemaIr) {
+pub fn build_instructions_schema(
+    instructions: &[InstructionNode],
+    event_names: &HashSet<String>,
+    ir: &mut SchemaIr,
+) {
     // All instructions (including events) get full Accounts + Args + wrapper types
     // and go into the InstructionDispatch oneof. Events also appear as CPI
     // instructions in some programs, so they must remain matchable.
@@ -113,25 +119,10 @@ pub fn build_instructions_schema(instructions: &[InstructionNode], ir: &mut Sche
     // (no accounts wrapper).
     let events: Vec<&InstructionNode> = instructions
         .iter()
-        .filter(|ix| is_event_instruction(ix))
+        .filter(|ix| event_names.contains(ix.name.as_ref()))
         .collect();
 
     build_event_dispatch_oneof(&events, ir);
-}
-
-/// An event instruction has no accounts and a field discriminator.
-/// These are Anchor events emitted via `emit!()` that appear as
-/// "Program data:" log lines.
-fn is_event_instruction(ix: &InstructionNode) -> bool {
-    if !ix.accounts.is_empty() {
-        return false;
-    }
-
-    let Some(discriminator) = ix.discriminators.first() else {
-        return false;
-    };
-
-    matches!(discriminator, DiscriminatorNode::Field(_))
 }
 
 ///

@@ -1411,6 +1411,7 @@
         "name": "tradeEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -1492,7 +1493,7 @@
           {
             "kind": "fieldDiscriminatorNode",
             "name": "discriminator",
-            "offset": 0
+            "offset": 8
           }
         ]
       },
@@ -1501,6 +1502,7 @@
         "name": "cancelOrderEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -1534,7 +1536,7 @@
           {
             "kind": "fieldDiscriminatorNode",
             "name": "discriminator",
-            "offset": 0
+            "offset": 8
           }
         ]
       },
@@ -1543,6 +1545,7 @@
         "name": "createOrderEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -1639,7 +1642,7 @@
           {
             "kind": "fieldDiscriminatorNode",
             "name": "discriminator",
-            "offset": 0
+            "offset": 8
           }
         ]
       }

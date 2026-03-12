@@ -11059,6 +11059,7 @@
         "name": "createPositionRequestEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -11289,6 +11290,7 @@
         "name": "instantCreateTpslEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -11440,6 +11442,7 @@
         "name": "instantUpdateTpslEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -11591,6 +11594,7 @@
         "name": "closePositionRequestEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -11734,6 +11738,7 @@
         "name": "increasePositionEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12018,6 +12023,7 @@
         "name": "increasePositionPreSwapEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12080,6 +12086,7 @@
         "name": "decreasePositionEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12416,6 +12423,7 @@
         "name": "decreasePositionPostSwapEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12487,6 +12495,7 @@
         "name": "liquidateFullPositionEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12750,6 +12759,7 @@
         "name": "poolSwapEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12874,6 +12884,7 @@
         "name": "poolSwapExactOutEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -12998,6 +13009,7 @@
         "name": "addLiquidityEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -13128,6 +13140,7 @@
         "name": "removeLiquidityEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -13238,6 +13251,7 @@
         "name": "instantCreateLimitOrderEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -13384,6 +13398,7 @@
         "name": "instantIncreasePositionEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -13613,6 +13628,7 @@
         "name": "instantDecreasePositionEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -13920,6 +13936,7 @@
         "name": "depositCollateralEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14022,6 +14039,7 @@
         "name": "withdrawCollateralEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14172,6 +14190,7 @@
         "name": "borrowFromCustodyEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14296,6 +14315,7 @@
         "name": "repayToCustodyEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14400,6 +14420,7 @@
         "name": "liquidateBorrowPositionEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14546,6 +14567,7 @@
         "name": "redeemStakeEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14654,6 +14676,7 @@
         "name": "withdrawStakeEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14762,6 +14785,7 @@
         "name": "delegateStakeEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {
@@ -14858,6 +14882,7 @@
         "name": "withdrawFeesEvent",
         "docs": [],
         "optionalAccountStrategy": "programId",
+        "isEvent": true,
         "accounts": [],
         "arguments": [
           {

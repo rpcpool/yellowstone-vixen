@@ -391,21 +391,6 @@ fn collision_group_match_arm(instructions: &[&codama_nodes::InstructionNode]) ->
     }
 }
 
-/// An event instruction has no accounts and a field discriminator at offset > 0
-/// (typically offset 8 for Anchor events emitted via `emit!()`).
-fn is_event_instruction(ix: &codama_nodes::InstructionNode) -> bool {
-    if !ix.accounts.is_empty() {
-        return false;
-    }
-
-    // Must have a field discriminator (constant discriminators are not Anchor events).
-    let Some(discriminator) = ix.discriminators.first() else {
-        return false;
-    };
-
-    matches!(discriminator, DiscriminatorNode::Field(_))
-}
-
 ///
 /// Generate a match arm for resolving a single event from "Program data:" bytes.
 ///
@@ -467,6 +452,7 @@ fn event_resolve_arm(ix: &codama_nodes::InstructionNode) -> Option<TokenStream> 
 pub fn instruction_parser(
     program_name_camel: &CamelCaseString,
     instructions: &[codama_nodes::InstructionNode],
+    event_names: &std::collections::HashSet<String>,
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
@@ -508,7 +494,7 @@ pub fn instruction_parser(
     // 3. Event resolver: match arms for Anchor log events ("Program data:" payloads).
     let event_arms: Vec<TokenStream> = instructions
         .iter()
-        .filter(|ix| is_event_instruction(ix))
+        .filter(|ix| event_names.contains(ix.name.as_ref()))
         .filter_map(|ix| event_resolve_arm(ix))
         .collect();
 

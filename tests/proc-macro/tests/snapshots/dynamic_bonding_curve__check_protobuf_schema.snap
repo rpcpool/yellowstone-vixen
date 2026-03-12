@@ -1164,6 +1164,265 @@ message WithdrawMigrationFee {
   WithdrawMigrationFeeArgs args = 2;
 }
     
+message EvtClaimCreatorTradingFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtClaimCreatorTradingFeeArgs {
+  PublicKey pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtClaimPoolCreationFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtClaimPoolCreationFeeArgs {
+  PublicKey pool = 1;
+  PublicKey receiver = 2;
+  uint64 creation_fee = 3;
+}
+    
+message EvtClaimProtocolFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtClaimProtocolFeeArgs {
+  PublicKey pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtClaimProtocolLiquidityMigrationFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtClaimProtocolLiquidityMigrationFeeArgs {
+  PublicKey pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtClaimTradingFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtClaimTradingFeeArgs {
+  PublicKey pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtCloseClaimFeeOperatorAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCloseClaimFeeOperatorArgs {
+  PublicKey claim_fee_operator = 1;
+  PublicKey operator = 2;
+}
+    
+message EvtCreateClaimFeeOperatorAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCreateClaimFeeOperatorArgs {
+  PublicKey operator = 1;
+}
+    
+message EvtCreateConfigAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCreateConfigArgs {
+  PublicKey config = 1;
+  PublicKey quote_mint = 2;
+  PublicKey fee_claimer = 3;
+  PublicKey owner = 4;
+  PoolFeeParameters pool_fees = 5;
+  uint32 collect_fee_mode = 6;
+  uint32 migration_option = 7;
+  uint32 activation_type = 8;
+  uint32 token_decimal = 9;
+  uint32 token_type = 10;
+  uint32 partner_permanent_locked_liquidity_percentage = 11;
+  uint32 partner_liquidity_percentage = 12;
+  uint32 creator_permanent_locked_liquidity_percentage = 13;
+  uint32 creator_liquidity_percentage = 14;
+  uint64 swap_base_amount = 15;
+  uint64 migration_quote_threshold = 16;
+  uint64 migration_base_amount = 17;
+  bytes sqrt_start_price = 18;
+  LockedVestingParams locked_vesting = 19;
+  uint32 migration_fee_option = 20;
+  uint32 fixed_token_supply_flag = 21;
+  uint64 pre_migration_token_supply = 22;
+  uint64 post_migration_token_supply = 23;
+  repeated LiquidityDistributionParameters curve = 24;
+}
+    
+message EvtCreateConfigV2Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCreateConfigV2Args {
+  PublicKey config = 1;
+  PublicKey quote_mint = 2;
+  PublicKey fee_claimer = 3;
+  PublicKey leftover_receiver = 4;
+  ConfigParameters config_parameters = 5;
+}
+    
+message EvtCreateMeteoraMigrationMetadataAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCreateMeteoraMigrationMetadataArgs {
+  PublicKey virtual_pool = 1;
+}
+    
+message EvtCreatorWithdrawSurplusAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCreatorWithdrawSurplusArgs {
+  PublicKey pool = 1;
+  uint64 surplus_amount = 2;
+}
+    
+message EvtCurveCompleteAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtCurveCompleteArgs {
+  PublicKey pool = 1;
+  PublicKey config = 2;
+  uint64 base_reserve = 3;
+  uint64 quote_reserve = 4;
+}
+    
+message EvtInitializePoolAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtInitializePoolArgs {
+  PublicKey pool = 1;
+  PublicKey config = 2;
+  PublicKey creator = 3;
+  PublicKey base_mint = 4;
+  uint32 pool_type = 5;
+  uint64 activation_point = 6;
+}
+    
+message EvtPartnerClaimPoolCreationFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtPartnerClaimPoolCreationFeeArgs {
+  PublicKey pool = 1;
+  PublicKey partner = 2;
+  uint64 creation_fee = 3;
+  PublicKey fee_receiver = 4;
+}
+    
+message EvtPartnerMetadataAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtPartnerMetadataArgs {
+  PublicKey partner_metadata = 1;
+  PublicKey fee_claimer = 2;
+}
+    
+message EvtPartnerWithdrawMigrationFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtPartnerWithdrawMigrationFeeArgs {
+  PublicKey pool = 1;
+  uint64 fee = 2;
+}
+    
+message EvtPartnerWithdrawSurplusAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtPartnerWithdrawSurplusArgs {
+  PublicKey pool = 1;
+  uint64 surplus_amount = 2;
+}
+    
+message EvtSwapAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtSwapArgs {
+  PublicKey pool = 1;
+  PublicKey config = 2;
+  uint32 trade_direction = 3;
+  bool has_referral = 4;
+  SwapParameters params = 5;
+  SwapResult swap_result = 6;
+  uint64 amount_in = 7;
+  uint64 current_timestamp = 8;
+}
+    
+message EvtSwap2Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtSwap2Args {
+  PublicKey pool = 1;
+  PublicKey config = 2;
+  uint32 trade_direction = 3;
+  bool has_referral = 4;
+  SwapParameters2 swap_parameters = 5;
+  SwapResult2 swap_result = 6;
+  uint64 quote_reserve_amount = 7;
+  uint64 migration_threshold = 8;
+  uint64 current_timestamp = 9;
+}
+    
+message EvtUpdatePoolCreatorAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtUpdatePoolCreatorArgs {
+  PublicKey pool = 1;
+  PublicKey creator = 2;
+  PublicKey new_creator = 3;
+}
+    
+message EvtVirtualPoolMetadataAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtVirtualPoolMetadataArgs {
+  PublicKey virtual_pool_metadata = 1;
+  PublicKey virtual_pool = 2;
+}
+    
+message EvtWithdrawLeftoverAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtWithdrawLeftoverArgs {
+  PublicKey pool = 1;
+  PublicKey leftover_receiver = 2;
+  uint64 leftover_amount = 3;
+}
+    
+message EvtWithdrawMigrationFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtWithdrawMigrationFeeArgs {
+  PublicKey pool = 1;
+  uint64 fee = 2;
+  uint32 flag = 3;
+}
+    
 message DynamicBondingCurveAccount {
   oneof account {
     ClaimFeeOperator claim_fee_operator = 1;
@@ -1174,6 +1433,33 @@ message DynamicBondingCurveAccount {
     PoolConfig pool_config = 6;
     VirtualPool virtual_pool = 7;
     VirtualPoolMetadata virtual_pool_metadata = 8;
+  }
+}
+message AnchorLogEvent {
+  oneof event {
+    EvtClaimCreatorTradingFeeArgs evt_claim_creator_trading_fee = 1;
+    EvtClaimPoolCreationFeeArgs evt_claim_pool_creation_fee = 2;
+    EvtClaimProtocolFeeArgs evt_claim_protocol_fee = 3;
+    EvtClaimProtocolLiquidityMigrationFeeArgs evt_claim_protocol_liquidity_migration_fee = 4;
+    EvtClaimTradingFeeArgs evt_claim_trading_fee = 5;
+    EvtCloseClaimFeeOperatorArgs evt_close_claim_fee_operator = 6;
+    EvtCreateClaimFeeOperatorArgs evt_create_claim_fee_operator = 7;
+    EvtCreateConfigArgs evt_create_config = 8;
+    EvtCreateConfigV2Args evt_create_config_v2 = 9;
+    EvtCreateMeteoraMigrationMetadataArgs evt_create_meteora_migration_metadata = 10;
+    EvtCreatorWithdrawSurplusArgs evt_creator_withdraw_surplus = 11;
+    EvtCurveCompleteArgs evt_curve_complete = 12;
+    EvtInitializePoolArgs evt_initialize_pool = 13;
+    EvtPartnerClaimPoolCreationFeeArgs evt_partner_claim_pool_creation_fee = 14;
+    EvtPartnerMetadataArgs evt_partner_metadata = 15;
+    EvtPartnerWithdrawMigrationFeeArgs evt_partner_withdraw_migration_fee = 16;
+    EvtPartnerWithdrawSurplusArgs evt_partner_withdraw_surplus = 17;
+    EvtSwapArgs evt_swap = 18;
+    EvtSwap2Args evt_swap2 = 19;
+    EvtUpdatePoolCreatorArgs evt_update_pool_creator = 20;
+    EvtVirtualPoolMetadataArgs evt_virtual_pool_metadata = 21;
+    EvtWithdrawLeftoverArgs evt_withdraw_leftover = 22;
+    EvtWithdrawMigrationFeeArgs evt_withdraw_migration_fee = 23;
   }
 }
 message Instructions {
@@ -1204,6 +1490,30 @@ message Instructions {
     TransferPoolCreator transfer_pool_creator = 24;
     WithdrawLeftover withdraw_leftover = 25;
     WithdrawMigrationFee withdraw_migration_fee = 26;
+    EvtClaimCreatorTradingFee evt_claim_creator_trading_fee = 27;
+    EvtClaimPoolCreationFee evt_claim_pool_creation_fee = 28;
+    EvtClaimProtocolFee evt_claim_protocol_fee = 29;
+    EvtClaimProtocolLiquidityMigrationFee evt_claim_protocol_liquidity_migration_fee = 30;
+    EvtClaimTradingFee evt_claim_trading_fee = 31;
+    EvtCloseClaimFeeOperator evt_close_claim_fee_operator = 32;
+    EvtCreateClaimFeeOperator evt_create_claim_fee_operator = 33;
+    EvtCreateConfig evt_create_config = 34;
+    EvtCreateConfigV2 evt_create_config_v2 = 35;
+    EvtCreateMeteoraMigrationMetadata evt_create_meteora_migration_metadata = 36;
+    EvtCreatorWithdrawSurplus evt_creator_withdraw_surplus = 37;
+    EvtCurveComplete evt_curve_complete = 38;
+    EvtInitializePool evt_initialize_pool = 39;
+    EvtPartnerClaimPoolCreationFee evt_partner_claim_pool_creation_fee = 40;
+    EvtPartnerMetadata evt_partner_metadata = 41;
+    EvtPartnerWithdrawMigrationFee evt_partner_withdraw_migration_fee = 42;
+    EvtPartnerWithdrawSurplus evt_partner_withdraw_surplus = 43;
+    EvtSwap evt_swap = 44;
+    EvtSwap2 evt_swap2 = 45;
+    EvtUpdatePoolCreator evt_update_pool_creator = 46;
+    EvtVirtualPoolMetadata evt_virtual_pool_metadata = 47;
+    EvtWithdrawLeftover evt_withdraw_leftover = 48;
+    EvtWithdrawMigrationFee evt_withdraw_migration_fee = 49;
   }
-  repeated string raw_logs = 27;
+  repeated string raw_logs = 50;
+  repeated AnchorLogEvent anchor_log_events = 51;
 }
