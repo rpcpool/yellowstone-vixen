@@ -495,7 +495,7 @@ pub fn instruction_parser(
     let event_arms: Vec<TokenStream> = instructions
         .iter()
         .filter(|ix| event_names.contains(ix.name.as_ref()))
-        .filter_map(|ix| event_resolve_arm(ix))
+        .filter_map(event_resolve_arm)
         .collect();
 
     let resolve_event_fn = if event_arms.is_empty() {

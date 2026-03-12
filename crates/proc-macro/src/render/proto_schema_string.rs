@@ -103,12 +103,12 @@ pub fn proto_schema_string(
         .find(|o| o.kind == OneofKindIr::AnchorLogEventDispatch);
 
     // Render AnchorLogEvent message first (before Instructions, so proto ordering is clean).
-    if let Some(ev) = event_oneof {
-        if !ev.variants.is_empty() {
-            render_oneof_parent(&mut out, ev);
+    if let Some(ev) = event_oneof
+        && !ev.variants.is_empty()
+    {
+        render_oneof_parent(&mut out, ev);
 
-            message_count += 1;
-        }
+        message_count += 1;
     }
 
     for oneof in &schema.oneofs {
@@ -243,17 +243,17 @@ fn render_instruction_dispatch_parent(
 
     writeln!(out, "  repeated string raw_logs = {raw_logs_tag};").unwrap();
 
-    if let Some(ev) = event_oneof {
-        if !ev.variants.is_empty() {
-            let events_tag = max_tag + 2;
+    if let Some(ev) = event_oneof
+        && !ev.variants.is_empty()
+    {
+        let events_tag = max_tag + 2;
 
-            writeln!(
-                out,
-                "  repeated {} anchor_log_events = {events_tag};",
-                ev.parent_message
-            )
-            .unwrap();
-        }
+        writeln!(
+            out,
+            "  repeated {} anchor_log_events = {events_tag};",
+            ev.parent_message
+        )
+        .unwrap();
     }
 
     writeln!(out, "}}").unwrap();

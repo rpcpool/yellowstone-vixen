@@ -99,6 +99,7 @@ fn find_invoke(logs: &[String], start: usize) -> Option<usize> {
 /// Returns a vec where entry `i` contains the log lines for outer instruction `i`
 /// (from its `Program ... invoke [1]` through its `Program ... success`/`failed`).
 ///
+#[must_use]
 pub fn split_logs_by_outer_ix(logs: &[String]) -> Vec<Vec<String>> {
     let mut result: Vec<Vec<String>> = Vec::new();
     let mut current: Vec<String> = Vec::new();

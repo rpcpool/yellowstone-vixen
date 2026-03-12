@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use codama_nodes::InstructionNode;
 
 use crate::intermediate_representation::{
-    helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr,
-    OneofVariantIr, ScalarIr, SchemaIr, TypeIr, TypeKindIr,
+    helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr, OneofVariantIr,
+    ScalarIr, SchemaIr, TypeIr, TypeKindIr,
 };
 
 ///

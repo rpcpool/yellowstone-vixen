@@ -15,8 +15,11 @@ pub fn vixen_parser(idl: &RootNode, event_names: &HashSet<String>) -> TokenStrea
 
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
-    let instruction_parser =
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, event_names);
+    let instruction_parser = crate::render::instruction_parser(
+        &idl.program.name,
+        &idl.program.instructions,
+        event_names,
+    );
 
     let program_name_pascal = crate::utils::to_pascal_case(&idl.program.name);
 
