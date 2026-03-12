@@ -34,7 +34,7 @@ fn read_last_slot_from_topic(config: &KafkaSinkConfig, topic: &str) -> Option<La
         .set("group.id", "vixen-startup-reader")
         .set("enable.auto.commit", "false");
 
-    config.apply_sasl(&mut client_config);
+    config.apply_sasl_if_configured(&mut client_config);
 
     let consumer: BaseConsumer = match client_config.create() {
         Ok(consumer) => consumer,

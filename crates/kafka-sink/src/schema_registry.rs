@@ -136,7 +136,7 @@ fn register_schema(
         .post(&url)
         .header("Content-Type", "application/vnd.schemaregistry.v1+json")
         .json(&request);
-    let req = config.apply_schema_registry_auth(req);
+    let req = config.apply_schema_registry_auth_if_configured(req);
 
     let response = req
         .send()
@@ -174,7 +174,7 @@ fn check_schema_registry(
     let req = client
         .get(format!("{}/subjects", base_url))
         .timeout(std::time::Duration::from_secs(5));
-    let req = config.apply_schema_registry_auth(req);
+    let req = config.apply_schema_registry_auth_if_configured(req);
 
     match req.send() {
         Ok(r) if r.status().is_success() => Ok(()),
@@ -241,7 +241,7 @@ fn get_latest_schema_id_for_subject(
 ) -> Option<i32> {
     let url = format!("{}/subjects/{}/versions/latest", base_url, subject);
     let req = client.get(&url);
-    let req = config.apply_schema_registry_auth(req);
+    let req = config.apply_schema_registry_auth_if_configured(req);
     let response = req.send().ok()?;
 
     if response.status().is_success() {

@@ -14,7 +14,7 @@ pub fn create_producer(config: &KafkaSinkConfig) -> FutureProducer {
         .set("batch.num.messages", config.batch_num_messages.to_string())
         .set("enable.idempotence", "true");
 
-    config.apply_sasl(&mut client_config);
+    config.apply_sasl_if_configured(&mut client_config);
 
     client_config
         .create()

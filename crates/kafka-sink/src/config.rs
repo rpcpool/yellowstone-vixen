@@ -182,7 +182,7 @@ impl KafkaSinkConfig {
     }
 
     /// Apply SASL+TLS settings to an rdkafka ClientConfig when credentials are present.
-    pub fn apply_sasl(&self, client_config: &mut rdkafka::ClientConfig) {
+    pub fn apply_sasl_if_configured(&self, client_config: &mut rdkafka::ClientConfig) {
         if let (Some(username), Some(password)) = (&self.sasl_username, &self.sasl_password) {
             client_config
                 .set("security.protocol", "SASL_SSL")
@@ -197,7 +197,7 @@ impl KafkaSinkConfig {
     /// Uses dedicated schema_registry pair if both set, otherwise falls back to
     /// Kafka SASL pair. After validate_credentials(), each pair is guaranteed to
     /// be "both or neither".
-    pub fn apply_schema_registry_auth(
+    pub fn apply_schema_registry_auth_if_configured(
         &self,
         req: reqwest::blocking::RequestBuilder,
     ) -> reqwest::blocking::RequestBuilder {
