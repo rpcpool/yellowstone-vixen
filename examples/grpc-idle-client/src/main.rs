@@ -219,9 +219,9 @@ async fn connect_client(
         .accept_compressed(config.accept_compression.unwrap_or_default().into())
         .connect_timeout(timeout)
         .timeout(timeout)
-        .http2_keep_alive_interval(Duration::from_secs(10))  // send HTTP/2 PING every 10s
-        .keep_alive_timeout(Duration::from_secs(20))          // fail if no PING ACK within 20s
-        .keep_alive_while_idle(true)                           // ping even when no RPCs in-flight
+        .http2_keep_alive_interval(Duration::from_secs(10))    // send HTTP/2 PING every 10s
+        .keep_alive_timeout(Duration::from_secs(20))           // fail if no PING ACK within 20s
+        .keep_alive_while_idle(true)                   // ping even when no RPCs in-flight
         .tcp_keepalive(Some(Duration::from_secs(15)))          // OS-level TCP keepalive too
         .tls_config(ClientTlsConfig::new().with_native_roots())?
         .connect()
