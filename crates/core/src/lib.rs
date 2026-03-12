@@ -374,12 +374,27 @@ impl SlotPrefilter {
 #[macro_export]
 macro_rules! pubkey_convert_helpers {
     ($ty:ty) => {
-        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::KeyBytes<32> {
-            value.to_bytes().into()
+        pub(crate) fn into_vixen_pubkey(pubkey: $ty) -> $crate::KeyBytes<32> {
+            pubkey.to_bytes().into()
         }
 
-        pub(crate) fn from_vixen_pubkey(value: $crate::KeyBytes<32>) -> $ty {
-            value.into_bytes().into()
+        pub(crate) fn from_vixen_pubkey(keybytes: $crate::KeyBytes<32>) -> $ty {
+            keybytes.into_bytes().into()
+        }
+
+         pub(crate) fn into_vixen_pubkey2(pubkey: $ty) -> $crate::PublicKey {
+            let bytes: Vec<u8> = pubkey.to_bytes().into();
+            $crate::PublicKey::new(bytes)
+        }
+
+        pub(crate) fn from_vixen_pubkey2(vixen_publickey: $crate::PublicKey) -> $ty {
+            let bytes: [u8; 32] = vixen_publickey
+                .value
+                .as_slice()
+                .try_into()
+            // FIXME
+                .expect("PublicKey must be 32 bytes");
+            bytes.into()
         }
     };
 }

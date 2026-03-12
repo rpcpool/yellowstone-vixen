@@ -1,12 +1,42 @@
 mod common;
 
-use yellowstone_vixen_core::Parser;
+use yellowstone_vixen_core::{pubkey_convert_helpers, KeyBytes, Parser, PublicKey};
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 // This IDL have non-even length hex strings for discriminators, which caused `hex::decode` to fail before we added padding logic. This test ensures that the padding logic works correctly.
 
 include_vixen_parser!("idls/raydium_amm_v4_with_swapv2.json");
+
+pubkey_convert_helpers!(solana_pubkey::Pubkey);
+
+#[test]
+fn convert_vixen_keybytes() {
+
+    let solana_pubkey = solana_pubkey::Pubkey::new_unique();
+
+    let vixen_keybytes: KeyBytes<32> = into_vixen_pubkey(solana_pubkey);
+
+    let back = from_vixen_pubkey(vixen_keybytes);
+
+    assert_eq!(solana_pubkey, back);
+
+}
+
+#[test]
+fn convert_vixen_publickey() {
+
+    let solana_pubkey = solana_pubkey::Pubkey::new_unique();
+
+    let public_key: PublicKey = into_vixen_pubkey2(solana_pubkey);
+
+    let back = from_vixen_pubkey2(public_key);
+
+    assert_eq!(solana_pubkey, back);
+
+}
+
+
 
 #[test]
 fn check_protobuf_schema() {
