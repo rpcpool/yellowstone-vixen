@@ -2,7 +2,7 @@
 //!
 //! Uses the Confluent Schema Registry REST API (compatible with Redpanda).
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io};
 
 use serde::{Deserialize, Serialize};
 
@@ -122,6 +122,7 @@ fn register_schema(
     base_url: &str,
     subject: &str,
     schema: &str,
+    config: &KafkaSinkConfig,
 ) -> Result<i32, String> {
     let url = format!("{}/subjects/{}/versions", base_url, subject);
 
@@ -131,10 +132,13 @@ fn register_schema(
         references: vec![],
     };
 
-    let response = client
+    let req = client
         .post(&url)
         .header("Content-Type", "application/vnd.schemaregistry.v1+json")
-        .json(&request)
+        .json(&request);
+    let req = config.apply_schema_registry_auth(req);
+
+    let response = req
         .send()
         .map_err(|e| format!("HTTP request failed: {}", e))?;
 
@@ -162,13 +166,29 @@ fn register_schema(
     }
 }
 
-fn check_schema_registry(client: &reqwest::blocking::Client, base_url: &str) -> bool {
-    client
+fn check_schema_registry(
+    client: &reqwest::blocking::Client,
+    base_url: &str,
+    config: &KafkaSinkConfig,
+) -> io::Result<()> {
+    let req = client
         .get(format!("{}/subjects", base_url))
-        .timeout(std::time::Duration::from_secs(5))
-        .send()
-        .map(|r| r.status().is_success())
-        .unwrap_or(false)
+        .timeout(std::time::Duration::from_secs(5));
+    let req = config.apply_schema_registry_auth(req);
+
+    match req.send() {
+        Ok(r) if r.status().is_success() => Ok(()),
+        Ok(r) if r.status().as_u16() == 401 || r.status().as_u16() == 403 => Err(io::Error::other(
+            format!("Schema Registry auth failed (HTTP {})", r.status()),
+        )),
+        Ok(r) => Err(io::Error::other(format!(
+            "Schema Registry returned HTTP {}",
+            r.status()
+        ))),
+        Err(e) => Err(io::Error::other(format!(
+            "Schema Registry unreachable: {e}"
+        ))),
+    }
 }
 
 /// Register all provided schemas with the Schema Registry.
@@ -176,7 +196,7 @@ fn check_schema_registry(client: &reqwest::blocking::Client, base_url: &str) -> 
 pub fn ensure_schemas_registered(
     config: &KafkaSinkConfig,
     schemas: &[SchemaDefinition],
-) -> HashMap<String, RegisteredSchema> {
+) -> io::Result<HashMap<String, RegisteredSchema>> {
     let base_url = &config.schema_registry_url;
     let mut registered = HashMap::new();
 
@@ -185,47 +205,44 @@ pub fn ensure_schemas_registered(
         .build()
         .expect("Failed to create HTTP client");
 
-    if !check_schema_registry(&client, base_url) {
-        tracing::warn!(
-            url = %base_url,
-            "Schema Registry not available, skipping schema registration"
-        );
-        return registered;
-    }
+    check_schema_registry(&client, base_url, config)?;
 
     tracing::info!(url = %base_url, "Registering schemas with Schema Registry");
 
     for schema_def in schemas {
-        let schema_id = register_schema(&client, base_url, &schema_def.subject, schema_def.schema)
+        let schema_id = register_schema(&client, base_url, &schema_def.subject, schema_def.schema, config)
             .or_else(|e| {
                 tracing::debug!(subject = %schema_def.subject, error = %e, "Registration failed, trying existing");
-                get_latest_schema_id_for_subject(&client, base_url, &schema_def.subject).ok_or(e)
-            });
+                get_latest_schema_id_for_subject(&client, base_url, &schema_def.subject, config)
+                    .ok_or(e)
+            })
+            .map_err(|e| {
+                io::Error::other(format!(
+                    "No schema available for {}: {e}",
+                    schema_def.subject
+                ))
+            })?;
 
-        match schema_id {
-            Ok(id) => {
-                tracing::debug!(subject = %schema_def.subject, schema_id = id, "Schema ready");
-                registered.insert(schema_def.subject.clone(), RegisteredSchema {
-                    schema_id: id,
-                    message_index: schema_def.message_index,
-                });
-            },
-            Err(e) => {
-                tracing::warn!(subject = %schema_def.subject, error = %e, "No schema available");
-            },
-        }
+        tracing::debug!(subject = %schema_def.subject, schema_id, "Schema ready");
+        registered.insert(schema_def.subject.clone(), RegisteredSchema {
+            schema_id,
+            message_index: schema_def.message_index,
+        });
     }
 
-    registered
+    Ok(registered)
 }
 
 fn get_latest_schema_id_for_subject(
     client: &reqwest::blocking::Client,
     base_url: &str,
     subject: &str,
+    config: &KafkaSinkConfig,
 ) -> Option<i32> {
     let url = format!("{}/subjects/{}/versions/latest", base_url, subject);
-    let response = client.get(&url).send().ok()?;
+    let req = client.get(&url);
+    let req = config.apply_schema_registry_auth(req);
+    let response = req.send().ok()?;
 
     if response.status().is_success() {
         #[derive(Deserialize)]
@@ -236,5 +253,125 @@ fn get_latest_schema_id_for_subject(
         Some(version.id)
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn schema_registry_auth_sends_basic_auth_header() {
+        let mut server = mockito::Server::new();
+        let mock = server
+            .mock("GET", "/subjects")
+            .match_header("authorization", "Basic dXNlcjpwYXNz") // base64("user:pass")
+            .with_status(200)
+            .with_body("[]")
+            .create();
+
+        let config = KafkaSinkConfig {
+            schema_registry_url: server.url(),
+            sasl_username: Some("user".into()),
+            sasl_password: Some("pass".into()),
+            ..Default::default()
+        };
+
+        let client = reqwest::blocking::Client::new();
+        let result = check_schema_registry(&client, &server.url(), &config);
+        assert!(result.is_ok());
+        mock.assert();
+    }
+
+    #[test]
+    fn schema_registry_auth_falls_back_to_sasl_creds() {
+        let mut server = mockito::Server::new();
+        let mock = server
+            .mock("GET", "/subjects")
+            .match_header("authorization", "Basic dXNlcjpwYXNz")
+            .with_status(200)
+            .with_body("[]")
+            .create();
+
+        let config = KafkaSinkConfig {
+            schema_registry_url: server.url(),
+            sasl_username: Some("user".into()),
+            sasl_password: Some("pass".into()),
+            schema_registry_username: None,
+            schema_registry_password: None,
+            ..Default::default()
+        };
+
+        let client = reqwest::blocking::Client::new();
+        let result = check_schema_registry(&client, &server.url(), &config);
+        assert!(result.is_ok());
+        mock.assert();
+    }
+
+    #[test]
+    fn schema_registry_no_auth_when_no_creds() {
+        let mut server = mockito::Server::new();
+        let mock = server
+            .mock("GET", "/subjects")
+            .match_header("authorization", mockito::Matcher::Missing)
+            .with_status(200)
+            .with_body("[]")
+            .create();
+
+        let config = KafkaSinkConfig {
+            schema_registry_url: server.url(),
+            ..Default::default()
+        };
+
+        let client = reqwest::blocking::Client::new();
+        let result = check_schema_registry(&client, &server.url(), &config);
+        assert!(result.is_ok());
+        mock.assert();
+    }
+
+    #[test]
+    fn check_schema_registry_401_is_fatal() {
+        let mut server = mockito::Server::new();
+        server.mock("GET", "/subjects").with_status(401).create();
+
+        let config = KafkaSinkConfig {
+            schema_registry_url: server.url(),
+            ..Default::default()
+        };
+
+        let client = reqwest::blocking::Client::new();
+        let err = check_schema_registry(&client, &server.url(), &config).unwrap_err();
+        assert!(err.to_string().contains("auth failed"));
+    }
+
+    #[test]
+    fn check_schema_registry_403_is_fatal() {
+        let mut server = mockito::Server::new();
+        server.mock("GET", "/subjects").with_status(403).create();
+
+        let config = KafkaSinkConfig {
+            schema_registry_url: server.url(),
+            ..Default::default()
+        };
+
+        let client = reqwest::blocking::Client::new();
+        let err = check_schema_registry(&client, &server.url(), &config).unwrap_err();
+        assert!(err.to_string().contains("auth failed"));
+    }
+
+    #[test]
+    fn check_schema_registry_connection_error_is_fatal() {
+        let config = KafkaSinkConfig {
+            schema_registry_url: "http://127.0.0.1:1".to_string(),
+            ..Default::default()
+        };
+
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(1))
+            .build()
+            .unwrap();
+
+        let err = check_schema_registry(&client, &config.schema_registry_url, &config).unwrap_err();
+        assert!(err.to_string().contains("unreachable"));
     }
 }

@@ -1,7 +1,9 @@
+use std::{fmt, io};
+
 use serde::{Deserialize, Serialize};
 use yellowstone_vixen_block_coordinator::AccountMode;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct KafkaSinkConfig {
     /// Kafka bootstrap servers (e.g., "localhost:9092").
     pub brokers: String,
@@ -43,6 +45,54 @@ pub struct KafkaSinkConfig {
     /// Delay between Kafka write retry attempts.
     #[serde(default = "default_kafka_retry_backoff_ms")]
     pub kafka_retry_backoff_ms: u64,
+
+    /// SASL username (e.g. "janus-dev"). When set, enables SASL_SSL + SCRAM-SHA-256.
+    #[serde(default)]
+    pub sasl_username: Option<String>,
+
+    /// SASL password. Redacted from Debug and Serialize output.
+    #[serde(default, skip_serializing)]
+    pub sasl_password: Option<String>,
+
+    /// Schema Registry username. Falls back to sasl_username when unset.
+    #[serde(default)]
+    pub schema_registry_username: Option<String>,
+
+    /// Schema Registry password. Falls back to sasl_password when unset.
+    /// Redacted from Debug and Serialize output.
+    #[serde(default, skip_serializing)]
+    pub schema_registry_password: Option<String>,
+}
+
+impl fmt::Debug for KafkaSinkConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("KafkaSinkConfig")
+            .field("brokers", &self.brokers)
+            .field("schema_registry_url", &self.schema_registry_url)
+            .field("transaction_slots_topic", &self.transaction_slots_topic)
+            .field("account_slots_topic", &self.account_slots_topic)
+            .field("account_mode", &self.account_mode)
+            .field("buffer_size", &self.buffer_size)
+            .field("message_timeout_ms", &self.message_timeout_ms)
+            .field(
+                "queue_buffering_max_messages",
+                &self.queue_buffering_max_messages,
+            )
+            .field("batch_num_messages", &self.batch_num_messages)
+            .field("kafka_write_max_attempts", &self.kafka_write_max_attempts)
+            .field("kafka_retry_backoff_ms", &self.kafka_retry_backoff_ms)
+            .field("sasl_username", &self.sasl_username)
+            .field(
+                "sasl_password",
+                &self.sasl_password.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field("schema_registry_username", &self.schema_registry_username)
+            .field(
+                "schema_registry_password",
+                &self.schema_registry_password.as_ref().map(|_| "[REDACTED]"),
+            )
+            .finish()
+    }
 }
 
 fn default_schema_registry_url() -> String { "http://localhost:8081".to_string() }
@@ -77,6 +127,10 @@ impl Default for KafkaSinkConfig {
             batch_num_messages: default_batch_num_messages(),
             kafka_write_max_attempts: default_kafka_write_max_attempts(),
             kafka_retry_backoff_ms: default_kafka_retry_backoff_ms(),
+            sasl_username: None,
+            sasl_password: None,
+            schema_registry_username: None,
+            schema_registry_password: None,
         }
     }
 }
@@ -87,6 +141,80 @@ impl KafkaSinkConfig {
             brokers: brokers.into(),
             schema_registry_url: schema_registry_url.into(),
             ..Default::default()
+        }
+    }
+
+    /// Validate credential pairs: each pair must be "both set or both unset".
+    /// Call this at startup before creating any Kafka client.
+    pub fn validate_credentials(&self) -> io::Result<()> {
+        match (&self.sasl_username, &self.sasl_password) {
+            (Some(_), None) => {
+                return Err(io::Error::other(
+                    "KAFKA_SASL_USERNAME is set but KAFKA_SASL_PASSWORD is missing",
+                ));
+            },
+            (None, Some(_)) => {
+                return Err(io::Error::other(
+                    "KAFKA_SASL_PASSWORD is set but KAFKA_SASL_USERNAME is missing",
+                ));
+            },
+            _ => {},
+        }
+
+        match (
+            &self.schema_registry_username,
+            &self.schema_registry_password,
+        ) {
+            (Some(_), None) => {
+                return Err(io::Error::other(
+                    "SCHEMA_REGISTRY_USERNAME is set but SCHEMA_REGISTRY_PASSWORD is missing",
+                ));
+            },
+            (None, Some(_)) => {
+                return Err(io::Error::other(
+                    "SCHEMA_REGISTRY_PASSWORD is set but SCHEMA_REGISTRY_USERNAME is missing",
+                ));
+            },
+            _ => {},
+        }
+
+        Ok(())
+    }
+
+    /// Apply SASL+TLS settings to an rdkafka ClientConfig when credentials are present.
+    pub fn apply_sasl(&self, client_config: &mut rdkafka::ClientConfig) {
+        if let (Some(username), Some(password)) = (&self.sasl_username, &self.sasl_password) {
+            client_config
+                .set("security.protocol", "SASL_SSL")
+                .set("sasl.mechanism", "SCRAM-SHA-256")
+                .set("sasl.username", username)
+                .set("sasl.password", password);
+        }
+    }
+
+    /// Apply Basic Auth to a reqwest RequestBuilder for Schema Registry.
+    ///
+    /// Uses dedicated schema_registry pair if both set, otherwise falls back to
+    /// Kafka SASL pair. After validate_credentials(), each pair is guaranteed to
+    /// be "both or neither".
+    pub fn apply_schema_registry_auth(
+        &self,
+        req: reqwest::blocking::RequestBuilder,
+    ) -> reqwest::blocking::RequestBuilder {
+        let creds = match (
+            &self.schema_registry_username,
+            &self.schema_registry_password,
+        ) {
+            (Some(u), Some(p)) => Some((u, p)),
+            _ => match (&self.sasl_username, &self.sasl_password) {
+                (Some(u), Some(p)) => Some((u, p)),
+                _ => None,
+            },
+        };
+
+        match creds {
+            Some((u, p)) => req.basic_auth(u, Some(p)),
+            None => req,
         }
     }
 }
@@ -139,5 +267,62 @@ mod tests {
         let config = KafkaSinkConfig::default();
         assert_eq!(config.kafka_write_max_attempts, 3);
         assert_eq!(config.kafka_retry_backoff_ms, 200);
+    }
+
+    #[test]
+    fn validate_credentials_rejects_partial_sasl() {
+        let mut config = KafkaSinkConfig::default();
+
+        config.sasl_username = Some("user".into());
+        config.sasl_password = None;
+        let err = config.validate_credentials().unwrap_err();
+        assert!(err.to_string().contains("KAFKA_SASL_PASSWORD is missing"));
+
+        config.sasl_username = None;
+        config.sasl_password = Some("pass".into());
+        let err = config.validate_credentials().unwrap_err();
+        assert!(err.to_string().contains("KAFKA_SASL_USERNAME is missing"));
+    }
+
+    #[test]
+    fn validate_credentials_rejects_partial_schema_registry() {
+        let mut config = KafkaSinkConfig::default();
+
+        config.schema_registry_username = Some("user".into());
+        config.schema_registry_password = None;
+        let err = config.validate_credentials().unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("SCHEMA_REGISTRY_PASSWORD is missing"));
+
+        config.schema_registry_username = None;
+        config.schema_registry_password = Some("pass".into());
+        let err = config.validate_credentials().unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("SCHEMA_REGISTRY_USERNAME is missing"));
+    }
+
+    #[test]
+    fn validate_credentials_accepts_complete_pairs() {
+        let mut config = KafkaSinkConfig::default();
+
+        // Both unset → Ok
+        config.validate_credentials().unwrap();
+
+        // Both set → Ok
+        config.sasl_username = Some("user".into());
+        config.sasl_password = Some("pass".into());
+        config.schema_registry_username = Some("sr-user".into());
+        config.schema_registry_password = Some("sr-pass".into());
+        config.validate_credentials().unwrap();
+    }
+
+    #[test]
+    fn validate_credentials_accepts_sasl_only_no_sr_override() {
+        let mut config = KafkaSinkConfig::default();
+        config.sasl_username = Some("user".into());
+        config.sasl_password = Some("pass".into());
+        config.validate_credentials().unwrap();
     }
 }
