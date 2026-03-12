@@ -1,20 +1,25 @@
+use std::collections::HashSet;
+
 use codama_nodes::RootNode;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-pub fn vixen_parser(idl: &RootNode) -> TokenStream {
+pub fn vixen_parser(idl: &RootNode, event_names: &HashSet<String>) -> TokenStream {
     let program_mod_ident = format_ident!("{}", crate::utils::to_snake_case(&idl.program.name));
 
     let program_pubkey = crate::render::program_pubkey(&idl.program.public_key);
 
-    let schema_ir = crate::intermediate_representation::build_schema_ir(idl);
+    let schema_ir = crate::intermediate_representation::build_schema_ir(idl, event_names);
 
     let schema_types = crate::render::rust_types_from_ir(&schema_ir);
 
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
-    let instruction_parser =
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions);
+    let instruction_parser = crate::render::instruction_parser(
+        &idl.program.name,
+        &idl.program.instructions,
+        event_names,
+    );
 
     let program_name_pascal = crate::utils::to_pascal_case(&idl.program.name);
 

@@ -34,12 +34,14 @@ use yellowstone_grpc_proto::geyser::{
     SubscribeUpdateTransaction,
 };
 
+pub extern crate base64;
 pub extern crate bs58;
 
 #[cfg(feature = "proto")]
 pub extern crate yellowstone_vixen_proto;
 
 pub mod instruction;
+pub mod log_messages;
 
 #[cfg(feature = "proto")]
 pub mod proto;

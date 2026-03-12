@@ -275,6 +275,8 @@ fn single_instruction_helper_fn(
                     accounts: #accounts_value,
                     #args_field
                 },
+                raw_logs: vec![],
+                anchor_log_events: vec![],
             })
         }
     })
@@ -389,9 +391,68 @@ fn collision_group_match_arm(instructions: &[&codama_nodes::InstructionNode]) ->
     }
 }
 
+///
+/// Generate a match arm for resolving a single event from "Program data:" bytes.
+///
+/// In "Program data:" payloads the discriminator is always at offset 0,
+/// regardless of the IDL offset (which describes the position within
+/// instruction data for self-CPI events).
+///
+fn event_resolve_arm(ix: &codama_nodes::InstructionNode) -> Option<TokenStream> {
+    let ix_name_pascal = crate::utils::to_pascal_case(&ix.name);
+    let variant_ident = format_ident!("{}", ix_name_pascal);
+    let args_ident = format_ident!("{}Args", ix_name_pascal);
+
+    let discriminator = ix.discriminators.first()?;
+
+    let DiscriminatorNode::Field(node) = discriminator else {
+        return None;
+    };
+
+    let field = ix.arguments.iter().find(|f| f.name == node.name)?;
+
+    let TypeNode::FixedSize(fixed_size_node) = &field.r#type else {
+        return None;
+    };
+
+    let disc_size = fixed_size_node.size;
+
+    let default_value = field.default_value.as_ref()?;
+
+    let InstructionInputValueNode::Bytes(bytes) = default_value else {
+        return None;
+    };
+
+    let discriminator_bytes = decode_discriminator_field_bytes(bytes);
+
+    // Filter out the discriminator argument from args to deserialize.
+    let has_args = ix.arguments.iter().any(|a| a.name != node.name);
+
+    let args_expr = if has_args {
+        quote! {
+            {
+                let mut slice: &[u8] = data.get(#disc_size..).unwrap_or(&[]);
+
+                <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice).ok()?
+            }
+        }
+    } else {
+        quote! { instruction::#args_ident {} }
+    };
+
+    Some(quote! {
+        if data.get(0..#disc_size) == ::core::option::Option::Some(&[#(#discriminator_bytes),*]) {
+            return ::core::option::Option::Some(
+                AnchorLogEvent::#variant_ident(#args_expr)
+            );
+        }
+    })
+}
+
 pub fn instruction_parser(
     program_name_camel: &CamelCaseString,
     instructions: &[codama_nodes::InstructionNode],
+    event_names: &std::collections::HashSet<String>,
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
@@ -430,6 +491,37 @@ pub fn instruction_parser(
         })
         .collect();
 
+    // 3. Event resolver: match arms for Anchor log events ("Program data:" payloads).
+    let event_arms: Vec<TokenStream> = instructions
+        .iter()
+        .filter(|ix| event_names.contains(ix.name.as_ref()))
+        .filter_map(event_resolve_arm)
+        .collect();
+
+    let resolve_event_fn = if event_arms.is_empty() {
+        quote! {
+            /// No Anchor log events in this program.
+            pub fn resolve_event(_data: &[u8]) -> ::core::option::Option<AnchorLogEvent> {
+                ::core::option::Option::None
+            }
+        }
+    } else {
+        quote! {
+            ///
+            /// Try to resolve an Anchor event from "Program data:" bytes.
+            ///
+            /// The input `data` is the base64-decoded payload from a
+            /// `"Program data: <base64>"` log line.  Returns `None` if no
+            /// known event discriminator matches.
+            ///
+            pub fn resolve_event(data: &[u8]) -> ::core::option::Option<AnchorLogEvent> {
+                #(#event_arms)*
+
+                ::core::option::Option::None
+            }
+        }
+    };
+
     quote! {
         //
         // Per-instruction parse helper functions.
@@ -455,6 +547,26 @@ pub fn instruction_parser(
             #(#match_arms)*
 
             Err(ParseError::Filtered)
+        }
+
+        #resolve_event_fn
+
+        /// Scan log messages for `"Program data: <base64>"` lines and resolve
+        /// any matching Anchor events.
+        pub fn resolve_events_from_logs(logs: &[String]) -> Vec<AnchorLogEvent> {
+            const PREFIX: &str = "Program data: ";
+
+            logs.iter()
+                .filter_map(|line| {
+                    let b64 = line.strip_prefix(PREFIX)?;
+
+                    use ::yellowstone_vixen_core::base64::{engine::general_purpose::STANDARD, Engine};
+
+                    let data = STANDARD.decode(b64).ok()?;
+
+                    resolve_event(&data)
+                })
+                .collect()
         }
 
         ///
@@ -483,7 +595,7 @@ pub fn instruction_parser(
         ///
         /// # Example
         ///
-        /// ```rust,ignore
+        /// ```rust, ignore
         /// #[derive(Debug, Copy, Clone)]
         /// struct MyResolver;
         ///
@@ -501,8 +613,29 @@ pub fn instruction_parser(
         /// let parser = program::CustomInstructionParser(MyResolver);
         /// ```
         ///
+        /// Instruction parser with a custom resolver.
+        ///
+        /// Raw logs are excluded by default; call with_raw_logs() to include them.
+        ///
         #[derive(Debug, Copy, Clone)]
-        pub struct CustomInstructionParser<R: InstructionResolver>(pub R);
+        pub struct CustomInstructionParser<R: InstructionResolver> {
+            /// The resolver used to disambiguate instructions.
+            pub resolver: R,
+            include_raw_logs: bool,
+        }
+
+        impl<R: InstructionResolver> CustomInstructionParser<R> {
+            /// Create a new parser with the given resolver.
+            pub fn new(resolver: R) -> Self {
+                Self { resolver, include_raw_logs: false }
+            }
+
+            /// Include raw logs in the parsed output.
+            pub fn with_raw_logs(mut self) -> Self {
+                self.include_raw_logs = true;
+                self
+            }
+        }
 
         impl<R: InstructionResolver> Parser for CustomInstructionParser<R> {
             type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
@@ -527,7 +660,15 @@ pub fn instruction_parser(
                     return Err(ParseError::Filtered);
                 }
 
-                self.0.resolve(&ix_update.accounts, &ix_update.data)
+                let mut result = self.resolver.resolve(&ix_update.accounts, &ix_update.data)?;
+
+                if self.include_raw_logs {
+                    result.raw_logs = ix_update.log_messages.clone();
+                }
+
+                result.anchor_log_events = resolve_events_from_logs(&ix_update.log_messages);
+
+                Ok(result)
             }
         }
 
@@ -539,7 +680,20 @@ pub fn instruction_parser(
         }
 
         #[derive(Debug, Copy, Clone)]
-        pub struct InstructionParser;
+        pub struct InstructionParser {
+            include_raw_logs: bool,
+        }
+
+        #[allow(non_upper_case_globals)]
+        pub const InstructionParser: InstructionParser = InstructionParser { include_raw_logs: false };
+
+        impl InstructionParser {
+            /// Include raw logs in the parsed output.
+            pub fn with_raw_logs(mut self) -> Self {
+                self.include_raw_logs = true;
+                self
+            }
+        }
 
         impl Parser for InstructionParser {
             type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
@@ -564,11 +718,18 @@ pub fn instruction_parser(
                     return Err(ParseError::Filtered);
                 }
 
-                resolve_instruction_default(&ix_update.accounts, &ix_update.data)
+                let mut result = resolve_instruction_default(&ix_update.accounts, &ix_update.data)?;
+
+                if self.include_raw_logs {
+                    result.raw_logs = ix_update.log_messages.clone();
+                }
+
+                result.anchor_log_events = resolve_events_from_logs(&ix_update.log_messages);
+
+                Ok(result)
             }
         }
 
-        // Implement the trait for Mock
         impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
             #[inline]
             fn program_id(&self) -> yellowstone_vixen_core::KeyBytes::<32> {

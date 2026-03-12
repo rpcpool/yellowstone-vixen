@@ -1855,6 +1855,633 @@ message CloseBorrowPosition {
   CloseBorrowPositionArgs args = 2;
 }
     
+message CreatePositionRequestEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CreatePositionRequestEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  uint32 position_side = 4;
+  PublicKey position_mint = 5;
+  PublicKey position_custody = 6;
+  PublicKey position_collateral_mint = 7;
+  PublicKey position_collateral_custody = 8;
+  PublicKey position_request_key = 9;
+  PublicKey position_request_mint = 10;
+  uint64 size_usd_delta = 11;
+  uint64 collateral_delta = 12;
+  optional uint64 price_slippage = 13;
+  optional uint64 jupiter_minimum_out = 14;
+  optional uint64 pre_swap_amount = 15;
+  uint32 request_change = 16;
+  int64 open_time = 17;
+  optional PublicKey referral = 18;
+}
+    
+message CreatePositionRequestEvent {
+  CreatePositionRequestEventAccounts accounts = 1;
+  CreatePositionRequestEventArgs args = 2;
+}
+    
+message InstantCreateTpslEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message InstantCreateTpslEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  uint32 position_side = 4;
+  PublicKey position_mint = 5;
+  PublicKey position_custody = 6;
+  PublicKey position_collateral_custody = 7;
+  PublicKey position_request_key = 8;
+  PublicKey position_request_mint = 9;
+  uint64 size_usd_delta = 10;
+  uint64 collateral_delta = 11;
+  bool entire_position = 12;
+  int64 open_time = 13;
+}
+    
+message InstantCreateTpslEvent {
+  InstantCreateTpslEventAccounts accounts = 1;
+  InstantCreateTpslEventArgs args = 2;
+}
+    
+message InstantUpdateTpslEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message InstantUpdateTpslEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  uint32 position_side = 4;
+  PublicKey position_mint = 5;
+  PublicKey position_custody = 6;
+  PublicKey position_collateral_custody = 7;
+  PublicKey position_request_key = 8;
+  PublicKey position_request_mint = 9;
+  uint64 size_usd_delta = 10;
+  uint64 collateral_delta = 11;
+  bool entire_position = 12;
+  int64 update_time = 13;
+}
+    
+message InstantUpdateTpslEvent {
+  InstantUpdateTpslEventAccounts accounts = 1;
+  InstantUpdateTpslEventArgs args = 2;
+}
+    
+message ClosePositionRequestEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message ClosePositionRequestEventArgs {
+  optional bool entire_position = 1;
+  bool executed = 2;
+  uint32 request_change = 3;
+  uint32 request_type = 4;
+  uint32 side = 5;
+  PublicKey position_request_key = 6;
+  PublicKey owner = 7;
+  PublicKey mint = 8;
+  uint64 amount = 9;
+  int64 open_time = 10;
+}
+    
+message ClosePositionRequestEvent {
+  ClosePositionRequestEventAccounts accounts = 1;
+  ClosePositionRequestEventArgs args = 2;
+}
+    
+message IncreasePositionEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message IncreasePositionEventArgs {
+  PublicKey position_key = 1;
+  uint32 position_side = 2;
+  PublicKey position_custody = 3;
+  PublicKey position_collateral_custody = 4;
+  uint64 position_size_usd = 5;
+  PublicKey position_mint = 6;
+  PublicKey position_request_key = 7;
+  PublicKey position_request_mint = 8;
+  uint32 position_request_change = 9;
+  uint32 position_request_type = 10;
+  uint64 position_request_collateral_delta = 11;
+  PublicKey owner = 12;
+  PublicKey pool = 13;
+  uint64 size_usd_delta = 14;
+  uint64 collateral_usd_delta = 15;
+  uint64 collateral_token_delta = 16;
+  uint64 price = 17;
+  optional uint64 price_slippage = 18;
+  uint64 fee_token = 19;
+  uint64 fee_usd = 20;
+  int64 open_time = 21;
+  optional PublicKey referral = 22;
+  uint64 position_fee_usd = 23;
+  uint64 funding_fee_usd = 24;
+  uint64 price_impact_fee_usd = 25;
+}
+    
+message IncreasePositionEvent {
+  IncreasePositionEventAccounts accounts = 1;
+  IncreasePositionEventArgs args = 2;
+}
+    
+message IncreasePositionPreSwapEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message IncreasePositionPreSwapEventArgs {
+  PublicKey position_request_key = 1;
+  uint64 transfer_amount = 2;
+  uint64 collateral_custody_pre_swap_amount = 3;
+}
+    
+message IncreasePositionPreSwapEvent {
+  IncreasePositionPreSwapEventAccounts accounts = 1;
+  IncreasePositionPreSwapEventArgs args = 2;
+}
+    
+message DecreasePositionEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message DecreasePositionEventArgs {
+  PublicKey position_key = 1;
+  uint32 position_side = 2;
+  PublicKey position_custody = 3;
+  PublicKey position_collateral_custody = 4;
+  uint64 position_size_usd = 5;
+  PublicKey position_mint = 6;
+  PublicKey position_request_key = 7;
+  PublicKey position_request_mint = 8;
+  uint32 position_request_change = 9;
+  uint32 position_request_type = 10;
+  bool has_profit = 11;
+  uint64 pnl_delta = 12;
+  PublicKey owner = 13;
+  PublicKey pool = 14;
+  uint64 size_usd_delta = 15;
+  uint64 transfer_amount_usd = 16;
+  optional uint64 transfer_token = 17;
+  uint64 price = 18;
+  optional uint64 price_slippage = 19;
+  uint64 fee_usd = 20;
+  int64 open_time = 21;
+  optional PublicKey referral = 22;
+  uint64 position_fee_usd = 23;
+  uint64 funding_fee_usd = 24;
+  uint64 price_impact_fee_usd = 25;
+  uint64 original_position_collateral_usd = 26;
+  uint64 position_collateral_usd = 27;
+  int64 position_open_time = 28;
+  uint64 position_price = 29;
+}
+    
+message DecreasePositionEvent {
+  DecreasePositionEventAccounts accounts = 1;
+  DecreasePositionEventArgs args = 2;
+}
+    
+message DecreasePositionPostSwapEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message DecreasePositionPostSwapEventArgs {
+  PublicKey position_request_key = 1;
+  uint64 swap_amount = 2;
+  optional uint64 jupiter_minimum_out = 3;
+}
+    
+message DecreasePositionPostSwapEvent {
+  DecreasePositionPostSwapEventAccounts accounts = 1;
+  DecreasePositionPostSwapEventArgs args = 2;
+}
+    
+message LiquidateFullPositionEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message LiquidateFullPositionEventArgs {
+  PublicKey position_key = 1;
+  uint32 position_side = 2;
+  PublicKey position_custody = 3;
+  PublicKey position_collateral_custody = 4;
+  PublicKey position_collateral_mint = 5;
+  PublicKey position_mint = 6;
+  uint64 position_size_usd = 7;
+  bool has_profit = 8;
+  uint64 pnl_delta = 9;
+  PublicKey owner = 10;
+  PublicKey pool = 11;
+  uint64 transfer_amount_usd = 12;
+  uint64 transfer_token = 13;
+  uint64 price = 14;
+  uint64 fee_usd = 15;
+  uint64 liquidation_fee_usd = 16;
+  int64 open_time = 17;
+  uint64 position_fee_usd = 18;
+  uint64 funding_fee_usd = 19;
+  uint64 price_impact_fee_usd = 20;
+  uint64 original_position_collateral_usd = 21;
+  uint64 position_collateral_usd = 22;
+  int64 position_open_time = 23;
+  uint64 position_price = 24;
+}
+    
+message LiquidateFullPositionEvent {
+  LiquidateFullPositionEventAccounts accounts = 1;
+  LiquidateFullPositionEventArgs args = 2;
+}
+    
+message PoolSwapEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message PoolSwapEventArgs {
+  PublicKey receiving_custody_key = 1;
+  PublicKey dispensing_custody_key = 2;
+  PublicKey pool_key = 3;
+  uint64 amount_in = 4;
+  uint64 amount_out = 5;
+  uint64 swap_usd_amount = 6;
+  uint64 amount_out_after_fees = 7;
+  uint64 fee_bps = 8;
+  PublicKey owner_key = 9;
+  PublicKey receiving_account_key = 10;
+}
+    
+message PoolSwapEvent {
+  PoolSwapEventAccounts accounts = 1;
+  PoolSwapEventArgs args = 2;
+}
+    
+message PoolSwapExactOutEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message PoolSwapExactOutEventArgs {
+  PublicKey receiving_custody_key = 1;
+  PublicKey dispensing_custody_key = 2;
+  PublicKey pool_key = 3;
+  uint64 amount_in = 4;
+  uint64 amount_in_after_fees = 5;
+  uint64 amount_out = 6;
+  uint64 swap_usd_amount = 7;
+  uint64 fee_bps = 8;
+  PublicKey owner_key = 9;
+  PublicKey receiving_account_key = 10;
+}
+    
+message PoolSwapExactOutEvent {
+  PoolSwapExactOutEventAccounts accounts = 1;
+  PoolSwapExactOutEventArgs args = 2;
+}
+    
+message AddLiquidityEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message AddLiquidityEventArgs {
+  PublicKey custody_key = 1;
+  PublicKey pool_key = 2;
+  uint64 token_amount_in = 3;
+  bytes pre_pool_amount_usd = 4;
+  uint64 token_amount_usd = 5;
+  uint64 fee_bps = 6;
+  uint64 token_amount_after_fee = 7;
+  uint64 mint_amount_usd = 8;
+  uint64 lp_amount = 9;
+  bytes post_pool_amount_usd = 10;
+}
+    
+message AddLiquidityEvent {
+  AddLiquidityEventAccounts accounts = 1;
+  AddLiquidityEventArgs args = 2;
+}
+    
+message RemoveLiquidityEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message RemoveLiquidityEventArgs {
+  PublicKey custody_key = 1;
+  PublicKey pool_key = 2;
+  uint64 lp_amount_in = 3;
+  uint64 remove_amount_usd = 4;
+  uint64 fee_bps = 5;
+  uint64 remove_token_amount = 6;
+  uint64 token_amount_after_fee = 7;
+  bytes post_pool_amount_usd = 8;
+}
+    
+message RemoveLiquidityEvent {
+  RemoveLiquidityEventAccounts accounts = 1;
+  RemoveLiquidityEventArgs args = 2;
+}
+    
+message InstantCreateLimitOrderEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message InstantCreateLimitOrderEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  uint32 position_side = 4;
+  PublicKey position_mint = 5;
+  PublicKey position_custody = 6;
+  PublicKey position_collateral_mint = 7;
+  PublicKey position_collateral_custody = 8;
+  PublicKey position_request_key = 9;
+  PublicKey position_request_mint = 10;
+  uint64 size_usd_delta = 11;
+  uint64 collateral_delta = 12;
+  int64 open_time = 13;
+}
+    
+message InstantCreateLimitOrderEvent {
+  InstantCreateLimitOrderEventAccounts accounts = 1;
+  InstantCreateLimitOrderEventArgs args = 2;
+}
+    
+message InstantIncreasePositionEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message InstantIncreasePositionEventArgs {
+  PublicKey position_key = 1;
+  uint32 position_side = 2;
+  PublicKey position_custody = 3;
+  PublicKey position_collateral_custody = 4;
+  uint64 position_size_usd = 5;
+  PublicKey position_mint = 6;
+  PublicKey owner = 7;
+  PublicKey pool = 8;
+  uint64 size_usd_delta = 9;
+  uint64 collateral_usd_delta = 10;
+  uint64 collateral_token_delta = 11;
+  uint64 price = 12;
+  uint64 price_slippage = 13;
+  uint64 fee_token = 14;
+  uint64 fee_usd = 15;
+  int64 open_time = 16;
+  optional PublicKey referral = 17;
+  uint64 position_fee_usd = 18;
+  uint64 funding_fee_usd = 19;
+  uint64 price_impact_fee_usd = 20;
+}
+    
+message InstantIncreasePositionEvent {
+  InstantIncreasePositionEventAccounts accounts = 1;
+  InstantIncreasePositionEventArgs args = 2;
+}
+    
+message InstantDecreasePositionEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message InstantDecreasePositionEventArgs {
+  PublicKey position_key = 1;
+  uint32 position_side = 2;
+  PublicKey position_custody = 3;
+  PublicKey position_collateral_custody = 4;
+  uint64 position_size_usd = 5;
+  PublicKey position_mint = 6;
+  PublicKey desired_mint = 7;
+  bool has_profit = 8;
+  uint64 pnl_delta = 9;
+  PublicKey owner = 10;
+  PublicKey pool = 11;
+  uint64 size_usd_delta = 12;
+  uint64 transfer_amount_usd = 13;
+  uint64 transfer_token = 14;
+  uint64 price = 15;
+  uint64 price_slippage = 16;
+  uint64 fee_usd = 17;
+  int64 open_time = 18;
+  optional PublicKey referral = 19;
+  uint64 position_fee_usd = 20;
+  uint64 funding_fee_usd = 21;
+  uint64 original_position_collateral_usd = 22;
+  uint64 position_collateral_usd = 23;
+  uint64 price_impact_fee_usd = 24;
+  int64 position_open_time = 25;
+  uint64 position_price = 26;
+  optional PublicKey position_request = 27;
+}
+    
+message InstantDecreasePositionEvent {
+  InstantDecreasePositionEventAccounts accounts = 1;
+  InstantDecreasePositionEventArgs args = 2;
+}
+    
+message DepositCollateralEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message DepositCollateralEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  PublicKey position_mint = 4;
+  PublicKey position_custody = 5;
+  uint64 deposit_amount = 6;
+  PublicKey user_token_account = 7;
+  int64 time = 8;
+}
+    
+message DepositCollateralEvent {
+  DepositCollateralEventAccounts accounts = 1;
+  DepositCollateralEventArgs args = 2;
+}
+    
+message WithdrawCollateralEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message WithdrawCollateralEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  PublicKey position_mint = 4;
+  PublicKey position_custody = 5;
+  uint64 withdraw_amount = 6;
+  PublicKey user_token_account = 7;
+  PublicKey custody = 8;
+  uint64 previous_collateral_amount = 9;
+  uint64 collateral_amount = 10;
+  uint64 collateral_amount_usd = 11;
+  uint64 margin_usd = 12;
+  int64 time = 13;
+}
+    
+message WithdrawCollateralEvent {
+  WithdrawCollateralEventAccounts accounts = 1;
+  WithdrawCollateralEventArgs args = 2;
+}
+    
+message BorrowFromCustodyEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message BorrowFromCustodyEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  PublicKey position_mint = 4;
+  PublicKey position_custody = 5;
+  uint64 size_custody_token = 6;
+  uint64 collateral_amount = 7;
+  uint64 collateral_amount_usd = 8;
+  uint64 margin_usd = 9;
+  int64 update_time = 10;
+}
+    
+message BorrowFromCustodyEvent {
+  BorrowFromCustodyEventAccounts accounts = 1;
+  BorrowFromCustodyEventArgs args = 2;
+}
+    
+message RepayToCustodyEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message RepayToCustodyEventArgs {
+  PublicKey owner = 1;
+  PublicKey pool = 2;
+  PublicKey position_key = 3;
+  PublicKey position_mint = 4;
+  PublicKey position_custody = 5;
+  uint64 size_custody_token = 6;
+  int64 update_time = 7;
+  bytes interest = 8;
+}
+    
+message RepayToCustodyEvent {
+  RepayToCustodyEventAccounts accounts = 1;
+  RepayToCustodyEventArgs args = 2;
+}
+    
+message LiquidateBorrowPositionEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message LiquidateBorrowPositionEventArgs {
+  PublicKey position_key = 1;
+  PublicKey position_custody = 2;
+  uint64 position_size_usd = 3;
+  PublicKey owner = 4;
+  PublicKey pool = 5;
+  uint64 collateral_locked_in_usd = 6;
+  uint64 collateral_locked_in_lp = 7;
+  uint64 remaining_collateral_in_lp = 8;
+  uint64 custody_token_price = 9;
+  uint64 total_borrows_in_usd = 10;
+  uint64 liquidation_fee_usd = 11;
+  int64 liquidation_time = 12;
+}
+    
+message LiquidateBorrowPositionEvent {
+  LiquidateBorrowPositionEventAccounts accounts = 1;
+  LiquidateBorrowPositionEventArgs args = 2;
+}
+    
+message RedeemStakeEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message RedeemStakeEventArgs {
+  PublicKey custody = 1;
+  PublicKey stake_account = 2;
+  PublicKey stake_info = 3;
+  uint64 stake_rewards = 4;
+  uint64 custody_total_staked_amount = 5;
+  uint64 current_staked_amount = 6;
+  uint64 total_staking_rewards = 7;
+  int64 redeem_time = 8;
+}
+    
+message RedeemStakeEvent {
+  RedeemStakeEventAccounts accounts = 1;
+  RedeemStakeEventArgs args = 2;
+}
+    
+message WithdrawStakeEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message WithdrawStakeEventArgs {
+  PublicKey custody = 1;
+  PublicKey stake_account = 2;
+  PublicKey stake_info = 3;
+  uint64 stake_rewards = 4;
+  uint64 custody_total_staked_amount = 5;
+  uint64 total_staking_rewards = 6;
+  uint64 withdraw_amount = 7;
+  int64 withdraw_time = 8;
+}
+    
+message WithdrawStakeEvent {
+  WithdrawStakeEventAccounts accounts = 1;
+  WithdrawStakeEventArgs args = 2;
+}
+    
+message DelegateStakeEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message DelegateStakeEventArgs {
+  PublicKey custody = 1;
+  PublicKey stake_account = 2;
+  PublicKey stake_info = 3;
+  uint64 custody_total_staked_amount = 4;
+  uint64 stake_amount = 5;
+  PublicKey validator_vote_account = 6;
+  int64 delegate_time = 7;
+}
+    
+message DelegateStakeEvent {
+  DelegateStakeEventAccounts accounts = 1;
+  DelegateStakeEventArgs args = 2;
+}
+    
+message WithdrawFeesEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message WithdrawFeesEventArgs {
+  PublicKey pool = 1;
+  PublicKey custody = 2;
+  PublicKey custody_mint = 3;
+  PublicKey receiving_token_account = 4;
+  uint64 total_trade_swap_fees = 5;
+  uint64 pool_trade_swap_fees = 6;
+  uint64 protocol_trade_swap_fees = 7;
+  uint64 total_borrow_lending_fees = 8;
+  uint64 pool_borrow_lending_fees = 9;
+  uint64 protocol_borrow_lending_fees = 10;
+  uint64 pool_total_fees_usd = 11;
+  uint64 apr_bps_before = 12;
+  uint64 apr_bps_after = 13;
+  int64 apr_bps_updated_at = 14;
+  uint64 pool_realized_fee_usd_before = 15;
+  uint64 pool_realized_fee_usd_after = 16;
+  int64 curtime = 17;
+}
+    
+message WithdrawFeesEvent {
+  WithdrawFeesEventAccounts accounts = 1;
+  WithdrawFeesEventArgs args = 2;
+}
+    
 message PerpetualsAccount {
   oneof account {
     BorrowPosition borrow_position = 1;
@@ -1865,6 +2492,35 @@ message PerpetualsAccount {
     Position position = 6;
     StakeInfo stake_info = 7;
     TokenLedger token_ledger = 8;
+  }
+}
+message AnchorLogEvent {
+  oneof event {
+    CreatePositionRequestEventArgs create_position_request_event = 1;
+    InstantCreateTpslEventArgs instant_create_tpsl_event = 2;
+    InstantUpdateTpslEventArgs instant_update_tpsl_event = 3;
+    ClosePositionRequestEventArgs close_position_request_event = 4;
+    IncreasePositionEventArgs increase_position_event = 5;
+    IncreasePositionPreSwapEventArgs increase_position_pre_swap_event = 6;
+    DecreasePositionEventArgs decrease_position_event = 7;
+    DecreasePositionPostSwapEventArgs decrease_position_post_swap_event = 8;
+    LiquidateFullPositionEventArgs liquidate_full_position_event = 9;
+    PoolSwapEventArgs pool_swap_event = 10;
+    PoolSwapExactOutEventArgs pool_swap_exact_out_event = 11;
+    AddLiquidityEventArgs add_liquidity_event = 12;
+    RemoveLiquidityEventArgs remove_liquidity_event = 13;
+    InstantCreateLimitOrderEventArgs instant_create_limit_order_event = 14;
+    InstantIncreasePositionEventArgs instant_increase_position_event = 15;
+    InstantDecreasePositionEventArgs instant_decrease_position_event = 16;
+    DepositCollateralEventArgs deposit_collateral_event = 17;
+    WithdrawCollateralEventArgs withdraw_collateral_event = 18;
+    BorrowFromCustodyEventArgs borrow_from_custody_event = 19;
+    RepayToCustodyEventArgs repay_to_custody_event = 20;
+    LiquidateBorrowPositionEventArgs liquidate_borrow_position_event = 21;
+    RedeemStakeEventArgs redeem_stake_event = 22;
+    WithdrawStakeEventArgs withdraw_stake_event = 23;
+    DelegateStakeEventArgs delegate_stake_event = 24;
+    WithdrawFeesEventArgs withdraw_fees_event = 25;
   }
 }
 message PriceImpactMechanism {
@@ -1980,5 +2636,32 @@ message Instructions {
     LiquidateBorrowPosition liquidate_borrow_position = 57;
     PartialLiquidateBorrowPosition partial_liquidate_borrow_position = 58;
     CloseBorrowPosition close_borrow_position = 59;
+    CreatePositionRequestEvent create_position_request_event = 60;
+    InstantCreateTpslEvent instant_create_tpsl_event = 61;
+    InstantUpdateTpslEvent instant_update_tpsl_event = 62;
+    ClosePositionRequestEvent close_position_request_event = 63;
+    IncreasePositionEvent increase_position_event = 64;
+    IncreasePositionPreSwapEvent increase_position_pre_swap_event = 65;
+    DecreasePositionEvent decrease_position_event = 66;
+    DecreasePositionPostSwapEvent decrease_position_post_swap_event = 67;
+    LiquidateFullPositionEvent liquidate_full_position_event = 68;
+    PoolSwapEvent pool_swap_event = 69;
+    PoolSwapExactOutEvent pool_swap_exact_out_event = 70;
+    AddLiquidityEvent add_liquidity_event = 71;
+    RemoveLiquidityEvent remove_liquidity_event = 72;
+    InstantCreateLimitOrderEvent instant_create_limit_order_event = 73;
+    InstantIncreasePositionEvent instant_increase_position_event = 74;
+    InstantDecreasePositionEvent instant_decrease_position_event = 75;
+    DepositCollateralEvent deposit_collateral_event = 76;
+    WithdrawCollateralEvent withdraw_collateral_event = 77;
+    BorrowFromCustodyEvent borrow_from_custody_event = 78;
+    RepayToCustodyEvent repay_to_custody_event = 79;
+    LiquidateBorrowPositionEvent liquidate_borrow_position_event = 80;
+    RedeemStakeEvent redeem_stake_event = 81;
+    WithdrawStakeEvent withdraw_stake_event = 82;
+    DelegateStakeEvent delegate_stake_event = 83;
+    WithdrawFeesEvent withdraw_fees_event = 84;
   }
+  repeated string raw_logs = 85;
+  repeated AnchorLogEvent anchor_log_events = 86;
 }

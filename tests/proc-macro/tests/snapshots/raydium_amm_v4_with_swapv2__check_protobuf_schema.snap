@@ -712,4 +712,5 @@ message Instructions {
     SwapBaseInV2 swap_base_in_v2 = 18;
     SwapBaseOutV2 swap_base_out_v2 = 19;
   }
+  repeated string raw_logs = 20;
 }
