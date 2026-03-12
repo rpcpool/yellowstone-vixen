@@ -60,7 +60,6 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
         quote! {}
     };
 
-
     quote! {
         pub mod #program_mod_ident {
             use yellowstone_vixen_parser::prelude::*;
@@ -554,4 +553,3 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
         }
     }
 }
-
