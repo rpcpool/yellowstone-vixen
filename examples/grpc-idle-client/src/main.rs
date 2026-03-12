@@ -129,9 +129,10 @@ impl Stats {
                 event = "slotStatus";
                 slot = Some(slot_update.slot);
 
-                let status = SlotStatus::try_from(slot_update.status)
-                    .map(|status| format!("{status:?}"))
-                    .unwrap_or_else(|_| format!("Unknown({})", slot_update.status));
+                let status = SlotStatus::try_from(slot_update.status).map_or_else(
+                    |_| format!("Unknown({})", slot_update.status),
+                    |slot_status| format!("{slot_status:?}"),
+                );
 
                 *self.slot_status_counts.entry(status.clone()).or_default() += 1;
                 if self.seen_slot_statuses.insert(status.clone()) {
@@ -169,47 +170,64 @@ impl Stats {
     }
 }
 
+fn duration_millis_u64(duration: Duration) -> u64 {
+    u64::try_from(duration.as_millis()).unwrap_or(u64::MAX)
+}
+
+fn update_event_name(update: &SubscribeUpdate) -> &'static str {
+    match update.update_oneof.as_ref() {
+        Some(UpdateOneof::Entry(_)) => "entries",
+        Some(UpdateOneof::BlockMeta(_)) => "blockMeta",
+        Some(UpdateOneof::Slot(_)) => "slotStatus",
+        Some(UpdateOneof::Transaction(_)) => "transactions",
+        Some(UpdateOneof::Ping(_)) => "ping",
+        Some(UpdateOneof::Pong(_)) => "pong",
+        Some(_) | None => "other",
+    }
+}
+
+#[allow(clippy::zero_sized_map_values)]
+fn filter_map<T>(name: &str, filter: T) -> HashMap<String, T> {
+    HashMap::from([(name.to_string(), filter)])
+}
+
+#[allow(clippy::zero_sized_map_values)]
+fn empty_filter_map<T>() -> HashMap<String, T> { HashMap::new() }
+
 fn build_subscribe_request(
     config: &YellowstoneGrpcConfig,
     subscription_profile: SubscriptionProfile,
 ) -> SubscribeRequest {
-    let slots = HashMap::from([(
-        "slotStatus".to_string(),
-        SubscribeRequestFilterSlots {
-            filter_by_commitment: None,
-            interslot_updates: Some(true),
-        },
-    )]);
+    let slots = filter_map("slotStatus", SubscribeRequestFilterSlots {
+        filter_by_commitment: None,
+        interslot_updates: Some(true),
+    });
 
     let (transactions, blocks_meta, entry) = match subscription_profile {
         SubscriptionProfile::Full => (
-            HashMap::from([(
-                "transactions".to_string(),
-                SubscribeRequestFilterTransactions {
-                    vote: None,
-                    failed: None,
-                    signature: None,
-                    account_include: vec![],
-                    account_exclude: vec![],
-                    account_required: vec![],
-                },
-            )]),
-            HashMap::from([(
-                "blockMeta".to_string(),
-                SubscribeRequestFilterBlocksMeta {},
-            )]),
-            HashMap::from([("entries".to_string(), SubscribeRequestFilterEntry {})]),
+            filter_map("transactions", SubscribeRequestFilterTransactions {
+                vote: None,
+                failed: None,
+                signature: None,
+                account_include: vec![],
+                account_exclude: vec![],
+                account_required: vec![],
+            }),
+            filter_map("blockMeta", SubscribeRequestFilterBlocksMeta {}),
+            filter_map("entries", SubscribeRequestFilterEntry {}),
         ),
-        SubscriptionProfile::SlotUpdatesOnly => (HashMap::new(), HashMap::new(), HashMap::new()),
+        SubscriptionProfile::SlotUpdatesOnly => {
+            (empty_filter_map(), empty_filter_map(), empty_filter_map())
+        },
     };
 
     SubscribeRequest {
-        accounts: HashMap::new(),
+        accounts: empty_filter_map(),
         // Keep slot lifecycle events unfiltered so idle diagnosis sees intra-slot transitions.
         slots,
         transactions,
-        transactions_status: HashMap::new(),
-        blocks: HashMap::new(),
+        transactions_status: empty_filter_map(),
+        blocks: empty_filter_map(),
         blocks_meta,
         entry,
         commitment: config.commitment_level.map(|level| level as i32),
@@ -232,6 +250,51 @@ fn log_summary(stats: &Stats) {
         last_seen_slot = ?stats.last_seen_slot,
         slot_status_counts = ?stats.slot_status_counts,
         "stream summary"
+    );
+}
+
+async fn probe_version(
+    client: &mut GeyserGrpcClient<impl yellowstone_grpc_client::Interceptor + Clone>,
+    attempt: u64,
+    config: &YellowstoneGrpcConfig,
+) {
+    match client.get_version().await {
+        Ok(response) => tracing::info!(
+            attempt,
+            endpoint = %config.endpoint,
+            version = %response.version,
+            "connected to gRPC endpoint"
+        ),
+        Err(error) => tracing::warn!(
+            attempt,
+            endpoint = %config.endpoint,
+            error = %error,
+            "connected to gRPC endpoint but version probe failed"
+        ),
+    }
+}
+
+fn log_subscription_request(
+    attempt: u64,
+    config: &YellowstoneGrpcConfig,
+    subscribe_request: &SubscribeRequest,
+    subscription_profile: SubscriptionProfile,
+    idle_warn_secs: u64,
+    log_every: u64,
+) {
+    tracing::info!(
+        attempt,
+        endpoint = %config.endpoint,
+        subscription_profile = ?subscription_profile,
+        has_entries = !subscribe_request.entry.is_empty(),
+        has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
+        has_slots = !subscribe_request.slots.is_empty(),
+        has_transactions = !subscribe_request.transactions.is_empty(),
+        from_slot = ?subscribe_request.from_slot,
+        commitment = ?subscribe_request.commitment,
+        idle_warn_secs,
+        log_every,
+        "subscribing to gRPC stream"
     );
 }
 
@@ -281,6 +344,207 @@ fn startup_window_status(
     }
 }
 
+#[derive(Debug)]
+struct AttemptState {
+    stats: Stats,
+    last_update_at: Instant,
+    idle_since: Option<Instant>,
+    total_updates_at_idle_warn: Option<u64>,
+    startup_idle_observed: bool,
+    attempt_started_at: Instant,
+}
+
+impl AttemptState {
+    fn new() -> Self {
+        Self {
+            stats: Stats::default(),
+            last_update_at: Instant::now(),
+            idle_since: None,
+            total_updates_at_idle_warn: None,
+            startup_idle_observed: false,
+            attempt_started_at: Instant::now(),
+        }
+    }
+
+    fn subscription_age(&self) -> Duration { self.attempt_started_at.elapsed() }
+
+    fn idle_for(&self) -> Duration { self.last_update_at.elapsed() }
+
+    fn total_idle_ms(&self) -> u64 { duration_millis_u64(self.idle_for()) }
+}
+
+fn handle_idle_tick(
+    state: &mut AttemptState,
+    attempt: u64,
+    idle_warn_secs: u64,
+    mode: Mode,
+    subscription_idle_window: Option<Duration>,
+) -> Option<AttemptOutcome> {
+    let subscription_age = state.subscription_age();
+    let idle_for = state.idle_for();
+
+    if idle_warn_secs > 0
+        && state.idle_since.is_none()
+        && idle_for >= Duration::from_secs(idle_warn_secs)
+    {
+        state.idle_since = Some(Instant::now());
+        state.total_updates_at_idle_warn = Some(state.stats.total);
+
+        let subscription_age_ms = duration_millis_u64(subscription_age);
+        tracing::warn!(
+            attempt,
+            subscription_age_ms,
+            idle_for_ms = duration_millis_u64(idle_for),
+            idle_for_secs = idle_for.as_secs(),
+            last_seen_slot = ?state.stats.last_seen_slot,
+            total_updates = state.stats.total,
+            "stream idle"
+        );
+
+        if mode == Mode::SubscriptionIdle && !state.startup_idle_observed {
+            match startup_window_status(subscription_age, subscription_idle_window) {
+                StartupWindowStatus::Open => {
+                    state.startup_idle_observed = true;
+                    tracing::warn!(
+                        attempt,
+                        subscription_age_ms,
+                        total_updates = state.stats.total,
+                        "subscription went idle during startup window; staying on this stream"
+                    );
+                },
+                StartupWindowStatus::Elapsed => {
+                    tracing::warn!(
+                        attempt,
+                        subscription_age_ms,
+                        total_updates = state.stats.total,
+                        "subscription went idle after startup window; retrying with a fresh \
+                         subscription"
+                    );
+                    return Some(AttemptOutcome::Retry);
+                },
+                StartupWindowStatus::Disabled => {},
+            }
+        }
+    }
+
+    if mode == Mode::SubscriptionIdle
+        && !state.startup_idle_observed
+        && state.idle_since.is_none()
+        && matches!(
+            startup_window_status(subscription_age, subscription_idle_window),
+            StartupWindowStatus::Elapsed
+        )
+    {
+        tracing::warn!(
+            attempt,
+            subscription_age_ms = duration_millis_u64(subscription_age),
+            total_updates = state.stats.total,
+            "subscription did not go idle during startup window; retrying with a fresh \
+             subscription"
+        );
+        return Some(AttemptOutcome::Retry);
+    }
+
+    None
+}
+
+fn handle_first_update_after_startup_idle(
+    state: &mut AttemptState,
+    attempt: u64,
+    idle_warn_secs: u64,
+    mode: Mode,
+    subscription_idle_window: Option<Duration>,
+    update: &SubscribeUpdate,
+) -> Option<AttemptOutcome> {
+    if mode != Mode::SubscriptionIdle
+        || state.startup_idle_observed
+        || idle_warn_secs == 0
+        || state.stats.total != 0
+    {
+        return None;
+    }
+
+    let idle_warn_ms = duration_millis_u64(Duration::from_secs(idle_warn_secs));
+    let total_idle_ms = state.total_idle_ms();
+    if total_idle_ms < idle_warn_ms {
+        return None;
+    }
+
+    match startup_window_status(state.subscription_age(), subscription_idle_window) {
+        StartupWindowStatus::Open => {
+            state.startup_idle_observed = true;
+            tracing::warn!(
+                attempt,
+                startup_idle_ms = total_idle_ms,
+                startup_idle_secs = total_idle_ms / 1000,
+                first_event = update_event_name(update),
+                "subscription was idle before first update; staying on this stream"
+            );
+            None
+        },
+        StartupWindowStatus::Elapsed => {
+            tracing::warn!(
+                attempt,
+                startup_idle_ms = total_idle_ms,
+                startup_idle_secs = total_idle_ms / 1000,
+                first_event = update_event_name(update),
+                "subscription was idle before first update, but after startup window; retrying \
+                 with a fresh subscription"
+            );
+            Some(AttemptOutcome::Retry)
+        },
+        StartupWindowStatus::Disabled => None,
+    }
+}
+
+fn record_update(state: &mut AttemptState, attempt: u64, update: &SubscribeUpdate, log_every: u64) {
+    let previous_slot = state.stats.last_seen_slot;
+    let total_idle_ms = state.total_idle_ms();
+    let observation = state.stats.record(update);
+
+    if let Some(started_at) = state.idle_since.take() {
+        let total_updates_at_idle_warn = state.total_updates_at_idle_warn.take();
+        tracing::warn!(
+            attempt,
+            total_idle_ms,
+            post_warn_idle_ms = duration_millis_u64(started_at.elapsed()),
+            previous_slot = ?previous_slot,
+            resume_event_slot = ?observation.slot,
+            slots_elapsed = ?previous_slot
+                .zip(observation.slot)
+                .map(|(previous, current)| current.saturating_sub(previous)),
+            total_updates = state.stats.total,
+            total_updates_at_idle_warn = ?total_updates_at_idle_warn,
+            "stream resumed"
+        );
+    }
+
+    state.last_update_at = Instant::now();
+
+    if observation.first_event {
+        tracing::debug!(
+            attempt,
+            event = observation.event,
+            slot = ?observation.slot,
+            filters = ?update.filters,
+            "received first update for event type"
+        );
+    }
+
+    if let Some(status) = observation.first_slot_status {
+        tracing::debug!(
+            attempt,
+            slot = ?observation.slot,
+            slot_status = %status,
+            "received first update for slot status"
+        );
+    }
+
+    if state.stats.total == 1 || state.stats.total.is_multiple_of(log_every.max(1)) {
+        log_summary(&state.stats);
+    }
+}
+
 async fn run_subscription_attempt(
     config: &YellowstoneGrpcConfig,
     idle_warn_secs: u64,
@@ -290,53 +554,27 @@ async fn run_subscription_attempt(
     attempt: u64,
     subscription_idle_window: Option<Duration>,
 ) -> Result<AttemptOutcome, DynError> {
-    let mut client = connect_client(&config).await?;
+    let mut client = connect_client(config).await?;
+    probe_version(&mut client, attempt, config).await;
 
-    match client.get_version().await {
-        Ok(response) => tracing::info!(
-            attempt,
-            endpoint = %config.endpoint,
-            version = %response.version,
-            "connected to gRPC endpoint"
-        ),
-        Err(error) => tracing::warn!(
-            attempt,
-            endpoint = %config.endpoint,
-            error = %error,
-            "connected to gRPC endpoint but version probe failed"
-        ),
-    }
-
-    let subscribe_request = build_subscribe_request(&config, subscription_profile);
-
-    tracing::info!(
+    let subscribe_request = build_subscribe_request(config, subscription_profile);
+    log_subscription_request(
         attempt,
-        endpoint = %config.endpoint,
-        subscription_profile = ?subscription_profile,
-        has_entries = !subscribe_request.entry.is_empty(),
-        has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
-        has_slots = !subscribe_request.slots.is_empty(),
-        has_transactions = !subscribe_request.transactions.is_empty(),
-        from_slot = ?subscribe_request.from_slot,
-        commitment = ?subscribe_request.commitment,
+        config,
+        &subscribe_request,
+        subscription_profile,
         idle_warn_secs,
         log_every,
-        "subscribing to gRPC stream"
     );
 
     let (_subscribe_tx, stream) = client
         .subscribe_with_request(Some(subscribe_request))
         .await?;
     let mut stream = Box::pin(stream);
-    let mut stats = Stats::default();
+    let mut state = AttemptState::new();
     let mut shutdown = std::pin::pin!(tokio::signal::ctrl_c());
     let mut idle_tick = tokio::time::interval(Duration::from_secs(1));
     idle_tick.set_missed_tick_behavior(MissedTickBehavior::Delay);
-    let mut last_update_at = Instant::now();
-    let mut idle_since: Option<Instant> = None;
-    let mut total_updates_at_idle_warn: Option<u64> = None;
-    let mut startup_idle_observed = false;
-    let attempt_started_at = Instant::now();
 
     let outcome = loop {
         tokio::select! {
@@ -345,171 +583,40 @@ async fn run_subscription_attempt(
                 break AttemptOutcome::Finished;
             },
             _ = idle_tick.tick() => {
-                let subscription_age = attempt_started_at.elapsed();
-
-                if idle_warn_secs > 0
-                    && idle_since.is_none()
-                    && last_update_at.elapsed() >= Duration::from_secs(idle_warn_secs)
-                {
-                    idle_since = Some(Instant::now());
-                    total_updates_at_idle_warn = Some(stats.total);
-                    let subscription_age_ms = subscription_age.as_millis() as u64;
-                    tracing::warn!(
-                        attempt,
-                        subscription_age_ms,
-                        idle_for_ms = last_update_at.elapsed().as_millis() as u64,
-                        idle_for_secs = last_update_at.elapsed().as_secs(),
-                        last_seen_slot = ?stats.last_seen_slot,
-                        total_updates = stats.total,
-                        "stream idle"
-                    );
-
-                    if mode == Mode::SubscriptionIdle && !startup_idle_observed {
-                        match startup_window_status(subscription_age, subscription_idle_window) {
-                            StartupWindowStatus::Open => {
-                                startup_idle_observed = true;
-                                tracing::warn!(
-                                    attempt,
-                                    subscription_age_ms,
-                                    total_updates = stats.total,
-                                    "subscription went idle during startup window; staying on this stream"
-                                );
-                            },
-                            StartupWindowStatus::Elapsed => {
-                                tracing::warn!(
-                                    attempt,
-                                    subscription_age_ms,
-                                    total_updates = stats.total,
-                                    "subscription went idle after startup window; retrying with a fresh subscription"
-                                );
-                                break AttemptOutcome::Retry;
-                            },
-                            StartupWindowStatus::Disabled => {},
-                        }
-                    }
-                }
-
-                if mode == Mode::SubscriptionIdle
-                    && !startup_idle_observed
-                    && idle_since.is_none()
-                    && matches!(
-                        startup_window_status(subscription_age, subscription_idle_window),
-                        StartupWindowStatus::Elapsed
-                    )
-                {
-                    tracing::warn!(
-                        attempt,
-                        subscription_age_ms = subscription_age.as_millis() as u64,
-                        total_updates = stats.total,
-                        "subscription did not go idle during startup window; retrying with a fresh subscription"
-                    );
-                    break AttemptOutcome::Retry;
+                if let Some(outcome) = handle_idle_tick(
+                    &mut state,
+                    attempt,
+                    idle_warn_secs,
+                    mode,
+                    subscription_idle_window,
+                ) {
+                    break outcome;
                 }
             },
             maybe_update = stream.next() => {
                 match maybe_update {
                     Some(Ok(update)) => {
-                        let subscription_age = attempt_started_at.elapsed();
-                        let previous_slot = stats.last_seen_slot;
-                        let total_idle_ms = last_update_at.elapsed().as_millis() as u64;
-                        let is_first_update = stats.total == 0;
-
-                        if mode == Mode::SubscriptionIdle
-                            && is_first_update
-                            && !startup_idle_observed
-                            && idle_warn_secs > 0
-                            && total_idle_ms >= Duration::from_secs(idle_warn_secs).as_millis() as u64
-                        {
-                            match startup_window_status(subscription_age, subscription_idle_window) {
-                                StartupWindowStatus::Open => {
-                                    startup_idle_observed = true;
-                                    tracing::warn!(
-                                        attempt,
-                                        startup_idle_ms = total_idle_ms,
-                                        startup_idle_secs = total_idle_ms / 1000,
-                                        first_event = match update.update_oneof.as_ref() {
-                                            Some(UpdateOneof::Entry(_)) => "entries",
-                                            Some(UpdateOneof::BlockMeta(_)) => "blockMeta",
-                                            Some(UpdateOneof::Slot(_)) => "slotStatus",
-                                            Some(UpdateOneof::Transaction(_)) => "transactions",
-                                            Some(UpdateOneof::Ping(_)) => "ping",
-                                            Some(UpdateOneof::Pong(_)) => "pong",
-                                            Some(_) | None => "other",
-                                        },
-                                        "subscription was idle before first update; staying on this stream"
-                                    );
-                                },
-                                StartupWindowStatus::Elapsed => {
-                                    tracing::warn!(
-                                        attempt,
-                                        startup_idle_ms = total_idle_ms,
-                                        startup_idle_secs = total_idle_ms / 1000,
-                                        first_event = match update.update_oneof.as_ref() {
-                                            Some(UpdateOneof::Entry(_)) => "entries",
-                                            Some(UpdateOneof::BlockMeta(_)) => "blockMeta",
-                                            Some(UpdateOneof::Slot(_)) => "slotStatus",
-                                            Some(UpdateOneof::Transaction(_)) => "transactions",
-                                            Some(UpdateOneof::Ping(_)) => "ping",
-                                            Some(UpdateOneof::Pong(_)) => "pong",
-                                            Some(_) | None => "other",
-                                        },
-                                        "subscription was idle before first update, but after startup window; retrying with a fresh subscription"
-                                    );
-                                    break AttemptOutcome::Retry;
-                                },
-                                StartupWindowStatus::Disabled => {},
-                            }
+                        if let Some(outcome) = handle_first_update_after_startup_idle(
+                            &mut state,
+                            attempt,
+                            idle_warn_secs,
+                            mode,
+                            subscription_idle_window,
+                            &update,
+                        ) {
+                            break outcome;
                         }
 
-                        let observation = stats.record(&update);
-
-                        if let Some(started_at) = idle_since.take() {
-                            let total_updates_at_idle_warn = total_updates_at_idle_warn.take();
-                            tracing::warn!(
-                                attempt,
-                                total_idle_ms,
-                                post_warn_idle_ms = started_at.elapsed().as_millis() as u64,
-                                previous_slot = ?previous_slot,
-                                resume_event_slot = ?observation.slot,
-                                slots_elapsed = ?previous_slot
-                                    .zip(observation.slot)
-                                    .map(|(previous, current)| current.saturating_sub(previous)),
-                                total_updates = stats.total,
-                                total_updates_at_idle_warn = ?total_updates_at_idle_warn,
-                                "stream resumed"
-                            );
-                        }
-                        last_update_at = Instant::now();
-                        if observation.first_event {
-                            tracing::debug!(
-                                attempt,
-                                event = observation.event,
-                                slot = ?observation.slot,
-                                filters = ?update.filters,
-                                "received first update for event type"
-                            );
-                        }
-                        if let Some(status) = observation.first_slot_status {
-                            tracing::debug!(
-                                attempt,
-                                slot = ?observation.slot,
-                                slot_status = %status,
-                                "received first update for slot status"
-                            );
-                        }
-
-                        if stats.total == 1 || stats.total % log_every.max(1) == 0 {
-                            log_summary(&stats);
-                        }
+                        record_update(&mut state, attempt, &update, log_every);
                     },
-                    Some(Err(status)) => {
+                    Some(Err(grpc_status)) => {
                         tracing::error!(
                             attempt,
-                            code = ?status.code(),
-                            message = %status.message(),
+                            code = ?grpc_status.code(),
+                            message = %grpc_status.message(),
                             "gRPC stream returned an error"
                         );
-                        return Err(status.into());
+                        return Err(grpc_status.into());
                     },
                     None => {
                         tracing::warn!(attempt, "gRPC stream ended");
@@ -520,7 +627,7 @@ async fn run_subscription_attempt(
         }
     };
 
-    log_summary(&stats);
+    log_summary(&state.stats);
 
     Ok(outcome)
 }
@@ -596,7 +703,7 @@ async fn main() -> Result<(), DynError> {
 
                 if resubscribe_delay_ms > 0 {
                     tokio::select! {
-                        _ = tokio::time::sleep(Duration::from_millis(resubscribe_delay_ms)) => {},
+                        () = tokio::time::sleep(Duration::from_millis(resubscribe_delay_ms)) => {},
                         _ = tokio::signal::ctrl_c() => break,
                     }
                 }
@@ -611,11 +718,13 @@ async fn main() -> Result<(), DynError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        StartupWindowStatus, SubscriptionProfile, build_subscribe_request, startup_window_status,
-    };
     use std::time::Duration;
+
     use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
+
+    use super::{
+        build_subscribe_request, startup_window_status, StartupWindowStatus, SubscriptionProfile,
+    };
 
     fn config() -> YellowstoneGrpcConfig {
         YellowstoneGrpcConfig {
