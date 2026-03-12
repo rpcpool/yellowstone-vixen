@@ -26,7 +26,6 @@ edition.workspace = true
 # These must be [dependencies], not [dev-dependencies], because resolver v2
 # does not unify dev-dependency features during `cargo check --workspace`.
 [dependencies]
-solana-pubkey = { workspace = true }
 yellowstone-vixen-spl-token-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
     "proto",
@@ -35,6 +34,8 @@ yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
 
 [dev-dependencies]
+solana-pubkey = { workspace = true }
+
 yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
 yellowstone-vixen-mock = { workspace = true }
 
