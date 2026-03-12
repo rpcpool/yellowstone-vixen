@@ -162,6 +162,7 @@ impl Stats {
 fn build_subscribe_request(config: &YellowstoneGrpcConfig) -> SubscribeRequest {
     SubscribeRequest {
         accounts: HashMap::new(),
+        // Keep slot lifecycle events unfiltered so idle diagnosis sees intra-slot transitions.
         slots: HashMap::from([("slotStatus".to_string(), SubscribeRequestFilterSlots {
             filter_by_commitment: None,
             interslot_updates: Some(true),
@@ -218,6 +219,10 @@ async fn connect_client(
         .accept_compressed(config.accept_compression.unwrap_or_default().into())
         .connect_timeout(timeout)
         .timeout(timeout)
+        .http2_keep_alive_interval(Duration::from_secs(10))  // send HTTP/2 PING every 10s
+        .keep_alive_timeout(Duration::from_secs(20))          // fail if no PING ACK within 20s
+        .keep_alive_while_idle(true)                           // ping even when no RPCs in-flight
+        .tcp_keepalive(Some(Duration::from_secs(15)))          // OS-level TCP keepalive too
         .tls_config(ClientTlsConfig::new().with_native_roots())?
         .connect()
         .await?;
@@ -229,6 +234,24 @@ async fn connect_client(
 enum AttemptOutcome {
     Finished,
     Retry,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StartupWindowStatus {
+    Open,
+    Elapsed,
+    Disabled,
+}
+
+fn startup_window_status(
+    subscription_age: Duration,
+    subscription_idle_window: Option<Duration>,
+) -> StartupWindowStatus {
+    match subscription_idle_window {
+        Some(window) if subscription_age <= window => StartupWindowStatus::Open,
+        Some(_) => StartupWindowStatus::Elapsed,
+        None => StartupWindowStatus::Disabled,
+    }
 }
 
 async fn run_subscription_attempt(
@@ -289,13 +312,15 @@ async fn run_subscription_attempt(
                 break AttemptOutcome::Finished;
             },
             _ = idle_tick.tick() => {
+                let subscription_age = attempt_started_at.elapsed();
+
                 if idle_warn_secs > 0
                     && idle_since.is_none()
                     && last_update_at.elapsed() >= Duration::from_secs(idle_warn_secs)
                 {
                     idle_since = Some(Instant::now());
                     total_updates_at_idle_warn = Some(stats.total);
-                    let subscription_age_ms = attempt_started_at.elapsed().as_millis() as u64;
+                    let subscription_age_ms = subscription_age.as_millis() as u64;
                     tracing::warn!(
                         attempt,
                         subscription_age_ms,
@@ -306,30 +331,42 @@ async fn run_subscription_attempt(
                         "stream idle"
                     );
 
-                    if mode == Mode::SubscriptionIdle
-                        && !startup_idle_observed
-                        && subscription_idle_window
-                            .is_some_and(|window| attempt_started_at.elapsed() <= window)
-                    {
-                        startup_idle_observed = true;
-                        tracing::warn!(
-                            attempt,
-                            subscription_age_ms,
-                            total_updates = stats.total,
-                            "subscription went idle during startup window; staying on this stream"
-                        );
+                    if mode == Mode::SubscriptionIdle && !startup_idle_observed {
+                        match startup_window_status(subscription_age, subscription_idle_window) {
+                            StartupWindowStatus::Open => {
+                                startup_idle_observed = true;
+                                tracing::warn!(
+                                    attempt,
+                                    subscription_age_ms,
+                                    total_updates = stats.total,
+                                    "subscription went idle during startup window; staying on this stream"
+                                );
+                            },
+                            StartupWindowStatus::Elapsed => {
+                                tracing::warn!(
+                                    attempt,
+                                    subscription_age_ms,
+                                    total_updates = stats.total,
+                                    "subscription went idle after startup window; retrying with a fresh subscription"
+                                );
+                                break AttemptOutcome::Retry;
+                            },
+                            StartupWindowStatus::Disabled => {},
+                        }
                     }
                 }
 
                 if mode == Mode::SubscriptionIdle
                     && !startup_idle_observed
                     && idle_since.is_none()
-                    && subscription_idle_window
-                        .is_some_and(|window| attempt_started_at.elapsed() >= window)
+                    && matches!(
+                        startup_window_status(subscription_age, subscription_idle_window),
+                        StartupWindowStatus::Elapsed
+                    )
                 {
                     tracing::warn!(
                         attempt,
-                        subscription_age_ms = attempt_started_at.elapsed().as_millis() as u64,
+                        subscription_age_ms = subscription_age.as_millis() as u64,
                         total_updates = stats.total,
                         "subscription did not go idle during startup window; retrying with a fresh subscription"
                     );
@@ -339,6 +376,7 @@ async fn run_subscription_attempt(
             maybe_update = stream.next() => {
                 match maybe_update {
                     Some(Ok(update)) => {
+                        let subscription_age = attempt_started_at.elapsed();
                         let previous_slot = stats.last_seen_slot;
                         let total_idle_ms = last_update_at.elapsed().as_millis() as u64;
                         let is_first_update = stats.total == 0;
@@ -349,22 +387,45 @@ async fn run_subscription_attempt(
                             && idle_warn_secs > 0
                             && total_idle_ms >= Duration::from_secs(idle_warn_secs).as_millis() as u64
                         {
-                            startup_idle_observed = true;
-                            tracing::warn!(
-                                attempt,
-                                startup_idle_ms = total_idle_ms,
-                                startup_idle_secs = total_idle_ms / 1000,
-                                first_event = match update.update_oneof.as_ref() {
-                                    Some(UpdateOneof::Entry(_)) => "entries",
-                                    Some(UpdateOneof::BlockMeta(_)) => "blockMeta",
-                                    Some(UpdateOneof::Slot(_)) => "slotStatus",
-                                    Some(UpdateOneof::Transaction(_)) => "transactions",
-                                    Some(UpdateOneof::Ping(_)) => "ping",
-                                    Some(UpdateOneof::Pong(_)) => "pong",
-                                    Some(_) | None => "other",
+                            match startup_window_status(subscription_age, subscription_idle_window) {
+                                StartupWindowStatus::Open => {
+                                    startup_idle_observed = true;
+                                    tracing::warn!(
+                                        attempt,
+                                        startup_idle_ms = total_idle_ms,
+                                        startup_idle_secs = total_idle_ms / 1000,
+                                        first_event = match update.update_oneof.as_ref() {
+                                            Some(UpdateOneof::Entry(_)) => "entries",
+                                            Some(UpdateOneof::BlockMeta(_)) => "blockMeta",
+                                            Some(UpdateOneof::Slot(_)) => "slotStatus",
+                                            Some(UpdateOneof::Transaction(_)) => "transactions",
+                                            Some(UpdateOneof::Ping(_)) => "ping",
+                                            Some(UpdateOneof::Pong(_)) => "pong",
+                                            Some(_) | None => "other",
+                                        },
+                                        "subscription was idle before first update; staying on this stream"
+                                    );
                                 },
-                                "subscription was idle before first update; staying on this stream"
-                            );
+                                StartupWindowStatus::Elapsed => {
+                                    tracing::warn!(
+                                        attempt,
+                                        startup_idle_ms = total_idle_ms,
+                                        startup_idle_secs = total_idle_ms / 1000,
+                                        first_event = match update.update_oneof.as_ref() {
+                                            Some(UpdateOneof::Entry(_)) => "entries",
+                                            Some(UpdateOneof::BlockMeta(_)) => "blockMeta",
+                                            Some(UpdateOneof::Slot(_)) => "slotStatus",
+                                            Some(UpdateOneof::Transaction(_)) => "transactions",
+                                            Some(UpdateOneof::Ping(_)) => "ping",
+                                            Some(UpdateOneof::Pong(_)) => "pong",
+                                            Some(_) | None => "other",
+                                        },
+                                        "subscription was idle before first update, but after startup window; retrying with a fresh subscription"
+                                    );
+                                    break AttemptOutcome::Retry;
+                                },
+                                StartupWindowStatus::Disabled => {},
+                            }
                         }
 
                         let observation = stats.record(&update);
@@ -511,4 +572,26 @@ async fn main() -> Result<(), DynError> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{StartupWindowStatus, startup_window_status};
+    use std::time::Duration;
+
+    #[test]
+    fn startup_window_is_open_before_deadline() {
+        assert_eq!(
+            startup_window_status(Duration::from_secs(4), Some(Duration::from_secs(5))),
+            StartupWindowStatus::Open
+        );
+    }
+
+    #[test]
+    fn startup_window_expires_after_deadline() {
+        assert_eq!(
+            startup_window_status(Duration::from_secs(6), Some(Duration::from_secs(5))),
+            StartupWindowStatus::Elapsed
+        );
+    }
 }

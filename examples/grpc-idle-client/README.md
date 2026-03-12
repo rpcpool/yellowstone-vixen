@@ -34,7 +34,10 @@ timeout = 60
 ```
 
 Optional `commitment-level`, `from-slot`, `max-decoding-message-size`, and
-`accept-compression` fields are also honored.
+`accept-compression` fields are also honored for the overall request.
+
+`slotStatus` updates remain intentionally unfiltered with
+`filter_by_commitment = None` so intra-slot lifecycle transitions are always visible.
 
 ## Run
 
