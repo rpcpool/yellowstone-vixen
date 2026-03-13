@@ -388,21 +388,21 @@ pub type Pubkey = KeyBytes<32>;
 
 /// Protobuf wrapper for a 32-byte public key.
 ///
-/// This struct wraps raw public key bytes for protobuf serialization.  When the
-/// `proto` feature is enabled it derives [`prost::Message`] so it can be used
-/// as a nested message field (`message PublicKey { bytes value = 1; }`).
+/// This struct wraps raw public key bytes for protobuf serialization.
+/// It derives [`prost::Message`] so it can be used as a nested message field
+/// (`message PublicKey { bytes value = 1; }`).
 ///
 /// Generated code uses [`Pubkey`] in struct fields and converts to/from this
 /// wrapper at proto encode/decode time.
-#[derive(Clone, PartialEq)]
-#[cfg_attr(feature = "proto", derive(::prost::Message))]
-#[cfg_attr(not(feature = "proto"), derive(Debug, Default))]
+#[cfg(feature = "proto")]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PublicKeyProtoWrapper {
     /// The raw bytes of the public key.
-    #[cfg_attr(feature = "proto", prost(bytes = "vec", tag = "1"))]
+    #[prost(bytes = "vec", tag = "1")]
     pub value: Vec<u8>,
 }
 
+#[cfg(feature = "proto")]
 impl PublicKeyProtoWrapper {
     /// Creates a new `PublicKeyProtoWrapper` from any type convertible to `Vec<u8>`.
     pub fn new(value: impl Into<Vec<u8>>) -> Self {
@@ -535,17 +535,14 @@ impl<const LEN: usize> BorshDeserialize for KeyBytes<LEN> {
     }
 }
 
-/// Manual `prost::Message` impl for `KeyBytes<N>`.
+/// `prost::Message` impl for [`Pubkey`] (`KeyBytes<32>`).
 ///
-/// Encodes as a nested message with a single `bytes value = 1;` field,
-/// wire-compatible with the `PublicKey` proto message
-/// (`message PublicKey { bytes value = 1; }`).
+/// Delegates to [`PublicKeyProtoWrapper`] so there is a single source of truth
+/// for the `message PublicKey { bytes value = 1; }` wire format.
 #[cfg(feature = "proto")]
-impl<const LEN: usize> ::prost::Message for KeyBytes<LEN> {
+impl ::prost::Message for KeyBytes<32> {
     fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
-        if self.0.iter().any(|&b| b != 0) {
-            ::prost::encoding::bytes::encode(1, &self.0.as_slice().to_vec(), buf);
-        }
+        PublicKeyProtoWrapper::new(self.0).encode_raw(buf);
     }
 
     fn merge_field(
@@ -555,35 +552,28 @@ impl<const LEN: usize> ::prost::Message for KeyBytes<LEN> {
         buf: &mut impl ::prost::bytes::Buf,
         ctx: ::prost::encoding::DecodeContext,
     ) -> ::core::result::Result<(), ::prost::DecodeError> {
-        match tag {
-            1 => {
-                let mut tmp: Vec<u8> = Vec::new();
+        let mut wrapper = PublicKeyProtoWrapper::new(self.0);
 
-                ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)?;
+        wrapper.merge_field(tag, wire_type, buf, ctx)?;
 
-                if tmp.len() != LEN {
-                    return Err(::prost::DecodeError::new(format!(
-                        "expected exactly {LEN} bytes for KeyBytes"
-                    )));
-                }
+        let bytes = &wrapper.value;
 
-                self.0.copy_from_slice(&tmp);
-
-                Ok(())
-            },
-            _ => ::prost::encoding::skip_field(wire_type, tag, buf, ctx),
+        if bytes.len() != 32 {
+            return Err(::prost::DecodeError::new(
+                "expected exactly 32 bytes for Pubkey",
+            ));
         }
+
+        self.0.copy_from_slice(bytes);
+
+        Ok(())
     }
 
     fn encoded_len(&self) -> usize {
-        if self.0.iter().any(|&b| b != 0) {
-            ::prost::encoding::bytes::encoded_len(1, &self.0.as_slice().to_vec())
-        } else {
-            0
-        }
+        PublicKeyProtoWrapper::new(self.0).encoded_len()
     }
 
-    fn clear(&mut self) { self.0 = [0u8; LEN]; }
+    fn clear(&mut self) { self.0 = [0u8; 32]; }
 }
 
 /// An error that can occur when parsing a key from a base58 string.

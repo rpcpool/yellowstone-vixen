@@ -947,6 +947,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     {
                         let wrapper = #wrapper_ty::new(self.#fname.0.to_vec());
+
                         ::prost::encoding::message::encode(#tag, &wrapper, buf);
                     }
                 });
@@ -954,12 +955,16 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut wrapper = #wrapper_ty::default();
+
                         ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         let arr: [u8; 32] = wrapper.value.try_into().map_err(|_|
                             ::prost::DecodeError::new("expected exactly 32 bytes for Pubkey")
                         )?;
+
                         self.#fname = #pubkey_ty::new(arr);
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -967,6 +972,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encoded_len_stmts.push(quote! {
                     + {
                         let wrapper = #wrapper_ty::new(self.#fname.0.to_vec());
+
                         ::prost::encoding::message::encoded_len(#tag, &wrapper)
                     }
                 });
@@ -994,9 +1000,12 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut tmp = self.#fname as #wide_ty;
+
                         #enc_mod::merge(wire_type, &mut tmp, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         self.#fname = tmp as #native_ty;
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1018,6 +1027,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     if self.#fname != (0 as #native_ty) {
                         let tmp: Vec<u8> = self.#fname.to_le_bytes().to_vec();
+
                         ::prost::encoding::bytes::encode(#tag, &tmp, buf);
                     }
                 });
@@ -1025,14 +1035,18 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut tmp: Vec<u8> = Vec::new();
+
                         ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         let arr: [u8; 16] = tmp.try_into().map_err(|_|
                             ::prost::DecodeError::new(
                                 concat!("expected exactly 16 bytes for ", stringify!(#native_ty))
                             )
                         )?;
+
                         self.#fname = #native_ty::from_le_bytes(arr);
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1136,6 +1150,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     if let ::core::option::Option::Some(ref pk) = self.#fname {
                         let wrapper = #wrapper_ty::new(pk.0.to_vec());
+
                         ::prost::encoding::message::encode(#tag, &wrapper, buf);
                     }
                 });
@@ -1143,12 +1158,16 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut wrapper = #wrapper_ty::default();
+
                         ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         let arr: [u8; 32] = wrapper.value.try_into().map_err(|_|
                             ::prost::DecodeError::new("expected exactly 32 bytes for Pubkey")
                         )?;
+
                         self.#fname = ::core::option::Option::Some(#pubkey_ty::new(arr));
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1156,6 +1175,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encoded_len_stmts.push(quote! {
                     + self.#fname.as_ref().map_or(0, |pk| {
                         let wrapper = #wrapper_ty::new(pk.0.to_vec());
+
                         ::prost::encoding::message::encoded_len(#tag, &wrapper)
                     })
                 });
@@ -1173,6 +1193,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     if let ::core::option::Option::Some(v) = self.#fname {
                         let tmp = v as #wide_ty;
+
                         #enc_mod::encode(#tag, &tmp, buf);
                     }
                 });
@@ -1180,9 +1201,12 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut tmp: #wide_ty = self.#fname.unwrap_or_default() as #wide_ty;
+
                         #enc_mod::merge(wire_type, &mut tmp, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         self.#fname = ::core::option::Option::Some(tmp as #native_ty);
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1301,6 +1325,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     for pk in &self.#fname {
                         let wrapper = #wrapper_ty::new(pk.0.to_vec());
+
                         ::prost::encoding::message::encode(#tag, &wrapper, buf);
                     }
                 });
@@ -1308,12 +1333,16 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut wrapper = #wrapper_ty::default();
+
                         ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         let arr: [u8; 32] = wrapper.value.try_into().map_err(|_|
                             ::prost::DecodeError::new("expected exactly 32 bytes for Pubkey")
                         )?;
+
                         self.#fname.push(#pubkey_ty::new(arr));
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1321,6 +1350,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encoded_len_stmts.push(quote! {
                     + self.#fname.iter().map(|pk| {
                         let wrapper = #wrapper_ty::new(pk.0.to_vec());
+
                         ::prost::encoding::message::encoded_len(#tag, &wrapper)
                     }).sum::<usize>()
                 });
@@ -1340,6 +1370,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     {
                         let tmp: Vec<#wide_ty> = self.#fname.iter().map(|&v| v as #wide_ty).collect();
+
                         #enc_mod::encode_packed(#tag, &tmp, buf);
                     }
                 });
@@ -1347,9 +1378,12 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut tmp: Vec<#wide_ty> = self.#fname.iter().map(|&v| v as #wide_ty).collect();
+
                         #enc_mod::merge_repeated(wire_type, &mut tmp, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         self.#fname = tmp.into_iter().map(|v| v as #native_ty).collect();
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1357,6 +1391,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encoded_len_stmts.push(quote! {
                     + {
                         let tmp: Vec<#wide_ty> = self.#fname.iter().map(|&v| v as #wide_ty).collect();
+
                         #enc_mod::encoded_len_packed(#tag, &tmp)
                     }
                 });
@@ -1374,6 +1409,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encode_stmts.push(quote! {
                     for v in &self.#fname {
                         let tmp: Vec<u8> = v.to_le_bytes().to_vec();
+
                         ::prost::encoding::bytes::encode(#tag, &tmp, buf);
                     }
                 });
@@ -1381,14 +1417,18 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 merge_arms.push(quote! {
                     #tag => {
                         let mut tmp: Vec<u8> = Vec::new();
+
                         ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+
                         let arr: [u8; 16] = tmp.try_into().map_err(|_|
                             ::prost::DecodeError::new(
                                 concat!("expected exactly 16 bytes for ", stringify!(#native_ty))
                             )
                         )?;
+
                         self.#fname.push(#native_ty::from_le_bytes(arr));
+
                         ::core::result::Result::Ok(())
                     }
                 });
@@ -1459,7 +1499,9 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
         impl ::core::fmt::Debug for #ident {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 let mut s = f.debug_struct(stringify!(#ident));
+
                 #(s.field(stringify!(#debug_field_names), &self.#debug_field_names);)*
+                
                 s.finish()
             }
         }

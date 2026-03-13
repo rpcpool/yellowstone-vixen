@@ -33,7 +33,7 @@ use solana_transaction_status::{
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
     instruction::{InstructionShared, InstructionUpdate},
-    KeyBytes, ProgramParser, Pubkey as VixenPubkey,
+    KeyBytes, ProgramParser,
 };
 
 const DEFAULT_RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
@@ -118,11 +118,11 @@ impl Display for SerializablePubkey {
     }
 }
 
-impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
+impl From<KeyBytes<32>> for SerializablePubkey {
+    fn from(value: KeyBytes<32>) -> Self { Self(value.into_bytes()) }
 }
 
-impl From<SerializablePubkey> for VixenPubkey {
+impl From<SerializablePubkey> for KeyBytes<32> {
     fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
 }
 
