@@ -10,6 +10,8 @@ pub enum KafkaCompressionType {
     Gzip,
     Snappy,
     Lz4,
+    // Zstd is a modern compression algorithm that offers better compression ratios
+    // and faster speeds than older algorithms like Gzip and Snappy.
     #[default]
     Zstd,
 }
