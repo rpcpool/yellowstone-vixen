@@ -32,5 +32,5 @@ async fn parse_program_account() {
         panic!("Invalid Account");
     };
 
-    assert!(!prog.programdata_address.value.is_empty());
+    assert_ne!(prog.programdata_address.0, [0u8; 32]);
 }

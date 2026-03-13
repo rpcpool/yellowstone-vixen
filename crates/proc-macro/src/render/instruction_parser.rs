@@ -245,7 +245,7 @@ fn single_instruction_helper_fn(
             let field_name = format_ident!("{}", crate::utils::to_snake_case(&account.name));
             let error_msg = format!("Account does not exist at index {idx}");
 
-            quote! { #field_name: ::yellowstone_vixen_core::PublicKey::new(accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.to_vec()) }
+            quote! { #field_name: ::yellowstone_vixen_core::Pubkey::try_from(accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.as_slice())? }
         });
 
     let num_defined_accounts = instruction.accounts.len();
@@ -257,8 +257,8 @@ fn single_instruction_helper_fn(
                 .get(#num_defined_accounts..)
                 .unwrap_or_default()
                 .iter()
-                .map(|a| ::yellowstone_vixen_core::PublicKey::new(a.to_vec()))
-                .collect(),
+                .map(|a| ::yellowstone_vixen_core::Pubkey::try_from(a.as_slice()))
+                .collect::<::core::result::Result<Vec<_>, _>>()?,
         }
     };
     let args_field = info.args_expr.map(|expr| {

@@ -395,7 +395,7 @@ fn classify_type(ty: &Type) -> FieldClassification {
         "String" => FieldClassification::Scalar(ScalarKind::StringType),
         "Option" => classify_option(seg),
         "Vec" => classify_vec(seg),
-        "PublicKey" => FieldClassification::RequiredMessage,
+        "PublicKeyProtoWrapper" | "Pubkey" | "KeyBytes" => FieldClassification::RequiredMessage,
         _ => FieldClassification::RequiredMessage,
     }
 }

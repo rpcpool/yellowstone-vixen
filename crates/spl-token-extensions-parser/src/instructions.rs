@@ -6,40 +6,40 @@ use super::{
     CommonExtensionInstructions, ConfidentialTransferFeeIx, ConfidentialTransferIx, TokenGroupIx,
     TokenMetadataIx, TransferFeeIx,
 };
-use crate::PublicKey;
+use crate::Pubkey;
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct CreateNativeMintAccounts {
-    pub mint: PublicKey,
-    pub funding_account: PublicKey,
+    pub mint: Pubkey,
+    pub funding_account: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMintCloseAuthorityAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMintCloseAuthorityArgs {
-    pub close_authority: Option<PublicKey>,
+    pub close_authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeNonTransferableMintAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ReallocateAccounts {
-    pub account: PublicKey,
-    pub payer: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub payer: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -51,22 +51,22 @@ pub struct ReallocateArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializePermanentDelegateAccounts {
-    pub account: PublicKey,
+    pub account: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializePermanentDelegateArgs {
-    pub delegate: Option<PublicKey>,
+    pub delegate: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawExcessLamportsAccounts {
-    pub source_account: PublicKey,
-    pub destination_account: PublicKey,
-    pub authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub source_account: Pubkey,
+    pub destination_account: Pubkey,
+    pub authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen(enumeration)]
@@ -122,7 +122,7 @@ impl From<spl_token_2022::instruction::AuthorityType> for AuthorityType {
 pub struct SetAuthorityArgs {
     #[hint(enumeration = "AuthorityType")]
     pub authority_type: i32,
-    pub new_authority: Option<PublicKey>,
+    pub new_authority: Option<Pubkey>,
 }
 
 #[vixen]
@@ -312,6 +312,6 @@ pub fn set_authority_args_from_spl(
 ) -> SetAuthorityArgs {
     SetAuthorityArgs {
         authority_type: authority_type as i32,
-        new_authority: new_authority.map(|p| crate::PublicKey::new(p.0)),
+        new_authority: new_authority.map(|p| crate::Pubkey::new(p.0)),
     }
 }

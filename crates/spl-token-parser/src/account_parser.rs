@@ -9,34 +9,34 @@ use yellowstone_vixen_core::{
 };
 use yellowstone_vixen_proc_macro::vixen;
 
-use crate::PublicKey;
+use crate::Pubkey;
 
 /// SPL Token account state, proto-compatible
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct Mint {
-    pub mint_authority: Option<PublicKey>,
+    pub mint_authority: Option<Pubkey>,
     pub supply: u64,
     pub decimals: u32,
     pub is_initialized: bool,
-    pub freeze_authority: Option<PublicKey>,
+    pub freeze_authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct TokenAccount {
-    pub mint: PublicKey,
-    pub owner: PublicKey,
+    pub mint: Pubkey,
+    pub owner: Pubkey,
     pub amount: u64,
 
-    pub delegate: Option<PublicKey>,
+    pub delegate: Option<Pubkey>,
     pub state: u32,
     pub delegated_amount: u64,
 
     /// If present, native rent-exempt reserve (lamports).
     pub is_native: ::core::option::Option<u64>,
 
-    pub close_authority: Option<PublicKey>,
+    pub close_authority: Option<Pubkey>,
 }
 
 #[vixen]
@@ -45,7 +45,7 @@ pub struct Multisig {
     pub m: u32,
     pub n: u32,
     pub is_initialized: bool,
-    pub signers: Vec<PublicKey>,
+    pub signers: Vec<Pubkey>,
 }
 
 /// One-of wrapper for SPL Token program account state.
@@ -72,14 +72,14 @@ impl From<SplMint> for Mint {
     fn from(m: SplMint) -> Self {
         Self {
             mint_authority: match m.mint_authority {
-                COption::Some(pk) => Some(PublicKey::new(pk.to_bytes())),
+                COption::Some(pk) => Some(Pubkey::new(pk.to_bytes())),
                 COption::None => None,
             },
             supply: m.supply,
             decimals: m.decimals as u32,
             is_initialized: m.is_initialized,
             freeze_authority: match m.freeze_authority {
-                COption::Some(pk) => Some(PublicKey::new(pk.to_bytes())),
+                COption::Some(pk) => Some(Pubkey::new(pk.to_bytes())),
                 COption::None => None,
             },
         }
@@ -89,12 +89,12 @@ impl From<SplMint> for Mint {
 impl From<SplAccount> for TokenAccount {
     fn from(a: SplAccount) -> Self {
         Self {
-            mint: PublicKey::new(a.mint.to_bytes()),
-            owner: PublicKey::new(a.owner.to_bytes()),
+            mint: Pubkey::new(a.mint.to_bytes()),
+            owner: Pubkey::new(a.owner.to_bytes()),
             amount: a.amount,
 
             delegate: match a.delegate {
-                COption::Some(pk) => Some(PublicKey::new(pk.to_bytes())),
+                COption::Some(pk) => Some(Pubkey::new(pk.to_bytes())),
                 COption::None => None,
             },
             state: a.state as u32,
@@ -106,7 +106,7 @@ impl From<SplAccount> for TokenAccount {
             },
 
             close_authority: match a.close_authority {
-                COption::Some(pk) => Some(PublicKey::new(pk.to_bytes())),
+                COption::Some(pk) => Some(Pubkey::new(pk.to_bytes())),
                 COption::None => None,
             },
         }
@@ -122,7 +122,7 @@ impl From<SplMultisig> for Multisig {
             signers: m
                 .signers
                 .iter()
-                .map(|pk| PublicKey::new(pk.to_bytes()))
+                .map(|pk| Pubkey::new(pk.to_bytes()))
                 .collect(),
         }
     }

@@ -4,56 +4,56 @@ use yellowstone_vixen_parser::{check_min_accounts_req, Result};
 use yellowstone_vixen_proc_macro::vixen;
 
 use super::extension::{decode_extension_ix_type, ExtensionInstructionParser};
-use crate::PublicKey;
+use crate::Pubkey;
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeConfidentialTransferFeeConfigAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialWithdrawWithheldTokensFromMintAccounts {
-    pub mint: PublicKey,
-    pub fee_recipient: PublicKey,
-    pub sysvar: PublicKey,
-    pub withdraw_withheld_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub mint: Pubkey,
+    pub fee_recipient: Pubkey,
+    pub sysvar: Pubkey,
+    pub withdraw_withheld_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialWithdrawWithheldTokensFromAccounts {
-    pub mint: PublicKey,
-    pub fee_recipient: PublicKey,
-    pub sysvar: PublicKey,
-    pub withdraw_withheld_authority: PublicKey,
-    pub source_accounts: Vec<PublicKey>,
-    pub multisig_signers: Vec<PublicKey>,
+    pub mint: Pubkey,
+    pub fee_recipient: Pubkey,
+    pub sysvar: Pubkey,
+    pub withdraw_withheld_authority: Pubkey,
+    pub source_accounts: Vec<Pubkey>,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialHarvestWithheldTokensToMintAccounts {
-    pub mint: PublicKey,
-    pub source_accounts: Vec<PublicKey>,
+    pub mint: Pubkey,
+    pub source_accounts: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct EnableHarvestToMintAccounts {
-    pub mint: PublicKey,
-    pub confidential_transfer_fee_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub mint: Pubkey,
+    pub confidential_transfer_fee_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DisableHarvestToMintAccounts {
-    pub account: PublicKey,
-    pub confidential_transfer_fee_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub confidential_transfer_fee_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -136,7 +136,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 oneof::Instruction::InitializeConfidentialTransferFeeConfig(
                     oneof::InitializeConfidentialTransferFeeConfig {
                         accounts: InitializeConfidentialTransferFeeConfigAccounts {
-                            mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
+                            mint: crate::Pubkey::new(ix.accounts[0].0),
                         },
                     },
                 )
@@ -148,15 +148,15 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 oneof::Instruction::WithdrawWithheldTokensFromMint(
                     oneof::WithdrawWithheldTokensFromMint {
                         accounts: ConfidentialWithdrawWithheldTokensFromMintAccounts {
-                            mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                            fee_recipient: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                            sysvar: crate::PublicKey::new(ix.accounts[2].to_vec()),
-                            withdraw_withheld_authority: crate::PublicKey::new(
-                                ix.accounts[3].to_vec(),
+                            mint: crate::Pubkey::new(ix.accounts[0].0),
+                            fee_recipient: crate::Pubkey::new(ix.accounts[1].0),
+                            sysvar: crate::Pubkey::new(ix.accounts[2].0),
+                            withdraw_withheld_authority: crate::Pubkey::new(
+                                ix.accounts[3].0,
                             ),
                             multisig_signers: ix.accounts[4..]
                                 .iter()
-                                .map(|a| crate::PublicKey::new(a.to_vec()))
+                                .map(|a| crate::Pubkey::new(a.0))
                                 .collect(),
                         },
                     },
@@ -169,15 +169,15 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 oneof::Instruction::WithdrawWithheldTokensFromAccounts(
                     oneof::WithdrawWithheldTokensFromAccounts {
                         accounts: ConfidentialWithdrawWithheldTokensFromAccounts {
-                            mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                            fee_recipient: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                            sysvar: crate::PublicKey::new(ix.accounts[2].to_vec()),
-                            withdraw_withheld_authority: crate::PublicKey::new(
-                                ix.accounts[3].to_vec(),
+                            mint: crate::Pubkey::new(ix.accounts[0].0),
+                            fee_recipient: crate::Pubkey::new(ix.accounts[1].0),
+                            sysvar: crate::Pubkey::new(ix.accounts[2].0),
+                            withdraw_withheld_authority: crate::Pubkey::new(
+                                ix.accounts[3].0,
                             ),
                             source_accounts: ix.accounts[4..]
                                 .iter()
-                                .map(|a| crate::PublicKey::new(a.to_vec()))
+                                .map(|a| crate::Pubkey::new(a.0))
                                 .collect(),
                             multisig_signers: Vec::new(),
                         },
@@ -191,10 +191,10 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 oneof::Instruction::HarvestWithheldTokensToMint(
                     oneof::HarvestWithheldTokensToMint {
                         accounts: ConfidentialHarvestWithheldTokensToMintAccounts {
-                            mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
+                            mint: crate::Pubkey::new(ix.accounts[0].0),
                             source_accounts: ix.accounts[1..]
                                 .iter()
-                                .map(|a| crate::PublicKey::new(a.to_vec()))
+                                .map(|a| crate::Pubkey::new(a.0))
                                 .collect(),
                         },
                     },
@@ -206,13 +206,13 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
 
                 oneof::Instruction::EnableHarvestToMint(oneof::EnableHarvestToMint {
                     accounts: EnableHarvestToMintAccounts {
-                        mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        confidential_transfer_fee_authority: crate::PublicKey::new(
-                            ix.accounts[1].to_vec(),
+                        mint: crate::Pubkey::new(ix.accounts[0].0),
+                        confidential_transfer_fee_authority: crate::Pubkey::new(
+                            ix.accounts[1].0,
                         ),
                         multisig_signers: ix.accounts[2..]
                             .iter()
-                            .map(|a| crate::PublicKey::new(a.to_vec()))
+                            .map(|a| crate::Pubkey::new(a.0))
                             .collect(),
                     },
                 })
@@ -223,13 +223,13 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
 
                 oneof::Instruction::DisableHarvestToMint(oneof::DisableHarvestToMint {
                     accounts: DisableHarvestToMintAccounts {
-                        account: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        confidential_transfer_fee_authority: crate::PublicKey::new(
-                            ix.accounts[1].to_vec(),
+                        account: crate::Pubkey::new(ix.accounts[0].0),
+                        confidential_transfer_fee_authority: crate::Pubkey::new(
+                            ix.accounts[1].0,
                         ),
                         multisig_signers: ix.accounts[2..]
                             .iter()
-                            .map(|a| crate::PublicKey::new(a.to_vec()))
+                            .map(|a| crate::Pubkey::new(a.0))
                             .collect(),
                     },
                 })

@@ -560,12 +560,9 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
     let in_module = local_names.is_some();
     let path_prefix = if in_module { "super::" } else { "" };
 
-    // PublicKey is rendered as a message type (PublicKey wrapper), not a scalar.
-    let is_pubkey = matches!(&f.field_type, FieldTypeIr::Scalar(ScalarIr::PublicKey));
-
     // Custom borsh attrs for fields whose on-chain encoding differs from the Rust type.
     // With native types, we no longer need widening borsh attrs — only fixed-bytes,
-    // pubkey, float, and fixed-array helpers remain.
+    // float, and fixed-array helpers remain.
     let borsh_attr = {
         let fixed = fixed_bytes_borsh_attrs(&f.label, &f.field_type, path_prefix);
 
@@ -606,11 +603,6 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
 
             quote! { #borsh_attr pub #name: #ty }
         },
-        (LabelIr::Singular, _) if is_pubkey => {
-            let rust_type = map_ir_type_to_native(&f.field_type, in_module);
-
-            quote! { #borsh_attr pub #name: #rust_type }
-        },
         (LabelIr::Singular, field_type) => {
             let rust_type = map_ir_type_to_native(field_type, in_module);
 
@@ -640,16 +632,13 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
 }
 
 /// Returns `#[borsh(deserialize_with = "...", serialize_with = "...")]` for fixed-size byte fields
-/// (Pubkey and FixedBytes), or an empty TokenStream for all other field types.
+/// (FixedBytes), or an empty TokenStream for all other field types.
 fn fixed_bytes_borsh_attrs(
     label: &LabelIr,
     field_type: &FieldTypeIr,
     path_prefix: &str,
 ) -> TokenStream {
     match field_type {
-        FieldTypeIr::Scalar(ScalarIr::PublicKey) => {
-            return pubkey_borsh_attrs(label, path_prefix);
-        },
         FieldTypeIr::Scalar(ScalarIr::FixedBytes(_)) => {},
         _ => return quote! {},
     }
@@ -726,38 +715,6 @@ fn fixed_bytes_borsh_attrs(
 
             quote! { #[borsh(deserialize_with = #d, serialize_with = #s)] }
         },
-    }
-}
-
-/// Returns borsh attrs for Pubkey fields, routing to Pubkey-wrapping helpers.
-fn pubkey_borsh_attrs(label: &LabelIr, path_prefix: &str) -> TokenStream {
-    let (d, s) = match label {
-        LabelIr::Singular => (
-            format!("{path_prefix}borsh_deserialize_pubkey"),
-            format!("{path_prefix}borsh_serialize_pubkey"),
-        ),
-        LabelIr::Optional => (
-            format!("{path_prefix}borsh_deserialize_opt_pubkey"),
-            format!("{path_prefix}borsh_serialize_opt_pubkey"),
-        ),
-        LabelIr::Repeated => (
-            format!("{path_prefix}borsh_deserialize_vec_pubkey"),
-            format!("{path_prefix}borsh_serialize_vec_pubkey"),
-        ),
-        LabelIr::FixedArray(n) => (
-            format!("{path_prefix}borsh_deserialize_fixed_array_pubkey::<{n}, _>"),
-            format!("{path_prefix}borsh_serialize_fixed_array_pubkey::<{n}, _>"),
-        ),
-    };
-
-    let d_lit = LitStr::new(&d, Span::call_site());
-    let s_lit = LitStr::new(&s, Span::call_site());
-
-    quote! {
-        #[borsh(
-            deserialize_with = #d_lit,
-            serialize_with = #s_lit
-        )]
     }
 }
 
@@ -850,9 +807,9 @@ fn map_ir_type_to_native(field_type: &FieldTypeIr, in_module: bool) -> TokenStre
             ScalarIr::Bytes | ScalarIr::FixedBytes(_) => quote!(Vec<u8>),
             ScalarIr::PublicKey => {
                 if in_module {
-                    quote!(super::PublicKey)
+                    quote!(super::Pubkey)
                 } else {
-                    quote!(PublicKey)
+                    quote!(Pubkey)
                 }
             },
         },
@@ -892,6 +849,11 @@ fn bytes_native_type(scalar: &ScalarIr) -> TokenStream {
         ScalarIr::I128 => quote!(i128),
         _ => unreachable!("bytes_native_type called on non-bytes-conversion scalar"),
     }
+}
+
+/// Whether a scalar is a public key that needs Pubkey ↔ PublicKeyProtoWrapper conversion for proto.
+fn is_pubkey_scalar(scalar: &ScalarIr) -> bool {
+    matches!(scalar, ScalarIr::PublicKey)
 }
 
 /// Return the `prost::encoding` module path for a scalar type.
@@ -947,8 +909,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
         let fname = format_ident!("{}", f.name);
         let field_name_str = &f.name;
         let tag = f.tag;
-        let is_pubkey = matches!(&f.field_type, FieldTypeIr::Scalar(ScalarIr::PublicKey));
-        let is_message = matches!(&f.field_type, FieldTypeIr::Message(_)) || is_pubkey;
+        let is_message = matches!(&f.field_type, FieldTypeIr::Message(_));
 
         match (&f.label, &f.field_type) {
             // --- Singular message ---
@@ -972,15 +933,48 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
 
                 let msg_ty = match &f.field_type {
                     FieldTypeIr::Message(msg) => resolve_msg(msg),
-                    FieldTypeIr::Scalar(ScalarIr::PublicKey) => {
-                        map_ir_type_to_native(&f.field_type, in_module)
-                    },
                     _ => unreachable!(),
                 };
 
                 default_stmts.push(quote! {
                     #fname: <#msg_ty as ::core::default::Default>::default()
                 });
+            },
+
+            // --- Singular pubkey (Pubkey ↔ PublicKeyProtoWrapper conversion) ---
+            (LabelIr::Singular, FieldTypeIr::Scalar(s)) if is_pubkey_scalar(s) => {
+                let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
+                let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
+
+                encode_stmts.push(quote! {
+                    {
+                        let wrapper = #wrapper_ty::new(self.#fname.0.to_vec());
+                        ::prost::encoding::message::encode(#tag, &wrapper, buf);
+                    }
+                });
+
+                merge_arms.push(quote! {
+                    #tag => {
+                        let mut wrapper = #wrapper_ty::default();
+                        ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)
+                            .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+                        let arr: [u8; 32] = wrapper.value.try_into().map_err(|_|
+                            ::prost::DecodeError::new("expected exactly 32 bytes for Pubkey")
+                        )?;
+                        self.#fname = #pubkey_ty::new(arr);
+                        ::core::result::Result::Ok(())
+                    }
+                });
+
+                encoded_len_stmts.push(quote! {
+                    + {
+                        let wrapper = #wrapper_ty::new(self.#fname.0.to_vec());
+                        ::prost::encoding::message::encoded_len(#tag, &wrapper)
+                    }
+                });
+
+                clear_stmts.push(quote! { self.#fname = <#pubkey_ty as ::core::default::Default>::default(); });
+                default_stmts.push(quote! { #fname: <#pubkey_ty as ::core::default::Default>::default() });
             },
 
             // --- Singular scalar (widened) ---
@@ -1133,6 +1127,42 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 default_stmts.push(quote! { #fname: ::core::option::Option::None });
             },
 
+            // --- Optional pubkey (Pubkey ↔ PublicKeyProtoWrapper conversion) ---
+            (LabelIr::Optional, FieldTypeIr::Scalar(s)) if is_pubkey_scalar(s) => {
+                let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
+                let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
+
+                encode_stmts.push(quote! {
+                    if let ::core::option::Option::Some(ref pk) = self.#fname {
+                        let wrapper = #wrapper_ty::new(pk.0.to_vec());
+                        ::prost::encoding::message::encode(#tag, &wrapper, buf);
+                    }
+                });
+
+                merge_arms.push(quote! {
+                    #tag => {
+                        let mut wrapper = #wrapper_ty::default();
+                        ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)
+                            .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+                        let arr: [u8; 32] = wrapper.value.try_into().map_err(|_|
+                            ::prost::DecodeError::new("expected exactly 32 bytes for Pubkey")
+                        )?;
+                        self.#fname = ::core::option::Option::Some(#pubkey_ty::new(arr));
+                        ::core::result::Result::Ok(())
+                    }
+                });
+
+                encoded_len_stmts.push(quote! {
+                    + self.#fname.as_ref().map_or(0, |pk| {
+                        let wrapper = #wrapper_ty::new(pk.0.to_vec());
+                        ::prost::encoding::message::encoded_len(#tag, &wrapper)
+                    })
+                });
+
+                clear_stmts.push(quote! { self.#fname = ::core::option::Option::None; });
+                default_stmts.push(quote! { #fname: ::core::option::Option::None });
+            },
+
             // --- Optional scalar (widened) ---
             (LabelIr::Optional, FieldTypeIr::Scalar(s)) if needs_widening(s) => {
                 let enc_mod = prost_encoding_mod(s);
@@ -1254,6 +1284,44 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
 
                 encoded_len_stmts.push(quote! {
                     + ::prost::encoding::message::encoded_len_repeated(#tag, &self.#fname)
+                });
+
+                clear_stmts.push(quote! { self.#fname.clear(); });
+                default_stmts.push(quote! { #fname: Vec::new() });
+            },
+
+            // --- Repeated/FixedArray pubkey (Pubkey ↔ PublicKeyProtoWrapper conversion) ---
+            (LabelIr::Repeated | LabelIr::FixedArray(_), FieldTypeIr::Scalar(s))
+                if is_pubkey_scalar(s) =>
+            {
+                let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
+                let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
+
+                encode_stmts.push(quote! {
+                    for pk in &self.#fname {
+                        let wrapper = #wrapper_ty::new(pk.0.to_vec());
+                        ::prost::encoding::message::encode(#tag, &wrapper, buf);
+                    }
+                });
+
+                merge_arms.push(quote! {
+                    #tag => {
+                        let mut wrapper = #wrapper_ty::default();
+                        ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)
+                            .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+                        let arr: [u8; 32] = wrapper.value.try_into().map_err(|_|
+                            ::prost::DecodeError::new("expected exactly 32 bytes for Pubkey")
+                        )?;
+                        self.#fname.push(#pubkey_ty::new(arr));
+                        ::core::result::Result::Ok(())
+                    }
+                });
+
+                encoded_len_stmts.push(quote! {
+                    + self.#fname.iter().map(|pk| {
+                        let wrapper = #wrapper_ty::new(pk.0.to_vec());
+                        ::prost::encoding::message::encoded_len(#tag, &wrapper)
+                    }).sum::<usize>()
                 });
 
                 clear_stmts.push(quote! { self.#fname.clear(); });

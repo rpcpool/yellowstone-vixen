@@ -20,8 +20,8 @@ async fn parse_initialize_buffer_ix() {
     };
 
     let accounts = ib.accounts.as_ref().expect("missing accounts");
-    assert!(!accounts.buffer.value.is_empty());
-    assert!(!accounts.authority.value.is_empty());
+    assert_ne!(accounts.buffer.0, [0u8; 32]);
+    assert_ne!(accounts.authority.0, [0u8; 32]);
 }
 
 #[tokio::test]
@@ -42,9 +42,9 @@ async fn parse_upgrade_ix() {
     };
 
     let accounts = up.accounts.as_ref().expect("missing accounts");
-    assert!(!accounts.program_data.value.is_empty());
-    assert!(!accounts.program.value.is_empty());
-    assert!(!accounts.buffer.value.is_empty());
-    assert!(!accounts.spill.value.is_empty());
-    assert!(!accounts.authority.value.is_empty());
+    assert_ne!(accounts.program_data.0, [0u8; 32]);
+    assert_ne!(accounts.program.0, [0u8; 32]);
+    assert_ne!(accounts.buffer.0, [0u8; 32]);
+    assert_ne!(accounts.spill.0, [0u8; 32]);
+    assert_ne!(accounts.authority.0, [0u8; 32]);
 }

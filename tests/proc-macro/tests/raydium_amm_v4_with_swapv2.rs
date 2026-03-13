@@ -71,75 +71,75 @@ async fn parse_swap_base_in_with_custom_resolver() {
         })
         .expect("no SwapBaseInCompact found");
 
-    use yellowstone_vixen_core::PublicKey;
+    use yellowstone_vixen_core::Pubkey;
 
     let expected = raydium_amm::instruction::SwapBaseInCompact {
         accounts: raydium_amm::instruction::SwapBaseInCompactAccounts {
-            token_program: PublicKey::new(vec![
+            token_program: Pubkey::new([
                 6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28,
                 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
             ]),
-            amm: PublicKey::new(vec![
+            amm: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            amm_authority: PublicKey::new(vec![
+            amm_authority: Pubkey::new([
                 65, 87, 176, 88, 15, 49, 197, 252, 228, 74, 98, 88, 45, 188, 249, 215, 142, 231,
                 89, 67, 160, 132, 163, 147, 179, 80, 54, 141, 34, 137, 147, 8,
             ]),
-            amm_open_orders: PublicKey::new(vec![
+            amm_open_orders: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            pool_coin_token_account: PublicKey::new(vec![
+            pool_coin_token_account: Pubkey::new([
                 139, 18, 230, 5, 1, 32, 156, 221, 91, 96, 91, 116, 169, 30, 111, 156, 245, 246, 42,
                 109, 219, 228, 154, 117, 141, 138, 207, 253, 46, 10, 148, 255,
             ]),
-            pool_pc_token_account: PublicKey::new(vec![
+            pool_pc_token_account: Pubkey::new([
                 155, 187, 225, 72, 15, 114, 220, 199, 26, 153, 140, 50, 24, 236, 42, 146, 92, 89,
                 130, 216, 172, 148, 41, 204, 136, 249, 191, 107, 217, 101, 48, 217,
             ]),
-            serum_program: PublicKey::new(vec![
+            serum_program: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_market: PublicKey::new(vec![
+            serum_market: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_bids: PublicKey::new(vec![
+            serum_bids: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_asks: PublicKey::new(vec![
+            serum_asks: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_event_queue: PublicKey::new(vec![
+            serum_event_queue: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_coin_vault_account: PublicKey::new(vec![
+            serum_coin_vault_account: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_pc_vault_account: PublicKey::new(vec![
+            serum_pc_vault_account: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            serum_vault_signer: PublicKey::new(vec![
+            serum_vault_signer: Pubkey::new([
                 66, 238, 42, 218, 212, 12, 53, 80, 219, 34, 134, 23, 205, 81, 84, 25, 184, 252,
                 217, 221, 16, 160, 1, 65, 86, 170, 253, 53, 91, 192, 44, 17,
             ]),
-            user_source_token_account: PublicKey::new(vec![
+            user_source_token_account: Pubkey::new([
                 43, 223, 135, 76, 221, 119, 198, 35, 192, 77, 199, 87, 202, 206, 221, 133, 117,
                 196, 92, 208, 71, 236, 18, 125, 174, 96, 214, 219, 55, 90, 227, 255,
             ]),
-            user_destination_token_account: PublicKey::new(vec![
+            user_destination_token_account: Pubkey::new([
                 156, 224, 117, 207, 36, 231, 36, 251, 254, 56, 85, 246, 136, 129, 177, 173, 32,
                 212, 16, 198, 122, 104, 235, 23, 48, 67, 251, 64, 37, 29, 217, 220,
             ]),
-            user_source_owner: PublicKey::new(vec![
+            user_source_owner: Pubkey::new([
                 176, 95, 246, 195, 86, 53, 120, 198, 18, 165, 226, 150, 82, 137, 102, 66, 10, 246,
                 22, 81, 25, 252, 64, 213, 90, 126, 143, 13, 211, 224, 58, 130,
             ]),

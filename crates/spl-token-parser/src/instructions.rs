@@ -1,4 +1,4 @@
-pub use yellowstone_vixen_core::PublicKey;
+pub use yellowstone_vixen_core::Pubkey;
 use yellowstone_vixen_proc_macro::vixen;
 
 #[vixen(enumeration)]
@@ -14,10 +14,10 @@ pub enum AuthorityType {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct TransferAccounts {
-    pub source: PublicKey,
-    pub destination: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub source: Pubkey,
+    pub destination: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -36,43 +36,43 @@ pub struct TransferArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMintAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMintArgs {
     pub decimals: u32, // u8 -> uint32
-    pub mint_authority: PublicKey,
-    pub freeze_authority: Option<PublicKey>,
+    pub mint_authority: Pubkey,
+    pub freeze_authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeAccountAccounts {
-    pub account: PublicKey,
-    pub mint: PublicKey,
-    pub owner: PublicKey,
+    pub account: Pubkey,
+    pub mint: Pubkey,
+    pub owner: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeAccount2Accounts {
-    pub account: PublicKey,
-    pub mint: PublicKey,
+    pub account: Pubkey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeAccount2Args {
-    pub owner: PublicKey,
+    pub owner: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMultisigAccounts {
-    pub multisig: PublicKey,
-    pub signers: Vec<PublicKey>,
+    pub multisig: Pubkey,
+    pub signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -84,10 +84,10 @@ pub struct InitializeMultisigArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ApproveAccounts {
-    pub source: PublicKey,
-    pub delegate: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub source: Pubkey,
+    pub delegate: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -99,17 +99,17 @@ pub struct ApproveArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct RevokeAccounts {
-    pub source: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub source: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetAuthorityAccounts {
-    pub current_authority: PublicKey,
-    pub account: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub current_authority: Pubkey,
+    pub account: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -117,16 +117,16 @@ pub struct SetAuthorityAccounts {
 pub struct SetAuthorityArgs {
     #[hint(enumeration = "AuthorityType")]
     pub authority_type: i32,
-    pub new_authority: Option<PublicKey>,
+    pub new_authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct MintToAccounts {
-    pub mint: PublicKey,
-    pub account: PublicKey,
-    pub mint_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub mint: Pubkey,
+    pub account: Pubkey,
+    pub mint_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -138,10 +138,10 @@ pub struct MintToArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct BurnAccounts {
-    pub account: PublicKey,
-    pub mint: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub mint: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -153,48 +153,48 @@ pub struct BurnArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct CloseAccountAccounts {
-    pub account: PublicKey,
-    pub destination: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub destination: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct FreezeAccountAccounts {
-    pub account: PublicKey,
-    pub mint: PublicKey,
-    pub mint_freeze_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub mint: Pubkey,
+    pub mint_freeze_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ThawAccountAccounts {
-    pub account: PublicKey,
-    pub mint: PublicKey,
-    pub mint_freeze_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub mint: Pubkey,
+    pub mint_freeze_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct TransferCheckedAccounts {
-    pub source: PublicKey,
-    pub mint: PublicKey,
-    pub destination: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub source: Pubkey,
+    pub mint: Pubkey,
+    pub destination: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ApproveCheckedAccounts {
-    pub source: PublicKey,
-    pub mint: PublicKey,
-    pub delegate: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub source: Pubkey,
+    pub mint: Pubkey,
+    pub delegate: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -207,10 +207,10 @@ pub struct ApproveCheckedArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct MintToCheckedAccounts {
-    pub mint: PublicKey,
-    pub account: PublicKey,
-    pub mint_authority: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub mint: Pubkey,
+    pub account: Pubkey,
+    pub mint_authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -223,10 +223,10 @@ pub struct MintToCheckedArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct BurnCheckedAccounts {
-    pub account: PublicKey,
-    pub mint: PublicKey,
-    pub owner: PublicKey,
-    pub multisig_signers: Vec<PublicKey>,
+    pub account: Pubkey,
+    pub mint: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[vixen]
@@ -239,25 +239,25 @@ pub struct BurnCheckedArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SyncNativeAccounts {
-    pub account: PublicKey,
+    pub account: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct GetAccountDataSizeAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeImmutableOwnerAccounts {
-    pub account: PublicKey,
+    pub account: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct AmountToUiAmountAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
@@ -269,7 +269,7 @@ pub struct AmountToUiAmountArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct UiAmountToAmountAccounts {
-    pub mint: PublicKey,
+    pub mint: Pubkey,
 }
 
 #[vixen]
