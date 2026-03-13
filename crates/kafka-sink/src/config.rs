@@ -129,10 +129,7 @@ impl fmt::Debug for KafkaSinkConfig {
                 &self.queue_buffering_max_messages,
             )
             .field("batch_num_messages", &self.batch_num_messages)
-            .field(
-                "producer_compression_type",
-                &self.compression_type.as_str(),
-            )
+            .field("producer_compression_type", &self.compression_type.as_str())
             .field("kafka_write_max_attempts", &self.kafka_write_max_attempts)
             .field("kafka_retry_backoff_ms", &self.kafka_retry_backoff_ms)
             .field("sasl_username", &self.sasl_username)

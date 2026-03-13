@@ -12,10 +12,7 @@ pub fn create_producer(config: &KafkaSinkConfig) -> FutureProducer {
             config.queue_buffering_max_messages.to_string(),
         )
         .set("batch.num.messages", config.batch_num_messages.to_string())
-        .set(
-            "compression.type",
-            config.compression_type.as_str(),
-        )
+        .set("compression.type", config.compression_type.as_str())
         .set("enable.idempotence", "true");
 
     config.apply_sasl_if_configured(&mut client_config);
