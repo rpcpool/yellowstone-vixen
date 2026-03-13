@@ -77,7 +77,7 @@ async fn parse_custody_account() {
             global_short_average_prices: 83_486_086,
         },
         funding_rate_state: perpetuals::FundingRateState {
-            cumulative_interest_rate: vec![151, 179, 251, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            cumulative_interest_rate: u128::from_le_bytes([151, 179, 251, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
             last_update: 1_771_834_760,
             hourly_funding_dbps: 0,
         },
@@ -177,14 +177,14 @@ async fn parse_custody_account() {
             liquidation_fee_bps: 0,
         },
         borrows_funding_rate_state: perpetuals::FundingRateState {
-            cumulative_interest_rate: vec![
+            cumulative_interest_rate: u128::from_le_bytes([
                 0, 0, 100, 167, 179, 182, 224, 13, 0, 0, 0, 0, 0, 0, 0, 0,
-            ],
+            ]),
             last_update: 1_771_834_760,
             hourly_funding_dbps: 0,
         },
-        debt: vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        borrow_lend_interests_accured: vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        debt: 0u128,
+        borrow_lend_interests_accured: 0u128,
         borrow_limit_in_token_amount: 0,
         min_interest_fee_bps: 0,
         min_interest_fee_grace_period_seconds: 0,
@@ -235,10 +235,10 @@ async fn parse_pool_account() {
                 143, 193, 50, 214, 142, 152, 102, 9, 235, 19, 75, 215, 134, 249,
             ]),
         ],
-        aum_usd: vec![42, 148, 219, 152, 238, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        aum_usd: u128::from_le_bytes([42, 148, 219, 152, 238, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
         limit: perpetuals::Limit {
-            max_aum_usd: vec![0, 128, 83, 238, 123, 168, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            token_weightage_buffer_bps: vec![232, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            max_aum_usd: u128::from_le_bytes([0, 128, 83, 238, 123, 168, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+            token_weightage_buffer_bps: u128::from_le_bytes([232, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
             buffer: 0,
         },
         fees: perpetuals::Fees {

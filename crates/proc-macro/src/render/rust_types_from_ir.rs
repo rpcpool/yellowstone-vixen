@@ -844,6 +844,8 @@ fn map_ir_type_to_native(field_type: &FieldTypeIr, in_module: bool) -> TokenStre
             ScalarIr::Int64 => quote!(i64),
             ScalarIr::Float => quote!(f32),
             ScalarIr::Double => quote!(f64),
+            ScalarIr::U128 => quote!(u128),
+            ScalarIr::I128 => quote!(i128),
             ScalarIr::String => quote!(String),
             ScalarIr::Bytes | ScalarIr::FixedBytes(_) => quote!(Vec<u8>),
             ScalarIr::PublicKey => {
@@ -878,6 +880,20 @@ fn widened_type(scalar: &ScalarIr) -> TokenStream {
     }
 }
 
+/// Whether a scalar needs bytes-to-native-int conversion for proto encoding (u128/i128).
+fn needs_bytes_conversion(scalar: &ScalarIr) -> bool {
+    matches!(scalar, ScalarIr::U128 | ScalarIr::I128)
+}
+
+/// The native integer type for a scalar that needs bytes conversion.
+fn bytes_native_type(scalar: &ScalarIr) -> TokenStream {
+    match scalar {
+        ScalarIr::U128 => quote!(u128),
+        ScalarIr::I128 => quote!(i128),
+        _ => unreachable!("bytes_native_type called on non-bytes-conversion scalar"),
+    }
+}
+
 /// Return the `prost::encoding` module path for a scalar type.
 fn prost_encoding_mod(scalar: &ScalarIr) -> TokenStream {
     match scalar {
@@ -891,7 +907,9 @@ fn prost_encoding_mod(scalar: &ScalarIr) -> TokenStream {
         ScalarIr::Float => quote!(::prost::encoding::float),
         ScalarIr::Double => quote!(::prost::encoding::double),
         ScalarIr::String => quote!(::prost::encoding::string),
-        ScalarIr::Bytes | ScalarIr::FixedBytes(_) => quote!(::prost::encoding::bytes),
+        ScalarIr::Bytes | ScalarIr::FixedBytes(_) | ScalarIr::U128 | ScalarIr::I128 => {
+            quote!(::prost::encoding::bytes)
+        },
         ScalarIr::PublicKey => quote!(::prost::encoding::message),
     }
 }
@@ -991,6 +1009,42 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 encoded_len_stmts.push(quote! {
                     + if self.#fname != (0 as #native_ty) {
                         #enc_mod::encoded_len(#tag, &(self.#fname as #wide_ty))
+                    } else { 0 }
+                });
+
+                clear_stmts.push(quote! { self.#fname = 0; });
+                default_stmts.push(quote! { #fname: 0 });
+            },
+
+            // --- Singular scalar (bytes conversion: u128/i128) ---
+            (LabelIr::Singular, FieldTypeIr::Scalar(s)) if needs_bytes_conversion(s) => {
+                let native_ty = bytes_native_type(s);
+
+                encode_stmts.push(quote! {
+                    if self.#fname != (0 as #native_ty) {
+                        let tmp: Vec<u8> = self.#fname.to_le_bytes().to_vec();
+                        ::prost::encoding::bytes::encode(#tag, &tmp, buf);
+                    }
+                });
+
+                merge_arms.push(quote! {
+                    #tag => {
+                        let mut tmp: Vec<u8> = Vec::new();
+                        ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)
+                            .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+                        let arr: [u8; 16] = tmp.try_into().map_err(|_|
+                            ::prost::DecodeError::new(
+                                concat!("expected exactly 16 bytes for ", stringify!(#native_ty))
+                            )
+                        )?;
+                        self.#fname = #native_ty::from_le_bytes(arr);
+                        ::core::result::Result::Ok(())
+                    }
+                });
+
+                encoded_len_stmts.push(quote! {
+                    + if self.#fname != (0 as #native_ty) {
+                        ::prost::encoding::bytes::encoded_len(#tag, &self.#fname.to_le_bytes().to_vec())
                     } else { 0 }
                 });
 
@@ -1112,6 +1166,47 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 default_stmts.push(quote! { #fname: ::core::option::Option::None });
             },
 
+            // --- Optional scalar (bytes conversion: u128/i128) ---
+            (LabelIr::Optional, FieldTypeIr::Scalar(s)) if needs_bytes_conversion(s) => {
+                let native_ty = bytes_native_type(s);
+
+                encode_stmts.push(quote! {
+                    if let ::core::option::Option::Some(v) = self.#fname {
+                        let tmp: Vec<u8> = v.to_le_bytes().to_vec();
+
+                        ::prost::encoding::bytes::encode(#tag, &tmp, buf);
+                    }
+                });
+
+                merge_arms.push(quote! {
+                    #tag => {
+                        let mut tmp: Vec<u8> = Vec::new();
+
+                        ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)
+                            .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+                        
+                        let arr: [u8; 16] = tmp.try_into().map_err(|_|
+                            ::prost::DecodeError::new(
+                                concat!("expected exactly 16 bytes for ", stringify!(#native_ty))
+                            )
+                        )?;
+                        
+                        self.#fname = ::core::option::Option::Some(#native_ty::from_le_bytes(arr));
+                        
+                        ::core::result::Result::Ok(())
+                    }
+                });
+
+                encoded_len_stmts.push(quote! {
+                    + self.#fname.map_or(0, |v|
+                        ::prost::encoding::bytes::encoded_len(#tag, &v.to_le_bytes().to_vec())
+                    )
+                });
+
+                clear_stmts.push(quote! { self.#fname = ::core::option::Option::None; });
+                default_stmts.push(quote! { #fname: ::core::option::Option::None });
+            },
+
             // --- Optional scalar (no widening) ---
             (LabelIr::Optional, FieldTypeIr::Scalar(s)) => {
                 let enc_mod = prost_encoding_mod(s);
@@ -1195,6 +1290,44 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                         let tmp: Vec<#wide_ty> = self.#fname.iter().map(|&v| v as #wide_ty).collect();
                         #enc_mod::encoded_len_packed(#tag, &tmp)
                     }
+                });
+
+                clear_stmts.push(quote! { self.#fname.clear(); });
+                default_stmts.push(quote! { #fname: Vec::new() });
+            },
+
+            // --- Repeated/FixedArray scalar (bytes conversion: u128/i128) ---
+            (LabelIr::Repeated | LabelIr::FixedArray(_), FieldTypeIr::Scalar(s))
+                if needs_bytes_conversion(s) =>
+            {
+                let native_ty = bytes_native_type(s);
+
+                encode_stmts.push(quote! {
+                    for v in &self.#fname {
+                        let tmp: Vec<u8> = v.to_le_bytes().to_vec();
+                        ::prost::encoding::bytes::encode(#tag, &tmp, buf);
+                    }
+                });
+
+                merge_arms.push(quote! {
+                    #tag => {
+                        let mut tmp: Vec<u8> = Vec::new();
+                        ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)
+                            .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
+                        let arr: [u8; 16] = tmp.try_into().map_err(|_|
+                            ::prost::DecodeError::new(
+                                concat!("expected exactly 16 bytes for ", stringify!(#native_ty))
+                            )
+                        )?;
+                        self.#fname.push(#native_ty::from_le_bytes(arr));
+                        ::core::result::Result::Ok(())
+                    }
+                });
+
+                encoded_len_stmts.push(quote! {
+                    + self.#fname.iter().map(|v|
+                        ::prost::encoding::bytes::encoded_len(#tag, &v.to_le_bytes().to_vec())
+                    ).sum::<usize>()
                 });
 
                 clear_stmts.push(quote! { self.#fname.clear(); });
