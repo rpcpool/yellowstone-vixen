@@ -569,9 +569,7 @@ impl ::prost::Message for KeyBytes<32> {
         Ok(())
     }
 
-    fn encoded_len(&self) -> usize {
-        PublicKeyProtoWrapper::new(self.0).encoded_len()
-    }
+    fn encoded_len(&self) -> usize { PublicKeyProtoWrapper::new(self.0).encoded_len() }
 
     fn clear(&mut self) { self.0 = [0u8; 32]; }
 }

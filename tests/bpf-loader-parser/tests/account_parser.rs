@@ -1,5 +1,5 @@
 use yellowstone_vixen_bpf_loader_parser::{account, AccountParser, BpfLoaderState};
-use yellowstone_vixen_core::Parser;
+use yellowstone_vixen_core::{Parser, Pubkey};
 use yellowstone_vixen_mock::account_fixture;
 
 #[tokio::test]
@@ -32,5 +32,5 @@ async fn parse_program_account() {
         panic!("Invalid Account");
     };
 
-    assert_ne!(prog.programdata_address.0, [0u8; 32]);
+    assert_ne!(prog.programdata_address, Pubkey::default());
 }

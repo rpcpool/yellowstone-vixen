@@ -1501,7 +1501,7 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                 let mut s = f.debug_struct(stringify!(#ident));
 
                 #(s.field(stringify!(#debug_field_names), &self.#debug_field_names);)*
-                
+
                 s.finish()
             }
         }
