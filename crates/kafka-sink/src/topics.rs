@@ -16,24 +16,27 @@ pub struct LastCommitted {
 /// Read the latest committed transaction slot from a topic for resumption.
 /// Returns None if the topic is empty or doesn't exist.
 pub fn read_last_committed_transaction_block(config: &KafkaSinkConfig) -> Option<LastCommitted> {
-    read_last_slot_from_topic(&config.brokers, &config.transaction_slots_topic)
+    read_last_slot_from_topic(config, &config.transaction_slots_topic)
 }
 
 /// Read the latest committed account slot for resumption.
 /// Returns None if the topic is empty or doesn't exist.
 pub fn read_last_committed_account_block(config: &KafkaSinkConfig) -> Option<LastCommitted> {
-    read_last_slot_from_topic(&config.brokers, &config.account_slots_topic)
+    read_last_slot_from_topic(config, &config.account_slots_topic)
 }
 
 /// Read the last committed slot from a Kafka topic by scanning the highest offset.
 /// Tries to parse as a slot commit event, falls back to any JSON with a "slot" field.
-fn read_last_slot_from_topic(brokers: &str, topic: &str) -> Option<LastCommitted> {
-    let consumer: BaseConsumer = match ClientConfig::new()
-        .set("bootstrap.servers", brokers)
+fn read_last_slot_from_topic(config: &KafkaSinkConfig, topic: &str) -> Option<LastCommitted> {
+    let mut client_config = ClientConfig::new();
+    client_config
+        .set("bootstrap.servers", &config.brokers)
         .set("group.id", "vixen-startup-reader")
-        .set("enable.auto.commit", "false")
-        .create()
-    {
+        .set("enable.auto.commit", "false");
+
+    config.apply_sasl_if_configured(&mut client_config);
+
+    let consumer: BaseConsumer = match client_config.create() {
         Ok(consumer) => consumer,
         Err(e) => {
             tracing::warn!(
