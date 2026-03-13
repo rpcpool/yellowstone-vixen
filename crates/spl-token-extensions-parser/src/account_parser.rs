@@ -90,10 +90,7 @@ pub struct Multisig {
 
 fn spl_to_mint(m: &SplMint) -> Mint {
     Mint {
-        mint_authority: m
-            .mint_authority
-            .map(|pk| Pubkey::new(pk.to_bytes()))
-            .into(),
+        mint_authority: m.mint_authority.map(|pk| Pubkey::new(pk.to_bytes())).into(),
         supply: m.supply,
         decimals: m.decimals as u32,
         is_initialized: m.is_initialized,
@@ -270,9 +267,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(test)]

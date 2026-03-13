@@ -852,9 +852,7 @@ fn bytes_native_type(scalar: &ScalarIr) -> TokenStream {
 }
 
 /// Whether a scalar is a public key that needs Pubkey ↔ PublicKeyProtoWrapper conversion for proto.
-fn is_pubkey_scalar(scalar: &ScalarIr) -> bool {
-    matches!(scalar, ScalarIr::PublicKey)
-}
+fn is_pubkey_scalar(scalar: &ScalarIr) -> bool { matches!(scalar, ScalarIr::PublicKey) }
 
 /// Return the `prost::encoding` module path for a scalar type.
 fn prost_encoding_mod(scalar: &ScalarIr) -> TokenStream {
@@ -973,8 +971,11 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
                     }
                 });
 
-                clear_stmts.push(quote! { self.#fname = <#pubkey_ty as ::core::default::Default>::default(); });
-                default_stmts.push(quote! { #fname: <#pubkey_ty as ::core::default::Default>::default() });
+                clear_stmts.push(
+                    quote! { self.#fname = <#pubkey_ty as ::core::default::Default>::default(); },
+                );
+                default_stmts
+                    .push(quote! { #fname: <#pubkey_ty as ::core::default::Default>::default() });
             },
 
             // --- Singular scalar (widened) ---
@@ -1214,15 +1215,15 @@ fn manual_prost_struct_impl(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> 
 
                         ::prost::encoding::bytes::merge(wire_type, &mut tmp, buf, ctx)
                             .map_err(|mut error| { error.push(STRUCT_NAME, #field_name_str); error })?;
-                        
+
                         let arr: [u8; 16] = tmp.try_into().map_err(|_|
                             ::prost::DecodeError::new(
                                 concat!("expected exactly 16 bytes for ", stringify!(#native_ty))
                             )
                         )?;
-                        
+
                         self.#fname = ::core::option::Option::Some(#native_ty::from_le_bytes(arr));
-                        
+
                         ::core::result::Result::Ok(())
                     }
                 });

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, Pubkey, ProgramParser, SlotUpdate};
+use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey, SlotUpdate};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SlotParser;

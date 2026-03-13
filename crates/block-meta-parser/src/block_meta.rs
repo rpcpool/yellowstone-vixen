@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yellowstone_grpc_proto::geyser::SubscribeUpdateBlockMeta;
-use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, Pubkey, ProgramParser};
+use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey};
 use yellowstone_vixen_proc_macro::vixen;
 
 #[vixen]

@@ -227,9 +227,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
                         accounts: WithdrawWithheldTokensFromMintAccounts {
                             mint: crate::Pubkey::new(ix.accounts[0].0),
                             fee_recipient: crate::Pubkey::new(ix.accounts[1].0),
-                            withdraw_withheld_authority: crate::Pubkey::new(
-                                ix.accounts[2].0,
-                            ),
+                            withdraw_withheld_authority: crate::Pubkey::new(ix.accounts[2].0),
                             multisig_signers: ix.accounts[3..]
                                 .iter()
                                 .map(|a| crate::Pubkey::new(a.0))
@@ -251,9 +249,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
                         accounts: WithdrawWithheldTokensFromAccountsAccounts {
                             mint: crate::Pubkey::new(ix.accounts[0].0),
                             fee_recipient: crate::Pubkey::new(ix.accounts[1].0),
-                            withdraw_withheld_authority: crate::Pubkey::new(
-                                ix.accounts[2].0,
-                            ),
+                            withdraw_withheld_authority: crate::Pubkey::new(ix.accounts[2].0),
                             source_accounts: ix.accounts[3..(3 + n)]
                                 .iter()
                                 .map(|a| crate::Pubkey::new(a.0))

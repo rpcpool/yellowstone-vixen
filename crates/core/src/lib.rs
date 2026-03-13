@@ -374,13 +374,9 @@ impl SlotPrefilter {
 #[macro_export]
 macro_rules! pubkey_convert_helpers {
     ($ty:ty) => {
-        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey {
-            value.to_bytes().into()
-        }
+        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey { value.to_bytes().into() }
 
-        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty {
-            value.into_bytes().into()
-        }
+        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty { value.into_bytes().into() }
     };
 }
 

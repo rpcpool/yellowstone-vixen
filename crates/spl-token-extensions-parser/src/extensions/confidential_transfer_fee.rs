@@ -151,9 +151,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                             mint: crate::Pubkey::new(ix.accounts[0].0),
                             fee_recipient: crate::Pubkey::new(ix.accounts[1].0),
                             sysvar: crate::Pubkey::new(ix.accounts[2].0),
-                            withdraw_withheld_authority: crate::Pubkey::new(
-                                ix.accounts[3].0,
-                            ),
+                            withdraw_withheld_authority: crate::Pubkey::new(ix.accounts[3].0),
                             multisig_signers: ix.accounts[4..]
                                 .iter()
                                 .map(|a| crate::Pubkey::new(a.0))
@@ -172,9 +170,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                             mint: crate::Pubkey::new(ix.accounts[0].0),
                             fee_recipient: crate::Pubkey::new(ix.accounts[1].0),
                             sysvar: crate::Pubkey::new(ix.accounts[2].0),
-                            withdraw_withheld_authority: crate::Pubkey::new(
-                                ix.accounts[3].0,
-                            ),
+                            withdraw_withheld_authority: crate::Pubkey::new(ix.accounts[3].0),
                             source_accounts: ix.accounts[4..]
                                 .iter()
                                 .map(|a| crate::Pubkey::new(a.0))
@@ -207,9 +203,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 oneof::Instruction::EnableHarvestToMint(oneof::EnableHarvestToMint {
                     accounts: EnableHarvestToMintAccounts {
                         mint: crate::Pubkey::new(ix.accounts[0].0),
-                        confidential_transfer_fee_authority: crate::Pubkey::new(
-                            ix.accounts[1].0,
-                        ),
+                        confidential_transfer_fee_authority: crate::Pubkey::new(ix.accounts[1].0),
                         multisig_signers: ix.accounts[2..]
                             .iter()
                             .map(|a| crate::Pubkey::new(a.0))
@@ -224,9 +218,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 oneof::Instruction::DisableHarvestToMint(oneof::DisableHarvestToMint {
                     accounts: DisableHarvestToMintAccounts {
                         account: crate::Pubkey::new(ix.accounts[0].0),
-                        confidential_transfer_fee_authority: crate::Pubkey::new(
-                            ix.accounts[1].0,
-                        ),
+                        confidential_transfer_fee_authority: crate::Pubkey::new(ix.accounts[1].0),
                         multisig_signers: ix.accounts[2..]
                             .iter()
                             .map(|a| crate::Pubkey::new(a.0))

@@ -163,10 +163,7 @@ impl InstructionParser {
                     crate::instruction::InitializeMultisig {
                         accounts: crate::InitializeMultisigAccounts {
                             multisig: pk(&ix.accounts[0]),
-                            signers: ix.accounts[2..]
-                                .iter()
-                                .map(|a| Pubkey::new(a.0))
-                                .collect(),
+                            signers: ix.accounts[2..].iter().map(|a| Pubkey::new(a.0)).collect(),
                         },
                         args: crate::InitializeMultisigArgs { m: m as u32 },
                     },
@@ -180,10 +177,7 @@ impl InstructionParser {
                     crate::instruction::InitializeMultisig {
                         accounts: crate::InitializeMultisigAccounts {
                             multisig: pk(&ix.accounts[0]),
-                            signers: ix.accounts[1..]
-                                .iter()
-                                .map(|a| Pubkey::new(a.0))
-                                .collect(),
+                            signers: ix.accounts[1..].iter().map(|a| Pubkey::new(a.0)).collect(),
                         },
                         args: crate::InitializeMultisigArgs { m: m as u32 },
                     },

@@ -93,8 +93,7 @@ impl Parser for AccountParser {
                 upgrade_authority_address,
             } => account::State::ProgramData(ProgramData {
                 slot,
-                upgrade_authority: upgrade_authority_address
-                    .map(|pk| Pubkey::new(pk.to_bytes())),
+                upgrade_authority: upgrade_authority_address.map(|pk| Pubkey::new(pk.to_bytes())),
             }),
         };
 
