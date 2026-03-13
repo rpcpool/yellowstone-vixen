@@ -85,9 +85,8 @@ pub struct KafkaSinkConfig {
     #[serde(default = "default_batch_num_messages")]
     pub batch_num_messages: u32,
 
-    /// Kafka producer compression type.
     #[serde(default)]
-    pub kafka_compression_type: KafkaCompressionType,
+    pub compression_type: KafkaCompressionType,
 
     /// Max attempts for Kafka writes before surfacing an error.
     #[serde(default = "default_kafka_write_max_attempts")]
@@ -131,8 +130,8 @@ impl fmt::Debug for KafkaSinkConfig {
             )
             .field("batch_num_messages", &self.batch_num_messages)
             .field(
-                "kafka_compression_type",
-                &self.kafka_compression_type.as_str(),
+                "producer_compression_type",
+                &self.compression_type.as_str(),
             )
             .field("kafka_write_max_attempts", &self.kafka_write_max_attempts)
             .field("kafka_retry_backoff_ms", &self.kafka_retry_backoff_ms)
@@ -180,7 +179,7 @@ impl Default for KafkaSinkConfig {
             message_timeout_ms: default_message_timeout_ms(),
             queue_buffering_max_messages: default_queue_buffering_max_messages(),
             batch_num_messages: default_batch_num_messages(),
-            kafka_compression_type: KafkaCompressionType::default(),
+            compression_type: KafkaCompressionType::default(),
             kafka_write_max_attempts: default_kafka_write_max_attempts(),
             kafka_retry_backoff_ms: default_kafka_retry_backoff_ms(),
             sasl_username: None,
