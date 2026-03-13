@@ -13,7 +13,7 @@ pub mod utils;
 pub type Pubkey = yellowstone_vixen_core::KeyBytes<32>;
 
 // Re-export main types
-pub use config::KafkaSinkConfig;
+pub use config::{KafkaCompressionType, KafkaSinkConfig};
 pub use events::{
     AccountSlotCommitEvent, CommitScope, MarkerType, PreparedRecord, RawAccountEvent,
     RawInstructionEvent, RecordHeader, RecordKind, TransactionSlotCommitEvent,
