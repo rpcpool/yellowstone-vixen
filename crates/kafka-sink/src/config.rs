@@ -1,7 +1,54 @@
-use std::{fmt, io};
+use std::{fmt, io, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use yellowstone_vixen_block_coordinator::AccountMode;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum KafkaCompressionType {
+    None,
+    Gzip,
+    Snappy,
+    Lz4,
+    // Zstd is a modern compression algorithm that offers better compression ratios
+    // and faster speeds than older algorithms like Gzip and Snappy.
+    #[default]
+    Zstd,
+}
+
+impl KafkaCompressionType {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Gzip => "gzip",
+            Self::Snappy => "snappy",
+            Self::Lz4 => "lz4",
+            Self::Zstd => "zstd",
+        }
+    }
+}
+
+impl fmt::Display for KafkaCompressionType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(self.as_str()) }
+}
+
+impl FromStr for KafkaCompressionType {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "none" => Ok(Self::None),
+            "gzip" => Ok(Self::Gzip),
+            "snappy" => Ok(Self::Snappy),
+            "lz4" => Ok(Self::Lz4),
+            "zstd" => Ok(Self::Zstd),
+            other => Err(format!(
+                "Invalid KAFKA_COMPRESSION_TYPE='{other}'. Expected one of: none, gzip, snappy, \
+                 lz4, zstd"
+            )),
+        }
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct KafkaSinkConfig {
@@ -37,6 +84,9 @@ pub struct KafkaSinkConfig {
 
     #[serde(default = "default_batch_num_messages")]
     pub batch_num_messages: u32,
+
+    #[serde(default)]
+    pub compression_type: KafkaCompressionType,
 
     /// Max attempts for Kafka writes before surfacing an error.
     #[serde(default = "default_kafka_write_max_attempts")]
@@ -79,6 +129,7 @@ impl fmt::Debug for KafkaSinkConfig {
                 &self.queue_buffering_max_messages,
             )
             .field("batch_num_messages", &self.batch_num_messages)
+            .field("producer_compression_type", &self.compression_type.as_str())
             .field("kafka_write_max_attempts", &self.kafka_write_max_attempts)
             .field("kafka_retry_backoff_ms", &self.kafka_retry_backoff_ms)
             .field("sasl_username", &self.sasl_username)
@@ -125,6 +176,7 @@ impl Default for KafkaSinkConfig {
             message_timeout_ms: default_message_timeout_ms(),
             queue_buffering_max_messages: default_queue_buffering_max_messages(),
             batch_num_messages: default_batch_num_messages(),
+            compression_type: KafkaCompressionType::default(),
             kafka_write_max_attempts: default_kafka_write_max_attempts(),
             kafka_retry_backoff_ms: default_kafka_retry_backoff_ms(),
             sasl_username: None,
