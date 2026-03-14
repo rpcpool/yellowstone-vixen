@@ -202,8 +202,7 @@ fn scalar_to_proto(s: &ScalarIr) -> &'static str {
         ScalarIr::Float => "float",
         ScalarIr::Double => "double",
         ScalarIr::String => "string",
-        ScalarIr::Bytes => "bytes",
-        ScalarIr::FixedBytes(_) => "bytes",
+        ScalarIr::Bytes | ScalarIr::FixedBytes(_) | ScalarIr::U128 | ScalarIr::I128 => "bytes",
         ScalarIr::PublicKey => "PublicKey",
     }
 }

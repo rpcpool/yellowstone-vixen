@@ -9,10 +9,10 @@
 use std::{borrow::Cow, collections::HashSet};
 
 use yellowstone_vixen_core::{
-    AccountUpdate, ParseResult, Parser, Prefilter, TransactionPrefilter, TransactionUpdate,
+    AccountUpdate, ParseResult, Parser, Prefilter, Pubkey, TransactionPrefilter, TransactionUpdate,
 };
 
-use crate::{sink::KafkaSink, Pubkey};
+use crate::sink::KafkaSink;
 
 /// Pass-through subscription for transaction updates.
 /// Subscribes to all transactions and forwards them as-is.

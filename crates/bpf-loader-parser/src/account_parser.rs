@@ -6,25 +6,25 @@ use yellowstone_vixen_core::{
 };
 use yellowstone_vixen_proc_macro::vixen;
 
-use crate::PublicKey;
+use crate::Pubkey;
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct Buffer {
-    pub authority: Option<PublicKey>,
+    pub authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct Program {
-    pub programdata_address: PublicKey,
+    pub programdata_address: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ProgramData {
     pub slot: u64,
-    pub upgrade_authority: Option<PublicKey>,
+    pub upgrade_authority: Option<Pubkey>,
 }
 
 #[vixen]
@@ -78,14 +78,14 @@ impl Parser for AccountParser {
 
             UpgradeableLoaderState::Buffer { authority_address } => {
                 account::State::Buffer(Buffer {
-                    authority: authority_address.map(|pk| PublicKey::new(pk.to_bytes())),
+                    authority: authority_address.map(|pk| Pubkey::new(pk.to_bytes())),
                 })
             },
 
             UpgradeableLoaderState::Program {
                 programdata_address,
             } => account::State::Program(Program {
-                programdata_address: PublicKey::new(programdata_address.to_bytes()),
+                programdata_address: Pubkey::new(programdata_address.to_bytes()),
             }),
 
             UpgradeableLoaderState::ProgramData {
@@ -93,8 +93,7 @@ impl Parser for AccountParser {
                 upgrade_authority_address,
             } => account::State::ProgramData(ProgramData {
                 slot,
-                upgrade_authority: upgrade_authority_address
-                    .map(|pk| PublicKey::new(pk.to_bytes())),
+                upgrade_authority: upgrade_authority_address.map(|pk| Pubkey::new(pk.to_bytes())),
             }),
         };
 
@@ -104,7 +103,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> {
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
         solana_sdk_ids::bpf_loader_upgradeable::ID.to_bytes().into()
     }
 }

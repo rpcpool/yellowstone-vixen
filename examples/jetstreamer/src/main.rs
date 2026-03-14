@@ -13,13 +13,11 @@ use yellowstone_vixen_spl_token_parser::{
     instruction::Instruction, InstructionParser, TokenProgram,
 };
 
-fn pk(pubkey: &yellowstone_vixen_spl_token_parser::PublicKey) -> String {
-    bs58::encode(&pubkey.value).into_string()
-}
+fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
 
-fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::PublicKey>) -> String {
+fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::Pubkey>) -> String {
     match pubkey {
-        Some(p) => bs58::encode(&p.value).into_string(),
+        Some(p) => p.to_string(),
         None => "None".to_string(),
     }
 }

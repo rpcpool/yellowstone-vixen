@@ -70,6 +70,11 @@ pub enum ScalarIr {
     /// On-chain i64 (8 bytes). Native match with Rust i64 / proto int64.
     Int64,
 
+    /// On-chain u128 (16 bytes). Native Rust u128, proto-encoded as `bytes` (16 LE bytes).
+    U128,
+    /// On-chain i128 (16 bytes). Native Rust i128, proto-encoded as `bytes` (16 LE bytes).
+    I128,
+
     Float,
     Double,
     String,
@@ -77,8 +82,7 @@ pub enum ScalarIr {
 
     /// Fixed-size byte array with known size (no length prefix on-chain).
     /// Stored as `Vec<u8>` in Rust for prost compatibility, but borsh
-    /// reads/writes exactly N bytes. Used for u128/i128 (16), pubkeys (32),
-    /// fixed byte arrays, etc.
+    /// reads/writes exactly N bytes. Used for fixed byte arrays, etc.
     FixedBytes(usize),
 
     /// 32-byte pubkey. Same borsh as FixedBytes(32) but rendered as a

@@ -60,125 +60,11 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
         quote! {}
     };
 
-    let widen_helpers = widen_borsh_helpers();
-    let fixed_array_widen_helpers = fixed_array_widen_borsh_helpers();
-
     quote! {
         pub mod #program_mod_ident {
             use yellowstone_vixen_parser::prelude::*;
 
-            pub use yellowstone_vixen_core::PublicKey;
-
-            /// Borsh: deserialize 32 bytes into a PublicKey wrapper (singular required field).
-            fn borsh_deserialize_pubkey<R: ::borsh::io::Read>(
-                reader: &mut R,
-            ) -> ::core::result::Result<PublicKey, ::borsh::io::Error> {
-                let mut buf = [0u8; 32];
-
-                reader.read_exact(&mut buf)?;
-
-                ::core::result::Result::Ok(PublicKey::new(buf))
-            }
-
-            fn borsh_serialize_pubkey<W: ::borsh::io::Write>(
-                val: &PublicKey,
-                writer: &mut W,
-            ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                writer.write_all(&val.value)
-            }
-
-            fn borsh_deserialize_opt_pubkey<R: ::borsh::io::Read>(
-                reader: &mut R,
-            ) -> ::core::result::Result<::core::option::Option<PublicKey>, ::borsh::io::Error> {
-                let tag: u8 = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                match tag {
-                    0 => ::core::result::Result::Ok(::core::option::Option::None),
-                    1 => {
-                        let mut buf = [0u8; 32];
-
-                        reader.read_exact(&mut buf)?;
-
-                        ::core::result::Result::Ok(::core::option::Option::Some(PublicKey::new(buf)))
-                    }
-                    _ => ::core::result::Result::Err(::borsh::io::Error::new(
-                        ::borsh::io::ErrorKind::InvalidData,
-                        "invalid option tag for pubkey",
-                    )),
-                }
-            }
-
-            fn borsh_serialize_opt_pubkey<W: ::borsh::io::Write>(
-                val: &::core::option::Option<PublicKey>,
-                writer: &mut W,
-            ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                match val {
-                    ::core::option::Option::Some(pk) => {
-                        ::borsh::BorshSerialize::serialize(&1u8, writer)?;
-
-                        writer.write_all(&pk.value)
-                    }
-                    ::core::option::Option::None => {
-                        ::borsh::BorshSerialize::serialize(&0u8, writer)
-                    }
-                }
-            }
-
-            fn borsh_deserialize_vec_pubkey<R: ::borsh::io::Read>(
-                reader: &mut R,
-            ) -> ::core::result::Result<Vec<PublicKey>, ::borsh::io::Error> {
-                let len: u32 = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                let mut result = Vec::with_capacity(len as usize);
-
-                for _ in 0..len {
-                    let mut buf = [0u8; 32];
-
-                    reader.read_exact(&mut buf)?;
-                    result.push(PublicKey::new(buf));
-                }
-
-                ::core::result::Result::Ok(result)
-            }
-
-            fn borsh_serialize_vec_pubkey<W: ::borsh::io::Write>(
-                val: &[PublicKey],
-                writer: &mut W,
-            ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                ::borsh::BorshSerialize::serialize(&(val.len() as u32), writer)?;
-
-                for pk in val {
-                    writer.write_all(&pk.value)?;
-                }
-
-                ::core::result::Result::Ok(())
-            }
-
-            fn borsh_deserialize_fixed_array_pubkey<const N: usize, R: ::borsh::io::Read>(
-                reader: &mut R,
-            ) -> ::core::result::Result<Vec<PublicKey>, ::borsh::io::Error> {
-                let mut result = Vec::with_capacity(N);
-
-                for _ in 0..N {
-                    let mut buf = [0u8; 32];
-
-                    reader.read_exact(&mut buf)?;
-                    result.push(PublicKey::new(buf));
-                }
-
-                ::core::result::Result::Ok(result)
-            }
-
-            fn borsh_serialize_fixed_array_pubkey<const N: usize, W: ::borsh::io::Write>(
-                val: &[PublicKey],
-                writer: &mut W,
-            ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                for pk in val {
-                    writer.write_all(&pk.value)?;
-                }
-
-                ::core::result::Result::Ok(())
-            }
+            pub use yellowstone_vixen_core::Pubkey;
 
             /// Borsh: deserialize N fixed bytes into `Vec<u8>`.
             /// On-chain, fixed-size byte fields (pubkeys, u128, fixed arrays) have no
@@ -267,8 +153,6 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
                 ::core::result::Result::Ok(())
             }
 
-            #widen_helpers
-
             /// Borsh: deserialize a fixed-count array (no length prefix on-chain).
             /// Uses standard BorshDeserialize for each element.
             fn borsh_deserialize_fixed_array<T: ::borsh::BorshDeserialize, const N: usize, R: ::borsh::io::Read>(
@@ -321,8 +205,6 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
 
                 ::core::result::Result::Ok(())
             }
-
-            #(#fixed_array_widen_helpers)*
 
             /// Borsh: deserialize a fixed-count array of f32 permissively (no length prefix, allows NaN).
             fn borsh_deserialize_fixed_array_f32_permissive<const N: usize, R: ::borsh::io::Read>(
@@ -559,160 +441,4 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
             #instruction_parser
         }
     }
-}
-
-///
-/// Generate borsh helper functions that bridge the gap between on-chain narrow
-/// integer types (u8, u16, i8, i16) and their widened Rust/proto counterparts
-/// (u32, i32).
-///
-/// Protobuf has no u8/u16/i8/i16 — those on-chain types are stored as u32/i32
-/// in the generated Rust structs (for prost compatibility). But borsh must still
-/// read/write the original narrow size (e.g. 1 byte for u8, not 4 bytes for u32).
-///
-/// For each type pair we generate 6 functions (deserialize + serialize × 3 labels):
-///   - `borsh_deserialize_u8_as_u32`     / `borsh_serialize_u32_as_u8`       — singular
-///   - `borsh_deserialize_opt_u8_as_u32`  / `borsh_serialize_opt_u32_as_u8`  — optional
-///   - `borsh_deserialize_vec_u8_as_u32`  / `borsh_serialize_vec_u32_as_u8`  — repeated
-///
-fn widen_borsh_helpers() -> TokenStream {
-    // (on_chain_type, rust_type, deserialize_suffix, serialize_suffix)
-    let type_pairs: &[(&str, &str, &str, &str)] = &[
-        ("u8", "u32", "u8_as_u32", "u32_as_u8"),
-        ("u16", "u32", "u16_as_u32", "u32_as_u16"),
-        ("i8", "i32", "i8_as_i32", "i32_as_i8"),
-        ("i16", "i32", "i16_as_i32", "i32_as_i16"),
-    ];
-
-    let helper_fns: Vec<TokenStream> = type_pairs
-        .iter()
-        .map(
-            |(on_chain_type, rust_type, deserialize_suffix, serialize_suffix)| {
-                let on_chain_ty: syn::Type = syn::parse_str(on_chain_type).unwrap();
-                let rust_ty: syn::Type = syn::parse_str(rust_type).unwrap();
-
-                let (deserialize_singular, serialize_singular) = (
-                    format_ident!("borsh_deserialize_{}", deserialize_suffix),
-                    format_ident!("borsh_serialize_{}", serialize_suffix)
-                );
-
-                let (deserialize_optional, serialize_optional) = (
-                    format_ident!("borsh_deserialize_opt_{}", deserialize_suffix),
-                    format_ident!("borsh_serialize_opt_{}", serialize_suffix)
-                );
-
-                let (deserialize_repeated, serialize_repeated) = (
-                    format_ident!("borsh_deserialize_vec_{}", deserialize_suffix),
-                    format_ident!("borsh_serialize_vec_{}", serialize_suffix)
-                );
-
-                quote! {
-                    fn #deserialize_singular<R: ::borsh::io::Read>(
-                        reader: &mut R,
-                    ) -> ::core::result::Result<#rust_ty, ::borsh::io::Error> {
-                        let val: #on_chain_ty = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                        ::core::result::Result::Ok(val as #rust_ty)
-                    }
-
-                    fn #serialize_singular<W: ::borsh::io::Write>(
-                        val: &#rust_ty,
-                        writer: &mut W,
-                    ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                        ::borsh::BorshSerialize::serialize(&(*val as #on_chain_ty), writer)
-                    }
-
-                    fn #deserialize_optional<R: ::borsh::io::Read>(
-                        reader: &mut R,
-                    ) -> ::core::result::Result<::core::option::Option<#rust_ty>, ::borsh::io::Error> {
-                        let opt: ::core::option::Option<#on_chain_ty> =
-                            ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                        ::core::result::Result::Ok(opt.map(|v| v as #rust_ty))
-                    }
-
-                    fn #serialize_optional<W: ::borsh::io::Write>(
-                        val: &::core::option::Option<#rust_ty>,
-                        writer: &mut W,
-                    ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                        let narrowed = val.map(|v| v as #on_chain_ty);
-
-                        ::borsh::BorshSerialize::serialize(&narrowed, writer)
-                    }
-
-                    fn #deserialize_repeated<R: ::borsh::io::Read>(
-                        reader: &mut R,
-                    ) -> ::core::result::Result<Vec<#rust_ty>, ::borsh::io::Error> {
-                        let vec: Vec<#on_chain_ty> = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                        ::core::result::Result::Ok(vec.into_iter().map(|v| v as #rust_ty).collect())
-                    }
-
-                    fn #serialize_repeated<W: ::borsh::io::Write>(
-                        val: &[#rust_ty],
-                        writer: &mut W,
-                    ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                        let narrowed: Vec<#on_chain_ty> = val.iter().map(|&v| v as #on_chain_ty).collect();
-
-                        ::borsh::BorshSerialize::serialize(&narrowed, writer)
-                    }
-                }
-            },
-        )
-        .collect();
-
-    quote! { #(#helper_fns)* }
-}
-
-/// Generate borsh helpers for fixed-count arrays of widened integer types.
-/// These read exactly N narrow values without a length prefix, widening each to the proto type.
-fn fixed_array_widen_borsh_helpers() -> Vec<TokenStream> {
-    let type_pairs: &[(&str, &str, &str, &str)] = &[
-        ("u8", "u32", "u8_as_u32", "u32_as_u8"),
-        ("u16", "u32", "u16_as_u32", "u32_as_u16"),
-        ("i8", "i32", "i8_as_i32", "i32_as_i8"),
-        ("i16", "i32", "i16_as_i32", "i32_as_i16"),
-    ];
-
-    type_pairs
-        .iter()
-        .map(
-            |(on_chain_type, rust_type, deserialize_suffix, serialize_suffix)| {
-                let on_chain_ty: syn::Type = syn::parse_str(on_chain_type).unwrap();
-                let rust_ty: syn::Type = syn::parse_str(rust_type).unwrap();
-
-                let (deserialize_fn, serialize_fn) = (
-                    format_ident!("borsh_deserialize_fixed_array_{}", deserialize_suffix),
-                    format_ident!("borsh_serialize_fixed_array_{}", serialize_suffix),
-                );
-
-                quote! {
-                    fn #deserialize_fn<const N: usize, R: ::borsh::io::Read>(
-                        reader: &mut R,
-                    ) -> ::core::result::Result<Vec<#rust_ty>, ::borsh::io::Error> {
-                        let mut result = Vec::with_capacity(N);
-
-                        for _ in 0..N {
-                            let val: #on_chain_ty = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                            result.push(val as #rust_ty);
-                        }
-
-                        ::core::result::Result::Ok(result)
-                    }
-
-                    fn #serialize_fn<const N: usize, W: ::borsh::io::Write>(
-                        val: &[#rust_ty],
-                        writer: &mut W,
-                    ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                        for &v in val {
-                            ::borsh::BorshSerialize::serialize(&(v as #on_chain_ty), writer)?;
-                        }
-
-                        ::core::result::Result::Ok(())
-                    }
-                }
-            },
-        )
-        .collect()
 }

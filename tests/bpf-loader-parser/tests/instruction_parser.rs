@@ -1,5 +1,5 @@
 use yellowstone_vixen_bpf_loader_parser::{instruction, InstructionParser};
-use yellowstone_vixen_core::Parser;
+use yellowstone_vixen_core::{Parser, Pubkey};
 use yellowstone_vixen_mock::tx_fixture;
 
 #[tokio::test]
@@ -20,8 +20,8 @@ async fn parse_initialize_buffer_ix() {
     };
 
     let accounts = ib.accounts.as_ref().expect("missing accounts");
-    assert!(!accounts.buffer.value.is_empty());
-    assert!(!accounts.authority.value.is_empty());
+    assert_ne!(accounts.buffer, Pubkey::default());
+    assert_ne!(accounts.authority, Pubkey::default());
 }
 
 #[tokio::test]
@@ -42,9 +42,9 @@ async fn parse_upgrade_ix() {
     };
 
     let accounts = up.accounts.as_ref().expect("missing accounts");
-    assert!(!accounts.program_data.value.is_empty());
-    assert!(!accounts.program.value.is_empty());
-    assert!(!accounts.buffer.value.is_empty());
-    assert!(!accounts.spill.value.is_empty());
-    assert!(!accounts.authority.value.is_empty());
+    assert_ne!(accounts.program_data, Pubkey::default());
+    assert_ne!(accounts.program, Pubkey::default());
+    assert_ne!(accounts.buffer, Pubkey::default());
+    assert_ne!(accounts.spill, Pubkey::default());
+    assert_ne!(accounts.authority, Pubkey::default());
 }

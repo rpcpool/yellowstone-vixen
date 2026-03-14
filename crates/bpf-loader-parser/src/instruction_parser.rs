@@ -4,7 +4,7 @@ use yellowstone_vixen_core::{
 };
 use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
-use crate::PublicKey;
+use crate::Pubkey;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InstructionParser;
@@ -36,7 +36,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> {
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
         solana_sdk_ids::bpf_loader_upgradeable::ID.to_bytes().into()
     }
 }
@@ -55,8 +55,8 @@ impl InstructionParser {
                 crate::instruction::Instruction::InitializeBuffer(
                     crate::instruction::InitializeBuffer {
                         accounts: Some(crate::InitializeBufferAccounts {
-                            buffer: PublicKey::new(ix.accounts[0].0),
-                            authority: PublicKey::new(ix.accounts[1].0),
+                            buffer: Pubkey::new(ix.accounts[0].0),
+                            authority: Pubkey::new(ix.accounts[1].0),
                         }),
                     },
                 )
@@ -67,8 +67,8 @@ impl InstructionParser {
 
                 crate::instruction::Instruction::Write(crate::instruction::Write {
                     accounts: Some(crate::WriteAccounts {
-                        buffer: PublicKey::new(ix.accounts[0].0),
-                        authority: PublicKey::new(ix.accounts[1].0),
+                        buffer: Pubkey::new(ix.accounts[0].0),
+                        authority: Pubkey::new(ix.accounts[1].0),
                     }),
                     args: Some(crate::WriteArgs { offset, bytes }),
                 })
@@ -79,14 +79,14 @@ impl InstructionParser {
 
                 crate::instruction::Instruction::Deploy(crate::instruction::Deploy {
                     accounts: Some(crate::DeployAccounts {
-                        payer: PublicKey::new(ix.accounts[0].0),
-                        program_data: PublicKey::new(ix.accounts[1].0),
-                        program: PublicKey::new(ix.accounts[2].0),
-                        buffer: PublicKey::new(ix.accounts[3].0),
-                        rent: PublicKey::new(ix.accounts[4].0),
-                        clock: PublicKey::new(ix.accounts[5].0),
-                        system_program: PublicKey::new(ix.accounts[6].0),
-                        authority: PublicKey::new(ix.accounts[7].0),
+                        payer: Pubkey::new(ix.accounts[0].0),
+                        program_data: Pubkey::new(ix.accounts[1].0),
+                        program: Pubkey::new(ix.accounts[2].0),
+                        buffer: Pubkey::new(ix.accounts[3].0),
+                        rent: Pubkey::new(ix.accounts[4].0),
+                        clock: Pubkey::new(ix.accounts[5].0),
+                        system_program: Pubkey::new(ix.accounts[6].0),
+                        authority: Pubkey::new(ix.accounts[7].0),
                     }),
                     args: Some(crate::DeployArgs {
                         max_data_len: max_data_len as u64,
@@ -99,13 +99,13 @@ impl InstructionParser {
 
                 crate::instruction::Instruction::Upgrade(crate::instruction::Upgrade {
                     accounts: Some(crate::UpgradeAccounts {
-                        program_data: PublicKey::new(ix.accounts[0].0),
-                        program: PublicKey::new(ix.accounts[1].0),
-                        buffer: PublicKey::new(ix.accounts[2].0),
-                        spill: PublicKey::new(ix.accounts[3].0),
-                        rent: PublicKey::new(ix.accounts[4].0),
-                        clock: PublicKey::new(ix.accounts[5].0),
-                        authority: PublicKey::new(ix.accounts[6].0),
+                        program_data: Pubkey::new(ix.accounts[0].0),
+                        program: Pubkey::new(ix.accounts[1].0),
+                        buffer: Pubkey::new(ix.accounts[2].0),
+                        spill: Pubkey::new(ix.accounts[3].0),
+                        rent: Pubkey::new(ix.accounts[4].0),
+                        clock: Pubkey::new(ix.accounts[5].0),
+                        authority: Pubkey::new(ix.accounts[6].0),
                     }),
                 })
             },
@@ -115,9 +115,9 @@ impl InstructionParser {
 
                 crate::instruction::Instruction::SetAuthority(crate::instruction::SetAuthority {
                     accounts: Some(crate::SetAuthorityAccounts {
-                        account: PublicKey::new(ix.accounts[0].0),
-                        current_authority: PublicKey::new(ix.accounts[1].0),
-                        new_authority: ix.accounts.get(2).map(|k| PublicKey::new(k.0)),
+                        account: Pubkey::new(ix.accounts[0].0),
+                        current_authority: Pubkey::new(ix.accounts[1].0),
+                        new_authority: ix.accounts.get(2).map(|k| Pubkey::new(k.0)),
                     }),
                 })
             },
@@ -127,10 +127,10 @@ impl InstructionParser {
 
                 crate::instruction::Instruction::Close(crate::instruction::Close {
                     accounts: Some(crate::CloseAccounts {
-                        close_target: PublicKey::new(ix.accounts[0].0),
-                        recipient: PublicKey::new(ix.accounts[1].0),
-                        authority: ix.accounts.get(2).map(|k| PublicKey::new(k.0)),
-                        program: ix.accounts.get(3).map(|k| PublicKey::new(k.0)),
+                        close_target: Pubkey::new(ix.accounts[0].0),
+                        recipient: Pubkey::new(ix.accounts[1].0),
+                        authority: ix.accounts.get(2).map(|k| Pubkey::new(k.0)),
+                        program: ix.accounts.get(3).map(|k| Pubkey::new(k.0)),
                     }),
                 })
             },
@@ -140,10 +140,10 @@ impl InstructionParser {
 
                 crate::instruction::Instruction::ExtendProgram(crate::instruction::ExtendProgram {
                     accounts: Some(crate::ExtendProgramAccounts {
-                        program_data: PublicKey::new(ix.accounts[0].0),
-                        program: PublicKey::new(ix.accounts[1].0),
-                        system_program: ix.accounts.get(2).map(|k| PublicKey::new(k.0)),
-                        payer: ix.accounts.get(3).map(|k| PublicKey::new(k.0)),
+                        program_data: Pubkey::new(ix.accounts[0].0),
+                        program: Pubkey::new(ix.accounts[1].0),
+                        system_program: ix.accounts.get(2).map(|k| Pubkey::new(k.0)),
+                        payer: ix.accounts.get(3).map(|k| Pubkey::new(k.0)),
                     }),
                     args: Some(crate::ExtendProgramArgs { additional_bytes }),
                 })
@@ -155,9 +155,9 @@ impl InstructionParser {
                 crate::instruction::Instruction::SetAuthorityChecked(
                     crate::instruction::SetAuthorityChecked {
                         accounts: Some(crate::SetAuthorityCheckedAccounts {
-                            account: PublicKey::new(ix.accounts[0].0),
-                            current_authority: PublicKey::new(ix.accounts[1].0),
-                            new_authority: PublicKey::new(ix.accounts[2].0),
+                            account: Pubkey::new(ix.accounts[0].0),
+                            current_authority: Pubkey::new(ix.accounts[1].0),
+                            new_authority: Pubkey::new(ix.accounts[2].0),
                         }),
                     },
                 )

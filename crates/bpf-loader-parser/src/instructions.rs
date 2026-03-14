@@ -1,4 +1,4 @@
-pub use yellowstone_vixen_core::PublicKey;
+pub use yellowstone_vixen_core::Pubkey;
 use yellowstone_vixen_proc_macro::vixen;
 
 // ── Instruction accounts ───────────────────────────────────────────
@@ -6,74 +6,74 @@ use yellowstone_vixen_proc_macro::vixen;
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeBufferAccounts {
-    pub buffer: PublicKey,
-    pub authority: PublicKey,
+    pub buffer: Pubkey,
+    pub authority: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct WriteAccounts {
-    pub buffer: PublicKey,
-    pub authority: PublicKey,
+    pub buffer: Pubkey,
+    pub authority: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DeployAccounts {
-    pub payer: PublicKey,
-    pub program_data: PublicKey,
-    pub program: PublicKey,
-    pub buffer: PublicKey,
-    pub rent: PublicKey,
-    pub clock: PublicKey,
-    pub system_program: PublicKey,
-    pub authority: PublicKey,
+    pub payer: Pubkey,
+    pub program_data: Pubkey,
+    pub program: Pubkey,
+    pub buffer: Pubkey,
+    pub rent: Pubkey,
+    pub clock: Pubkey,
+    pub system_program: Pubkey,
+    pub authority: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct UpgradeAccounts {
-    pub program_data: PublicKey,
-    pub program: PublicKey,
-    pub buffer: PublicKey,
-    pub spill: PublicKey,
-    pub rent: PublicKey,
-    pub clock: PublicKey,
-    pub authority: PublicKey,
+    pub program_data: Pubkey,
+    pub program: Pubkey,
+    pub buffer: Pubkey,
+    pub spill: Pubkey,
+    pub rent: Pubkey,
+    pub clock: Pubkey,
+    pub authority: Pubkey,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetAuthorityAccounts {
-    pub account: PublicKey,
-    pub current_authority: PublicKey,
-    pub new_authority: Option<PublicKey>,
+    pub account: Pubkey,
+    pub current_authority: Pubkey,
+    pub new_authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct CloseAccounts {
-    pub close_target: PublicKey,
-    pub recipient: PublicKey,
-    pub authority: Option<PublicKey>,
-    pub program: Option<PublicKey>,
+    pub close_target: Pubkey,
+    pub recipient: Pubkey,
+    pub authority: Option<Pubkey>,
+    pub program: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct ExtendProgramAccounts {
-    pub program_data: PublicKey,
-    pub program: PublicKey,
-    pub system_program: Option<PublicKey>,
-    pub payer: Option<PublicKey>,
+    pub program_data: Pubkey,
+    pub program: Pubkey,
+    pub system_program: Option<Pubkey>,
+    pub payer: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetAuthorityCheckedAccounts {
-    pub account: PublicKey,
-    pub current_authority: PublicKey,
-    pub new_authority: PublicKey,
+    pub account: Pubkey,
+    pub current_authority: Pubkey,
+    pub new_authority: Pubkey,
 }
 
 // ── Instruction args ───────────────────────────────────────────────
