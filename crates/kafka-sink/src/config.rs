@@ -88,9 +88,25 @@ pub struct KafkaSinkConfig {
     #[serde(default)]
     pub compression_type: KafkaCompressionType,
 
+    /// Concrete Kafka transactional.id for this producer instance.
+    ///
+    /// When set, buffered sinks can atomically commit all records for a slot and
+    /// the slot checkpoint marker in a single Kafka transaction.
+    #[serde(default)]
+    pub transactional_id: Option<String>,
+
+    /// Broker-side transaction timeout used for transactional producers.
+    #[serde(default = "default_transaction_timeout_ms")]
+    pub transaction_timeout_ms: u32,
+
     /// Max attempts for Kafka writes before surfacing an error.
     #[serde(default = "default_kafka_write_max_attempts")]
     pub kafka_write_max_attempts: u32,
+
+    /// Max attempts for Kafka transactional control operations such as
+    /// init/begin/commit/abort before surfacing an error.
+    #[serde(default = "default_kafka_transaction_op_max_attempts")]
+    pub kafka_transaction_op_max_attempts: u32,
 
     /// Delay between Kafka write retry attempts.
     #[serde(default = "default_kafka_retry_backoff_ms")]
@@ -130,7 +146,13 @@ impl fmt::Debug for KafkaSinkConfig {
             )
             .field("batch_num_messages", &self.batch_num_messages)
             .field("producer_compression_type", &self.compression_type.as_str())
+            .field("transactional_id", &self.transactional_id)
+            .field("transaction_timeout_ms", &self.transaction_timeout_ms)
             .field("kafka_write_max_attempts", &self.kafka_write_max_attempts)
+            .field(
+                "kafka_transaction_op_max_attempts",
+                &self.kafka_transaction_op_max_attempts,
+            )
             .field("kafka_retry_backoff_ms", &self.kafka_retry_backoff_ms)
             .field("sasl_username", &self.sasl_username)
             .field(
@@ -160,7 +182,11 @@ fn default_queue_buffering_max_messages() -> u32 { 100000 }
 
 fn default_batch_num_messages() -> u32 { 1000 }
 
+fn default_transaction_timeout_ms() -> u32 { 30000 }
+
 fn default_kafka_write_max_attempts() -> u32 { 3 }
+
+fn default_kafka_transaction_op_max_attempts() -> u32 { 2 }
 
 fn default_kafka_retry_backoff_ms() -> u64 { 200 }
 
@@ -177,7 +203,10 @@ impl Default for KafkaSinkConfig {
             queue_buffering_max_messages: default_queue_buffering_max_messages(),
             batch_num_messages: default_batch_num_messages(),
             compression_type: KafkaCompressionType::default(),
+            transactional_id: None,
+            transaction_timeout_ms: default_transaction_timeout_ms(),
             kafka_write_max_attempts: default_kafka_write_max_attempts(),
+            kafka_transaction_op_max_attempts: default_kafka_transaction_op_max_attempts(),
             kafka_retry_backoff_ms: default_kafka_retry_backoff_ms(),
             sasl_username: None,
             sasl_password: None,
@@ -199,6 +228,14 @@ impl KafkaSinkConfig {
     /// Validate credential pairs: each pair must be "both set or both unset".
     /// Call this at startup before creating any Kafka client.
     pub fn validate_credentials(&self) -> io::Result<()> {
+        if let Some(id) = &self.transactional_id
+            && id.trim().is_empty()
+        {
+            return Err(io::Error::other(
+                "transactional_id must not be empty when transactions are enabled",
+            ));
+        }
+
         match (&self.sasl_username, &self.sasl_password) {
             (Some(_), None) => {
                 return Err(io::Error::other(
@@ -318,6 +355,7 @@ mod tests {
     fn kafka_retry_defaults() {
         let config = KafkaSinkConfig::default();
         assert_eq!(config.kafka_write_max_attempts, 3);
+        assert_eq!(config.kafka_transaction_op_max_attempts, 2);
         assert_eq!(config.kafka_retry_backoff_ms, 200);
     }
 
@@ -387,5 +425,16 @@ mod tests {
             ..KafkaSinkConfig::default()
         };
         config.validate_credentials().unwrap();
+    }
+
+    #[test]
+    fn validate_credentials_rejects_empty_transactional_id() {
+        let config = KafkaSinkConfig {
+            transactional_id: Some("   ".into()),
+            ..KafkaSinkConfig::default()
+        };
+
+        let err = config.validate_credentials().unwrap_err();
+        assert!(err.to_string().contains("transactional_id"));
     }
 }

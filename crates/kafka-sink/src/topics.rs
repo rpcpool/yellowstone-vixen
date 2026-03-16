@@ -32,7 +32,8 @@ fn read_last_slot_from_topic(config: &KafkaSinkConfig, topic: &str) -> Option<La
     client_config
         .set("bootstrap.servers", &config.brokers)
         .set("group.id", "vixen-startup-reader")
-        .set("enable.auto.commit", "false");
+        .set("enable.auto.commit", "false")
+        .set("isolation.level", "read_committed"); // read only committed kafka transactions
 
     config.apply_sasl_if_configured(&mut client_config);
 

@@ -1,25 +1,134 @@
 //! Downstream Kafka writers that consume slots from the coordinator.
 //!
 //! `TransactionSlotSink` — receives `InstructionSlot<PreparedRecord>`, writes to `transaction.slots`.
-//! `AccountSink` — two modes:
-//!   - `run_buffered`: receives `AccountSlot<PreparedRecord>` from coordinator, writes to `account.slots`.
-//!   - `run_passthrough`: receives `AccountMsg` directly, produces to Kafka immediately.
+//! `AccountSlotSink` — receives `AccountSlot<PreparedRecord>` from the coordinator and writes
+//! to `account.slots`.
+//! `AccountPassthroughSink` — receives `AccountMsg` directly and produces to Kafka immediately.
 
 use std::{future::Future, sync::Arc, time::Duration};
 
 use rdkafka::{
+    error::KafkaError,
     message::OwnedHeaders,
-    producer::{FutureProducer, FutureRecord},
+    producer::{FutureProducer, FutureRecord, Producer},
 };
 use tokio::{sync::mpsc, time::sleep};
 #[cfg(feature = "experimental-account-parser")]
 use yellowstone_vixen_block_coordinator::AccountSlot;
-use yellowstone_vixen_block_coordinator::{AccountCommitAt, AccountMode, InstructionSlot};
+use yellowstone_vixen_block_coordinator::{AccountCommitAt, InstructionSlot};
 
 type SinkError = Box<dyn std::error::Error + Send + Sync>;
 
+#[derive(Debug)]
+enum TransactionCommitError {
+    AbortRequired(SinkError),
+    Failed(SinkError),
+}
+
+fn kafka_error(context: &str, err: impl std::fmt::Display) -> SinkError {
+    format!("{context}: {err}").into()
+}
+
 fn kafka_send_error(context: &str, slot: u64, err: impl std::fmt::Display) -> SinkError {
     format!("{context} for slot {slot}: {err}").into()
+}
+
+fn transaction_error_context(err: &KafkaError) -> String {
+    match err {
+        KafkaError::Transaction(txn) => format!(
+            "{} (code={}, retriable={}, abort_required={}, fatal={})",
+            txn,
+            txn.code(),
+            txn.is_retriable(),
+            txn.txn_requires_abort(),
+            txn.is_fatal()
+        ),
+        _ => err.to_string(),
+    }
+}
+
+async fn run_transactional_op<F>(
+    producer: &FutureProducer,
+    timeout: Duration,
+    backoff: Duration,
+    max_attempts: u32,
+    context: &'static str,
+    mut op: F,
+) -> Result<(), SinkError>
+where
+    F: FnMut(&FutureProducer, Duration) -> Result<(), KafkaError>,
+{
+    let max_attempts = max_attempts.max(1);
+
+    for attempt in 1..=max_attempts {
+        match op(producer, timeout) {
+            Ok(()) => return Ok(()),
+            Err(KafkaError::Transaction(txn)) if txn.is_retriable() && attempt < max_attempts => {
+                tracing::warn!(
+                    attempt,
+                    max_attempts,
+                    code = ?txn.code(),
+                    retriable = txn.is_retriable(),
+                    abort_required = txn.txn_requires_abort(),
+                    fatal = txn.is_fatal(),
+                    "Kafka transactional operation failed, retrying"
+                );
+                sleep(backoff).await;
+            },
+            Err(err) => {
+                return Err(kafka_error(context, transaction_error_context(&err)));
+            },
+        }
+    }
+
+    unreachable!("max_attempts >= 1")
+}
+
+async fn commit_transactional_op<F>(
+    producer: &FutureProducer,
+    timeout: Duration,
+    backoff: Duration,
+    max_attempts: u32,
+    context: &'static str,
+    mut op: F,
+) -> Result<(), TransactionCommitError>
+where
+    F: FnMut(&FutureProducer, Duration) -> Result<(), KafkaError>,
+{
+    let max_attempts = max_attempts.max(1);
+
+    for attempt in 1..=max_attempts {
+        match op(producer, timeout) {
+            Ok(()) => return Ok(()),
+            Err(KafkaError::Transaction(txn)) if txn.txn_requires_abort() => {
+                let err = KafkaError::Transaction(txn);
+                return Err(TransactionCommitError::AbortRequired(kafka_error(
+                    context,
+                    transaction_error_context(&err),
+                )));
+            },
+            Err(KafkaError::Transaction(txn)) if txn.is_retriable() && attempt < max_attempts => {
+                tracing::warn!(
+                    attempt,
+                    max_attempts,
+                    code = ?txn.code(),
+                    retriable = txn.is_retriable(),
+                    abort_required = txn.txn_requires_abort(),
+                    fatal = txn.is_fatal(),
+                    "Kafka transactional commit failed, retrying"
+                );
+                sleep(backoff).await;
+            },
+            Err(err) => {
+                return Err(TransactionCommitError::Failed(kafka_error(
+                    context,
+                    transaction_error_context(&err),
+                )));
+            },
+        }
+    }
+
+    unreachable!("max_attempts >= 1")
 }
 
 async fn with_retry<F, Fut, R>(
@@ -108,15 +217,339 @@ async fn batch_publish_records(
     Ok(())
 }
 
+#[derive(Clone, Copy, Debug)]
+struct RetrySettings {
+    max_attempts: u32,
+    backoff: Duration,
+}
+
+impl RetrySettings {
+    fn new(max_attempts: u32, backoff: Duration) -> Self {
+        Self {
+            max_attempts: max_attempts.max(1),
+            backoff,
+        }
+    }
+
+    fn write_from_kafka_config(config: &KafkaSinkConfig) -> Self {
+        Self::new(
+            config.kafka_write_max_attempts,
+            Duration::from_millis(config.kafka_retry_backoff_ms),
+        )
+    }
+
+    fn transaction_op_from_kafka_config(config: &KafkaSinkConfig) -> Self {
+        Self::new(
+            config.kafka_transaction_op_max_attempts,
+            Duration::from_millis(config.kafka_retry_backoff_ms),
+        )
+    }
+}
+
+#[derive(Clone, Debug)]
+enum DeliveryGuarantee {
+    NonTransactional,
+    Transactional {
+        transactional_id: String,
+        timeout: Duration,
+    },
+}
+
+impl DeliveryGuarantee {
+    fn from_kafka_config(config: &KafkaSinkConfig) -> Self {
+        match &config.transactional_id {
+            Some(transactional_id) => Self::Transactional {
+                transactional_id: transactional_id.clone(),
+                timeout: Duration::from_millis(config.transaction_timeout_ms.into()),
+            },
+            None => Self::NonTransactional,
+        }
+    }
+}
+
+#[derive(Debug)]
+struct TransactionCheckpointLog {
+    decoded_instruction_count: u64,
+    decode_filtered_instruction_count: u64,
+    decode_error_instruction_count: u64,
+    fallback_instruction_count: u64,
+    transaction_status_failed_count: u64,
+    transaction_status_succeeded_count: u64,
+}
+
+#[cfg(feature = "experimental-account-parser")]
+#[derive(Debug)]
+struct AccountCheckpointLog {
+    marker_type: MarkerType,
+    account_commit_at: CommitScope,
+    decoded_account_count: u64,
+    decode_filtered_account_count: u64,
+    decode_error_account_count: u64,
+    fallback_account_count: u64,
+}
+
+#[derive(Debug)]
+enum SlotCheckpointLog {
+    Transaction(TransactionCheckpointLog),
+    #[cfg(feature = "experimental-account-parser")]
+    Account(AccountCheckpointLog),
+}
+
+impl SlotCheckpointLog {
+    fn emit(&self, slot: u64, record_count: usize) {
+        match self {
+            Self::Transaction(log) => {
+                tracing::debug!(
+                    slot,
+                    decoded_instruction_count = log.decoded_instruction_count,
+                    decode_filtered_instruction_count = log.decode_filtered_instruction_count,
+                    decode_error_instruction_count = log.decode_error_instruction_count,
+                    fallback_instruction_count = log.fallback_instruction_count,
+                    transaction_status_failed_count = log.transaction_status_failed_count,
+                    transaction_status_succeeded_count = log.transaction_status_succeeded_count,
+                    record_count,
+                    "Kafka: published instruction slot checkpoint"
+                );
+            },
+            #[cfg(feature = "experimental-account-parser")]
+            Self::Account(log) => {
+                tracing::debug!(
+                    slot,
+                    marker_type = %log.marker_type,
+                    account_commit_at = %log.account_commit_at,
+                    decoded_account_count = log.decoded_account_count,
+                    decode_filtered_account_count = log.decode_filtered_account_count,
+                    decode_error_account_count = log.decode_error_account_count,
+                    fallback_account_count = log.fallback_account_count,
+                    record_count,
+                    "Kafka: published account slot checkpoint"
+                );
+            },
+        }
+    }
+}
+
+struct SlotCheckpointRecord<'a> {
+    topic: &'a str,
+    payload: String,
+    error_prefix: &'static str,
+    log: SlotCheckpointLog,
+}
+
+struct SlotWritePlan<'a> {
+    slot: u64,
+    records: &'a [PreparedRecord],
+    record_error_prefix: &'static str,
+    checkpoint: SlotCheckpointRecord<'a>,
+}
+
+impl SlotWritePlan<'_> {
+    async fn publish_checkpoint(&self, producer: &FutureProducer) -> Result<(), SinkError> {
+        let slot_key = self.slot.to_string();
+
+        producer
+            .send(
+                FutureRecord::to(self.checkpoint.topic)
+                    .payload(&self.checkpoint.payload)
+                    .key(&slot_key),
+                Duration::from_secs(5),
+            )
+            .await
+            .map_err(|(e, _)| kafka_send_error(self.checkpoint.error_prefix, self.slot, e))?;
+
+        self.checkpoint.log.emit(self.slot, self.records.len());
+        Ok(())
+    }
+}
+
+struct SlotWriteExecutor {
+    producer: Arc<FutureProducer>,
+    delivery: DeliveryGuarantee,
+    write_retry_policy: RetrySettings,
+    transaction_retry_policy: RetrySettings,
+}
+
+impl SlotWriteExecutor {
+    fn from_kafka_config(config: &KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
+        Self {
+            producer,
+            delivery: DeliveryGuarantee::from_kafka_config(config),
+            write_retry_policy: RetrySettings::write_from_kafka_config(config),
+            transaction_retry_policy: RetrySettings::transaction_op_from_kafka_config(config),
+        }
+    }
+
+    fn producer(&self) -> &FutureProducer { self.producer.as_ref() }
+
+    fn write_retry_policy(&self) -> RetrySettings { self.write_retry_policy }
+
+    async fn initialize(&self) -> Result<(), SinkError> {
+        let DeliveryGuarantee::Transactional {
+            transactional_id,
+            timeout,
+        } = &self.delivery
+        else {
+            return Ok(());
+        };
+
+        tracing::info!(
+            transactional_id = %transactional_id,
+            "Initializing Kafka transactions"
+        );
+        run_transactional_op(
+            self.producer(),
+            *timeout,
+            self.transaction_retry_policy.backoff,
+            self.transaction_retry_policy.max_attempts,
+            "Failed to initialize Kafka transactions",
+            |producer, timeout| producer.init_transactions(timeout),
+        )
+        .await
+    }
+
+    async fn execute(&self, plan: &SlotWritePlan<'_>) -> Result<(), SinkError> {
+        match &self.delivery {
+            DeliveryGuarantee::NonTransactional => self.publish_plan(plan).await,
+            DeliveryGuarantee::Transactional { timeout, .. } => {
+                self.execute_transactional(plan, *timeout).await
+            },
+        }
+    }
+
+    async fn publish_plan(&self, plan: &SlotWritePlan<'_>) -> Result<(), SinkError> {
+        batch_publish_records(
+            self.producer(),
+            plan.slot,
+            plan.records,
+            Duration::ZERO,
+            plan.record_error_prefix,
+        )
+        .await?;
+        plan.publish_checkpoint(self.producer()).await
+    }
+
+    async fn execute_transactional(
+        &self,
+        plan: &SlotWritePlan<'_>,
+        timeout: Duration,
+    ) -> Result<(), SinkError> {
+        // Keep two retry scopes on purpose:
+        // - transactional control ops retry locally for transient producer state
+        // - the outer slot-level retry replays the full logical write after an abort/failure
+        // This keeps committed visibility atomic at the slot boundary without giving up too
+        // quickly on retriable begin/commit/abort errors.
+        run_transactional_op(
+            self.producer(),
+            timeout,
+            self.transaction_retry_policy.backoff,
+            self.transaction_retry_policy.max_attempts,
+            "Failed to begin Kafka transaction",
+            |producer, _| producer.begin_transaction(),
+        )
+        .await?;
+
+        let publish_result = self.publish_plan(plan).await;
+
+        if let Err(err) = publish_result {
+            return match self
+                .abort_transaction(plan.slot, "Kafka transactional slot write failed", timeout)
+                .await
+            {
+                Ok(()) => Err(err),
+                Err(abort_err) => Err(format!(
+                    "{err}; additionally failed to abort Kafka transaction: {abort_err}"
+                )
+                .into()),
+            };
+        }
+
+        match commit_transactional_op(
+            self.producer(),
+            timeout,
+            self.transaction_retry_policy.backoff,
+            self.transaction_retry_policy.max_attempts,
+            "Failed to commit Kafka transaction",
+            |producer, timeout| producer.commit_transaction(timeout),
+        )
+        .await
+        {
+            Ok(()) => Ok(()),
+            Err(TransactionCommitError::AbortRequired(err)) => {
+                self.abort_transaction(
+                    plan.slot,
+                    "Kafka transaction commit requires abort",
+                    timeout,
+                )
+                .await?;
+                Err(err)
+            },
+            Err(TransactionCommitError::Failed(err)) => Err(err),
+        }
+    }
+
+    async fn abort_transaction(
+        &self,
+        slot: u64,
+        cause: &str,
+        timeout: Duration,
+    ) -> Result<(), SinkError> {
+        run_transactional_op(
+            self.producer(),
+            timeout,
+            self.transaction_retry_policy.backoff,
+            self.transaction_retry_policy.max_attempts,
+            "Failed to abort Kafka transaction",
+            |producer, timeout| producer.abort_transaction(timeout),
+        )
+        .await
+        .map_err(|abort_err| {
+            format!(
+                "{cause} for slot {slot}; additionally failed to abort Kafka transaction: \
+                 {abort_err}"
+            )
+            .into()
+        })
+    }
+}
+
 /// Consumes instruction slots from the coordinator and writes them to Kafka.
 pub struct TransactionSlotSink {
-    config: KafkaSinkConfig,
-    producer: Arc<FutureProducer>,
+    executor: SlotWriteExecutor,
+    transaction_slots_topic: String,
 }
 
 impl TransactionSlotSink {
     pub fn new(config: KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
-        Self { config, producer }
+        Self {
+            executor: SlotWriteExecutor::from_kafka_config(&config, producer),
+            transaction_slots_topic: config.transaction_slots_topic,
+        }
+    }
+
+    fn build_slot_write_plan<'a>(
+        &'a self,
+        ix_slot: &'a InstructionSlot<PreparedRecord>,
+    ) -> Result<SlotWritePlan<'a>, SinkError> {
+        let event = build_transaction_slot_commit_event(ix_slot);
+
+        Ok(SlotWritePlan {
+            slot: ix_slot.slot,
+            records: &ix_slot.records,
+            record_error_prefix: "Kafka write failed",
+            checkpoint: SlotCheckpointRecord {
+                topic: self.transaction_slots_topic.as_str(),
+                payload: serde_json::to_string(&event)?,
+                error_prefix: "Failed to publish slot checkpoint",
+                log: SlotCheckpointLog::Transaction(TransactionCheckpointLog {
+                    decoded_instruction_count: event.decoded_instruction_count,
+                    decode_filtered_instruction_count: ix_slot.filtered_instruction_count,
+                    decode_error_instruction_count: ix_slot.failed_instruction_count,
+                    fallback_instruction_count: event.fallback_instruction_count,
+                    transaction_status_failed_count: ix_slot.transaction_status_failed_count,
+                    transaction_status_succeeded_count: ix_slot.transaction_status_succeeded_count,
+                }),
+            },
+        })
     }
 
     pub async fn run(
@@ -124,16 +557,19 @@ impl TransactionSlotSink {
         mut rx: mpsc::Receiver<InstructionSlot<PreparedRecord>>,
     ) -> Result<(), SinkError> {
         tracing::info!("TransactionSlotSink started, waiting for instruction slots...");
-        let max_attempts = self.config.kafka_write_max_attempts.max(1);
-        let retry_backoff = Duration::from_millis(self.config.kafka_retry_backoff_ms);
+        self.executor.initialize().await?;
+        let write_retry_policy = self.executor.write_retry_policy();
 
         while let Some(ix_slot) = rx.recv().await {
             with_retry(
-                max_attempts,
-                retry_backoff,
+                write_retry_policy.max_attempts,
+                write_retry_policy.backoff,
                 "Kafka write",
                 ix_slot.slot,
-                || self.write_instruction_slot(&ix_slot),
+                || async {
+                    let plan = self.build_slot_write_plan(&ix_slot)?;
+                    self.executor.execute(&plan).await
+                },
                 |e, attempt, max| {
                     tracing::warn!(
                         ?e,
@@ -150,57 +586,6 @@ impl TransactionSlotSink {
         tracing::warn!("TransactionSlotSink channel closed, shutting down");
         Ok(())
     }
-
-    async fn write_instruction_slot(
-        &self,
-        ix_slot: &InstructionSlot<PreparedRecord>,
-    ) -> Result<(), SinkError> {
-        batch_publish_records(
-            self.producer.as_ref(),
-            ix_slot.slot,
-            &ix_slot.records,
-            Duration::ZERO,
-            "Kafka write failed",
-        )
-        .await?;
-        self.commit_transaction_slot_checkpoint(ix_slot).await
-    }
-
-    async fn commit_transaction_slot_checkpoint(
-        &self,
-        ix_slot: &InstructionSlot<PreparedRecord>,
-    ) -> Result<(), SinkError> {
-        let slot = ix_slot.slot;
-        let record_count = ix_slot.records.len();
-        let event = build_transaction_slot_commit_event(ix_slot);
-
-        let payload = serde_json::to_string(&event)?;
-        let slot_key = slot.to_string();
-
-        self.producer
-            .send(
-                FutureRecord::to(&self.config.transaction_slots_topic)
-                    .payload(&payload)
-                    .key(&slot_key),
-                Duration::from_secs(5),
-            )
-            .await
-            .map_err(|(e, _)| kafka_send_error("Failed to commit slot", slot, e))?;
-
-        tracing::debug!(
-            slot,
-            decoded_instruction_count = event.decoded_instruction_count,
-            decode_filtered_instruction_count = ix_slot.filtered_instruction_count,
-            decode_error_instruction_count = ix_slot.failed_instruction_count,
-            fallback_instruction_count = event.fallback_instruction_count,
-            transaction_status_failed_count = ix_slot.transaction_status_failed_count,
-            transaction_status_succeeded_count = ix_slot.transaction_status_succeeded_count,
-            record_count,
-            "Kafka: committed instruction slot"
-        );
-
-        Ok(())
-    }
 }
 
 #[cfg(feature = "experimental-account-parser")]
@@ -214,47 +599,71 @@ pub enum AccountMsg {
 }
 
 #[cfg(feature = "experimental-account-parser")]
-/// Writes account records to Kafka and commits to the account.slots topic.
-pub struct AccountSink {
-    producer: Arc<FutureProducer>,
+/// Writes buffered account slots to Kafka and publishes account slot checkpoints.
+pub struct AccountSlotSink {
+    executor: SlotWriteExecutor,
     account_slots_topic: String,
-    account_mode: AccountMode,
-    max_attempts: u32,
-    retry_backoff: Duration,
+    account_commit_scope: CommitScope,
 }
 
 #[cfg(feature = "experimental-account-parser")]
-impl AccountSink {
+impl AccountSlotSink {
     pub fn new(
+        config: KafkaSinkConfig,
         producer: Arc<FutureProducer>,
-        account_slots_topic: String,
-        account_mode: AccountMode,
-        max_attempts: u32,
-        retry_backoff_ms: u64,
+        account_commit_at: AccountCommitAt,
     ) -> Self {
         Self {
-            producer,
-            account_slots_topic,
-            account_mode,
-            max_attempts: max_attempts.max(1),
-            retry_backoff: Duration::from_millis(retry_backoff_ms),
+            executor: SlotWriteExecutor::from_kafka_config(&config, producer),
+            account_slots_topic: config.account_slots_topic,
+            account_commit_scope: account_commit_at.into(),
         }
     }
 
-    /// Mode A: receives pre-batched `AccountSlot` from coordinator.
-    pub async fn run_buffered(
+    fn build_slot_write_plan<'a>(
+        &'a self,
+        acct_slot: &'a AccountSlot<PreparedRecord>,
+    ) -> Result<SlotWritePlan<'a>, SinkError> {
+        let event = build_account_slot_commit_event(acct_slot, self.account_commit_scope);
+
+        Ok(SlotWritePlan {
+            slot: acct_slot.slot,
+            records: &acct_slot.records,
+            record_error_prefix: "Account Kafka write failed",
+            checkpoint: SlotCheckpointRecord {
+                topic: self.account_slots_topic.as_str(),
+                payload: serde_json::to_string(&event)?,
+                error_prefix: "Failed to publish account slot checkpoint",
+                log: SlotCheckpointLog::Account(AccountCheckpointLog {
+                    marker_type: event.marker_type,
+                    account_commit_at: event.account_commit_at,
+                    decoded_account_count: event.decoded_account_count.unwrap_or(0),
+                    decode_filtered_account_count: event.decode_filtered_account_count.unwrap_or(0),
+                    decode_error_account_count: event.decode_error_account_count.unwrap_or(0),
+                    fallback_account_count: event.fallback_account_count.unwrap_or(0),
+                }),
+            },
+        })
+    }
+
+    pub async fn run(
         self,
         mut rx: mpsc::Receiver<AccountSlot<PreparedRecord>>,
     ) -> Result<(), SinkError> {
-        tracing::info!("AccountSink (buffered) started");
+        tracing::info!("AccountSlotSink started");
+        self.executor.initialize().await?;
+        let write_retry_policy = self.executor.write_retry_policy();
 
         while let Some(acct_slot) = rx.recv().await {
             with_retry(
-                self.max_attempts,
-                self.retry_backoff,
+                write_retry_policy.max_attempts,
+                write_retry_policy.backoff,
                 "Account slot write",
                 acct_slot.slot,
-                || self.write_account_slot(&acct_slot),
+                || async {
+                    let plan = self.build_slot_write_plan(&acct_slot)?;
+                    self.executor.execute(&plan).await
+                },
                 |e, attempt, max| {
                     tracing::warn!(
                         ?e,
@@ -268,46 +677,75 @@ impl AccountSink {
             .await?;
         }
 
-        tracing::warn!("AccountSink (buffered) channel closed, shutting down");
+        tracing::warn!("AccountSlotSink channel closed, shutting down");
         Ok(())
     }
+}
 
-    /// Mode B: passthrough — produce to Kafka immediately, emit watermark markers.
-    pub async fn run_passthrough(
-        self,
-        mut rx: mpsc::Receiver<AccountMsg>,
-    ) -> Result<(), SinkError> {
-        tracing::info!("AccountSink (passthrough) started");
+#[cfg(feature = "experimental-account-parser")]
+/// Produces account records immediately and advances a monotonic watermark by slot.
+pub struct AccountPassthroughSink {
+    producer: Arc<FutureProducer>,
+    account_slots_topic: String,
+    retry_settings: RetrySettings,
+}
+
+#[cfg(feature = "experimental-account-parser")]
+impl AccountPassthroughSink {
+    /// Construct the non-transactional passthrough sink.
+    ///
+    /// Passthrough writes account records immediately and emits watermarks later,
+    /// so it only needs the producer, slot topic, and write retry settings.
+    pub fn new(
+        producer: Arc<FutureProducer>,
+        account_slots_topic: String,
+        max_attempts: u32,
+        retry_backoff_ms: u64,
+    ) -> Self {
+        Self {
+            producer,
+            account_slots_topic,
+            retry_settings: RetrySettings::new(
+                max_attempts,
+                Duration::from_millis(retry_backoff_ms),
+            ),
+        }
+    }
+
+    pub async fn run(self, mut rx: mpsc::Receiver<AccountMsg>) -> Result<(), SinkError> {
+        tracing::info!("AccountPassthroughSink started");
 
         let mut current_slot: Option<u64> = None;
 
         while let Some(msg) = rx.recv().await {
             match msg {
                 AccountMsg::Record { slot, record, .. } => {
-                    // Produce to Kafka immediately if we have a record.
                     if let Some(record) = record {
                         with_retry(
-                            self.max_attempts,
-                            self.retry_backoff,
+                            self.retry_settings.max_attempts,
+                            self.retry_settings.backoff,
                             "Passthrough account write",
                             slot,
                             || self.publish_passthrough_record(slot, &record),
                             |e, attempt, max| {
-                                tracing::warn!(?e, slot, attempt, max_attempts = max,
+                                tracing::warn!(
+                                    ?e,
+                                    slot,
+                                    attempt,
+                                    max_attempts = max,
                                     topic = %record.topic,
-                                    "Passthrough account write failed, retrying");
+                                    "Passthrough account write failed, retrying"
+                                );
                             },
                         )
                         .await?;
                     }
 
-                    // Emit marker when slot advances (monotonic).
                     if let Some(prev) = current_slot {
                         if slot > prev {
                             self.emit_watermark_with_retry(prev).await?;
                             current_slot = Some(slot);
                         }
-                        // Straggler for old slot — record written, marker NOT moved backward.
                     } else {
                         current_slot = Some(slot);
                     }
@@ -315,58 +753,11 @@ impl AccountSink {
             }
         }
 
-        // Emit final marker on channel close.
         if let Some(slot) = current_slot {
             self.emit_watermark_with_retry(slot).await?;
         }
 
-        tracing::warn!("AccountSink (passthrough) channel closed, shutting down");
-        Ok(())
-    }
-
-    async fn write_account_slot(
-        &self,
-        acct_slot: &AccountSlot<PreparedRecord>,
-    ) -> Result<(), SinkError> {
-        let slot = acct_slot.slot;
-
-        batch_publish_records(
-            self.producer.as_ref(),
-            slot,
-            &acct_slot.records,
-            // Do not retry in send; QueueFull bubbles up so the slot retries as a unit.
-            Duration::ZERO,
-            "Account Kafka write failed",
-        )
-        .await?;
-
-        // Commit account slot marker.
-        let event = build_account_slot_commit_event(acct_slot, &self.account_mode);
-
-        let payload = serde_json::to_string(&event)?;
-        let slot_key = slot.to_string();
-
-        self.producer
-            .send(
-                FutureRecord::to(&self.account_slots_topic)
-                    .payload(&payload)
-                    .key(&slot_key),
-                Duration::from_secs(5),
-            )
-            .await
-            .map_err(|(e, _)| kafka_send_error("Failed to commit account slot", slot, e))?;
-
-        tracing::debug!(
-            slot,
-            marker_type = %event.marker_type,
-            account_commit_at = %event.account_commit_at,
-            decoded_account_count = event.decoded_account_count.unwrap_or(0),
-            decode_filtered_account_count = event.decode_filtered_account_count.unwrap_or(0),
-            decode_error_account_count = event.decode_error_account_count.unwrap_or(0),
-            fallback_account_count = event.fallback_account_count.unwrap_or(0),
-            record_count = acct_slot.records.len(),
-            "Kafka: committed account slot"
-        );
+        tracing::warn!("AccountPassthroughSink channel closed, shutting down");
         Ok(())
     }
 
@@ -391,8 +782,8 @@ impl AccountSink {
 
     async fn emit_watermark_with_retry(&self, slot: u64) -> Result<(), SinkError> {
         with_retry(
-            self.max_attempts,
-            self.retry_backoff,
+            self.retry_settings.max_attempts,
+            self.retry_settings.backoff,
             "Emit account watermark",
             slot,
             || self.emit_watermark(slot),
@@ -467,7 +858,7 @@ fn build_transaction_slot_commit_event(
 #[cfg(feature = "experimental-account-parser")]
 fn build_account_slot_commit_event(
     acct_slot: &AccountSlot<PreparedRecord>,
-    account_mode: &AccountMode,
+    account_commit_scope: CommitScope,
 ) -> AccountSlotCommitEvent {
     let decoded_account_count = acct_slot
         .records
@@ -483,7 +874,7 @@ fn build_account_slot_commit_event(
     AccountSlotCommitEvent {
         slot: acct_slot.slot,
         marker_type: MarkerType::Completed,
-        account_commit_at: CommitScope::from(account_mode),
+        account_commit_at: account_commit_scope,
         decoded_account_count: Some(decoded_account_count),
         decode_filtered_account_count: Some(acct_slot.filtered_account_count),
         decode_error_account_count: Some(acct_slot.failed_account_count),
@@ -491,14 +882,11 @@ fn build_account_slot_commit_event(
     }
 }
 
-impl From<&AccountMode> for CommitScope {
-    fn from(mode: &AccountMode) -> Self {
-        match mode {
-            AccountMode::Processed { commit_at } => match commit_at {
-                AccountCommitAt::Confirmed => Self::Confirmed,
-                AccountCommitAt::Finalized => Self::Finalized,
-            },
-            AccountMode::FinalizedPassthrough => Self::Finalized,
+impl From<AccountCommitAt> for CommitScope {
+    fn from(commit_at: AccountCommitAt) -> Self {
+        match commit_at {
+            AccountCommitAt::Confirmed => Self::Confirmed,
+            AccountCommitAt::Finalized => Self::Finalized,
         }
     }
 }
@@ -507,7 +895,7 @@ impl From<&AccountMode> for CommitScope {
 mod tests {
     use yellowstone_vixen_block_coordinator::InstructionSlot;
     #[cfg(feature = "experimental-account-parser")]
-    use yellowstone_vixen_block_coordinator::{AccountCommitAt, AccountMode, AccountSlot};
+    use yellowstone_vixen_block_coordinator::{AccountCommitAt, AccountSlot};
 
     use super::*;
     use crate::events::{AccountSlotCommitEvent, MarkerType};
@@ -569,9 +957,7 @@ mod tests {
             failed_account_count: 2,
         };
 
-        let event = build_account_slot_commit_event(&acct_slot, &AccountMode::Processed {
-            commit_at: AccountCommitAt::Confirmed,
-        });
+        let event = build_account_slot_commit_event(&acct_slot, CommitScope::Confirmed);
         assert_eq!(event.slot, 55);
         assert_eq!(event.marker_type, MarkerType::Completed);
         assert_eq!(event.account_commit_at, CommitScope::Confirmed);
@@ -591,7 +977,7 @@ mod tests {
             filtered_account_count: 0,
             failed_account_count: 0,
         };
-        let event = build_account_slot_commit_event(&acct_slot, &AccountMode::FinalizedPassthrough);
+        let event = build_account_slot_commit_event(&acct_slot, CommitScope::Finalized);
         assert_eq!(event.marker_type, MarkerType::Completed);
         assert_eq!(event.account_commit_at, CommitScope::Finalized);
     }
@@ -629,9 +1015,7 @@ mod tests {
             filtered_account_count: 9,
             failed_account_count: 3,
         };
-        let event = build_account_slot_commit_event(&acct_slot, &AccountMode::Processed {
-            commit_at: AccountCommitAt::Confirmed,
-        });
+        let event = build_account_slot_commit_event(&acct_slot, CommitScope::Confirmed);
 
         let value = serde_json::to_value(&event).expect("serialize completed marker");
         let obj = value.as_object().expect("object");
