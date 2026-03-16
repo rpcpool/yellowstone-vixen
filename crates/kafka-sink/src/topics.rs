@@ -69,7 +69,7 @@ fn read_last_slot_from_topic(config: &KafkaSinkConfig, topic: &str) -> Option<La
     for partition in topic_metadata.partitions() {
         let partition_id = partition.id();
 
-        let (_, high) = consumer
+        let (low, high) = consumer
             .fetch_watermarks(topic, partition_id, Duration::from_secs(5))
             .ok()?;
 
@@ -78,26 +78,34 @@ fn read_last_slot_from_topic(config: &KafkaSinkConfig, topic: &str) -> Option<La
         }
 
         let mut tpl = TopicPartitionList::new();
-        tpl.add_partition_offset(topic, partition_id, rdkafka::Offset::Offset(high - 1))
+        tpl.add_partition_offset(topic, partition_id, rdkafka::Offset::Offset(low))
             .ok()?;
         consumer.assign(&tpl).ok()?;
 
-        let candidate = consumer
-            .poll(Duration::from_secs(5))
-            .and_then(|r| r.ok())
-            .and_then(|msg| msg.payload().map(|p| p.to_vec()))
-            .and_then(|payload| {
-                // Try to parse as TransactionSlotCommitEvent first, then as a generic JSON with a "slot" field.
-                serde_json::from_slice::<TransactionSlotCommitEvent>(&payload)
-                    .ok()
-                    .map(|e| LastCommitted { slot: e.slot })
-                    .or_else(|| {
-                        serde_json::from_slice::<serde_json::Value>(&payload)
-                            .ok()
-                            .and_then(|v| v.get("slot")?.as_u64())
-                            .map(|slot| LastCommitted { slot })
-                    })
-            });
+        // Transactional topics may end with control records that consume offsets
+        // but do not deserialize into user checkpoint payloads. Walk backward
+        // from the last stable offset until we find the newest committed slot record.
+        let mut candidate = None;
+        for offset in (low..high).rev() {
+            consumer
+                .seek(
+                    topic,
+                    partition_id,
+                    rdkafka::Offset::Offset(offset),
+                    Duration::from_secs(5),
+                )
+                .ok()?;
+
+            candidate = consumer
+                .poll(Duration::from_millis(200))
+                .and_then(|r| r.ok())
+                .and_then(|msg| msg.payload().map(|payload| payload.to_vec()))
+                .and_then(|payload| parse_last_committed_payload(&payload));
+
+            if candidate.is_some() {
+                break;
+            }
+        }
 
         if let Some(c) = candidate
             && latest.is_none_or(|l| c.slot > l.slot)
@@ -107,4 +115,39 @@ fn read_last_slot_from_topic(config: &KafkaSinkConfig, topic: &str) -> Option<La
     }
 
     latest
+}
+
+fn parse_last_committed_payload(payload: &[u8]) -> Option<LastCommitted> {
+    serde_json::from_slice::<TransactionSlotCommitEvent>(payload)
+        .ok()
+        .map(|e| LastCommitted { slot: e.slot })
+        .or_else(|| {
+            serde_json::from_slice::<serde_json::Value>(payload)
+                .ok()
+                .and_then(|v| v.get("slot")?.as_u64())
+                .map(|slot| LastCommitted { slot })
+        })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_last_committed_payload_reads_transaction_commit_event() {
+        let payload = br#"{"slot":42,"blockhash":"abc","transaction_count":1,"decoded_instruction_count":1,"decode_filtered_instruction_count":0,"decode_error_instruction_count":0,"fallback_instruction_count":0,"transaction_status_failed_count":0,"transaction_status_succeeded_count":1}"#;
+
+        let parsed = parse_last_committed_payload(payload);
+
+        assert!(matches!(parsed, Some(LastCommitted { slot: 42 })));
+    }
+
+    #[test]
+    fn parse_last_committed_payload_falls_back_to_generic_slot_json() {
+        let payload = br#"{"slot":99,"marker_type":"Watermark"}"#;
+
+        let parsed = parse_last_committed_payload(payload);
+
+        assert!(matches!(parsed, Some(LastCommitted { slot: 99 })));
+    }
 }
