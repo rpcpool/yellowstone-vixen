@@ -5,11 +5,11 @@
 [source]
 # The endpoint of the dragon's mouth stream.
 # This is the URL where the stream can be accessed.
-endpoint = "https://index.rpcpool.com"
+endpoint = "ablelab-solanam-fc59.mainnet.rpcpool.com"
 
 # The x-token for the dragon's mouth stream.
 # Replace <X-TOKEN> with your actual token.
-x-token = "<X-TOKEN>"
+x-token ="734c0d8f-94db-4b53-a944-8ec2334a883d"
 
 # The connection timeout for the dragon's mouth stream in seconds.
 # This defines how long to wait for a connection before timing out.
@@ -27,7 +27,7 @@ timeout = 60
 #[metrics]
 # The endpoint of the metrics stream.
 # Metrics data is pushed to this endpoint and consumed by Prometheus.
-#endpoint = "http://localhost:3030"
+# endpoint = "http://localhost:3030"
 
 # The job name of the metrics stream.
 # This is used to identify the metrics stream in Prometheus.
