@@ -135,10 +135,10 @@ impl SchemaIr {
     /// If `ft` is a `Message` reference to a type alias, return the aliased
     /// type. Otherwise return `ft` unchanged.
     pub fn resolve_field_type(&self, ft: FieldTypeIr) -> FieldTypeIr {
-        if let FieldTypeIr::Message(ref name) = ft {
-            if let Some(aliased) = self.type_aliases.get(name) {
-                return aliased.clone();
-            }
+        if let FieldTypeIr::Message(ref name) = ft
+            && let Some(aliased) = self.type_aliases.get(name)
+        {
+            return aliased.clone();
         }
 
         ft
