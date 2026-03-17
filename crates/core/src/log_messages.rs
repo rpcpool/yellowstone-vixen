@@ -192,7 +192,10 @@ mod tests {
 
         // Inner instruction gets its own slice
         assert_eq!(outer[0].inner[0].log_messages().len(), 3);
-        assert_eq!(outer[0].inner[0].log_messages()[0], "Program DEF invoke [2]");
+        assert_eq!(
+            outer[0].inner[0].log_messages()[0],
+            "Program DEF invoke [2]"
+        );
         assert_eq!(outer[0].inner[0].log_messages()[2], "Program DEF success");
     }
 

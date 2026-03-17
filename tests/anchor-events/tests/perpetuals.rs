@@ -134,6 +134,7 @@ async fn parse_cpi_event_from_real_tx() {
         .iter()
         .find_map(|out| {
             let out = out.as_ref()?;
+
             if out.instruction.is_none() && !out.events.is_empty() {
                 Some(out)
             } else {
@@ -237,20 +238,22 @@ fn resolve_events_from_logs_skips_invalid_base64() {
 #[test]
 fn resolve_events_from_logs_skips_non_matching_discriminator() {
     use base64::Engine;
+
     let fake_data = vec![0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00];
+
     let encoded = base64::engine::general_purpose::STANDARD.encode(&fake_data);
+
     let logs = vec![format!("Program data: {encoded}")];
+
     let events = perpetuals_events::resolve_events_from_logs(&logs);
+
     assert!(events.is_empty());
 }
-
-// ---------------------------------------------------------------------------
-// Constants and trait impls
-// ---------------------------------------------------------------------------
 
 #[test]
 fn event_ix_tag_constant_is_correct() {
     let expected = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
+
     assert_eq!(EVENT_IX_TAG, expected);
 }
 
@@ -263,7 +266,10 @@ fn anchor_event_parser_implements_prefilter() {
 #[test]
 fn anchor_event_parser_implements_id() {
     use std::borrow::Cow;
+
     let parser = make_parser();
+
     let id: Cow<'static, str> = parser.id();
+
     assert!(!id.is_empty());
 }

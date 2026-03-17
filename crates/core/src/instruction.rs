@@ -246,9 +246,7 @@ impl InstructionUpdate {
     ///
     /// This is a zero-copy slice into the shared transaction log messages.
     #[must_use]
-    pub fn log_messages(&self) -> &[String] {
-        &self.shared.log_messages[self.log_range.clone()]
-    }
+    pub fn log_messages(&self) -> &[String] { &self.shared.log_messages[self.log_range.clone()] }
 
     /// Parse a transaction update into a list of instructions.
     ///

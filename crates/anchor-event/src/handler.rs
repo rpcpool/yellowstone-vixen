@@ -10,6 +10,7 @@ pub struct AnchorEventHandler<InstructionHandler, EventHandler> {
 }
 
 impl<InstructionHandler, EventHandler> AnchorEventHandler<InstructionHandler, EventHandler> {
+    /// Create a new handler that routes instructions and events to separate handlers.
     #[must_use]
     pub fn new(instruction_handler: InstructionHandler, event_handler: EventHandler) -> Self {
         Self {
@@ -29,21 +30,19 @@ where
     InstructionHandler: Handler<InstructionOut, R> + Send + Sync,
     EventHandler: Handler<EventOut, R> + Send + Sync,
 {
-    fn handle(
+    async fn handle(
         &self,
         value: &AnchorEventOutput<InstructionOut, EventOut>,
         raw_event: &R,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        async move {
-            if let Some(ix) = &value.instruction {
-                self.instruction_handler.handle(ix, raw_event).await?;
-            }
-
-            for evt in &value.events {
-                self.event_handler.handle(evt, raw_event).await?;
-            }
-
-            Ok(())
+    ) -> HandlerResult<()> {
+        if let Some(ix) = &value.instruction {
+            self.instruction_handler.handle(ix, raw_event).await?;
         }
+
+        for evt in &value.events {
+            self.event_handler.handle(evt, raw_event).await?;
+        }
+
+        Ok(())
     }
 }

@@ -452,13 +452,17 @@ pub fn instruction_parser(
             logs.iter()
                 .filter_map(|line| {
                     let encoded = line.strip_prefix(PREFIX)?;
+
                     let decoded = base64::Engine::decode(
                         &base64::engine::general_purpose::STANDARD,
                         encoded.trim(),
                     ).ok()?;
+
                     let mut data = Vec::with_capacity(8 + decoded.len());
+
                     data.extend_from_slice(&EVENT_IX_TAG);
                     data.extend_from_slice(&decoded);
+
                     resolve_instruction_default(&[], &data).ok()
                 })
                 .collect()
