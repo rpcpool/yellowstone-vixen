@@ -83,7 +83,9 @@ fn read_last_slot_from_topic(
         let (low, high) = consumer
             .fetch_watermarks(topic, partition_id, Duration::from_secs(5))
             .map_err(|e| {
-                format!("Failed to fetch watermarks for topic {topic} partition {partition_id}: {e}")
+                format!(
+                    "Failed to fetch watermarks for topic {topic} partition {partition_id}: {e}"
+                )
             })?;
 
         if high == 0 {
@@ -98,8 +100,7 @@ fn read_last_slot_from_topic(
         let scan_low = startup_scan_low_offset(low, high);
         let mut candidate: Option<LastCommittedCandidate> = None;
         for offset in (scan_low..high).rev() {
-            candidate =
-                read_candidate_at_or_after_offset(&consumer, topic, partition_id, offset)?;
+            candidate = read_candidate_at_or_after_offset(&consumer, topic, partition_id, offset)?;
 
             if candidate.is_some() {
                 break;

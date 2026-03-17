@@ -547,9 +547,7 @@ impl TransactionSlotSink {
     pub fn new_preinitialized(config: KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
         Self {
             executor: SlotWriteExecutor::from_kafka_config_with_initialized_transactions(
-                &config,
-                producer,
-                true,
+                &config, producer, true,
             ),
             transaction_slots_topic: config.transaction_slots_topic,
         }
@@ -656,9 +654,7 @@ impl AccountSlotSink {
     ) -> Self {
         Self {
             executor: SlotWriteExecutor::from_kafka_config_with_initialized_transactions(
-                &config,
-                producer,
-                true,
+                &config, producer, true,
             ),
             account_slots_topic: config.account_slots_topic,
             account_commit_scope: account_commit_at.into(),
