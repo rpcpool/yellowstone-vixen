@@ -190,7 +190,7 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
 
 #[cfg(feature = "experimental-account-parser")]
 /// Mode B handler: parses accounts at finalized commitment and sends directly
-/// to the AccountSink via a channel (no coordinator buffering).
+/// to the AccountPassthroughSink via a channel (no coordinator buffering).
 #[derive(Clone)]
 pub struct PassthroughAccountHandler {
     parsers: KafkaSink,
