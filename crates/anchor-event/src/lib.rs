@@ -21,7 +21,7 @@
 //!
 //! # Example
 //!
-//! ```rust,ignore
+//! ```rust, ignore
 //! include_vixen_parser!("idls/pump_fun.json");
 //! include_vixen_parser!("idls/pump_fun_events.json");
 //!
@@ -39,9 +39,7 @@ use yellowstone_vixen_core::{
     ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
 };
 
-#[cfg(feature = "handler")]
 mod handler;
-#[cfg(feature = "handler")]
 pub use handler::AnchorEventHandler;
 
 /// 8-byte Anchor self-CPI event prefix.
@@ -52,25 +50,26 @@ pub const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
 /// Combined output from instruction + event parsing.
 #[derive(Debug)]
-pub struct AnchorEventOutput<IxOut, EvtOut> {
+pub struct AnchorEventOutput<InstructionOut, EventOut> {
     /// Parsed instruction (None if this was a CPI event or filtered).
-    pub instruction: Option<IxOut>,
+    pub instruction: Option<InstructionOut>,
     /// Events parsed from logs and/or CPI self-invocations.
-    pub events: Vec<EvtOut>,
+    pub events: Vec<EventOut>,
 }
 
 #[cfg(feature = "proto")]
-impl<IxOut, EvtOut> prost::Message for AnchorEventOutput<IxOut, EvtOut>
+impl<InstructionOut, EventOut> prost::Message for AnchorEventOutput<InstructionOut, EventOut>
 where
-    IxOut: prost::Message,
-    EvtOut: prost::Message,
+    InstructionOut: prost::Message,
+    EventOut: prost::Message,
 {
     fn encode_raw(&self, buf: &mut impl prost::bytes::BufMut) {
         if let Some(ref ix) = self.instruction {
             prost::encoding::message::encode(1, ix, buf);
         }
-        for evt in &self.events {
-            prost::encoding::message::encode(2, evt, buf);
+
+        for event in &self.events {
+            prost::encoding::message::encode(2, event, buf);
         }
     }
 
@@ -90,23 +89,27 @@ where
 
     fn encoded_len(&self) -> usize {
         let mut len = 0;
+
         if let Some(ref ix) = self.instruction {
             len += prost::encoding::message::encoded_len(1, ix);
         }
-        for evt in &self.events {
-            len += prost::encoding::message::encoded_len(2, evt);
+
+        for event in &self.events {
+            len += prost::encoding::message::encoded_len(2, event);
         }
+
         len
     }
 
     fn clear(&mut self) {
         self.instruction = None;
+
         self.events.clear();
     }
 }
 
 #[cfg(feature = "proto")]
-impl<IxOut, EvtOut> Default for AnchorEventOutput<IxOut, EvtOut> {
+impl<InstructionOut, EventOut> Default for AnchorEventOutput<InstructionOut, EventOut> {
     fn default() -> Self {
         Self {
             instruction: None,
@@ -120,30 +123,33 @@ impl<IxOut, EvtOut> Default for AnchorEventOutput<IxOut, EvtOut> {
 /// Automatically detects CPI events (by `EVENT_IX_TAG` prefix) and log events
 /// (by scanning `"Program data: "` lines), routing each to the appropriate parser.
 #[derive(Debug, Clone, Copy)]
-pub struct AnchorEventInstructionParser<IxP, EvtP> {
-    ix_parser: IxP,
-    evt_parser: EvtP,
+pub struct AnchorEventInstructionParser<InstructionParser, EventParser> {
+    instruction_parser: InstructionParser,
+    event_parser: EventParser,
     program_id: Pubkey,
 }
 
-impl<IxP, EvtP> AnchorEventInstructionParser<IxP, EvtP> {
+impl<InstructionParser, EventParser> AnchorEventInstructionParser<InstructionParser, EventParser> {
     /// Create a new composable parser.
     ///
-    /// - `ix_parser`: parses regular instructions (from the program's instruction IDL)
-    /// - `evt_parser`: parses events (from the program's events IDL, where events
+    /// - `instruction_parser`: parses regular instructions (from the program's instruction IDL)
+    /// - `event_parser`: parses events (from the program's events IDL, where events
     ///   are modeled as instructions with discriminators at offset 8)
     /// - `program_id`: the program's public key, used to detect self-CPI events
     #[must_use]
-    pub fn new(ix_parser: IxP, evt_parser: EvtP, program_id: [u8; 32]) -> Self {
+    pub fn new(
+        instruction_parser: InstructionParser,
+        event_parser: EventParser,
+        program_id: [u8; 32],
+    ) -> Self {
         Self {
-            ix_parser,
-            evt_parser,
+            instruction_parser,
+            event_parser,
             program_id: Pubkey::new(program_id),
         }
     }
 }
 
-/// Check whether instruction data starts with the Anchor event self-CPI prefix.
 fn is_anchor_cpi_event(data: &[u8]) -> bool { data.len() >= 8 && data[..8] == EVENT_IX_TAG }
 
 /// Extract event payloads from "Program data: " log lines.
@@ -156,16 +162,18 @@ fn extract_log_event_payloads(logs: &[String]) -> Vec<Vec<u8>> {
     logs.iter()
         .filter_map(|line| {
             let encoded = line.strip_prefix(PREFIX)?;
-            let decoded = base64::Engine::decode(
-                &base64::engine::general_purpose::STANDARD,
-                encoded.trim(),
-            )
-            .ok()?;
+
+            let decoded =
+                base64::Engine::decode(&base64::engine::general_purpose::STANDARD, encoded.trim())
+                    .ok()?;
+
             // Prepend EVENT_IX_TAG so the discriminator sits at offset 8,
             // matching the layout the events parser expects from CPI data.
             let mut data = Vec::with_capacity(EVENT_IX_TAG.len() + decoded.len());
+
             data.extend_from_slice(&EVENT_IX_TAG);
             data.extend_from_slice(&decoded);
+
             Some(data)
         })
         .collect()
@@ -191,12 +199,14 @@ fn synthetic_instruction(
 
 macro_rules! impl_parser {
     ($($extra_bound:tt)*) => {
-        fn id(&self) -> Cow<'static, str> { self.ix_parser.id() }
+        fn id(&self) -> Cow<'static, str> { self.instruction_parser.id() }
 
         fn prefilter(&self) -> Prefilter {
-            let mut pf = self.ix_parser.prefilter();
-            pf.merge(self.evt_parser.prefilter());
-            pf
+            let mut prefilter = self.instruction_parser.prefilter();
+
+            prefilter.merge(self.event_parser.prefilter());
+
+            prefilter
         }
 
         fn parse(
@@ -207,15 +217,16 @@ macro_rules! impl_parser {
                 // 1. CPI event: instruction data starts with EVENT_IX_TAG
                 //    and the program is invoking itself.
                 if is_anchor_cpi_event(&value.data) && value.program == self.program_id {
-                    let evt = self.evt_parser.parse(value).await?;
+                    let event = self.event_parser.parse(value).await?;
+
                     return Ok(AnchorEventOutput {
                         instruction: None,
-                        events: vec![evt],
+                        events: vec![event],
                     });
                 }
 
                 // 2. Regular instruction: delegate to the instruction parser.
-                let ix_result = match self.ix_parser.parse(value).await {
+                let ix_result = match self.instruction_parser.parse(value).await {
                     Ok(ix) => Some(ix),
                     Err(ParseError::Filtered) => None,
                     Err(e) => return Err(e),
@@ -223,17 +234,15 @@ macro_rules! impl_parser {
 
                 // 3. Scan logs for "Program data:" events.
                 let log_payloads = extract_log_event_payloads(&value.log_messages);
+
                 let mut events = Vec::with_capacity(log_payloads.len());
 
                 for payload in log_payloads {
-                    let synthetic = synthetic_instruction(
-                        self.program_id,
-                        payload,
-                        &value.shared,
-                        &value.path,
-                    );
-                    match self.evt_parser.parse(&synthetic).await {
-                        Ok(evt) => events.push(evt),
+                    let synthetic =
+                        synthetic_instruction(self.program_id, payload, &value.shared, &value.path);
+
+                    match self.event_parser.parse(&synthetic).await {
+                        Ok(event) => events.push(event),
                         // Event discriminator didn't match — not our event, skip.
                         Err(ParseError::Filtered) => continue,
                         Err(e) => return Err(e),
@@ -255,34 +264,38 @@ macro_rules! impl_parser {
 }
 
 #[cfg(feature = "proto")]
-impl<IxP, EvtP> Parser for AnchorEventInstructionParser<IxP, EvtP>
+impl<InstructionParser, EventParser> Parser
+    for AnchorEventInstructionParser<InstructionParser, EventParser>
 where
-    IxP: Parser<Input = InstructionUpdate> + Send + Sync,
-    EvtP: Parser<Input = InstructionUpdate> + Send + Sync,
-    IxP::Output: Send,
-    EvtP::Output: Send,
+    InstructionParser: Parser<Input = InstructionUpdate> + Send + Sync,
+    EventParser: Parser<Input = InstructionUpdate> + Send + Sync,
+    InstructionParser::Output: Send,
+    EventParser::Output: Send,
 {
     type Input = InstructionUpdate;
-    type Output = AnchorEventOutput<IxP::Output, EvtP::Output>;
+    type Output = AnchorEventOutput<InstructionParser::Output, EventParser::Output>;
+
     impl_parser!();
 }
 
 #[cfg(not(feature = "proto"))]
-impl<IxP, EvtP> Parser for AnchorEventInstructionParser<IxP, EvtP>
+impl<InstructionParser, EventParser> Parser
+    for AnchorEventInstructionParser<InstructionParser, EventParser>
 where
-    IxP: Parser<Input = InstructionUpdate> + Send + Sync,
-    EvtP: Parser<Input = InstructionUpdate> + Send + Sync,
-    IxP::Output: Send,
-    EvtP::Output: Send,
+    InstructionParser: Parser<Input = InstructionUpdate> + Send + Sync,
+    EventParser: Parser<Input = InstructionUpdate> + Send + Sync,
+    InstructionParser::Output: Send,
+    EventParser::Output: Send,
 {
     type Input = InstructionUpdate;
-    type Output = AnchorEventOutput<IxP::Output, EvtP::Output>;
+    type Output = AnchorEventOutput<InstructionParser::Output, EventParser::Output>;
+
     impl_parser!();
 }
 
-impl<IxP, EvtP> ProgramParser for AnchorEventInstructionParser<IxP, EvtP>
-where
-    Self: Parser,
+impl<InstructionParser, EventParser> ProgramParser
+    for AnchorEventInstructionParser<InstructionParser, EventParser>
+where Self: Parser
 {
     fn program_id(&self) -> Pubkey { self.program_id }
 }

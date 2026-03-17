@@ -1,60 +1,48 @@
-//! Handler wrapper that routes instruction and event outputs to separate handlers.
-
 use yellowstone_vixen::{Handler, HandlerResult};
 
 use crate::AnchorEventOutput;
 
-/// Handler that splits [`AnchorEventOutput`] into separate instruction and event handlers.
-///
-/// This is useful when you want to route parsed instructions and parsed events
-/// to different sinks (e.g., separate Kafka topics).
-///
-/// # Example
-///
-/// ```rust,ignore
-/// let handler = AnchorEventHandler::new(
-///     ix_kafka_handler,   // sends instructions to "pump_fun_instructions" topic
-///     evt_kafka_handler,  // sends events to "pump_fun_events" topic
-/// );
-/// ```
+/// Wraps separate instruction and event handlers
 #[derive(Debug, Clone, Copy)]
-pub struct AnchorEventHandler<IxH, EvtH> {
-    ix_handler: IxH,
-    evt_handler: EvtH,
+pub struct AnchorEventHandler<InstructionHandler, EventHandler> {
+    instruction_handler: InstructionHandler,
+    event_handler: EventHandler,
 }
 
-impl<IxH, EvtH> AnchorEventHandler<IxH, EvtH> {
-    /// Create a new handler that routes instructions and events to separate handlers.
+impl<InstructionHandler, EventHandler> AnchorEventHandler<InstructionHandler, EventHandler> {
     #[must_use]
-    pub fn new(ix_handler: IxH, evt_handler: EvtH) -> Self {
+    pub fn new(instruction_handler: InstructionHandler, event_handler: EventHandler) -> Self {
         Self {
-            ix_handler,
-            evt_handler,
+            instruction_handler,
+            event_handler,
         }
     }
 }
 
-impl<IxOut, EvtOut, IxH, EvtH, R> Handler<AnchorEventOutput<IxOut, EvtOut>, R>
-    for AnchorEventHandler<IxH, EvtH>
+impl<InstructionOut, EventOut, InstructionHandler, EventHandler, R>
+    Handler<AnchorEventOutput<InstructionOut, EventOut>, R>
+    for AnchorEventHandler<InstructionHandler, EventHandler>
 where
     R: Sync,
-    IxOut: Sync,
-    EvtOut: Sync,
-    IxH: Handler<IxOut, R> + Send + Sync,
-    EvtH: Handler<EvtOut, R> + Send + Sync,
+    InstructionOut: Sync,
+    EventOut: Sync,
+    InstructionHandler: Handler<InstructionOut, R> + Send + Sync,
+    EventHandler: Handler<EventOut, R> + Send + Sync,
 {
     fn handle(
         &self,
-        value: &AnchorEventOutput<IxOut, EvtOut>,
+        value: &AnchorEventOutput<InstructionOut, EventOut>,
         raw_event: &R,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
         async move {
             if let Some(ix) = &value.instruction {
-                self.ix_handler.handle(ix, raw_event).await?;
+                self.instruction_handler.handle(ix, raw_event).await?;
             }
+
             for evt in &value.events {
-                self.evt_handler.handle(evt, raw_event).await?;
+                self.event_handler.handle(evt, raw_event).await?;
             }
+
             Ok(())
         }
     }
