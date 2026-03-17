@@ -8,6 +8,7 @@ use rdkafka::{
 use crate::{config::KafkaSinkConfig, events::TransactionSlotCommitEvent};
 
 const MAX_STARTUP_CHECKPOINT_SCAN_OFFSETS: i64 = 256;
+const STARTUP_CHECKPOINT_SCAN_DEADLINE: Duration = Duration::from_secs(5);
 
 /// Last committed block info from a slots topic.
 #[derive(Debug, Clone, Copy)]
@@ -168,7 +169,7 @@ fn read_tail_candidate_in_range(
             )
         })?;
 
-    let deadline = Instant::now() + Duration::from_secs(1);
+    let deadline = Instant::now() + STARTUP_CHECKPOINT_SCAN_DEADLINE;
     let mut latest: Option<LastCommittedCandidate> = None;
 
     loop {
@@ -189,7 +190,7 @@ fn read_tail_candidate_in_range(
                 );
                 continue;
             },
-            None => return Ok(latest),
+            None => continue,
         };
 
         if message.partition() != partition_id || message.offset() < scan_low {
