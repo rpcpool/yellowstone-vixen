@@ -9,6 +9,7 @@ pub fn build_schema_ir(idl: &RootNode) -> SchemaIr {
     let mut ir = SchemaIr {
         types: Vec::new(),
         oneofs: Vec::new(),
+        type_aliases: std::collections::HashMap::new(),
     };
 
     crate::intermediate_representation::build_defined_types(&idl.program.defined_types, &mut ir);

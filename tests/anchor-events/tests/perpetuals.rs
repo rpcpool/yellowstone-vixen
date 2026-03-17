@@ -34,7 +34,9 @@ fn load_cpi_event_payload_from_fixture() -> Vec<u8> {
         yellowstone_vixen_mock::FixtureData::Instructions(f) => f,
         _ => panic!("expected instructions fixture"),
     };
-    fixture.instructions.iter()
+    fixture
+        .instructions
+        .iter()
         .find(|ix| ix.data.len() >= 8 && ix.data[..8] == EVENT_IX_TAG)
         .map(|ix| ix.data[8..].to_vec())
         .expect("no CPI event instruction found in fixture")
@@ -43,10 +45,19 @@ fn load_cpi_event_payload_from_fixture() -> Vec<u8> {
 fn assert_borrow_from_custody_event(
     args: &perpetuals_events::instruction::BorrowFromCustodyEventArgs,
 ) {
-    assert_eq!(args.owner, p("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC"));
+    assert_eq!(
+        args.owner,
+        p("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC")
+    );
     assert_eq!(args.pool, p("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"));
-    assert_eq!(args.position_key, p("iUzDVme5Mc21GdULKK2JFuvjNWY4TaULF2kNGTcoXf9"));
-    assert_eq!(args.position_mint, p("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"));
+    assert_eq!(
+        args.position_key,
+        p("iUzDVme5Mc21GdULKK2JFuvjNWY4TaULF2kNGTcoXf9")
+    );
+    assert_eq!(
+        args.position_mint,
+        p("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+    );
     assert_eq!(
         args.position_custody,
         p("G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa")
@@ -134,14 +145,13 @@ async fn parse_cpi_event_from_real_tx() {
     assert!(evt_output.instruction.is_none());
     assert_eq!(evt_output.events.len(), 1);
 
-    let event_args =
-        match &evt_output.events[0].instruction {
-            perpetuals_events::instruction::Instruction::BorrowFromCustodyEvent {
-                accounts: _,
-                args,
-            } => args,
-            other => panic!("Expected BorrowFromCustodyEvent, got {other:?}"),
-        };
+    let event_args = match &evt_output.events[0].instruction {
+        perpetuals_events::instruction::Instruction::BorrowFromCustodyEvent {
+            accounts: _,
+            args,
+        } => args,
+        other => panic!("Expected BorrowFromCustodyEvent, got {other:?}"),
+    };
 
     assert_borrow_from_custody_event(event_args);
 }
@@ -196,7 +206,10 @@ fn resolve_events_from_fixture_logs_returns_empty() {
 
     // The real transaction logs contain no "Program data:" lines.
     let events = perpetuals_events::resolve_events_from_logs(&fixture.log_messages);
-    assert!(events.is_empty(), "perpetuals uses CPI events, not log events");
+    assert!(
+        events.is_empty(),
+        "perpetuals uses CPI events, not log events"
+    );
 }
 
 // ---------------------------------------------------------------------------

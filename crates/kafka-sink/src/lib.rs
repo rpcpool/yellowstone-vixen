@@ -10,7 +10,7 @@ pub mod topics;
 pub mod utils;
 
 // Re-export main types
-pub use config::KafkaSinkConfig;
+pub use config::{KafkaCompressionType, KafkaSinkConfig};
 pub use events::{
     AccountSlotCommitEvent, CommitScope, MarkerType, PreparedRecord, RawAccountEvent,
     RawInstructionEvent, RecordHeader, RecordKind, TransactionSlotCommitEvent,
@@ -20,9 +20,9 @@ pub use handler::BufferingHandler;
 pub use handler::PassthroughAccountHandler;
 pub use kafka_sink::TransactionSlotSink;
 #[cfg(feature = "experimental-account-parser")]
-pub use kafka_sink::{AccountMsg, AccountSink};
+pub use kafka_sink::{AccountMsg, AccountPassthroughSink, AccountSlotSink};
 pub use parsers::{AccountSubscription, TransactionSubscription};
-pub use producer::create_producer;
+pub use producer::{create_producer, initialize_transactional_producer};
 // Re-export rdkafka types for convenience
 pub use rdkafka::producer::FutureProducer;
 pub use schema_registry::{

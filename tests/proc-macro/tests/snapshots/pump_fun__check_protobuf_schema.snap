@@ -117,10 +117,6 @@ message InitUserVolumeAccumulatorEvent {
   int64 timestamp = 3;
 }
     
-message OptionBool {
-  bool item_0 = 1;
-}
-    
 message ReservedFeeRecipientsEvent {
   int64 timestamp = 1;
   PublicKey reserved_fee_recipient = 2;
@@ -347,7 +343,7 @@ message BuyAccounts {
 message BuyArgs {
   uint64 amount = 1;
   uint64 max_sol_cost = 2;
-  OptionBool track_volume = 3;
+  bool track_volume = 3;
 }
     
 message Buy {
@@ -378,7 +374,7 @@ message BuyExactSolInAccounts {
 message BuyExactSolInArgs {
   uint64 spendable_sol_in = 1;
   uint64 min_tokens_out = 2;
-  OptionBool track_volume = 3;
+  bool track_volume = 3;
 }
     
 message BuyExactSolIn {

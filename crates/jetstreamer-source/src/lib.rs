@@ -208,9 +208,9 @@ impl VixenStreamHandler {
             yellowstone_grpc_proto::geyser::SubscribeUpdateTransactionInfo {
                 signature: tx_data.signature.as_ref().to_vec(),
                 is_vote: tx_data.is_vote,
-                transaction: Some(convert::transaction(&tx_data.transaction)),
+                transaction: Some(convert::transaction(tx_data.transaction)),
                 meta: Some(convert::transaction_status_meta(
-                    &tx_data.transaction_status_meta,
+                    tx_data.transaction_status_meta,
                 )),
                 index: tx_data.transaction_slot_index as u64,
             },
@@ -346,6 +346,24 @@ impl SourceTrait for JetstreamSource {
         let config = self.config.clone();
         let filters = self.filters.clone();
 
+        // SAFETY: jetstreamer-firehose reads these env vars when `firehose()` is
+        // called (inside the spawned task below). Setting them here — before that
+        // call — ensures the values are visible. The tokio runtime is already
+        // multi-threaded at this point, so a true data race is possible if other
+        // code reads these vars concurrently; in practice nothing else in this
+        // process touches them.
+        unsafe {
+            std::env::set_var("JETSTREAMER_NETWORK", &config.network);
+            std::env::set_var(
+                "JETSTREAMER_COMPACT_INDEX_BASE_URL",
+                &config.compact_index_base_url,
+            );
+            std::env::set_var(
+                "JETSTREAMER_NETWORK_CAPACITY_MB",
+                config.network_capacity_mb.to_string(),
+            );
+        }
+
         let cancellation_token = CancellationToken::new();
         let token = cancellation_token.clone();
 
@@ -392,19 +410,6 @@ impl JetstreamSource {
         );
 
         let handler = Arc::new(VixenStreamHandler::new(tx.clone(), filters.clone()));
-
-        // Set environment variables for jetstreamer
-        unsafe {
-            std::env::set_var("JETSTREAMER_NETWORK", &config.network);
-            std::env::set_var(
-                "JETSTREAMER_COMPACT_INDEX_BASE_URL",
-                &config.compact_index_base_url,
-            );
-            std::env::set_var(
-                "JETSTREAMER_NETWORK_CAPACITY_MB",
-                config.network_capacity_mb.to_string(),
-            );
-        }
 
         let handler_on_block = handler.clone();
         let on_block = Some(move |_thread_id: usize, block: BlockData| {
@@ -582,10 +587,10 @@ mod convert {
     use solana_transaction_status::{TransactionStatusMeta, TransactionTokenBalance};
     use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
 
-    pub fn transaction(tx: &VersionedTransaction) -> proto::Transaction {
+    pub fn transaction(tx: VersionedTransaction) -> proto::Transaction {
         proto::Transaction {
             signatures: tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect(),
-            message: Some(match &tx.message {
+            message: Some(match tx.message {
                 VersionedMessage::Legacy(msg) => proto::Message {
                     header: Some(proto::MessageHeader {
                         num_required_signatures: msg.header.num_required_signatures as u32,
@@ -602,11 +607,11 @@ mod convert {
                     recent_blockhash: msg.recent_blockhash.as_ref().to_vec(),
                     instructions: msg
                         .instructions
-                        .iter()
+                        .into_iter()
                         .map(|ix| proto::CompiledInstruction {
                             program_id_index: ix.program_id_index as u32,
-                            accounts: ix.accounts.clone(),
-                            data: ix.data.clone(),
+                            accounts: ix.accounts,
+                            data: ix.data,
                         })
                         .collect(),
                     versioned: false,
@@ -628,21 +633,21 @@ mod convert {
                     recent_blockhash: msg.recent_blockhash.as_ref().to_vec(),
                     instructions: msg
                         .instructions
-                        .iter()
+                        .into_iter()
                         .map(|ix| proto::CompiledInstruction {
                             program_id_index: ix.program_id_index as u32,
-                            accounts: ix.accounts.clone(),
-                            data: ix.data.clone(),
+                            accounts: ix.accounts,
+                            data: ix.data,
                         })
                         .collect(),
                     versioned: true,
                     address_table_lookups: msg
                         .address_table_lookups
-                        .iter()
+                        .into_iter()
                         .map(|l| proto::MessageAddressTableLookup {
                             account_key: l.account_key.as_ref().to_vec(),
-                            writable_indexes: l.writable_indexes.clone(),
-                            readonly_indexes: l.readonly_indexes.clone(),
+                            writable_indexes: l.writable_indexes,
+                            readonly_indexes: l.readonly_indexes,
                         })
                         .collect(),
                 },
@@ -650,28 +655,31 @@ mod convert {
         }
     }
 
-    pub fn transaction_status_meta(meta: &TransactionStatusMeta) -> proto::TransactionStatusMeta {
+    pub fn transaction_status_meta(meta: TransactionStatusMeta) -> proto::TransactionStatusMeta {
+        let inner_instructions_none = meta.inner_instructions.is_none();
+        let log_messages_none = meta.log_messages.is_none();
+        let return_data_none = meta.return_data.is_none();
+
         proto::TransactionStatusMeta {
-            err: meta.status.clone().err().map(|e| proto::TransactionError {
+            err: meta.status.err().map(|e| proto::TransactionError {
                 err: bincode::serialize(&e).unwrap_or_default(),
             }),
             fee: meta.fee,
-            pre_balances: meta.pre_balances.clone(),
-            post_balances: meta.post_balances.clone(),
+            pre_balances: meta.pre_balances,
+            post_balances: meta.post_balances,
             inner_instructions: meta
                 .inner_instructions
-                .as_ref()
                 .map(|ixs| {
-                    ixs.iter()
+                    ixs.into_iter()
                         .map(|ix| proto::InnerInstructions {
                             index: ix.index as u32,
                             instructions: ix
                                 .instructions
-                                .iter()
+                                .into_iter()
                                 .map(|i| proto::InnerInstruction {
                                     program_id_index: i.instruction.program_id_index as u32,
-                                    accounts: i.instruction.accounts.clone(),
-                                    data: i.instruction.data.clone(),
+                                    accounts: i.instruction.accounts,
+                                    data: i.instruction.data,
                                     stack_height: i.stack_height,
                                 })
                                 .collect(),
@@ -679,26 +687,23 @@ mod convert {
                         .collect()
                 })
                 .unwrap_or_default(),
-            inner_instructions_none: meta.inner_instructions.is_none(),
-            log_messages: meta.log_messages.clone().unwrap_or_default(),
-            log_messages_none: meta.log_messages.is_none(),
+            inner_instructions_none,
+            log_messages: meta.log_messages.unwrap_or_default(),
+            log_messages_none,
             pre_token_balances: meta
                 .pre_token_balances
-                .as_ref()
-                .map(|bs| bs.iter().map(convert_token_balance).collect())
+                .map(|bs| bs.into_iter().map(convert_token_balance).collect())
                 .unwrap_or_default(),
             post_token_balances: meta
                 .post_token_balances
-                .as_ref()
-                .map(|bs| bs.iter().map(convert_token_balance).collect())
+                .map(|bs| bs.into_iter().map(convert_token_balance).collect())
                 .unwrap_or_default(),
             rewards: meta
                 .rewards
-                .as_ref()
                 .map(|rs| {
-                    rs.iter()
+                    rs.into_iter()
                         .map(|r| proto::Reward {
-                            pubkey: r.pubkey.clone(),
+                            pubkey: r.pubkey,
                             lamports: r.lamports,
                             post_balance: r.post_balance,
                             reward_type: match r.reward_type {
@@ -725,28 +730,28 @@ mod convert {
                 .iter()
                 .map(|k| k.as_ref().to_vec())
                 .collect(),
-            return_data: meta.return_data.as_ref().map(|r| proto::ReturnData {
+            return_data: meta.return_data.map(|r| proto::ReturnData {
                 program_id: r.program_id.as_ref().to_vec(),
-                data: r.data.clone(),
+                data: r.data,
             }),
-            return_data_none: meta.return_data.is_none(),
+            return_data_none,
             compute_units_consumed: meta.compute_units_consumed,
             cost_units: None,
         }
     }
 
-    fn convert_token_balance(tb: &TransactionTokenBalance) -> proto::TokenBalance {
+    fn convert_token_balance(tb: TransactionTokenBalance) -> proto::TokenBalance {
         proto::TokenBalance {
             account_index: tb.account_index as u32,
-            mint: tb.mint.clone(),
+            mint: tb.mint,
             ui_token_amount: Some(proto::UiTokenAmount {
                 ui_amount: tb.ui_token_amount.ui_amount.unwrap_or_default(),
                 decimals: tb.ui_token_amount.decimals as u32,
-                amount: tb.ui_token_amount.amount.clone(),
-                ui_amount_string: tb.ui_token_amount.ui_amount_string.clone(),
+                amount: tb.ui_token_amount.amount,
+                ui_amount_string: tb.ui_token_amount.ui_amount_string,
             }),
-            owner: tb.owner.clone(),
-            program_id: tb.program_id.clone(),
+            owner: tb.owner,
+            program_id: tb.program_id,
         }
     }
 }

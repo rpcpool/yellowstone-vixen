@@ -109,6 +109,7 @@ pub fn build_fields_ir(
 
             other => {
                 let (label, field_type) = map_type_with_label(other);
+                let field_type = ir.resolve_field_type(field_type);
 
                 out.push(FieldIr {
                     name: field_name,
