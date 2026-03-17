@@ -317,7 +317,9 @@ pub(super) fn manual_prost_struct_impl(
                 #(#encode_stmts)*
             }
 
-            #[allow(unused_variables)]
+            // DecodeError::new is doc(hidden) + deprecated but explicitly intended
+            // for Message implementations, which is exactly our use case.
+            #[allow(unused_variables, deprecated)]
             fn merge_field(
                 &mut self,
                 tag: u32,
