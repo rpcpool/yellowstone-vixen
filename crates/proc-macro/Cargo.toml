@@ -28,7 +28,6 @@ base64 = { workspace = true }
 
 [features]
 proto = []
-anchor-events = []
 
 [dev-dependencies]
 prettyplease = { workspace = true }

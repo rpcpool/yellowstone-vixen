@@ -15,11 +15,11 @@ yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-anchor-event = { workspace = true, features = ["proto"] }
 
 [dev-dependencies]
-yellowstone-vixen-proc-macro = { workspace = true, features = ["proto", "anchor-events"] }
+yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
 yellowstone-vixen-mock = { workspace = true }
 
 # required by macro expansion
-yellowstone-vixen-parser = { workspace = true, features = ["anchor-events"] }
+yellowstone-vixen-parser = { workspace = true }
 yellowstone-vixen-core = { workspace = true, features = ["proto"] }
 yellowstone-vixen = { workspace = true }
 
