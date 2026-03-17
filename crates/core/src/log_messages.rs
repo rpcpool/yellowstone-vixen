@@ -68,7 +68,7 @@ fn assign_logs_recursive(logs: &[String], start: usize, ix: &mut InstructionUpda
 
                 if depth == 0 {
                     // This is the closing line for the current instruction.
-                    ix.log_messages = logs[invoke_pos..=pos].to_vec();
+                    ix.log_range = invoke_pos..(pos + 1);
 
                     return pos + 1;
                 }
@@ -79,7 +79,7 @@ fn assign_logs_recursive(logs: &[String], start: usize, ix: &mut InstructionUpda
     }
 
     // Fallback: if we never found a matching close, take everything from invoke to end.
-    ix.log_messages = logs[invoke_pos..pos].to_vec();
+    ix.log_range = invoke_pos..pos;
 
     pos
 }
@@ -146,7 +146,23 @@ mod tests {
 
     #[test]
     fn test_assign_log_messages() {
-        let shared = Arc::new(InstructionShared::default());
+        let logs: Vec<String> = vec![
+            "Program ABC invoke [1]",
+            "Program log: outer hello",
+            "Program DEF invoke [2]",
+            "Program log: inner hello",
+            "Program DEF success",
+            "Program ABC consumed 5000 units",
+            "Program ABC success",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+
+        let shared = Arc::new(InstructionShared {
+            log_messages: logs.clone(),
+            ..InstructionShared::default()
+        });
 
         // Build a simple instruction tree: outer ix with one inner ix
         let mut outer = vec![InstructionUpdate {
@@ -161,63 +177,27 @@ mod tests {
                 shared: Arc::clone(&shared),
                 inner: vec![],
                 path: Path::from(vec![0, 0]),
-                log_messages: vec![],
+                log_range: 0..0,
             }],
             path: Path::new_single(0),
-            log_messages: vec![],
+            log_range: 0..0,
         }];
 
-        let logs: Vec<String> = vec![
-            "Program ABC invoke [1]",
-            "Program log: outer hello",
-            "Program DEF invoke [2]",
-            "Program log: inner hello",
-            "Program DEF success",
-            "Program ABC consumed 5000 units",
-            "Program ABC success",
-        ]
-        .into_iter()
-        .map(String::from)
-        .collect();
-
-        assign_log_messages(&logs, &mut outer);
+        assign_log_messages(&shared.log_messages, &mut outer);
 
         // Outer instruction gets all logs (invoke through success, inclusive)
-        assert_eq!(outer[0].log_messages.len(), 7);
-        assert_eq!(outer[0].log_messages[0], "Program ABC invoke [1]");
-        assert_eq!(outer[0].log_messages[6], "Program ABC success");
+        assert_eq!(outer[0].log_messages().len(), 7);
+        assert_eq!(outer[0].log_messages()[0], "Program ABC invoke [1]");
+        assert_eq!(outer[0].log_messages()[6], "Program ABC success");
 
         // Inner instruction gets its own slice
-        assert_eq!(outer[0].inner[0].log_messages.len(), 3);
-        assert_eq!(outer[0].inner[0].log_messages[0], "Program DEF invoke [2]");
-        assert_eq!(outer[0].inner[0].log_messages[2], "Program DEF success");
+        assert_eq!(outer[0].inner[0].log_messages().len(), 3);
+        assert_eq!(outer[0].inner[0].log_messages()[0], "Program DEF invoke [2]");
+        assert_eq!(outer[0].inner[0].log_messages()[2], "Program DEF success");
     }
 
     #[test]
     fn test_assign_log_messages_multiple_outer() {
-        let shared = Arc::new(InstructionShared::default());
-
-        let mut outer = vec![
-            InstructionUpdate {
-                program: KeyBytes::new([1; 32]),
-                accounts: vec![],
-                data: vec![],
-                shared: Arc::clone(&shared),
-                inner: vec![],
-                path: Path::new_single(0),
-                log_messages: vec![],
-            },
-            InstructionUpdate {
-                program: KeyBytes::new([2; 32]),
-                accounts: vec![],
-                data: vec![],
-                shared: Arc::clone(&shared),
-                inner: vec![],
-                path: Path::new_single(1),
-                log_messages: vec![],
-            },
-        ];
-
         let logs: Vec<String> = vec![
             "Program ABC invoke [1]",
             "Program log: first",
@@ -230,12 +210,38 @@ mod tests {
         .map(String::from)
         .collect();
 
-        assign_log_messages(&logs, &mut outer);
+        let shared = Arc::new(InstructionShared {
+            log_messages: logs.clone(),
+            ..InstructionShared::default()
+        });
 
-        assert_eq!(outer[0].log_messages.len(), 3);
-        assert_eq!(outer[0].log_messages[1], "Program log: first");
+        let mut outer = vec![
+            InstructionUpdate {
+                program: KeyBytes::new([1; 32]),
+                accounts: vec![],
+                data: vec![],
+                shared: Arc::clone(&shared),
+                inner: vec![],
+                path: Path::new_single(0),
+                log_range: 0..0,
+            },
+            InstructionUpdate {
+                program: KeyBytes::new([2; 32]),
+                accounts: vec![],
+                data: vec![],
+                shared: Arc::clone(&shared),
+                inner: vec![],
+                path: Path::new_single(1),
+                log_range: 0..0,
+            },
+        ];
 
-        assert_eq!(outer[1].log_messages.len(), 3);
-        assert_eq!(outer[1].log_messages[1], "Program log: second");
+        assign_log_messages(&shared.log_messages, &mut outer);
+
+        assert_eq!(outer[0].log_messages().len(), 3);
+        assert_eq!(outer[0].log_messages()[1], "Program log: first");
+
+        assert_eq!(outer[1].log_messages().len(), 3);
+        assert_eq!(outer[1].log_messages()[1], "Program log: second");
     }
 }

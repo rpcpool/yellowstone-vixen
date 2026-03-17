@@ -152,7 +152,7 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
                 .collect(),
             data: value.data.clone(),
             inner: value.inner.iter().map(Into::into).collect(),
-            log_messages: value.log_messages.clone(),
+            log_messages: value.log_messages().to_vec(),
         }
     }
 }
@@ -160,13 +160,20 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
 impl From<&SerializableInstructionUpdate> for InstructionUpdate {
     #[allow(clippy::cast_possible_truncation)]
     fn from(value: &SerializableInstructionUpdate) -> Self {
+        let log_range = 0..value.log_messages.len();
+
+        let shared = Arc::new(InstructionShared {
+            log_messages: value.log_messages.clone(),
+            ..InstructionShared::default()
+        });
+
         Self {
             program: value.program.into(),
             accounts: value.accounts.iter().copied().map(Into::into).collect(),
             data: value.data.clone(),
-            shared: Arc::new(InstructionShared::default()),
+            shared,
             inner: value.inner.iter().map(Into::into).collect(),
-            log_messages: value.log_messages.clone(),
+            log_range,
             path: value
                 .ix_index
                 .iter()

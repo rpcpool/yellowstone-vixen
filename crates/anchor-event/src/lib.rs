@@ -193,7 +193,7 @@ fn synthetic_instruction(
         shared: Arc::clone(shared),
         inner: vec![],
         path: path.clone(),
-        log_messages: vec![],
+        log_range: 0..0,
     }
 }
 
@@ -233,7 +233,7 @@ macro_rules! impl_parser {
                 };
 
                 // 3. Scan logs for "Program data:" events.
-                let log_payloads = extract_log_event_payloads(&value.log_messages);
+                let log_payloads = extract_log_event_payloads(value.log_messages());
 
                 let mut events = Vec::with_capacity(log_payloads.len());
 

@@ -112,8 +112,8 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
     /// The path of this instruction within the transaction.
     pub path: Path,
-    /// Log messages produced by this specific instruction (from invoke to success/failed).
-    pub log_messages: Vec<String>,
+    /// Range into `shared.log_messages` for this instruction's logs.
+    pub log_range: std::ops::Range<usize>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -242,6 +242,14 @@ impl AccountKeys {
 }
 
 impl InstructionUpdate {
+    /// Returns the log messages for this specific instruction.
+    ///
+    /// This is a zero-copy slice into the shared transaction log messages.
+    #[must_use]
+    pub fn log_messages(&self) -> &[String] {
+        &self.shared.log_messages[self.log_range.clone()]
+    }
+
     /// Parse a transaction update into a list of instructions.
     ///
     /// # Errors
@@ -435,7 +443,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             path,
-            log_messages: vec![],
+            log_range: 0..0,
         })
     }
 
