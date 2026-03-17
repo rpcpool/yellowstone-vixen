@@ -11,7 +11,7 @@ use yellowstone_grpc_proto::{
     },
 };
 
-use crate::{Pubkey, TransactionUpdate};
+use crate::{log_messages::assign_log_messages, Pubkey, TransactionUpdate};
 
 /// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
@@ -112,6 +112,8 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
     /// The path of this instruction within the transaction.
     pub path: Path,
+    /// Log messages produced by this specific instruction (from invoke to success/failed).
+    pub log_messages: Vec<String>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -319,6 +321,8 @@ impl InstructionUpdate {
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
 
+        assign_log_messages(&shared.log_messages, &mut outer);
+
         Ok(outer)
     }
 
@@ -431,6 +435,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             path,
+            log_messages: vec![],
         })
     }
 

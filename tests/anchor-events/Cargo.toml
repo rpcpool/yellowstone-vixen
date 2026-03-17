@@ -1,0 +1,35 @@
+[package]
+name = "anchor-events-test"
+version.workspace = true
+edition.workspace = true
+
+# See tests/proc-macro/Cargo.toml for an explanation of why parser crates
+# must appear here as [dependencies] with `features = ["proto"]`.
+[dependencies]
+yellowstone-vixen-spl-token-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
+    "proto",
+] }
+yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-anchor-event = { workspace = true, features = ["proto"] }
+
+[dev-dependencies]
+yellowstone-vixen-proc-macro = { workspace = true, features = ["proto", "anchor-events"] }
+yellowstone-vixen-mock = { workspace = true }
+
+# required by macro expansion
+yellowstone-vixen-parser = { workspace = true, features = ["anchor-events"] }
+yellowstone-vixen-core = { workspace = true, features = ["proto"] }
+yellowstone-vixen = { workspace = true }
+
+base64 = { workspace = true }
+hex = { workspace = true }
+prost = { workspace = true }
+borsh = { workspace = true }
+
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+regex = { workspace = true }
+
+insta = "1.46.3"

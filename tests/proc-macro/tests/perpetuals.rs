@@ -6,7 +6,7 @@ use yellowstone_vixen_core::{Parser, Pubkey};
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("idls/perp_idl.json");
+include_vixen_parser!("idls/perpetuals.json");
 
 #[test]
 fn check_protobuf_schema() {

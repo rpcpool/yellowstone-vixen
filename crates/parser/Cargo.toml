@@ -18,6 +18,7 @@ yellowstone-vixen-proto = { workspace = true, features = [
 ], optional = true }
 thiserror.workspace = true
 bs58.workspace = true
+base64 = { workspace = true, optional = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
@@ -31,3 +32,4 @@ proto = [
   "yellowstone-vixen-proto/parser",
   "solana-program-option",
 ]
+anchor-events = ["dep:base64"]

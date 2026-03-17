@@ -40,6 +40,7 @@ pub extern crate bs58;
 pub extern crate yellowstone_vixen_proto;
 
 pub mod instruction;
+pub mod log_messages;
 
 #[cfg(feature = "proto")]
 pub mod proto;

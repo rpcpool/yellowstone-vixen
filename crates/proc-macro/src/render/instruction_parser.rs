@@ -430,6 +430,45 @@ pub fn instruction_parser(
         })
         .collect();
 
+    let resolve_events_from_logs = if cfg!(feature = "anchor-events") {
+        quote! {
+            ///
+            /// Resolve Anchor events from `"Program data: "` transaction log lines.
+            ///
+            /// For each matching line, base64-decodes the payload, prepends the
+            /// Anchor self-CPI event prefix (`EVENT_IX_TAG`), and runs it through
+            /// the standard discriminator matching.  This lets an events-IDL
+            /// parser decode log-emitted events directly, without needing the
+            /// `AnchorEventInstructionParser` wrapper.
+            ///
+            /// Returns successfully parsed events; lines that don't match any
+            /// discriminator are silently skipped.
+            ///
+            pub fn resolve_events_from_logs(
+                logs: &[String],
+            ) -> Vec<#wrapper_ident> {
+                const PREFIX: &str = "Program data: ";
+                const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
+
+                logs.iter()
+                    .filter_map(|line| {
+                        let encoded = line.strip_prefix(PREFIX)?;
+                        let decoded = base64::Engine::decode(
+                            &base64::engine::general_purpose::STANDARD,
+                            encoded.trim(),
+                        ).ok()?;
+                        let mut data = Vec::with_capacity(8 + decoded.len());
+                        data.extend_from_slice(&EVENT_IX_TAG);
+                        data.extend_from_slice(&decoded);
+                        resolve_instruction_default(&[], &data).ok()
+                    })
+                    .collect()
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     quote! {
         //
         // Per-instruction parse helper functions.
@@ -456,6 +495,8 @@ pub fn instruction_parser(
 
             Err(ParseError::Filtered)
         }
+
+        #resolve_events_from_logs
 
         ///
         ///  Trait for customizing instruction resolution logic.

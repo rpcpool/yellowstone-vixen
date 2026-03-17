@@ -1,0 +1,19 @@
+[package]
+name = "yellowstone-vixen-anchor-event"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+description = "Composable Anchor event parser wrapper for yellowstone-vixen"
+
+[features]
+handler = ["dep:yellowstone-vixen"]
+proto = ["yellowstone-vixen-core/proto", "dep:prost"]
+
+[dependencies]
+yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
+base64 = { workspace = true }
