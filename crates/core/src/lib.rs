@@ -559,6 +559,9 @@ impl ::prost::Message for KeyBytes<32> {
         let bytes = &wrapper.value;
 
         if bytes.len() != 32 {
+            // DecodeError::new is doc(hidden) + deprecated but explicitly intended
+            // for Message implementations, which is exactly our use case.
+            #[allow(deprecated)]
             return Err(::prost::DecodeError::new(
                 "expected exactly 32 bytes for Pubkey",
             ));
