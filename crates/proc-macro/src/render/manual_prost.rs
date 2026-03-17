@@ -3,11 +3,10 @@ use std::collections::HashSet;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::rust_types_from_ir::map_ir_type_to_native;
 use crate::intermediate_representation::{
     FieldIr, FieldTypeIr, LabelIr, OneofIr, ScalarIr, TypeIr,
 };
-
-use super::rust_types_from_ir::map_ir_type_to_native;
 
 ///
 /// Generate a manual `prost::Message` impl for a oneof wrapper struct.
