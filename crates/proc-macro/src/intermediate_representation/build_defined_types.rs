@@ -87,6 +87,15 @@ fn build_defined_type_tuple(
     tuple_type_node: &codama_nodes::TupleTypeNode,
     ir: &mut SchemaIr,
 ) {
+    // Single-item tuples are inlined as their inner type (e.g. optionBool → bool).
+    if tuple_type_node.items.len() == 1 {
+        let (_label, field_type) = map_type_with_label(&tuple_type_node.items[0]);
+
+        ir.type_aliases.insert(name.to_string(), field_type);
+
+        return;
+    }
+
     let mut fields = Vec::with_capacity(tuple_type_node.items.len());
 
     for (i, item) in tuple_type_node.items.iter().enumerate() {

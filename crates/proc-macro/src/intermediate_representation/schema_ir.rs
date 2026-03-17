@@ -2,6 +2,12 @@
 pub struct SchemaIr {
     pub types: Vec<TypeIr>,
     pub oneofs: Vec<OneofIr>,
+
+    /// Single-item tuple defined types are inlined as their inner type.
+    ///
+    /// For example, `optionBool` (a tuple with one bool) becomes a direct
+    /// `bool` field instead of a wrapper struct with `item_0`.
+    pub type_aliases: std::collections::HashMap<String, FieldTypeIr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,5 +130,17 @@ impl SchemaIr {
         }
 
         self.types.push(msg);
+    }
+
+    /// If `ft` is a `Message` reference to a type alias, return the aliased
+    /// type. Otherwise return `ft` unchanged.
+    pub fn resolve_field_type(&self, ft: FieldTypeIr) -> FieldTypeIr {
+        if let FieldTypeIr::Message(ref name) = ft {
+            if let Some(aliased) = self.type_aliases.get(name) {
+                return aliased.clone();
+            }
+        }
+
+        ft
     }
 }
