@@ -5270,6 +5270,7 @@ dependencies = [
  "insta",
  "prost 0.14.1",
  "regex",
+ "solana-pubkey 3.0.0",
  "tokio",
  "yellowstone-vixen",
  "yellowstone-vixen-block-meta-parser",

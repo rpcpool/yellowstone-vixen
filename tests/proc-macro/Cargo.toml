@@ -34,6 +34,8 @@ yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
 
 [dev-dependencies]
+solana-pubkey = { workspace = true }
+
 yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
 yellowstone-vixen-mock = { workspace = true }
 
