@@ -92,20 +92,9 @@ fn read_last_slot_from_topic(
             continue;
         }
 
-        // Transactional topics may end with control records that consume offsets
-        // but do not deserialize into user checkpoint payloads. Walk backward
-        // from the tail and only accept records that are actually returned at
-        // or after the offset we sought, rather than trusting the first poll
-        // result after seek.
         let scan_low = startup_scan_low_offset(low, high);
-        let mut candidate: Option<LastCommittedCandidate> = None;
-        for offset in (scan_low..high).rev() {
-            candidate = read_candidate_at_or_after_offset(&consumer, topic, partition_id, offset)?;
-
-            if candidate.is_some() {
-                break;
-            }
-        }
+        let candidate =
+            read_tail_candidate_in_range(&consumer, topic, partition_id, scan_low, high)?;
 
         if let Some(candidate) = candidate {
             tracing::debug!(
@@ -144,45 +133,47 @@ fn startup_scan_low_offset(low: i64, high: i64) -> i64 {
     (high - MAX_STARTUP_CHECKPOINT_SCAN_OFFSETS).max(low)
 }
 
-fn read_candidate_at_or_after_offset(
+fn read_tail_candidate_in_range(
     consumer: &BaseConsumer,
     topic: &str,
     partition_id: i32,
-    seek_offset: i64,
+    scan_low: i64,
+    scan_high: i64,
 ) -> Result<Option<LastCommittedCandidate>, String> {
     let mut tpl = TopicPartitionList::new();
-    tpl.add_partition_offset(topic, partition_id, rdkafka::Offset::Offset(seek_offset))
+    tpl.add_partition_offset(topic, partition_id, rdkafka::Offset::Offset(scan_low))
         .map_err(|e| {
             format!(
                 "Failed to prepare startup checkpoint assignment for topic {topic} partition \
-                 {partition_id} offset {seek_offset}: {e}"
+                 {partition_id} offset {scan_low}: {e}"
             )
         })?;
     consumer.assign(&tpl).map_err(|e| {
         format!(
             "Failed to assign startup checkpoint consumer for topic {topic} partition \
-             {partition_id} offset {seek_offset}: {e}"
+             {partition_id} offset {scan_low}: {e}"
         )
     })?;
     consumer
         .seek(
             topic,
             partition_id,
-            rdkafka::Offset::Offset(seek_offset),
+            rdkafka::Offset::Offset(scan_low),
             Duration::from_secs(5),
         )
         .map_err(|e| {
             format!(
                 "Failed to seek startup checkpoint consumer for topic {topic} partition \
-                 {partition_id} offset {seek_offset}: {e}"
+                 {partition_id} offset {scan_low}: {e}"
             )
         })?;
 
-    let deadline = Instant::now() + Duration::from_millis(250);
+    let deadline = Instant::now() + Duration::from_secs(1);
+    let mut latest: Option<LastCommittedCandidate> = None;
 
     loop {
         let Some(remaining) = deadline.checked_duration_since(Instant::now()) else {
-            return Ok(None);
+            return Ok(latest);
         };
 
         let message = match consumer.poll(remaining.min(Duration::from_millis(50))) {
@@ -191,17 +182,22 @@ fn read_candidate_at_or_after_offset(
                 tracing::debug!(
                     topic,
                     partition = partition_id,
-                    seek_offset,
+                    scan_low,
+                    scan_high,
                     ?error,
                     "Ignoring Kafka poll error while scanning startup checkpoint"
                 );
                 continue;
             },
-            None => return Ok(None),
+            None => return Ok(latest),
         };
 
-        if message.partition() != partition_id || message.offset() < seek_offset {
+        if message.partition() != partition_id || message.offset() < scan_low {
             continue;
+        }
+
+        if message.offset() >= scan_high {
+            return Ok(latest);
         }
 
         let Some(payload) = message.payload() else {
@@ -209,7 +205,7 @@ fn read_candidate_at_or_after_offset(
         };
 
         if let Some(candidate) = parse_last_committed_candidate(message.offset(), payload) {
-            return Ok(Some(candidate));
+            latest = Some(candidate);
         }
     }
 }
