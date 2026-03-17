@@ -93,7 +93,7 @@ impl SingleInstructionPipeline {
     /// its sub-pipeline.
     ///
     /// # Errors
-    /// Returns an error if the inner pipeline fails.
+    /// Returns an error if the instructuion update parsing fail.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
@@ -104,14 +104,8 @@ impl SingleInstructionPipeline {
             #[cfg(feature = "prometheus")]
             metrics::increment_processed_updates(&res, metrics::UpdateType::Instruction);
 
-            match res {
-                Ok(()) => (),
-                Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
-                Err(e) => {
-                    let handled = e.handle::<InstructionUpdate>(&pipe.id());
-
-                    return Err(PipelineErrors::AlreadyHandled(handled));
-                },
+            if let Err(e) = res {
+                let _ = e.handle::<InstructionUpdate>(&pipe.id());
             }
         }
 
