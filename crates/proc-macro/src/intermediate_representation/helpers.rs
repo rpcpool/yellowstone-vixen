@@ -109,6 +109,7 @@ pub fn build_fields_ir(
 
             other => {
                 let (label, field_type) = map_type_with_label(other);
+                let field_type = ir.resolve_field_type(field_type);
 
                 out.push(FieldIr {
                     name: field_name,
@@ -235,7 +236,8 @@ fn map_type(t: &codama_nodes::TypeNode) -> FieldTypeIr {
             NF::I64 => FieldTypeIr::Scalar(ScalarIr::Int64),
             NF::F32 => FieldTypeIr::Scalar(ScalarIr::Float),
             NF::F64 => FieldTypeIr::Scalar(ScalarIr::Double),
-            NF::U128 | NF::I128 => FieldTypeIr::Scalar(ScalarIr::FixedBytes(16)),
+            NF::U128 => FieldTypeIr::Scalar(ScalarIr::U128),
+            NF::I128 => FieldTypeIr::Scalar(ScalarIr::I128),
         },
 
         T::Link(link) => FieldTypeIr::Message(crate::utils::to_pascal_case(&link.name)),

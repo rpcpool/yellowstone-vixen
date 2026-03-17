@@ -16,14 +16,13 @@ use prost::Message;
 use yellowstone_vixen_core::{
     bs58,
     instruction::{InstructionUpdate, Path},
-    AccountUpdate, ParseError, Parser, ProgramParser,
+    AccountUpdate, ParseError, Parser, ProgramParser, Pubkey,
 };
 
 use crate::{
     events::{PreparedRecord, RawAccountEvent, RawInstructionEvent, RecordHeader, RecordKind},
     schema_registry::{wrap_payload_with_confluent_wire_format, RegisteredSchema},
     utils::{make_account_record_key, make_instruction_record_key},
-    Pubkey,
 };
 
 /// Parsed output result with protobuf-encoded bytes.
@@ -675,7 +674,7 @@ mod tests {
     use prost::Message;
     use yellowstone_vixen_core::{
         instruction::{InstructionShared, InstructionUpdate, Path},
-        ParseError, ParseResult, Parser, Prefilter, ProgramParser,
+        ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
     };
     #[cfg(feature = "experimental-account-parser")]
     use yellowstone_vixen_core::{AccountUpdate, AccountUpdateInfo};
@@ -683,7 +682,7 @@ mod tests {
     use super::KafkaSinkBuilder;
     #[cfg(feature = "experimental-account-parser")]
     use crate::events::RawAccountEvent;
-    use crate::{events::RawInstructionEvent, Pubkey};
+    use crate::events::RawInstructionEvent;
 
     #[derive(Clone, Copy)]
     enum TestInstructionOutcome {

@@ -209,7 +209,7 @@ fn extract_discriminator_info(
 /// Example output:
 /// ```rust, ignore
 /// pub fn parse_swap_base_in(
-///     accounts: &[::yellowstone_vixen_core::KeyBytes<32>],
+///     accounts: &[::yellowstone_vixen_core::Pubkey],
 ///     data: &[u8],
 /// ) -> ParseResult<Instructions> {
 ///     Ok(Instructions {
@@ -245,7 +245,7 @@ fn single_instruction_helper_fn(
             let field_name = format_ident!("{}", crate::utils::to_snake_case(&account.name));
             let error_msg = format!("Account does not exist at index {idx}");
 
-            quote! { #field_name: ::yellowstone_vixen_core::PublicKey::new(accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.to_vec()) }
+            quote! { #field_name: ::yellowstone_vixen_core::Pubkey::try_from(accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.as_slice())? }
         });
 
     let num_defined_accounts = instruction.accounts.len();
@@ -257,8 +257,8 @@ fn single_instruction_helper_fn(
                 .get(#num_defined_accounts..)
                 .unwrap_or_default()
                 .iter()
-                .map(|a| ::yellowstone_vixen_core::PublicKey::new(a.to_vec()))
-                .collect(),
+                .map(|a| ::yellowstone_vixen_core::Pubkey::try_from(a.as_slice()))
+                .collect::<::core::result::Result<Vec<_>, _>>()?,
         }
     };
     let args_field = info.args_expr.map(|expr| {
@@ -267,7 +267,7 @@ fn single_instruction_helper_fn(
 
     Some(quote! {
         pub fn #fn_ident(
-            accounts: &[::yellowstone_vixen_core::KeyBytes<32>],
+            accounts: &[::yellowstone_vixen_core::Pubkey],
             data: &[u8],
         ) -> ParseResult<#wrapper_ident> {
             Ok(#wrapper_ident {
@@ -449,7 +449,7 @@ pub fn instruction_parser(
         /// non-ambiguous instructions while overriding specific ones.
         ///
         pub fn resolve_instruction_default(
-            accounts: &[::yellowstone_vixen_core::KeyBytes<32>],
+            accounts: &[::yellowstone_vixen_core::Pubkey],
             data: &[u8],
         ) -> ParseResult<#wrapper_ident> {
             #(#match_arms)*
@@ -470,7 +470,7 @@ pub fn instruction_parser(
         pub trait InstructionResolver: Send + Sync + std::fmt::Debug + Copy + 'static {
             fn resolve(
                 &self,
-                accounts: &[::yellowstone_vixen_core::KeyBytes<32>],
+                accounts: &[::yellowstone_vixen_core::Pubkey],
                 data: &[u8],
             ) -> ParseResult<#wrapper_ident>;
         }
@@ -490,7 +490,7 @@ pub fn instruction_parser(
         /// impl program::InstructionResolver for MyResolver {
         ///     fn resolve(
         ///         &self,
-        ///         accounts: &[yellowstone_vixen_core::KeyBytes<32>],
+        ///         accounts: &[yellowstone_vixen_core::Pubkey],
         ///         data: &[u8],
         ///     ) -> ParseResult<program::Instructions> {
         ///         // Custom disambiguation logic here
@@ -533,8 +533,8 @@ pub fn instruction_parser(
 
         impl<R: InstructionResolver> ::yellowstone_vixen_core::ProgramParser for CustomInstructionParser<R> {
             #[inline]
-            fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> {
-                yellowstone_vixen_core::KeyBytes::<32>(PROGRAM_ID)
+            fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+                yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
             }
         }
 
@@ -571,8 +571,8 @@ pub fn instruction_parser(
         // Implement the trait for Mock
         impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
             #[inline]
-            fn program_id(&self) -> yellowstone_vixen_core::KeyBytes::<32> {
-                yellowstone_vixen_core::KeyBytes::<32>(PROGRAM_ID)
+            fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+                yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
             }
         }
     }

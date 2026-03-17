@@ -1,5 +1,6 @@
 pub mod account_parser;
 pub mod instruction_parser;
+mod manual_prost;
 pub mod program_pubkey;
 pub mod proto_schema_string;
 pub mod rust_types_from_ir;

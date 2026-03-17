@@ -2,6 +2,12 @@
 pub struct SchemaIr {
     pub types: Vec<TypeIr>,
     pub oneofs: Vec<OneofIr>,
+
+    /// Single-item tuple defined types are inlined as their inner type.
+    ///
+    /// For example, `optionBool` (a tuple with one bool) becomes a direct
+    /// `bool` field instead of a wrapper struct with `item_0`.
+    pub type_aliases: std::collections::HashMap<String, FieldTypeIr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -70,6 +76,11 @@ pub enum ScalarIr {
     /// On-chain i64 (8 bytes). Native match with Rust i64 / proto int64.
     Int64,
 
+    /// On-chain u128 (16 bytes). Native Rust u128, proto-encoded as `bytes` (16 LE bytes).
+    U128,
+    /// On-chain i128 (16 bytes). Native Rust i128, proto-encoded as `bytes` (16 LE bytes).
+    I128,
+
     Float,
     Double,
     String,
@@ -77,8 +88,7 @@ pub enum ScalarIr {
 
     /// Fixed-size byte array with known size (no length prefix on-chain).
     /// Stored as `Vec<u8>` in Rust for prost compatibility, but borsh
-    /// reads/writes exactly N bytes. Used for u128/i128 (16), pubkeys (32),
-    /// fixed byte arrays, etc.
+    /// reads/writes exactly N bytes. Used for fixed byte arrays, etc.
     FixedBytes(usize),
 
     /// 32-byte pubkey. Same borsh as FixedBytes(32) but rendered as a
@@ -120,5 +130,17 @@ impl SchemaIr {
         }
 
         self.types.push(msg);
+    }
+
+    /// If `ft` is a `Message` reference to a type alias, return the aliased
+    /// type. Otherwise return `ft` unchanged.
+    pub fn resolve_field_type(&self, ft: FieldTypeIr) -> FieldTypeIr {
+        if let FieldTypeIr::Message(ref name) = ft
+            && let Some(aliased) = self.type_aliases.get(name)
+        {
+            return aliased.clone();
+        }
+
+        ft
     }
 }

@@ -45,9 +45,7 @@ impl Parser for InstructionParser {
 }
 
 impl ProgramParser for InstructionParser {
-    fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -216,18 +214,18 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 2)?;
 
                     let accounts = SetAuthorityAccounts {
-                        account: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        current_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
+                        account: crate::Pubkey::new(ix.accounts[0].0),
+                        current_authority: crate::Pubkey::new(ix.accounts[1].0),
                         multisig_signers: ix.accounts[2..]
                             .iter()
-                            .map(|a| crate::PublicKey::new(a.to_vec()))
+                            .map(|a| crate::Pubkey::new(a.0))
                             .collect(),
                     };
 
                     let args = SetAuthorityArgs {
                         authority_type: AuthorityType::from(authority_type) as i32,
                         new_authority: new_authority
-                            .map(|pk| crate::PublicKey::new(pk.to_bytes()))
+                            .map(|pk| crate::Pubkey::new(pk.to_bytes()))
                             .into(),
                     };
 
@@ -240,8 +238,8 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 2)?;
 
                     let accounts = CreateNativeMintAccounts {
-                        funding_account: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        mint: crate::PublicKey::new(ix.accounts[1].to_vec()),
+                        funding_account: crate::Pubkey::new(ix.accounts[0].0),
+                        mint: crate::Pubkey::new(ix.accounts[1].0),
                     };
 
                     Ok(envelope!(
@@ -255,12 +253,12 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 1)?;
 
                     let accounts = InitializeMintCloseAuthorityAccounts {
-                        mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
+                        mint: crate::Pubkey::new(ix.accounts[0].0),
                     };
 
                     let args = InitializeMintCloseAuthorityArgs {
                         close_authority: close_authority
-                            .map(|pk| crate::PublicKey::new(pk.to_bytes()))
+                            .map(|pk| crate::Pubkey::new(pk.to_bytes()))
                             .into(),
                     };
 
@@ -275,7 +273,7 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 1)?;
 
                     let accounts = InitializeNonTransferableMintAccounts {
-                        mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
+                        mint: crate::Pubkey::new(ix.accounts[0].0),
                     };
 
                     Ok(envelope!(
@@ -289,12 +287,12 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 4)?;
 
                     let accounts = ReallocateAccounts {
-                        account: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        payer: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                        owner: crate::PublicKey::new(ix.accounts[3].to_vec()),
+                        account: crate::Pubkey::new(ix.accounts[0].0),
+                        payer: crate::Pubkey::new(ix.accounts[1].0),
+                        owner: crate::Pubkey::new(ix.accounts[3].0),
                         multisig_signers: ix.accounts[4..]
                             .iter()
-                            .map(|a| crate::PublicKey::new(a.to_vec()))
+                            .map(|a| crate::Pubkey::new(a.0))
                             .collect(),
                     };
 
@@ -311,11 +309,11 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 1)?;
 
                     let accounts = InitializePermanentDelegateAccounts {
-                        account: crate::PublicKey::new(ix.accounts[0].to_vec()),
+                        account: crate::Pubkey::new(ix.accounts[0].0),
                     };
 
                     let args = InitializePermanentDelegateArgs {
-                        delegate: Some(crate::PublicKey::new(delegate.to_bytes())),
+                        delegate: Some(crate::Pubkey::new(delegate.to_bytes())),
                     };
 
                     Ok(envelope!(
@@ -329,12 +327,12 @@ impl InstructionParser {
                     check_min_accounts_req(accounts_len, 3)?;
 
                     let accounts = WithdrawExcessLamportsAccounts {
-                        source_account: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        destination_account: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                        authority: crate::PublicKey::new(ix.accounts[2].to_vec()),
+                        source_account: crate::Pubkey::new(ix.accounts[0].0),
+                        destination_account: crate::Pubkey::new(ix.accounts[1].0),
+                        authority: crate::Pubkey::new(ix.accounts[2].0),
                         multisig_signers: ix.accounts[3..]
                             .iter()
-                            .map(|a| crate::PublicKey::new(a.to_vec()))
+                            .map(|a| crate::Pubkey::new(a.0))
                             .collect(),
                     };
 

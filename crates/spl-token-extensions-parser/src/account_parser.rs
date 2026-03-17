@@ -9,7 +9,7 @@ use spl_token_2022::{
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
 use yellowstone_vixen_proc_macro::vixen;
 
-use crate::PublicKey;
+use crate::Pubkey;
 
 #[vixen]
 #[derive(Clone, PartialEq)]
@@ -57,26 +57,26 @@ pub struct ExtendedTokenAccount {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct Mint {
-    pub mint_authority: Option<PublicKey>,
+    pub mint_authority: Option<Pubkey>,
     pub supply: u64,
     pub decimals: u32,
     pub is_initialized: bool,
-    pub freeze_authority: Option<PublicKey>,
+    pub freeze_authority: Option<Pubkey>,
 }
 
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct Account {
-    pub mint: PublicKey,
-    pub owner: PublicKey,
+    pub mint: Pubkey,
+    pub owner: Pubkey,
     pub amount: u64,
-    pub delegate: Option<PublicKey>,
+    pub delegate: Option<Pubkey>,
     /// `spl_token_2022::state::AccountState` as u32
     pub state: u32,
     /// If native: rent-exempt reserve lamports (same semantics as spl-token)
     pub is_native: Option<u64>,
     pub delegated_amount: u64,
-    pub close_authority: Option<PublicKey>,
+    pub close_authority: Option<Pubkey>,
 }
 
 #[vixen]
@@ -85,21 +85,18 @@ pub struct Multisig {
     pub m: u32,
     pub n: u32,
     pub is_initialized: bool,
-    pub signers: Vec<PublicKey>,
+    pub signers: Vec<Pubkey>,
 }
 
 fn spl_to_mint(m: &SplMint) -> Mint {
     Mint {
-        mint_authority: m
-            .mint_authority
-            .map(|pk| PublicKey::new(pk.to_bytes()))
-            .into(),
+        mint_authority: m.mint_authority.map(|pk| Pubkey::new(pk.to_bytes())).into(),
         supply: m.supply,
         decimals: m.decimals as u32,
         is_initialized: m.is_initialized,
         freeze_authority: m
             .freeze_authority
-            .map(|pk| PublicKey::new(pk.to_bytes()))
+            .map(|pk| Pubkey::new(pk.to_bytes()))
             .into(),
     }
 }
@@ -114,16 +111,16 @@ fn account_state_to_u32(s: AccountState) -> u32 {
 
 fn spl_to_account(a: &SplAccount) -> Account {
     Account {
-        mint: PublicKey::new(a.mint.to_bytes()),
-        owner: PublicKey::new(a.owner.to_bytes()),
+        mint: Pubkey::new(a.mint.to_bytes()),
+        owner: Pubkey::new(a.owner.to_bytes()),
         amount: a.amount,
-        delegate: a.delegate.map(|pk| PublicKey::new(pk.to_bytes())).into(),
+        delegate: a.delegate.map(|pk| Pubkey::new(pk.to_bytes())).into(),
         state: account_state_to_u32(a.state),
         is_native: a.is_native.into(),
         delegated_amount: a.delegated_amount,
         close_authority: a
             .close_authority
-            .map(|pk| PublicKey::new(pk.to_bytes()))
+            .map(|pk| Pubkey::new(pk.to_bytes()))
             .into(),
     }
 }
@@ -136,7 +133,7 @@ fn spl_to_multisig(multisig: &SplMultisig) -> Multisig {
     let mut signers = Vec::with_capacity(max);
 
     for i in 0..max {
-        signers.push(PublicKey::new(multisig.signers[i].to_bytes()));
+        signers.push(Pubkey::new(multisig.signers[i].to_bytes()));
     }
 
     Multisig {
@@ -270,9 +267,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::KeyBytes<32> {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(test)]
