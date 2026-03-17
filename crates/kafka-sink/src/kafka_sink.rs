@@ -231,14 +231,14 @@ impl RetrySettings {
         }
     }
 
-    fn write_from_kafka_config(config: &KafkaSinkConfig) -> Self {
+    fn get_write_policy_from_kafka_config(config: &KafkaSinkConfig) -> Self {
         Self::new(
             config.kafka_write_max_attempts,
             Duration::from_millis(config.kafka_retry_backoff_ms),
         )
     }
 
-    fn transaction_op_from_kafka_config(config: &KafkaSinkConfig) -> Self {
+    fn get_transaction_write_policy_from_kafka_config(config: &KafkaSinkConfig) -> Self {
         Self::new(
             config.kafka_transaction_op_max_attempts,
             Duration::from_millis(config.kafka_retry_backoff_ms),
@@ -383,8 +383,8 @@ impl SlotWriteExecutor {
         Self {
             producer,
             delivery: DeliveryGuarantee::from_kafka_config(config),
-            write_retry_policy: RetrySettings::write_from_kafka_config(config),
-            transaction_retry_policy: RetrySettings::transaction_op_from_kafka_config(config),
+            write_retry_policy: RetrySettings::get_write_policy_from_kafka_config(config),
+            transaction_retry_policy: RetrySettings::get_transaction_write_policy_from_kafka_config(config),
             transactions_initialized: transactions_initialized && config.transactional_id.is_some(),
         }
     }
