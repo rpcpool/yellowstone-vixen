@@ -169,7 +169,11 @@ async fn main() -> Result<()> {
     let range = SlotRangeConfig {
         slot_start: opts.slot_start,
         slot_end: opts.slot_end,
-        epoch: if opts.slot_start.is_some() { None } else { opts.epoch.or(Some(885)) },
+        epoch: if opts.slot_start.is_some() {
+            None
+        } else {
+            opts.epoch.or(Some(885))
+        },
     };
 
     let config = JetstreamSourceConfig {
