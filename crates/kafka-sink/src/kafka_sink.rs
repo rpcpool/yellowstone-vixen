@@ -367,15 +367,25 @@ struct SlotWriteExecutor {
     delivery: DeliveryGuarantee,
     write_retry_policy: RetrySettings,
     transaction_retry_policy: RetrySettings,
+    transactions_initialized: bool,
 }
 
 impl SlotWriteExecutor {
     fn from_kafka_config(config: &KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
+        Self::from_kafka_config_with_initialized_transactions(config, producer, false)
+    }
+
+    fn from_kafka_config_with_initialized_transactions(
+        config: &KafkaSinkConfig,
+        producer: Arc<FutureProducer>,
+        transactions_initialized: bool,
+    ) -> Self {
         Self {
             producer,
             delivery: DeliveryGuarantee::from_kafka_config(config),
             write_retry_policy: RetrySettings::write_from_kafka_config(config),
             transaction_retry_policy: RetrySettings::transaction_op_from_kafka_config(config),
+            transactions_initialized: transactions_initialized && config.transactional_id.is_some(),
         }
     }
 
@@ -391,6 +401,14 @@ impl SlotWriteExecutor {
         else {
             return Ok(());
         };
+
+        if self.transactions_initialized {
+            tracing::debug!(
+                transactional_id = %transactional_id,
+                "Kafka transactions already initialized before sink startup"
+            );
+            return Ok(());
+        }
 
         tracing::info!(
             transactional_id = %transactional_id,
@@ -526,6 +544,17 @@ impl TransactionSlotSink {
         }
     }
 
+    pub fn new_preinitialized(config: KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
+        Self {
+            executor: SlotWriteExecutor::from_kafka_config_with_initialized_transactions(
+                &config,
+                producer,
+                true,
+            ),
+            transaction_slots_topic: config.transaction_slots_topic,
+        }
+    }
+
     fn build_slot_write_plan<'a>(
         &'a self,
         ix_slot: &'a InstructionSlot<PreparedRecord>,
@@ -615,6 +644,22 @@ impl AccountSlotSink {
     ) -> Self {
         Self {
             executor: SlotWriteExecutor::from_kafka_config(&config, producer),
+            account_slots_topic: config.account_slots_topic,
+            account_commit_scope: account_commit_at.into(),
+        }
+    }
+
+    pub fn new_preinitialized(
+        config: KafkaSinkConfig,
+        producer: Arc<FutureProducer>,
+        account_commit_at: AccountCommitAt,
+    ) -> Self {
+        Self {
+            executor: SlotWriteExecutor::from_kafka_config_with_initialized_transactions(
+                &config,
+                producer,
+                true,
+            ),
             account_slots_topic: config.account_slots_topic,
             account_commit_scope: account_commit_at.into(),
         }

@@ -25,7 +25,7 @@ pub use kafka_sink::TransactionSlotSink;
 #[cfg(feature = "experimental-account-parser")]
 pub use kafka_sink::{AccountMsg, AccountPassthroughSink, AccountSlotSink};
 pub use parsers::{AccountSubscription, TransactionSubscription};
-pub use producer::create_producer;
+pub use producer::{create_producer, initialize_transactional_producer};
 // Re-export rdkafka types for convenience
 pub use rdkafka::producer::FutureProducer;
 pub use schema_registry::{
