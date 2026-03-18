@@ -4,9 +4,10 @@ use std::{borrow::Cow, fmt::Debug};
 
 use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
-use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
-
-use vixen_core::{instruction::Path, TransactionUpdate};
+use vixen_core::{
+    instruction::Path, GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder,
+    TransactionUpdate,
+};
 
 use crate::{
     handler::{DynPipeline, PipelineErrors},
@@ -154,10 +155,7 @@ where
     ///
     /// # Errors
     /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_enter(
-        &self,
-        caller_cpi_path: &Path,
-    ) -> Result<(), PipelineErrors> {
+    pub async fn handle_cpi_enter(&self, caller_cpi_path: &Path) -> Result<(), PipelineErrors> {
         let errs = self
             .handlers
             .into_iter()
@@ -179,10 +177,7 @@ where
     ///
     /// # Errors
     /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_return(
-        &self,
-        caller_cpi_path: &Path,
-    ) -> Result<(), PipelineErrors> {
+    pub async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> Result<(), PipelineErrors> {
         let errs = self
             .handlers
             .into_iter()
@@ -217,7 +212,7 @@ where
     > {
         Box::pin(FilterPipeline::handle_value(self, value))
     }
-    
+
     fn handle_tx_start<'h>(
         &'h self,
         txn: &'h TransactionUpdate,
@@ -261,6 +256,4 @@ where
             }
         })
     }
-
-
 }

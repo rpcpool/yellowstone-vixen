@@ -1,6 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
+
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -9,6 +10,7 @@ use yellowstone_grpc_proto::{
         Transaction, TransactionError, TransactionStatusMeta,
     },
 };
+
 use crate::{Pubkey, TransactionUpdate};
 
 /// Errors that can occur when parsing a transaction update into instructions.
@@ -435,12 +437,12 @@ impl InstructionUpdate {
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
     pub fn visit_all(&self) -> impl Iterator<Item = &Self> {
-        VisitAll::new(self)
-            .filter_map(|thing| match thing {
-                TreeStep::PhysicalNode(ix) => Some(ix),
-                TreeStep::EnterCpiCallFromNode { .. }
-                | TreeStep::ReturnFromCpiCallsToNode { .. } => None,
-            })
+        VisitAll::new(self).filter_map(|thing| match thing {
+            TreeStep::PhysicalNode(ix) => Some(ix),
+            TreeStep::EnterCpiCallFromNode { .. } | TreeStep::ReturnFromCpiCallsToNode { .. } => {
+                None
+            },
+        })
     }
 
     /// Iterate over all inner instructions stored in this instruction and alos emit pseudo nodes representing return from CPI calls to parent nodes.
@@ -451,23 +453,25 @@ impl InstructionUpdate {
 /// Trait for tree nodes that have children of the same type.
 pub trait Node {
     /// Returns the child nodes of this node.
-    fn inner_iter(&self) -> std::slice::Iter<Self>
+    fn inner_iter(&self) -> std::slice::Iter<'_, Self>
     where Self: Sized;
 
+    /// Returns true if this node has no children.
     fn is_leaf(&self) -> bool;
 }
 
+/// Trait for tree nodes that have a cpi path.
 pub trait NodeWithPath {
+    /// cpi path
     fn get_path(&self) -> Path;
 }
 
 impl Node for InstructionUpdate {
     #[inline]
-    fn inner_iter(&self) -> std::slice::Iter<Self> { self.inner.iter() }
+    fn inner_iter(&self) -> std::slice::Iter<'_, Self> { self.inner.iter() }
 
     #[inline]
     fn is_leaf(&self) -> bool { self.inner.is_empty() }
-
 }
 
 impl NodeWithPath for InstructionUpdate {
@@ -490,6 +494,7 @@ enum VisitAllState<'a, T: Node> {
 }
 
 #[derive(Debug)]
+/// Items emitted from VisitAll tree traversal visitor.
 pub enum TreeStep<'a, T: Node> {
     /// instruction node of tree
     PhysicalNode(&'a T),
@@ -516,7 +521,11 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
             &mut VisitAllState::Init(ix) => {
-                let pending = if ix.is_leaf() { None } else { Some(ix.get_path()) };
+                let pending = if ix.is_leaf() {
+                    None
+                } else {
+                    Some(ix.get_path())
+                };
                 let mut d = VecDeque::new();
                 d.push_back((ix.inner_iter(), ix));
                 self.0 = VisitAllState::Started(d, pending);
@@ -526,7 +535,9 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
             VisitAllState::Started(d, pending_enter) => {
                 // If we have a pending enter-CPI event, yield it first
                 if let Some(path) = pending_enter.take() {
-                    return Some(TreeStep::EnterCpiCallFromNode { caller_cpi_path: path });
+                    return Some(TreeStep::EnterCpiCallFromNode {
+                        caller_cpi_path: path,
+                    });
                 }
 
                 'walk_up: loop {
@@ -538,10 +549,12 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
                         // no child nodes at current level - walk up
                         let _ = d.pop_back().unwrap_or_else(|| unreachable!());
 
-                        if !invoking_node_is_leaf {
-                            break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode { caller_cpi_path: invoking_path });
-                        } else {
+                        if invoking_node_is_leaf {
                             continue 'walk_up;
+                        } else {
+                            break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode {
+                                caller_cpi_path: invoking_path,
+                            });
                         }
                     };
 

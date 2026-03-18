@@ -11,10 +11,16 @@ use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
 use solana_signature::Signature;
-use yellowstone_vixen::{self as vixen, filter_pipeline::FilterPipeline, vixen_core::{instruction::InstructionUpdate, KeyBytes, Prefilter}, HandlerResult};
-use yellowstone_vixen::config::VixenConfig;
-use yellowstone_vixen::vixen_core::instruction::Path;
-use yellowstone_vixen::vixen_core::TransactionUpdate;
+use yellowstone_vixen::{
+    self as vixen,
+    config::VixenConfig,
+    filter_pipeline::FilterPipeline,
+    vixen_core::{
+        instruction::{InstructionUpdate, Path},
+        KeyBytes, Prefilter, TransactionUpdate,
+    },
+    HandlerResult,
+};
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::{YellowstoneGrpcConfig, YellowstoneGrpcSource};
 
@@ -29,15 +35,19 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger {
-
     async fn handle_tx_start(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
-        let sig = Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
+        let sig =
+            Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
         println!("--- starttx {}", sig);
         Ok(())
     }
 
     async fn handle_cpi_enter(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
-        println!("{} >>> {:?} ENTER", indent(&caller_cpi_path), caller_cpi_path);
+        println!(
+            "{} >>> {:?} ENTER",
+            indent(&caller_cpi_path),
+            caller_cpi_path
+        );
         Ok(())
     }
 
@@ -48,22 +58,24 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     }
 
     async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
-        println!("{} <<< {:?} RETURN", indent(&caller_cpi_path), caller_cpi_path);
+        println!(
+            "{} <<< {:?} RETURN",
+            indent(&caller_cpi_path),
+            caller_cpi_path
+        );
         Ok(())
     }
 
     async fn handle_tx_end(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
-        let sig = Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
+        let sig =
+            Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
         println!("=== endtx {}", sig);
         println!();
         Ok(())
     }
-
 }
 
-fn indent(cpi_path: &Path) -> String {
-    "  ".repeat(cpi_path.len())
-}
+fn indent(cpi_path: &Path) -> String { "  ".repeat(cpi_path.len()) }
 
 fn main() {
     rustls::crypto::aws_lc_rs::default_provider()
@@ -72,11 +84,14 @@ fn main() {
 
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
-    let config: VixenConfig<YellowstoneGrpcConfig> = toml::from_str(&config).expect("Error parsing config");
+    let config: VixenConfig<YellowstoneGrpcConfig> =
+        toml::from_str(&config).expect("Error parsing config");
     if config.buffer.jobs != Some(1) {
-        println!("This example works best with buffer.jobs to be set to 1 but was {:?}", config.buffer.jobs);
+        println!(
+            "This example works best with buffer.jobs to be set to 1 but was {:?}",
+            config.buffer.jobs
+        );
     }
-
 
     vixen::Runtime::<YellowstoneGrpcSource>::builder()
         .instruction(FilterPipeline::new(

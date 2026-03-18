@@ -297,10 +297,7 @@ where
     ///
     /// # Errors
     /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_enter(
-        &self,
-        caller_cpi_path: &CpiPath,
-    ) -> Result<(), PipelineErrors> {
+    pub async fn handle_cpi_enter(&self, caller_cpi_path: &CpiPath) -> Result<(), PipelineErrors> {
         let errs = (&self.1)
             .into_iter()
             .map(|h| async move { h.handle_cpi_enter(caller_cpi_path).await })
@@ -321,10 +318,7 @@ where
     ///
     /// # Errors
     /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_return(
-        &self,
-        caller_cpi_path: &CpiPath,
-    ) -> Result<(), PipelineErrors> {
+    pub async fn handle_cpi_return(&self, caller_cpi_path: &CpiPath) -> Result<(), PipelineErrors> {
         let errs = (&self.1)
             .into_iter()
             .map(|h| async move { h.handle_cpi_return(caller_cpi_path).await })
@@ -351,25 +345,37 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>>;
 
     /// optional callback when a transaction is entered
-    fn handle_tx_start<'h>(&'h self, _txn: &'h TransactionUpdate) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+    fn handle_tx_start<'h>(
+        &'h self,
+        _txn: &'h TransactionUpdate,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
         Box::pin(async move {})
     }
 
     /// optional callback to end of transaction
-    fn handle_tx_end<'h>(&'h self, _txn: &'h TransactionUpdate,) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+    fn handle_tx_end<'h>(
+        &'h self,
+        _txn: &'h TransactionUpdate,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
         Box::pin(async move {})
     }
 
     /// optional callback when entering CPI calls from a caller node
-    fn handle_cpi_enter<'h>(&'h self, _caller_cpi_path: &'h CpiPath) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+    fn handle_cpi_enter<'h>(
+        &'h self,
+        _caller_cpi_path: &'h CpiPath,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
         Box::pin(async move {})
     }
 
     /// optional callback when returning from CPI calls to a caller node
-    fn handle_cpi_return<'h>(&'h self, _caller_cpi_path: &'h CpiPath) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+    fn handle_cpi_return<'h>(
+        &'h self,
+        _caller_cpi_path: &'h CpiPath,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
         Box::pin(async move {})
     }
