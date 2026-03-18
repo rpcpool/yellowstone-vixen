@@ -1,6 +1,7 @@
 use tokio::sync::mpsc;
 use yellowstone_block_machine::{
-    dragonsmouth::wrapper::BlocksStateMachineWrapper, state_machine::BlockStateMachineOutput,
+    dragonsmouth::wrapper::BlocksStateMachineWrapper,
+    state_machine::{BlockStateMachineOutput, DeadletterEvent},
 };
 use yellowstone_grpc_proto::geyser::{subscribe_update::UpdateOneof, SubscribeUpdate};
 
@@ -203,6 +204,17 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                     events.push(CoordinatorEvent::SlotDiscarded {
                         slot: fork.slot,
                         reason: DiscardReason::Forked,
+                    });
+                },
+            }
+        }
+
+        while let Some(dlq_event) = self.wrapper.pop_next_dlq() {
+            match dlq_event {
+                DeadletterEvent::Incomplete(slot) => {
+                    events.push(CoordinatorEvent::SlotDiscarded {
+                        slot,
+                        reason: DiscardReason::Incomplete,
                     });
                 },
             }
