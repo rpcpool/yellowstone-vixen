@@ -11,11 +11,9 @@ use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
 use solana_signature::Signature;
-use yellowstone_vixen::{
-    self as vixen,
-    filter_pipeline::FilterPipeline,
-    vixen_core::{instruction::InstructionUpdate, KeyBytes, Prefilter},
-};
+use yellowstone_vixen::{self as vixen, filter_pipeline::FilterPipeline, vixen_core::{instruction::InstructionUpdate, KeyBytes, Prefilter}, HandlerResult};
+use yellowstone_vixen::vixen_core::instruction::Path;
+use yellowstone_vixen::vixen_core::TransactionUpdate;
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
@@ -34,9 +32,25 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
         // TODO
         // println!("ix {:?} - {value:?}", input.path);
         let sig = Signature::try_from(input.shared.signature.as_slice()).unwrap();
-        println!("ix {:?} tx {}", input.path, sig);
+        println!("{} ix {:?} tx {}", indent(&input.path), input.path, sig);
         Ok(())
     }
+
+    async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
+        println!("{} ret {:?}", indent(&caller_cpi_path), caller_cpi_path);
+        Ok(())
+    }
+
+    async fn handle_tx_end(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
+        let sig = Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
+        println!("=== endtx {}", sig);
+        Ok(())
+    }
+
+}
+
+fn indent(cpi_path: &Path) -> String {
+    "  ".repeat(cpi_path.len())
 }
 
 fn main() {

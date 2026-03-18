@@ -6,7 +6,7 @@ use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
 use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 
-use vixen_core::{instruction::Path as CpiPath, TransactionUpdate};
+use vixen_core::{instruction::Path, TransactionUpdate};
 
 use crate::{
     handler::{DynPipeline, PipelineErrors},
@@ -135,7 +135,7 @@ where
     /// If any handler returns an error, all errors are collected and returned.
     pub async fn handle_cpi_return(
         &self,
-        caller_cpi_path: &CpiPath,
+        caller_cpi_path: &Path,
     ) -> Result<(), PipelineErrors> {
         let errs = self
             .handlers
@@ -185,7 +185,7 @@ where
 
     fn handle_cpi_return<'h>(
         &'h self,
-        caller_cpi_path: &'h CpiPath,
+        caller_cpi_path: &'h Path,
     ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
             if let Err(e) = FilterPipeline::handle_cpi_return(self, caller_cpi_path).await {
