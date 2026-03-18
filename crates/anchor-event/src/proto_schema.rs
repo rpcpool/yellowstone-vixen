@@ -183,9 +183,8 @@ fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>)
             };
             let after = remaining.as_bytes().get(pos + old.len()).copied();
 
-            let is_word_boundary = |c: Option<u8>| {
-                c.is_none_or(|b| !b.is_ascii_alphanumeric() && b != b'_')
-            };
+            let is_word_boundary =
+                |c: Option<u8>| c.is_none_or(|b| !b.is_ascii_alphanumeric() && b != b'_');
 
             out.push_str(&remaining[..pos]);
 
@@ -207,10 +206,7 @@ fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>)
 
 /// Check whether a proto block body references any of the renamed type names
 /// (whole-word match only).
-fn references_renamed_type(
-    raw: &str,
-    renames: &std::collections::HashMap<&str, String>,
-) -> bool {
+fn references_renamed_type(raw: &str, renames: &std::collections::HashMap<&str, String>) -> bool {
     for old in renames.keys() {
         let mut remaining = raw.as_bytes();
         let old_bytes = old.as_bytes();
@@ -226,9 +222,8 @@ fn references_renamed_type(
             };
             let after = remaining.get(pos + old_bytes.len()).copied();
 
-            let is_word_boundary = |c: Option<u8>| {
-                c.is_none_or(|b| !b.is_ascii_alphanumeric() && b != b'_')
-            };
+            let is_word_boundary =
+                |c: Option<u8>| c.is_none_or(|b| !b.is_ascii_alphanumeric() && b != b'_');
 
             if is_word_boundary(before) && is_word_boundary(after) {
                 return true;

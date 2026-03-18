@@ -1,6 +1,8 @@
 use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_anchor_event::{merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput};
+use yellowstone_vixen_anchor_event::{
+    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput,
+};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
