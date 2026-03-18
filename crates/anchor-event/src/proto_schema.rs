@@ -60,10 +60,10 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
             continue;
         }
 
-        if let Some(ev_raw) = event_map.get(msg.name.as_str()) {
-            if *ev_raw != msg.raw {
-                ix_rename_map.insert(msg.name.as_str(), format!("{}Struct", msg.name));
-            }
+        if let Some(ev_raw) = event_map.get(msg.name.as_str())
+            && *ev_raw != msg.raw
+        {
+            ix_rename_map.insert(msg.name.as_str(), format!("{}Struct", msg.name));
         }
     }
 
@@ -96,10 +96,11 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
 
         // Deduplicate: identical definitions already emitted from the
         // instruction schema (possibly under a renamed name — skip either way).
-        if msg.name != "Instructions" && ix_map.contains_key(msg.name.as_str()) {
-            if !ix_rename_map.contains_key(msg.name.as_str()) {
-                continue;
-            }
+        if msg.name != "Instructions"
+            && ix_map.contains_key(msg.name.as_str())
+            && !ix_rename_map.contains_key(msg.name.as_str())
+        {
+            continue;
         }
 
         let mut block = msg.raw.clone();
