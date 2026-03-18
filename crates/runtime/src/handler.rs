@@ -26,6 +26,14 @@ where R: Sync
     /// Consume the parsed value together with the raw event.
     fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
 
+    /// Called when a transaction is entered, before any instructions are processed.
+    fn handle_tx_start(
+        &self,
+        _txn: &TransactionUpdate,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        async { Ok(()) }
+    }
+
     /// Called after all instructions in a transaction have been processed.
     fn handle_tx_end(
         &self,
@@ -49,6 +57,14 @@ where R: Sync
     #[inline]
     fn handle(&self, value: &U, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send {
         <T as Handler<U, R>>::handle(self, value, raw_event)
+    }
+
+    #[inline]
+    fn handle_tx_start(
+        &self,
+        txn: &TransactionUpdate,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        <T as Handler<U, R>>::handle_tx_start(self, txn)
     }
 
     #[inline]
@@ -220,6 +236,26 @@ where
         }
     }
 
+    /// Notify all handlers that a transaction has been entered.
+    ///
+    /// # Errors
+    /// If any handler returns an error, all errors are collected and returned.
+    pub async fn handle_tx_start(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+        let errs = (&self.1)
+            .into_iter()
+            .map(|h| async move { h.handle_tx_start(txn).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
+
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(PipelineErrors::Handlers(errs))
+        }
+    }
+
     /// Notify all handlers that the transaction has ended.
     ///
     /// # Errors
@@ -274,6 +310,12 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>>;
 
+    /// optional callback when a transaction is entered
+    fn handle_tx_start<'h>(&'h self, _txn: &'h TransactionUpdate) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        // optional
+        Box::pin(async move {})
+    }
+
     /// optional callback to end of transaction
     fn handle_tx_end<'h>(&'h self, _txn: &'h TransactionUpdate,) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
@@ -309,6 +351,17 @@ where
         value: &'h P::Input,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         Box::pin(Pipeline::handle(self, value))
+    }
+
+    fn handle_tx_start<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {
+            if let Err(e) = Pipeline::handle_tx_start(self, txn).await {
+                e.handle::<P::Input>(&self.id()).as_unit();
+            }
+        })
     }
 
     fn handle_tx_end<'h>(
@@ -350,6 +403,14 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         <dyn DynPipeline<T>>::handle(&**self, value)
+    }
+
+    #[inline]
+    fn handle_tx_start<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        <dyn DynPipeline<T>>::handle_tx_start(&**self, txn)
     }
 
     #[inline]

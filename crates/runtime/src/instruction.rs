@@ -38,6 +38,11 @@ impl InstructionPipeline {
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let mut err = None;
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+
+        for pipe in &*self.0 {
+            pipe.handle_tx_start(txn).await;
+        }
+
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
         for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
             for pipe in &*self.0 {
@@ -112,6 +117,8 @@ impl SingleInstructionPipeline {
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
         let mut prev_depth: usize = 0;
+
+        pipe.handle_tx_start(txn).await;
 
         for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match thing {
