@@ -1,6 +1,4 @@
-mod common;
-
-use common::p;
+use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::{Parser, Pubkey};
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
@@ -9,7 +7,7 @@ include_vixen_parser!("idls/pump_fun.json");
 
 #[test]
 fn check_protobuf_schema() {
-    common::check_protobuf_format(pump_fun::PROTOBUF_SCHEMA);
+    check_protobuf_format(pump_fun::PROTOBUF_SCHEMA);
 
     insta::assert_snapshot!(pump_fun::PROTOBUF_SCHEMA);
 }

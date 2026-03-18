@@ -1,6 +1,4 @@
-mod common;
-
-use common::p;
+use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_anchor_event::{AnchorEventInstructionParser, AnchorEventOutput};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
@@ -26,7 +24,7 @@ fn make_parser() -> AnchorEventInstructionParser<
 
 #[test]
 fn check_events_protobuf_schema() {
-    common::check_protobuf_format(limit_order_events::PROTOBUF_SCHEMA);
+    check_protobuf_format(limit_order_events::PROTOBUF_SCHEMA);
     insta::assert_snapshot!(limit_order_events::PROTOBUF_SCHEMA);
 }
 

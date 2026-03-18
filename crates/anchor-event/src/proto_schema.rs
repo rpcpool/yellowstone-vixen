@@ -55,6 +55,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
             let renamed = msg
                 .raw
                 .replacen("message Instructions", "message AnchorEvents", 1);
+
             out.push_str(&renamed);
         } else {
             out.push_str(&msg.raw);
@@ -76,6 +77,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
         .iter()
         .filter(|m| m.name != "PublicKey")
         .count();
+
     let total = ix_messages.len() + event_count + 1; // +1 for AnchorEventOutput
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
@@ -115,10 +117,12 @@ fn parse_message_blocks(schema: &str) -> Vec<MessageBlock> {
 
         // Accumulate the full block including nested braces.
         let mut raw = String::new();
+
         raw.push_str(line);
         raw.push('\n');
 
         let mut depth = trimmed.matches('{').count();
+
         depth -= trimmed.matches('}').count();
 
         while depth > 0 {

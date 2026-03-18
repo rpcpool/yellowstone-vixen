@@ -1,6 +1,4 @@
-mod common;
-
-use common::p;
+use vixen_test_utils::{check_protobuf_format, p};
 use prost::Message;
 use yellowstone_vixen_anchor_event::{
     merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput, EVENT_IX_TAG,
@@ -31,7 +29,7 @@ const BORROW_FROM_CUSTODY_TX: &str =
 
 #[test]
 fn check_events_protobuf_schema() {
-    common::check_protobuf_format(perpetuals_events::PROTOBUF_SCHEMA);
+    check_protobuf_format(perpetuals_events::PROTOBUF_SCHEMA);
     insta::assert_snapshot!(perpetuals_events::PROTOBUF_SCHEMA);
 }
 
@@ -47,7 +45,7 @@ fn check_merged_protobuf_schema() {
         schema.matches("\nmessage ").count() + if schema.starts_with("message ") { 1 } else { 0 };
     assert_eq!(message_index, (message_count - 1) as i32);
 
-    common::check_protobuf_format(&schema);
+    check_protobuf_format(&schema);
     insta::assert_snapshot!(schema);
 }
 

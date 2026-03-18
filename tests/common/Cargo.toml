@@ -1,0 +1,7 @@
+[package]
+name = "vixen-test-utils"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+yellowstone-vixen-core = { workspace = true }

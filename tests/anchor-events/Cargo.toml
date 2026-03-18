@@ -17,6 +17,7 @@ yellowstone-vixen-anchor-event = { workspace = true, features = ["proto"] }
 [dev-dependencies]
 yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
 yellowstone-vixen-mock = { workspace = true }
+vixen-test-utils = { path = "../common" }
 
 # required by macro expansion
 yellowstone-vixen-parser = { workspace = true }
