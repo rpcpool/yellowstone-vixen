@@ -41,6 +41,7 @@ use yellowstone_vixen_core::{
 
 #[cfg(feature = "proto")]
 mod proto_schema;
+
 #[cfg(feature = "proto")]
 pub use proto_schema::merge_proto_schemas;
 

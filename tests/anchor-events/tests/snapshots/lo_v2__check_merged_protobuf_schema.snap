@@ -135,7 +135,7 @@ message FillOrderAccounts {
 
 message FillOrderArgs {
   uint64 input_amount = 1;
-  string swap_data = 2;
+  bytes swap_data = 2;
 }
 
 message FillOrder {
