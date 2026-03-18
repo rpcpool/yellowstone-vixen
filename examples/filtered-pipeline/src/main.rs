@@ -38,14 +38,14 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     async fn handle_tx_start(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
         let sig =
             Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
-        println!("--- starttx {}", sig);
+        println!("--- starttx {sig}");
         Ok(())
     }
 
     async fn handle_cpi_enter(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
         println!(
             "{} >>> {:?} ENTER",
-            indent(&caller_cpi_path),
+            indent(caller_cpi_path),
             caller_cpi_path
         );
         Ok(())
@@ -60,7 +60,7 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
         println!(
             "{} <<< {:?} RETURN",
-            indent(&caller_cpi_path),
+            indent(caller_cpi_path),
             caller_cpi_path
         );
         Ok(())
@@ -69,7 +69,7 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     async fn handle_tx_end(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
         let sig =
             Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
-        println!("=== endtx {}", sig);
+        println!("=== endtx {sig}");
         println!();
         Ok(())
     }

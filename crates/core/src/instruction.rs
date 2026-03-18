@@ -494,7 +494,7 @@ enum VisitAllState<'a, T: Node> {
 }
 
 #[derive(Debug)]
-/// Items emitted from VisitAll tree traversal visitor.
+/// Items emitted from `VisitAll` tree traversal visitor.
 pub enum TreeStep<'a, T: Node> {
     /// instruction node of tree
     PhysicalNode(&'a T),
@@ -551,11 +551,12 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
 
                         if invoking_node_is_leaf {
                             continue 'walk_up;
-                        } else {
-                            break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode {
-                                caller_cpi_path: invoking_path,
-                            });
                         }
+
+                        // intermediate state
+                        break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode {
+                            caller_cpi_path: invoking_path,
+                        });
                     };
 
                     d.push_back((ix.inner_iter(), ix));
