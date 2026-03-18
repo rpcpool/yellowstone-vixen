@@ -1,8 +1,6 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
-use solana_signature::Signature;
-use tracing::info;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -448,9 +446,8 @@ pub trait Node {
     fn is_leaf(&self) -> bool;
 }
 
-pub trait DebugNode {
-    /// Returns a string representation of this node for debugging purposes.
-    fn debug_node(&self) -> String;
+pub trait NodeWithPath {
+    fn get_path(&self) -> Path;
 }
 
 impl Node for InstructionUpdate {
@@ -462,15 +459,9 @@ impl Node for InstructionUpdate {
 
 }
 
-impl DebugNode for InstructionUpdate {
+impl NodeWithPath for InstructionUpdate {
     #[inline]
-    fn debug_node(&self) -> String {
-        let sig = Signature::try_from(self.shared.signature.as_slice()).unwrap();
-        format!(
-            "InstructionUpdate {:?}  tx {}",
-            self.path, sig
-        )
-    }
+    fn get_path(&self) -> Path { self.path.clone() }
 }
 
 /// A depth-first iterator over a tree of [`Node`] nodes.
@@ -478,29 +469,29 @@ impl DebugNode for InstructionUpdate {
 /// Yields the root node first, then recursively visits all children.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
-pub struct VisitAll<'a, T: Node + DebugNode>(VisitAllState<'a, T>);
+pub struct VisitAll<'a, T: Node>(VisitAllState<'a, T>);
 
 #[derive(Debug)]
-enum VisitAllState<'a, T: Node + DebugNode> {
+enum VisitAllState<'a, T: Node> {
     Init(&'a T),
+    // (iterator over children, parent node)
     Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>),
 }
 
 #[derive(Debug)]
-pub enum Thing<'a, T: Node + DebugNode> {
+pub enum Thing<'a, T: Node> {
     // instruction returned to consumer
     PhysicalNode(&'a T),
-    // pseudo object representing return from CPI calls to a node
-    // TODO replace string which is only a placeholder
-    ReturnFromCpiCallsToNode(String),
+    // pseudo object representing return from CPI calls to a node(=caller/parent)
+    ReturnFromCpiCallsToNode{ caller_cpi_path: Path },
 }
 
-impl<'a, T: Node + DebugNode> VisitAll<'a, T> {
+impl<'a, T: Node> VisitAll<'a, T> {
     #[inline]
     fn new(root: &'a T) -> Self { Self(VisitAllState::Init(root)) }
 }
 
-impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
+impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
     type Item = Thing<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -516,26 +507,25 @@ impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
                 Some(Thing::PhysicalNode(ix))
             }
             VisitAllState::Started(d) => 'walk_up: loop {
-                let (last, invoking_node) = d.back_mut()?;
+                let (children, invoking_node) = d.back_mut()?;
                 let invoking_node_is_leaf = invoking_node.is_leaf();
-                let invoking_node = invoking_node.debug_node();
-                // let _last_path = last.1.clone(); // same as popped
-                // let sig = last.3.clone();
-                // let Some(ix) = last.0.next() else {
+                let invoking_path = invoking_node.get_path();
 
-                let Some(ix) = last.next() else {
+                let Some(ix) = children.next() else {
+                    // no child nodes at current level - walk up
                     let _ = d.pop_back().unwrap_or_else(|| unreachable!());
 
                     if !invoking_node_is_leaf {
-                        // println!("Return from CPI calls to {:?}", invoking_node);
-                        break Some(Thing::ReturnFromCpiCallsToNode(invoking_node.clone()));
+                        // walk-up is not done yet, but we need to return the pseudo node
+                        break 'walk_up Some(Thing::ReturnFromCpiCallsToNode{ caller_cpi_path: invoking_path });
                     } else {
+                        // walking up to first non-leaf
                         continue 'walk_up;
                     }
 
                 };
                 d.push_back((ix.inner_iter(), ix));
-                break Some(Thing::PhysicalNode(ix));
+                break 'walk_up Some(Thing::PhysicalNode(ix));
             },
         }
     }
