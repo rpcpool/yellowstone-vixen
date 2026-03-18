@@ -493,7 +493,10 @@ pub enum TreeStep<'a, T: Node> {
     /// instruction node of tree
     PhysicalNode(&'a T),
     /// pseudo object representing return from CPI calls to a node(=caller/parent)
-    ReturnFromCpiCallsToNode{ caller_cpi_path: Path },
+    ReturnFromCpiCallsToNode{
+        /// path of caller/parent node to which we are returning from CPI calls
+        caller_cpi_path: Path
+    },
 }
 
 impl<'a, T: Node> VisitAll<'a, T> {

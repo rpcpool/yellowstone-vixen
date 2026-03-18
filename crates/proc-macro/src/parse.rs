@@ -1,7 +1,6 @@
 use std::{fs, path::Path};
 
 use codama_nodes::RootNode;
-use hex::FromHexError;
 
 #[derive(Debug)]
 pub enum IdlError {
@@ -21,14 +20,4 @@ impl std::fmt::Display for IdlError {
 pub fn load_codama_idl<P: AsRef<Path>>(path: P) -> Result<RootNode, IdlError> {
     let data = fs::read_to_string(&path).map_err(IdlError::ReadFile)?;
     serde_json::from_str::<RootNode>(&data).map_err(IdlError::ParseFile)
-}
-
-pub fn hexdecode_relaxed(input: &str) -> Result<Vec<u8>, FromHexError> {
-    if input.len() % 2 != 0 {
-        let mut fixed = input.to_string();
-        fixed.insert(0, '0');
-        hex::decode(fixed)
-    } else {
-        hex::decode(input)
-    }
 }
