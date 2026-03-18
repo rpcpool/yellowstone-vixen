@@ -2,7 +2,7 @@
 //!
 //! Uses the Confluent Schema Registry REST API (compatible with Redpanda).
 
-use std::{collections::HashMap, io};
+use std::{borrow::Cow, collections::HashMap, io};
 
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +12,11 @@ pub struct SchemaDefinition {
     /// Subject name (typically "<topic>-value" or "<topic>-key").
     pub subject: String,
     /// The protobuf schema content.
-    pub schema: &'static str,
+    ///
+    /// Use `Cow::Borrowed` for static schemas (e.g. `MyParser::PROTOBUF_SCHEMA`)
+    /// or `Cow::Owned` for runtime-generated schemas (e.g. from
+    /// `merge_proto_schemas`).
+    pub schema: Cow<'static, str>,
     /// Index of the message type within the schema (0-indexed from the last message).
     /// For a schema with only one message, this should be 0.
     /// For our TokenProgramInstruction which is the last message, this is 0.
@@ -210,7 +214,7 @@ pub fn ensure_schemas_registered(
     tracing::info!(url = %base_url, "Registering schemas with Schema Registry");
 
     for schema_def in schemas {
-        let schema_id = register_schema(&client, base_url, &schema_def.subject, schema_def.schema, config)
+        let schema_id = register_schema(&client, base_url, &schema_def.subject, &schema_def.schema, config)
             .or_else(|e| {
                 tracing::debug!(subject = %schema_def.subject, error = %e, "Registration failed, trying existing");
                 get_latest_schema_id_for_subject(&client, base_url, &schema_def.subject, config)

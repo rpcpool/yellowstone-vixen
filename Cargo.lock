@@ -13879,7 +13879,6 @@ version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "prost 0.14.1",
- "yellowstone-vixen",
  "yellowstone-vixen-core",
 ]
 

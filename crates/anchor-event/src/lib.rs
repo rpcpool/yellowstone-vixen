@@ -39,8 +39,10 @@ use yellowstone_vixen_core::{
     ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
 };
 
-mod handler;
-pub use handler::AnchorEventHandler;
+#[cfg(feature = "proto")]
+mod proto_schema;
+#[cfg(feature = "proto")]
+pub use proto_schema::merge_proto_schemas;
 
 /// 8-byte Anchor self-CPI event prefix.
 ///
@@ -49,12 +51,12 @@ pub use handler::AnchorEventHandler;
 pub const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
 /// Combined output from instruction + event parsing.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct AnchorEventOutput<InstructionOut, EventOut> {
     /// Parsed instruction (None if this was a CPI event or filtered).
     pub instruction: Option<InstructionOut>,
     /// Events parsed from logs and/or CPI self-invocations.
-    pub events: Vec<EventOut>,
+    pub anchor_events: Vec<EventOut>,
 }
 
 #[cfg(feature = "proto")]
@@ -68,7 +70,7 @@ where
             prost::encoding::message::encode(1, ix, buf);
         }
 
-        for event in &self.events {
+        for event in &self.anchor_events {
             prost::encoding::message::encode(2, event, buf);
         }
     }
@@ -94,7 +96,7 @@ where
             len += prost::encoding::message::encoded_len(1, ix);
         }
 
-        for event in &self.events {
+        for event in &self.anchor_events {
             len += prost::encoding::message::encoded_len(2, event);
         }
 
@@ -104,7 +106,7 @@ where
     fn clear(&mut self) {
         self.instruction = None;
 
-        self.events.clear();
+        self.anchor_events.clear();
     }
 }
 
@@ -113,7 +115,7 @@ impl<InstructionOut, EventOut> Default for AnchorEventOutput<InstructionOut, Eve
     fn default() -> Self {
         Self {
             instruction: None,
-            events: Vec::new(),
+            anchor_events: Vec::new(),
         }
     }
 }
@@ -214,49 +216,54 @@ macro_rules! impl_parser {
             value: &Self::Input,
         ) -> impl Future<Output = ParseResult<Self::Output>> + Send {
             async move {
-                // 1. CPI event: instruction data starts with EVENT_IX_TAG
-                //    and the program is invoking itself.
+                // CPI event as a standalone instruction — filtered because the
+                // parent instruction's parse call already collects it.
                 if is_anchor_cpi_event(&value.data) && value.program == self.program_id {
-                    let event = self.event_parser.parse(value).await?;
-
-                    return Ok(AnchorEventOutput {
-                        instruction: None,
-                        events: vec![event],
-                    });
+                    return Err(ParseError::Filtered);
                 }
 
-                // 2. Regular instruction: delegate to the instruction parser.
+                // 1. Regular instruction: delegate to the instruction parser.
                 let ix_result = match self.instruction_parser.parse(value).await {
                     Ok(ix) => Some(ix),
                     Err(ParseError::Filtered) => None,
                     Err(e) => return Err(e),
                 };
 
+                let mut anchor_events = Vec::new();
+
+                // 2. Scan inner instructions for CPI self-invocation events.
+                for inner in &value.inner {
+                    if is_anchor_cpi_event(&inner.data) && inner.program == self.program_id {
+                        match self.event_parser.parse(inner).await {
+                            Ok(event) => anchor_events.push(event),
+                            Err(ParseError::Filtered) => continue,
+                            Err(e) => return Err(e),
+                        }
+                    }
+                }
+
                 // 3. Scan logs for "Program data:" events.
                 let log_payloads = extract_log_event_payloads(value.log_messages());
-
-                let mut events = Vec::with_capacity(log_payloads.len());
 
                 for payload in log_payloads {
                     let synthetic =
                         synthetic_instruction(self.program_id, payload, &value.shared, &value.path);
 
                     match self.event_parser.parse(&synthetic).await {
-                        Ok(event) => events.push(event),
-                        // Event discriminator didn't match — not our event, skip.
+                        Ok(event) => anchor_events.push(event),
                         Err(ParseError::Filtered) => continue,
                         Err(e) => return Err(e),
                     }
                 }
 
                 // If we got neither an instruction nor any events, filter.
-                if ix_result.is_none() && events.is_empty() {
+                if ix_result.is_none() && anchor_events.is_empty() {
                     return Err(ParseError::Filtered);
                 }
 
                 Ok(AnchorEventOutput {
                     instruction: ix_result,
-                    events,
+                    anchor_events,
                 })
             }
         }

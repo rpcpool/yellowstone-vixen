@@ -10,7 +10,6 @@ readme = "./../../README.md"
 
 [dependencies]
 yellowstone-vixen-core = { workspace = true }
-yellowstone-vixen = { workspace = true }
 prost = { workspace = true, optional = true }
 base64 = { workspace = true }
 
