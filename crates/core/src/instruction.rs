@@ -438,7 +438,8 @@ impl InstructionUpdate {
         VisitAll::new(self)
             .filter_map(|thing| match thing {
                 TreeStep::PhysicalNode(ix) => Some(ix),
-                TreeStep::ReturnFromCpiCallsToNode{ .. } => None,
+                TreeStep::EnterCpiCallFromNode { .. }
+                | TreeStep::ReturnFromCpiCallsToNode { .. } => None,
             })
     }
 
@@ -484,18 +485,23 @@ pub struct VisitAll<'a, T: Node>(VisitAllState<'a, T>);
 #[derive(Debug)]
 enum VisitAllState<'a, T: Node> {
     Init(&'a T),
-    // (iterator over children, parent node)
-    Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>),
+    // (iterator over children, parent node, optional pending enter-CPI path)
+    Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>, Option<Path>),
 }
 
 #[derive(Debug)]
 pub enum TreeStep<'a, T: Node> {
     /// instruction node of tree
     PhysicalNode(&'a T),
-    /// pseudo object representing return from CPI calls to a node(=caller/parent)
-    ReturnFromCpiCallsToNode{
+    /// pseudo event: about to recurse into CPI children of a node
+    EnterCpiCallFromNode {
+        /// path of the caller node whose CPI children we are entering
+        caller_cpi_path: Path,
+    },
+    /// pseudo event: returning from CPI calls to a node (=caller/parent)
+    ReturnFromCpiCallsToNode {
         /// path of caller/parent node to which we are returning from CPI calls
-        caller_cpi_path: Path
+        caller_cpi_path: Path,
     },
 }
 
@@ -510,34 +516,45 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
             &mut VisitAllState::Init(ix) => {
-
-                // let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
-
+                let pending = if ix.is_leaf() { None } else { Some(ix.get_path()) };
                 let mut d = VecDeque::new();
                 d.push_back((ix.inner_iter(), ix));
-                self.0 = VisitAllState::Started(d);
+                self.0 = VisitAllState::Started(d, pending);
                 Some(TreeStep::PhysicalNode(ix))
-            }
-            VisitAllState::Started(d) => 'walk_up: loop {
-                let (children, invoking_node) = d.back_mut()?;
-                let invoking_node_is_leaf = invoking_node.is_leaf();
-                let invoking_path = invoking_node.get_path();
+            },
 
-                let Some(ix) = children.next() else {
-                    // no child nodes at current level - walk up
-                    let _ = d.pop_back().unwrap_or_else(|| unreachable!());
+            VisitAllState::Started(d, pending_enter) => {
+                // If we have a pending enter-CPI event, yield it first
+                if let Some(path) = pending_enter.take() {
+                    return Some(TreeStep::EnterCpiCallFromNode { caller_cpi_path: path });
+                }
 
-                    if !invoking_node_is_leaf {
-                        // walk-up is not done yet, but we need to return the pseudo node
-                        break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode{ caller_cpi_path: invoking_path });
-                    } else {
-                        // walking up to first non-leaf
-                        continue 'walk_up;
+                'walk_up: loop {
+                    let (children, invoking_node) = d.back_mut()?;
+                    let invoking_node_is_leaf = invoking_node.is_leaf();
+                    let invoking_path = invoking_node.get_path();
+
+                    let Some(ix) = children.next() else {
+                        // no child nodes at current level - walk up
+                        let _ = d.pop_back().unwrap_or_else(|| unreachable!());
+
+                        if !invoking_node_is_leaf {
+                            break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode { caller_cpi_path: invoking_path });
+                        } else {
+                            continue 'walk_up;
+                        }
+                    };
+
+                    d.push_back((ix.inner_iter(), ix));
+
+                    // If this node has children, schedule an enter-CPI event
+                    // for the next call
+                    if !ix.is_leaf() {
+                        *pending_enter = Some(ix.get_path());
                     }
 
-                };
-                d.push_back((ix.inner_iter(), ix));
-                break 'walk_up Some(TreeStep::PhysicalNode(ix));
+                    break 'walk_up Some(TreeStep::PhysicalNode(ix));
+                }
             },
         }
     }

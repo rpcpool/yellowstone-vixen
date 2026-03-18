@@ -36,6 +36,11 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
         Ok(())
     }
 
+    async fn handle_cpi_enter(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
+        println!("{} >>> {:?} ENTER", indent(&caller_cpi_path), caller_cpi_path);
+        Ok(())
+    }
+
     async fn handle(&self, _value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
         let sig = Signature::try_from(input.shared.signature.as_slice()).unwrap();
         println!("{} > {:?} tx {}", indent(&input.path), input.path, sig);
@@ -43,7 +48,7 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     }
 
     async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
-        println!("{} <<< {:?}", indent(&caller_cpi_path), caller_cpi_path);
+        println!("{} <<< {:?} RETURN", indent(&caller_cpi_path), caller_cpi_path);
         Ok(())
     }
 

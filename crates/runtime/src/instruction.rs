@@ -48,7 +48,11 @@ impl InstructionPipeline {
             for pipe in &*self.0 {
 
                 let insn = match thing {
-                    TreeStep::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
+                    TreeStep::EnterCpiCallFromNode { ref caller_cpi_path } => {
+                        pipe.handle_cpi_enter(caller_cpi_path).await;
+                        continue;
+                    },
+                    TreeStep::ReturnFromCpiCallsToNode { ref caller_cpi_path } => {
                         pipe.handle_cpi_return(caller_cpi_path).await;
                         continue;
                     },
@@ -122,7 +126,11 @@ impl SingleInstructionPipeline {
 
         for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match thing {
-                TreeStep::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
+                TreeStep::EnterCpiCallFromNode { ref caller_cpi_path } => {
+                    pipe.handle_cpi_enter(caller_cpi_path).await;
+                    continue;
+                },
+                TreeStep::ReturnFromCpiCallsToNode { ref caller_cpi_path } => {
                     pipe.handle_cpi_return(caller_cpi_path).await;
                     continue;
                 },
