@@ -12,7 +12,10 @@ Solana change events, following the Yellowstone gRPC specification, are received
   - [Features](#features)
   - [Quick Start](#quick-start)
   - [Parsers](#parsers)
+    - [Built-in](#built-in)
+    - [Codegen Macro](#codegen-macro)
   - [Official Sources](#official-sources)
+  - [Running Tests](#running-tests)
   - [Developer Resources](#developer-resources)
   - [Maintainers](#maintainers)
 
@@ -130,6 +133,42 @@ include_vixen_parser!("path/to/idl.json");
 
 The generated account and instruction parsers will be available under a module named after the program.
 
+### Handling Discriminator Collisions
+
+Some programs define multiple instruction variants that share the same discriminator. When the variants have **different account counts**, the generated `InstructionParser` disambiguates automatically — it tries the variant with the most accounts first and falls back to smaller ones:
+
+```rust
+// Just works — no custom resolver needed.
+let parser = my_program::InstructionParser;
+```
+
+When two or more variants share both the same discriminator **and** the same account count, the default parser cannot disambiguate and returns an error at runtime. In that case, implement `InstructionResolver` and use `CustomInstructionParser`:
+
+```rust
+use yellowstone_vixen_core::ParseError;
+
+#[derive(Debug, Copy, Clone)]
+struct MyResolver;
+
+impl my_program::InstructionResolver for MyResolver {
+    fn resolve(
+        &self,
+        accounts: &[yellowstone_vixen_core::KeyBytes<32>],
+        data: &[u8],
+    ) -> Result<my_program::Instructions, ParseError> {
+        // Custom disambiguation logic for the ambiguous discriminator.
+        if data.first() == Some(&0x09) {
+            // ... inspect data or accounts to decide which variant ...
+        }
+
+        // Delegate everything else to the default resolver.
+        my_program::resolve_instruction_default(accounts, data)
+    }
+}
+
+let parser = my_program::CustomInstructionParser(MyResolver);
+```
+
 ## Official Sources
 
 Yellowstone Vixen supports several official data sources for ingesting Solana account and transaction data. Each source is provided as a Rust crate and can be configured in your Vixen pipeline. Below is a summary of the available sources:
@@ -142,6 +181,27 @@ Yellowstone Vixen supports several official data sources for ingesting Solana ac
 | [`solana-snapshot-source`](./crates/solana-snapshot-source)           | **Solana Snapshot Source**: Loads and processes Solana ledger snapshots for offline or historical analysis.                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 Refer to the crate documentation for setup instructions and configuration options.
+
+## Running Tests
+
+Parser tests use the `RPC_ENDPOINT` environment variable to fetch fixture data from a Solana RPC node. If not set, it defaults to `https://api.devnet.solana.com`.
+
+**Inline (one-off):**
+
+```bash
+RPC_ENDPOINT=https://my-rpc.example.com cargo test
+```
+
+**Persistent per-project via `.cargo/config.toml`:**
+
+Create `.cargo/config.toml` in the repo root:
+
+```toml
+[env]
+RPC_ENDPOINT = "https://my-rpc.example.com"
+```
+
+This applies to every `cargo` invocation inside this workspace. The file is gitignored so each developer can use their own RPC provider.
 
 ## Developer Resources
 

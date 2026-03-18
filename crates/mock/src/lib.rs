@@ -33,14 +33,15 @@ use solana_transaction_status::{
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
     instruction::{InstructionShared, InstructionUpdate},
-    ProgramParser, Pubkey as VixenPubkey,
+    KeyBytes, ProgramParser,
 };
 
-//TODO: Look these up from the Vixen.toml config file
-const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
+const DEFAULT_RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
+
 const FIXTURES_PATH: &str = "./fixtures";
 const PUBKEY_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$";
 const TX_SIGNATURE_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{64,90}$";
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
@@ -117,11 +118,11 @@ impl Display for SerializablePubkey {
     }
 }
 
-impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
+impl From<KeyBytes<32>> for SerializablePubkey {
+    fn from(value: KeyBytes<32>) -> Self { Self(value.into_bytes()) }
 }
 
-impl From<SerializablePubkey> for VixenPubkey {
+impl From<SerializablePubkey> for KeyBytes<32> {
     fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
 }
 
@@ -186,7 +187,7 @@ pub fn get_account_pubkey_from_index(
             accounts.len(),
         )),
         |account| {
-            Ok(VixenPubkey::from_str(account)
+            Ok(KeyBytes::<32>::from_str(account)
                 .map_err(|e| e.to_string())?
                 .into())
         },
@@ -331,8 +332,8 @@ fn try_from_tx_meta<P: ProgramParser>(
 macro_rules! account_fixture {
     ($pubkey:expr, $parser:expr) => {
         match $crate::load_fixture($pubkey, $parser).await.unwrap() {
-            FixtureData::Account(a) => {
-                run_account_parse!($parser, a)
+            $crate::FixtureData::Account(a) => {
+                $crate::run_account_parse!($parser, a)
             },
             f @ _ => panic!("Invalid account fixture {f:?}"),
         }
@@ -364,7 +365,13 @@ macro_rules! run_account_parse {
 #[macro_export]
 macro_rules! run_ix_parse {
     ($parser:expr, $ix:expr) => {
-        $parser.parse(&$ix.into()).await.unwrap()
+        match $parser.parse(&$ix.into()).await {
+            Ok(v) => Some(v),
+
+            // Ignore filtered instructions, but panic on actual errors
+            Err(yellowstone_vixen_core::ParseError::Filtered) => None,
+            Err(e) => panic!("parse error: {e:?}"),
+        }
     };
 }
 
@@ -374,6 +381,7 @@ pub async fn load_fixture<P: ProgramParser>(
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     maybe_create_fixture_dir()?;
     let path = fixture_path(fixture)?;
+
     if path.is_file() {
         read_fixture(&path)
     } else {
@@ -398,7 +406,12 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 #[must_use]
-pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
+pub fn get_rpc_client() -> RpcClient {
+    let endpoint =
+        std::env::var("RPC_ENDPOINT").unwrap_or_else(|_| DEFAULT_RPC_ENDPOINT.to_string());
+
+    RpcClient::new(endpoint)
+}
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {

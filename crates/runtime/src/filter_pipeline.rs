@@ -42,18 +42,18 @@ impl<P: Parser, H> FilterPipeline<P, H> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust, ignore
     ///
     ///    vixen::Runtime::builder()
     ///        .source(YellowstoneGrpcSource::new())
     ///        .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
     ///        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()
     ///            .transaction_accounts_include([
-    ///                Pubkey::from_str("GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6").unwrap(),
-    ///                Pubkey::from_str("4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar").unwrap()
+    ///                KeyBytes::<32>::from_str("GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6").unwrap(),
+    ///                KeyBytes::<32>::from_str("4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar").unwrap()
     ///            ])
     ///            .transaction_accounts([
-    ///                Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()
+    ///                KeyBytes::<32>::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()
     ///            ]),
     ///        ))
     ///        .build(config)

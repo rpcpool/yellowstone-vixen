@@ -97,7 +97,15 @@ pub struct InstructionUpdateOutput<T> {
 pub trait Parser {
     /// The input update type for this parser.
     type Input;
+
     /// The type of the parsed value produced by this parser.
+    /// When the `proto` feature is enabled, this type must implement `prost::Message`
+    /// for protobuf serialization compatibility.
+    #[cfg(feature = "proto")]
+    type Output: ::prost::Message;
+
+    /// The type of the parsed value produced by this parser.
+    #[cfg(not(feature = "proto"))]
     type Output;
 
     /// A unique ID for this parser.  Used to associate the parser with its
@@ -348,8 +356,8 @@ impl SlotPrefilter {
     }
 }
 
-/// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519 public
-/// key.
+/// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519
+/// public key.
 ///
 /// Invoking the macro with the name of a publicly-exported Solana `Pubkey`
 /// type (e.g. `pubkey_convert_helpers!(solana_sdk::pubkey::Pubkey);`) will
@@ -372,20 +380,47 @@ macro_rules! pubkey_convert_helpers {
     };
 }
 
-/// Helper type representing a Solana public key.
+/// A 32-byte Solana public key.
 ///
-/// This type is functionally equivalent to the `Pubkey` type from the Solana
-/// SDK, and it can be trivially converted to or from one by passing the
-/// underlying `[u8; 32]` array.  Vixen uses this `Pubkey` type to avoid
-/// depending on the Solana SDK, as this can lead to version conflicts when
-/// working with Solana program crates.
+/// This is a convenience alias for [`KeyBytes<32>`] that provides a familiar
+/// name for Solana developers.
 pub type Pubkey = KeyBytes<32>;
+
+/// Protobuf wrapper for a 32-byte public key.
+///
+/// This struct wraps raw public key bytes for protobuf serialization.
+/// It derives [`prost::Message`] so it can be used as a nested message field
+/// (`message PublicKey { bytes value = 1; }`).
+///
+/// Generated code uses [`Pubkey`] in struct fields and converts to/from this
+/// wrapper at proto encode/decode time.
+#[cfg(feature = "proto")]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PublicKeyProtoWrapper {
+    /// The raw bytes of the public key.
+    #[prost(bytes = "vec", tag = "1")]
+    pub value: Vec<u8>,
+}
+
+#[cfg(feature = "proto")]
+impl PublicKeyProtoWrapper {
+    /// Creates a new `PublicKeyProtoWrapper` from any type convertible to `Vec<u8>`.
+    pub fn new(value: impl Into<Vec<u8>>) -> Self {
+        Self {
+            value: value.into(),
+        }
+    }
+}
 
 /// Generic wrapper for a fixed-length array of cryptographic key bytes,
 /// convertible to or from a base58-encoded string.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct KeyBytes<const LEN: usize>(pub [u8; LEN]);
+
+impl<const LEN: usize> Default for KeyBytes<LEN> {
+    fn default() -> Self { Self([0u8; LEN]) }
+}
 
 impl<const LEN: usize> Debug for KeyBytes<LEN> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -498,6 +533,48 @@ impl<const LEN: usize> BorshDeserialize for KeyBytes<LEN> {
         let bytes = <[u8; LEN]>::deserialize_reader(reader)?;
         Ok(Self(bytes))
     }
+}
+
+/// `prost::Message` impl for [`Pubkey`] (`KeyBytes<32>`).
+///
+/// Delegates to [`PublicKeyProtoWrapper`] so there is a single source of truth
+/// for the `message PublicKey { bytes value = 1; }` wire format.
+#[cfg(feature = "proto")]
+impl ::prost::Message for KeyBytes<32> {
+    fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
+        PublicKeyProtoWrapper::new(self.0).encode_raw(buf);
+    }
+
+    fn merge_field(
+        &mut self,
+        tag: u32,
+        wire_type: ::prost::encoding::WireType,
+        buf: &mut impl ::prost::bytes::Buf,
+        ctx: ::prost::encoding::DecodeContext,
+    ) -> ::core::result::Result<(), ::prost::DecodeError> {
+        let mut wrapper = PublicKeyProtoWrapper::new(self.0);
+
+        wrapper.merge_field(tag, wire_type, buf, ctx)?;
+
+        let bytes = &wrapper.value;
+
+        if bytes.len() != 32 {
+            // DecodeError::new is doc(hidden) + deprecated but explicitly intended
+            // for Message implementations, which is exactly our use case.
+            #[allow(deprecated)]
+            return Err(::prost::DecodeError::new(
+                "expected exactly 32 bytes for Pubkey",
+            ));
+        }
+
+        self.0.copy_from_slice(bytes);
+
+        Ok(())
+    }
+
+    fn encoded_len(&self) -> usize { PublicKeyProtoWrapper::new(self.0).encoded_len() }
+
+    fn clear(&mut self) { self.0 = [0u8; 32]; }
 }
 
 /// An error that can occur when parsing a key from a base58 string.

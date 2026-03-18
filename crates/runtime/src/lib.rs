@@ -337,7 +337,7 @@ impl<S: SourceTrait> Runtime<S> {
                 },
                 SourceExitStatus::StreamError { code, message } => {
                     tracing::error!(?code, %message, "Source stopped: stream error");
-                    Err(Error::ServerHangup)
+                    Err(Error::YellowstoneStatus(Status::new(code, message)))
                 },
                 SourceExitStatus::Error(msg) => {
                     tracing::error!(%msg, "Source stopped: error");

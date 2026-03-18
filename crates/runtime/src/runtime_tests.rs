@@ -67,6 +67,25 @@ fn assert_server_hangup(result: Result<(), Box<Error>>) {
     assert!(matches!(*result.unwrap_err(), Error::ServerHangup));
 }
 
+fn assert_yellowstone_status(
+    result: Result<(), Box<Error>>,
+    expected_code: tonic::Code,
+    expected_message_substring: &str,
+) {
+    assert!(result.is_err());
+    match *result.unwrap_err() {
+        Error::YellowstoneStatus(status) => {
+            assert_eq!(status.code(), expected_code);
+            assert!(
+                status.message().contains(expected_message_substring),
+                "expected message to contain {expected_message_substring:?}, got {:?}",
+                status.message()
+            );
+        },
+        other => panic!("expected YellowstoneStatus, got {other:?}"),
+    }
+}
+
 fn assert_other_error(result: Result<(), Box<Error>>) {
     assert!(result.is_err());
     assert!(matches!(*result.unwrap_err(), Error::Other(_)));
@@ -201,6 +220,32 @@ impl SourceTrait for MockStreamErrorSource {
 }
 
 #[derive(Debug)]
+struct MockSourceExitStreamErrorSource;
+
+#[async_trait]
+impl SourceTrait for MockSourceExitStreamErrorSource {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+        signal_stream_error(
+            status_tx,
+            tonic::Code::InvalidArgument,
+            "failed to get replay position for slot 42",
+        );
+        hold_channel_open_briefly().await;
+        drop(tx);
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
 struct MockErrorSource;
 
 #[async_trait]
@@ -272,6 +317,19 @@ async fn test_stream_error_returns_error() {
         .unwrap();
 
     assert!(runtime.try_run_async().await.is_err());
+}
+
+#[tokio::test]
+async fn test_source_exit_stream_error_maps_to_yellowstone_status() {
+    let runtime = Runtime::<MockSourceExitStreamErrorSource>::builder()
+        .try_build(default_test_config())
+        .unwrap();
+
+    assert_yellowstone_status(
+        runtime.try_run_async().await,
+        tonic::Code::InvalidArgument,
+        "replay position",
+    );
 }
 
 #[tokio::test]

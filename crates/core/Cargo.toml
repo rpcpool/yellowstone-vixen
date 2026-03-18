@@ -9,8 +9,6 @@ authors.workspace = true
 readme = "./../../README.md"
 
 [dependencies]
-# FIXME rmove
-solana-signature = "^3.0.0"
 bs58.workspace = true
 thiserror.workspace = true
 yellowstone-grpc-proto = { workspace = true }
@@ -18,7 +16,8 @@ yellowstone-vixen-proto = { workspace = true, optional = true }
 borsh = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
-tracing = { workspace = true }
+prost = { workspace = true, optional = true }
+prost-types = { workspace = true, optional = true }
 
 [features]
-proto = ["dep:yellowstone-vixen-proto"]
+proto = ["dep:yellowstone-vixen-proto", "dep:prost", "dep:prost-types"]

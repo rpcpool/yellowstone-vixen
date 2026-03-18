@@ -7,8 +7,8 @@ use yellowstone_grpc_proto::geyser::{subscribe_update::UpdateOneof, SubscribeUpd
 use crate::{
     state::{CoordinatorEvent, CoordinatorState},
     types::{
-        BlockMetadata, ColorSlot, ConfirmedSlot, CoordinatorError, CoordinatorMessage,
-        DiscardReason,
+        AccountCommitAt, AccountSlot, BlockMetadata, ColorSlot, CoordinatorError, CoordinatorInput,
+        CoordinatorMessage, DiscardReason, InstructionSlot,
     },
 };
 
@@ -17,32 +17,73 @@ use crate::{
 pub struct BlockMachineCoordinator<R> {
     wrapper: BlocksStateMachineWrapper,
     state: CoordinatorState<R>,
-    input_rx: mpsc::Receiver<SubscribeUpdate>,
+    input_rx: mpsc::Receiver<CoordinatorInput>,
     parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
-    output_tx: mpsc::Sender<ConfirmedSlot<R>>,
+    instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
+    account_output_tx: Option<mpsc::Sender<AccountSlot<R>>>,
+    /// When false, Gate 1 is disabled by forcing expected_tx_count to 0.
+    require_tx_gate: bool,
 }
 
 impl<R: Send + 'static> BlockMachineCoordinator<R> {
-    pub fn new(
-        input_rx: mpsc::Receiver<SubscribeUpdate>,
+    fn new(
+        input_rx: mpsc::Receiver<CoordinatorInput>,
         parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
-        output_tx: mpsc::Sender<ConfirmedSlot<R>>,
+        instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
+        account_output_tx: Option<mpsc::Sender<AccountSlot<R>>>,
+        account_commit_at: AccountCommitAt,
+        require_tx_gate: bool,
     ) -> Self {
         Self {
             wrapper: BlocksStateMachineWrapper::default(),
-            state: CoordinatorState::default(),
+            state: CoordinatorState::new(account_commit_at),
             input_rx,
             parsed_rx,
-            output_tx,
+            instruction_output_tx,
+            account_output_tx,
+            require_tx_gate,
         }
     }
 
     /// Main event loop. Any CoordinatorError terminates the coordinator.
-    pub async fn run(mut self) -> Result<(), CoordinatorError> {
+    pub async fn run(
+        input_rx: mpsc::Receiver<CoordinatorInput>,
+        parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
+        instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
+        account_output_tx: Option<mpsc::Sender<AccountSlot<R>>>,
+        account_commit_at: AccountCommitAt,
+        require_tx_gate: bool,
+    ) -> Result<(), CoordinatorError> {
+        Self::new(
+            input_rx,
+            parsed_rx,
+            instruction_output_tx,
+            account_output_tx,
+            account_commit_at,
+            require_tx_gate,
+        )
+        .run_inner()
+        .await
+    }
+
+    async fn run_inner(mut self) -> Result<(), CoordinatorError> {
+        if !self.require_tx_gate {
+            tracing::info!(
+                "require_tx_gate=false: tx gate disabled, transaction status stats will not be \
+                 reported"
+            );
+        }
         loop {
             let events: Vec<CoordinatorEvent<R>> = tokio::select! {
-                Some(update) = self.input_rx.recv() => {
-                    self.convert_geyser_update(&update)
+                Some(input) = self.input_rx.recv() => {
+                    match input {
+                        CoordinatorInput::GeyserUpdate(update) => {
+                            self.convert_geyser_update(update.as_ref())
+                        }
+                        CoordinatorInput::AccountEventSeen { slot } => {
+                            vec![CoordinatorEvent::AccountEventSeen { slot }]
+                        }
+                    }
                 }
                 Some(msg) = self.parsed_rx.recv() => {
                     Self::convert_parsed_message(msg)
@@ -57,18 +98,39 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                 self.state.apply(event)?;
             }
 
-            for confirmed in self.state.drain_flushable()? {
-                tracing::info!(
-                    slot = %ColorSlot(confirmed.slot),
-                    tx_count = confirmed.executed_transaction_count,
-                    record_count = confirmed.records.len(),
-                    parent_slot = confirmed.parent_slot,
-                    "Flushing slot"
-                );
-                self.output_tx
-                    .send(confirmed)
-                    .await
-                    .map_err(|e| CoordinatorError::OutputChannelClosed { slot: e.0.slot })?;
+            if let Some(ref instruction_tx) = self.instruction_output_tx {
+                for ix_slot in self.state.drain_instruction_flushable()? {
+                    tracing::debug!(
+                        slot = %ColorSlot(ix_slot.slot),
+                        tx_count = ix_slot.executed_transaction_count,
+                        record_count = ix_slot.records.len(),
+                        parent_slot = ix_slot.parent_slot,
+                        "Flushing instruction slot"
+                    );
+                    instruction_tx.send(ix_slot).await.map_err(|e| {
+                        CoordinatorError::InstructionOutputChannelClosed { slot: e.0.slot }
+                    })?;
+                }
+            } else {
+                // No instruction output channel — still drain to release buffer entries.
+                let _ = self.state.drain_instruction_flushable()?;
+            }
+
+            if let Some(ref account_tx) = self.account_output_tx {
+                for acct_slot in self.state.drain_account_flushable() {
+                    tracing::debug!(
+                        slot = %ColorSlot(acct_slot.slot),
+                        record_count = acct_slot.records.len(),
+                        decoded_account_count = acct_slot.decoded_account_count,
+                        "Flushing account slot"
+                    );
+                    account_tx.send(acct_slot).await.map_err(|e| {
+                        CoordinatorError::AccountOutputChannelClosed { slot: e.0.slot }
+                    })?;
+                }
+            } else {
+                // No account output channel — still drain to release buffer entries.
+                let _ = self.state.drain_account_flushable();
             }
         }
         Ok(())
@@ -103,14 +165,15 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
         while let Some(output) = self.wrapper.pop_next_state_machine_output() {
             match output {
                 BlockStateMachineOutput::FrozenBlock(frozen) => {
+                    let expected_tx_count = if self.require_tx_gate {
+                        frozen.entries.iter().map(|e| e.executed_txn_count).sum()
+                    } else {
+                        0
+                    };
                     let metadata = BlockMetadata {
                         parent_slot: frozen.parent_slot,
                         blockhash: frozen.blockhash,
-                        expected_tx_count: frozen
-                            .entries
-                            .iter()
-                            .map(|e| e.executed_txn_count)
-                            .sum(),
+                        expected_tx_count,
                     };
                     events.push(CoordinatorEvent::BlockFrozen {
                         slot: frozen.slot,
@@ -122,6 +185,12 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                         == solana_commitment_config::CommitmentLevel::Confirmed =>
                 {
                     events.push(CoordinatorEvent::SlotConfirmed { slot: status.slot });
+                },
+                BlockStateMachineOutput::SlotStatus(status)
+                    if status.commitment
+                        == solana_commitment_config::CommitmentLevel::Finalized =>
+                {
+                    events.push(CoordinatorEvent::SlotFinalized { slot: status.slot });
                 },
                 BlockStateMachineOutput::SlotStatus(_) => {},
                 BlockStateMachineOutput::DeadSlotDetected(dead) => {
@@ -144,11 +213,17 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
 
     fn convert_parsed_message(msg: CoordinatorMessage<R>) -> Vec<CoordinatorEvent<R>> {
         match msg {
-            CoordinatorMessage::Parsed { slot, key, record } => {
-                vec![CoordinatorEvent::RecordParsed { slot, key, record }]
+            CoordinatorMessage::InstructionParsed { slot, key, record } => {
+                vec![CoordinatorEvent::InstructionRecordParsed { slot, key, record }]
+            },
+            CoordinatorMessage::AccountParsed { slot, key, record } => {
+                vec![CoordinatorEvent::AccountRecordParsed { slot, key, record }]
             },
             CoordinatorMessage::TransactionParsed { slot } => {
                 vec![CoordinatorEvent::TransactionParsed { slot }]
+            },
+            CoordinatorMessage::ParseStats { slot, kind } => {
+                vec![CoordinatorEvent::ParseStats { slot, kind }]
             },
         }
     }

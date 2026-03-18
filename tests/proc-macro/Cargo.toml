@@ -1,0 +1,52 @@
+[package]
+name = "proc-macro-test"
+version.workspace = true
+edition.workspace = true
+
+# Workspace feature-unification workaround
+#
+# Parser crates have `default = []` so external consumers can opt out of
+# protobuf support.  But inside this workspace, any workspace-wide command
+# (`cargo check --workspace`, `cargo build`, `cargo test`) builds all crates
+# in a shared dependency graph where Cargo unifies features: if *any* crate
+# enables a feature, *all* crates see it enabled.
+#
+# The `#[vixen]` proc-macro uses `cfg!(feature = "proto")` to decide whether
+# to emit `#[derive(::prost::Message)]`.  Because proc-macros are compiled
+# once for the whole workspace, enabling `yellowstone-vixen-proc-macro/proto`
+# from any crate (e.g. examples/prometheus) causes every `#[vixen]` expansion
+# to emit prost derives — even for parser crates whose own `proto` feature is
+# off.  Those crates then fail because they don't have prost as a dependency.
+#
+# Adding every parser here with `features = ["proto"]` ensures proto is
+# activated on all of them during workspace builds, matching what the
+# proc-macro emits.  External consumers are unaffected — they get their own
+# isolated dependency graph.
+#
+# These must be [dependencies], not [dev-dependencies], because resolver v2
+# does not unify dev-dependency features during `cargo check --workspace`.
+[dependencies]
+yellowstone-vixen-spl-token-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
+    "proto",
+] }
+yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
+
+[dev-dependencies]
+yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
+yellowstone-vixen-mock = { workspace = true }
+
+# required by macro expansion
+yellowstone-vixen-parser = { workspace = true }
+yellowstone-vixen-core = { workspace = true, features = ["proto"] }
+yellowstone-vixen = { workspace = true }
+
+prost = { workspace = true }
+borsh = { workspace = true }
+
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+regex = { workspace = true }
+
+insta = "1.46.3"

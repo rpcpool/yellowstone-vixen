@@ -12,7 +12,8 @@ use std::{collections::HashMap, env, path::PathBuf};
 use tokio::sync::mpsc;
 use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorMessage, FixtureReader,
+    AccountCommitAt, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
+    CoordinatorMessage, FixtureReader, InstructionSlot,
 };
 
 fn fixture_path() -> PathBuf {
@@ -75,14 +76,29 @@ impl ExpectedState {
 
 async fn run_coordinator_with_updates(
     updates: &[yellowstone_grpc_proto::geyser::SubscribeUpdate],
-) -> Vec<ConfirmedSlot<()>> {
+) -> Vec<InstructionSlot<()>> {
     let (input_tx, input_rx) = mpsc::channel(4096);
     let (parsed_tx, parsed_rx) = mpsc::channel::<CoordinatorMessage<()>>(4096);
-    let (output_tx, mut output_rx) = mpsc::channel::<ConfirmedSlot<()>>(256);
+    let (output_tx, mut output_rx) = mpsc::channel::<InstructionSlot<()>>(256);
 
-    tokio::spawn(BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx).run());
+    let coordinator_task = tokio::spawn(BlockMachineCoordinator::run(
+        input_rx,
+        parsed_rx,
+        Some(output_tx),
+        None,
+        AccountCommitAt::Confirmed,
+        true,
+    ));
 
     for update in updates {
+        // Send AccountEventSeen for Account events.
+        if let Some(UpdateOneof::Account(acct)) = &update.update_oneof {
+            input_tx
+                .send(CoordinatorInput::AccountEventSeen { slot: acct.slot })
+                .await
+                .unwrap();
+        }
+
         // Forward BlockSM-relevant events to the coordinator
         let is_block_sm_event = matches!(
             update.update_oneof,
@@ -90,7 +106,10 @@ async fn run_coordinator_with_updates(
         );
 
         if is_block_sm_event {
-            input_tx.send(update.clone()).await.unwrap();
+            input_tx
+                .send(CoordinatorInput::GeyserUpdate(Box::new(update.clone())))
+                .await
+                .unwrap();
         }
 
         // Simulate all transactions being parsed for this slot
@@ -105,17 +124,41 @@ async fn run_coordinator_with_updates(
         }
     }
 
-    drop(input_tx);
-    drop(parsed_tx);
-
     let mut confirmed = Vec::new();
-    while let Some(slot) = output_rx.recv().await {
-        confirmed.push(slot);
-    }
+
+    finish_coordinator_and_drain_remaining_instructions(
+        input_tx,
+        parsed_tx,
+        coordinator_task,
+        &mut output_rx,
+        &mut confirmed,
+    )
+    .await;
+
     confirmed
 }
 
-fn assert_strictly_ascending(slots: &[ConfirmedSlot<()>]) {
+async fn finish_coordinator_and_drain_remaining_instructions(
+    input_tx: mpsc::Sender<CoordinatorInput>,
+    parsed_tx: mpsc::Sender<CoordinatorMessage<()>>,
+    coordinator_task: tokio::task::JoinHandle<Result<(), CoordinatorError>>,
+    output_rx: &mut mpsc::Receiver<InstructionSlot<()>>,
+    confirmed: &mut Vec<InstructionSlot<()>>,
+) {
+    drop(input_tx);
+    drop(parsed_tx);
+
+    while let Some(slot) = output_rx.recv().await {
+        confirmed.push(slot);
+    }
+
+    coordinator_task
+        .await
+        .expect("coordinator task panicked")
+        .expect("coordinator failed");
+}
+
+fn assert_strictly_ascending(slots: &[InstructionSlot<()>]) {
     for pair in slots.windows(2) {
         assert!(
             pair[0].slot < pair[1].slot,
@@ -126,7 +169,7 @@ fn assert_strictly_ascending(slots: &[ConfirmedSlot<()>]) {
     }
 }
 
-fn assert_slot_metadata(slot: &ConfirmedSlot<()>, expected: &ExpectedState) {
+fn assert_slot_metadata(slot: &InstructionSlot<()>, expected: &ExpectedState) {
     assert_ne!(
         slot.blockhash,
         solana_hash::Hash::default(),

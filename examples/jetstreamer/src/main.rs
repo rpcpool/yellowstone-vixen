@@ -9,94 +9,123 @@ use yellowstone_vixen::{
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, ParserId};
 use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
-use yellowstone_vixen_spl_token_parser::{InstructionParser, TokenProgramInstruction};
+use yellowstone_vixen_spl_token_parser::{
+    instruction::Instruction, InstructionParser, TokenProgram,
+};
+
+fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
+
+fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::Pubkey>) -> String {
+    match pubkey {
+        Some(p) => p.to_string(),
+        None => "None".to_string(),
+    }
+}
 
 /// Handler for SPL Token program instructions
 #[derive(Debug)]
 struct TokenInstructionLogger;
 
-impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLogger {
-    async fn handle(
-        &self,
-        value: &TokenProgramInstruction,
-        _raw: &InstructionUpdate,
-    ) -> HandlerResult<()> {
-        match value {
-            TokenProgramInstruction::Transfer { accounts, args } => {
+impl Handler<TokenProgram, InstructionUpdate> for TokenInstructionLogger {
+    async fn handle(&self, value: &TokenProgram, _raw: &InstructionUpdate) -> HandlerResult<()> {
+        let Some(ix) = value.instruction.as_ref() else {
+            return Ok(());
+        };
+
+        match ix {
+            Instruction::Transfer(t) => {
                 info!(
                     instruction = "Transfer",
-                    source = %accounts.source,
-                    destination = %accounts.destination,
-                    amount = args.amount,
+                    source = %pk(&t.accounts.source),
+                    destination = %pk(&t.accounts.destination),
+                    owner = %pk(&t.accounts.owner),
+                    amount = t.args.amount,
                     "Token transfer instruction"
                 );
             },
-            TokenProgramInstruction::TransferChecked { accounts, args } => {
+
+            Instruction::TransferChecked(t) => {
                 info!(
                     instruction = "TransferChecked",
-                    source = %accounts.source,
-                    destination = %accounts.destination,
-                    mint = %accounts.mint,
-                    amount = args.amount,
-                    decimals = args.decimals,
+                    source = %pk(&t.accounts.source),
+                    destination = %pk(&t.accounts.destination),
+                    mint = %pk(&t.accounts.mint),
+                    owner = %pk(&t.accounts.owner),
+                    amount = t.args.amount,
+                    decimals = t.args.decimals,
                     "Token transfer checked instruction"
                 );
             },
-            TokenProgramInstruction::MintTo { accounts, args } => {
+
+            Instruction::MintTo(t) => {
                 info!(
                     instruction = "MintTo",
-                    mint = %accounts.mint,
-                    account = %accounts.account,
-                    amount = args.amount,
+                    mint = %pk(&t.accounts.mint),
+                    account = %pk(&t.accounts.account),
+                    mint_authority = %pk(&t.accounts.mint_authority),
+                    amount = t.args.amount,
                     "Token mint instruction"
                 );
             },
-            TokenProgramInstruction::Burn { accounts, args } => {
+
+            Instruction::Burn(t) => {
                 info!(
                     instruction = "Burn",
-                    account = %accounts.account,
-                    mint = %accounts.mint,
-                    amount = args.amount,
+                    account = %pk(&t.accounts.account),
+                    mint = %pk(&t.accounts.mint),
+                    owner = %pk(&t.accounts.owner),
+                    amount = t.args.amount,
                     "Token burn instruction"
                 );
             },
-            TokenProgramInstruction::InitializeMint { accounts, args } => {
+
+            Instruction::InitializeMint(t) => {
                 info!(
                     instruction = "InitializeMint",
-                    mint = %accounts.mint,
-                    decimals = args.decimals,
+                    mint = %pk(&t.accounts.mint),
+                    decimals = t.args.decimals,
+                    mint_authority = %pk(&t.args.mint_authority),
+                    freeze_authority = %pk_opt(&t.args.freeze_authority),
                     "Token mint initialization"
                 );
             },
-            TokenProgramInstruction::InitializeAccount { accounts } => {
+
+            Instruction::InitializeAccount(t) => {
                 info!(
                     instruction = "InitializeAccount",
-                    account = %accounts.account,
-                    mint = %accounts.mint,
+                    account = %pk(&t.accounts.account),
+                    mint = %pk(&t.accounts.mint),
+                    owner = %pk(&t.accounts.owner),
                     "Token account initialization"
                 );
             },
-            TokenProgramInstruction::Approve { accounts, args } => {
+
+            Instruction::Approve(t) => {
                 info!(
                     instruction = "Approve",
-                    source = %accounts.source,
-                    delegate = %accounts.delegate,
-                    amount = args.amount,
+                    source = %pk(&t.accounts.source),
+                    delegate = %pk(&t.accounts.delegate),
+                    owner = %pk(&t.accounts.owner),
+                    amount = t.args.amount,
                     "Token approval instruction"
                 );
             },
-            TokenProgramInstruction::CloseAccount { accounts } => {
+
+            Instruction::CloseAccount(t) => {
                 info!(
                     instruction = "CloseAccount",
-                    account = %accounts.account,
-                    destination = %accounts.destination,
+                    account = %pk(&t.accounts.account),
+                    destination = %pk(&t.accounts.destination),
+                    owner = %pk(&t.accounts.owner),
                     "Token account close instruction"
                 );
             },
+
             other => {
                 info!(instruction = ?other, "Other token program instruction");
             },
         }
+
         Ok(())
     }
 }
@@ -138,7 +167,11 @@ async fn main() -> Result<()> {
     let range = SlotRangeConfig {
         slot_start: opts.slot_start,
         slot_end: opts.slot_end,
-        epoch: opts.epoch.or(Some(885)), // Default to epoch 885 if nothing specified
+        epoch: if opts.slot_start.is_some() {
+            None
+        } else {
+            opts.epoch.or(Some(885))
+        },
     };
 
     let config = JetstreamSourceConfig {

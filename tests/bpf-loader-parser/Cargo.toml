@@ -1,0 +1,13 @@
+[package]
+name = "bpf-loader-parser-test"
+version.workspace = true
+edition.workspace = true
+
+[dev-dependencies]
+yellowstone-vixen-bpf-loader-parser = { workspace = true }
+yellowstone-vixen-core = { workspace = true, features = ["proto"] }
+yellowstone-vixen-mock = { workspace = true }
+
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+regex = { workspace = true }
