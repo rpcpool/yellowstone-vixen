@@ -67,17 +67,39 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
         }
     }
 
+    // Second pass: detect "indirect collisions" — ix messages with identical
+    // raw bodies as their event counterpart, but whose bodies reference
+    // renamed types. After renaming, the ix body will diverge, so the ix
+    // wrapper must also be renamed to avoid a duplicate definition.
+    let mut changed = true;
+
+    while changed {
+        changed = false;
+
+        for msg in &ix_messages {
+            if msg.name == "PublicKey"
+                || msg.name == "Instructions"
+                || ix_rename_map.contains_key(msg.name.as_str())
+            {
+                continue;
+            }
+
+            if event_map.contains_key(msg.name.as_str())
+                && references_renamed_type(&msg.raw, &ix_rename_map)
+            {
+                ix_rename_map.insert(msg.name.as_str(), format!("{}Struct", msg.name));
+                changed = true;
+            }
+        }
+    }
+
     let mut out = String::with_capacity(ix_schema.len() + event_schema.len() + 256);
 
     out.push_str("syntax = \"proto3\";\n\n");
 
     // Emit instruction schema messages, renaming non-identical collisions.
     for msg in &ix_messages {
-        let mut block = msg.raw.clone();
-
-        for (old_name, new_name) in &ix_rename_map {
-            block = block.replace(old_name, new_name);
-        }
+        let block = apply_renames(&msg.raw, &ix_rename_map);
 
         out.push_str(&block);
         out.push_str("\n\n");
@@ -95,10 +117,12 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
         }
 
         // Deduplicate: identical definitions already emitted from the
-        // instruction schema (possibly under a renamed name — skip either way).
+        // instruction schema — but only when the ix-side block was NOT
+        // altered by renames (otherwise the event version is needed as-is).
         if msg.name != "Instructions"
-            && ix_map.contains_key(msg.name.as_str())
             && !ix_rename_map.contains_key(msg.name.as_str())
+            && let Some(ix_raw) = ix_map.get(msg.name.as_str())
+            && !references_renamed_type(ix_raw, &ix_rename_map)
         {
             continue;
         }
@@ -128,6 +152,93 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
     let message_index = (total - 1) as i32;
 
     (out, message_index)
+}
+
+/// Replace proto type names as whole words in a block of text.
+///
+/// Sorts rename pairs longest-first so `ExpireToken` is matched before `Expire`,
+/// then replaces only at word boundaries (preceded/followed by a non-alphanumeric
+/// character or start/end of string).
+fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>) -> String {
+    if renames.is_empty() {
+        return block.to_string();
+    }
+
+    // Sort longest-first to prevent shorter keys from matching as prefixes.
+    let mut pairs: Vec<_> = renames.iter().collect();
+
+    pairs.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+
+    let mut result = block.to_string();
+
+    for (old, new) in pairs {
+        let mut out = String::with_capacity(result.len());
+        let mut remaining = result.as_str();
+
+        while let Some(pos) = remaining.find(old) {
+            let before = if pos == 0 {
+                None
+            } else {
+                remaining.as_bytes().get(pos - 1).copied()
+            };
+            let after = remaining.as_bytes().get(pos + old.len()).copied();
+
+            let is_word_boundary = |c: Option<u8>| {
+                c.is_none_or(|b| !b.is_ascii_alphanumeric() && b != b'_')
+            };
+
+            out.push_str(&remaining[..pos]);
+
+            if is_word_boundary(before) && is_word_boundary(after) {
+                out.push_str(new);
+            } else {
+                out.push_str(old);
+            }
+
+            remaining = &remaining[pos + old.len()..];
+        }
+
+        out.push_str(remaining);
+        result = out;
+    }
+
+    result
+}
+
+/// Check whether a proto block body references any of the renamed type names
+/// (whole-word match only).
+fn references_renamed_type(
+    raw: &str,
+    renames: &std::collections::HashMap<&str, String>,
+) -> bool {
+    for old in renames.keys() {
+        let mut remaining = raw.as_bytes();
+        let old_bytes = old.as_bytes();
+
+        while let Some(pos) = remaining
+            .windows(old_bytes.len())
+            .position(|w| w == old_bytes)
+        {
+            let before = if pos == 0 {
+                None
+            } else {
+                Some(remaining[pos - 1])
+            };
+            let after = remaining.get(pos + old_bytes.len()).copied();
+
+            let is_word_boundary = |c: Option<u8>| {
+                c.is_none_or(|b| !b.is_ascii_alphanumeric() && b != b'_')
+            };
+
+            if is_word_boundary(before) && is_word_boundary(after) {
+                return true;
+            }
+
+            remaining = &remaining[pos + old_bytes.len()..];
+        }
+    }
+
+    false
 }
 
 /// A parsed proto message block: its name and the raw text (including the
