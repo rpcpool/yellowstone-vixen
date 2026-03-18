@@ -42,15 +42,11 @@ impl InstructionPipeline {
         for thing in ixs.iter().flat_map(|i| i.visit_all()) {
             for pipe in &*self.0 {
 
-                // TODO
                 let insn = match thing {
                     Thing::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
-                        println!(
-                            "Returning from CPI nesting: {:?}",
-                            caller_cpi_path
-                        );
+                        pipe.handle_cpi_return(caller_cpi_path).await;
                         continue;
-                    }
+                    },
                     Thing::PhysicalNode(insn) => insn,
                 };
 
@@ -118,15 +114,11 @@ impl SingleInstructionPipeline {
         let mut prev_depth: usize = 0;
 
         for thing in ixs.iter().flat_map(|i| i.visit_all()) {
-            // TODO
             let insn = match thing {
-                Thing::ReturnFromCpiCallsToNode{ caller_cpi_path } => {
-                    println!(
-                        "Returning from CPI nesting to {:?}",
-                        caller_cpi_path
-                    );
+                Thing::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
+                    pipe.handle_cpi_return(caller_cpi_path).await;
                     continue;
-                }
+                },
                 Thing::PhysicalNode(insn) => insn,
             };
 

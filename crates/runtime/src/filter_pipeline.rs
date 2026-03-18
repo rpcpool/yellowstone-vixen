@@ -6,7 +6,7 @@ use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
 use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 
-use vixen_core::TransactionUpdate;
+use vixen_core::{instruction::Path as CpiPath, TransactionUpdate};
 
 use crate::{
     handler::{DynPipeline, PipelineErrors},
@@ -127,6 +127,31 @@ where
             Err(PipelineErrors::Handlers(errs))
         }
     }
+
+    /// Notify all handlers that execution has returned from CPI calls to a
+    /// caller node.
+    ///
+    /// # Errors
+    /// If any handler returns an error, all errors are collected and returned.
+    pub async fn handle_cpi_return(
+        &self,
+        caller_cpi_path: &CpiPath,
+    ) -> Result<(), PipelineErrors> {
+        let errs = self
+            .handlers
+            .into_iter()
+            .map(|h| async move { h.handle_cpi_return(caller_cpi_path).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
+
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(PipelineErrors::Handlers(errs))
+        }
+    }
 }
 
 impl<P, H> DynPipeline<P::Input> for FilterPipeline<P, H>
@@ -153,6 +178,17 @@ where
     ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
             if let Err(e) = FilterPipeline::handle_tx_end(self, txn).await {
+                e.handle::<P::Input>(&self.id()).as_unit();
+            }
+        })
+    }
+
+    fn handle_cpi_return<'h>(
+        &'h self,
+        caller_cpi_path: &'h CpiPath,
+    ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {
+            if let Err(e) = FilterPipeline::handle_cpi_return(self, caller_cpi_path).await {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })

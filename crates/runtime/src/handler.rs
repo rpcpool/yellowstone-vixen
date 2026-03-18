@@ -7,8 +7,8 @@ use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
 use tracing::{trace, Instrument, Span};
 use vixen_core::{
-    AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter, ParserId, SlotUpdate,
-    TransactionUpdate,
+    instruction::Path as CpiPath, AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter,
+    ParserId, SlotUpdate, TransactionUpdate,
 };
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
@@ -33,6 +33,14 @@ where R: Sync
     ) -> impl Future<Output = HandlerResult<()>> + Send {
         async { Ok(()) }
     }
+
+    /// Called when returning from CPI calls back to a caller node.
+    fn handle_cpi_return(
+        &self,
+        _caller_cpi_path: &CpiPath,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        async { Ok(()) }
+    }
 }
 
 impl<T: Handler<U, R>, U, R> Handler<U, R> for &T
@@ -49,6 +57,14 @@ where R: Sync
         txn: &TransactionUpdate,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
         <T as Handler<U, R>>::handle_tx_end(self, txn)
+    }
+
+    #[inline]
+    fn handle_cpi_return(
+        &self,
+        caller_cpi_path: &CpiPath,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        <T as Handler<U, R>>::handle_cpi_return(self, caller_cpi_path)
     }
 }
 
@@ -223,6 +239,30 @@ where
             Err(PipelineErrors::Handlers(errs))
         }
     }
+
+    /// Notify all handlers that execution has returned from CPI calls to a
+    /// caller node.
+    ///
+    /// # Errors
+    /// If any handler returns an error, all errors are collected and returned.
+    pub async fn handle_cpi_return(
+        &self,
+        caller_cpi_path: &CpiPath,
+    ) -> Result<(), PipelineErrors> {
+        let errs = (&self.1)
+            .into_iter()
+            .map(|h| async move { h.handle_cpi_return(caller_cpi_path).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
+
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(PipelineErrors::Handlers(errs))
+        }
+    }
 }
 
 /// Object-safe trait for parsing and handling values.
@@ -236,6 +276,12 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
 
     /// optional callback to end of transaction
     fn handle_tx_end<'h>(&'h self, _txn: &'h TransactionUpdate,) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        // optional
+        Box::pin(async move {})
+    }
+
+    /// optional callback when returning from CPI calls to a caller node
+    fn handle_cpi_return<'h>(&'h self, _caller_cpi_path: &'h CpiPath) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
         Box::pin(async move {})
     }
@@ -275,6 +321,17 @@ where
             }
         })
     }
+
+    fn handle_cpi_return<'h>(
+        &'h self,
+        caller_cpi_path: &'h CpiPath,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {
+            if let Err(e) = Pipeline::handle_cpi_return(self, caller_cpi_path).await {
+                e.handle::<P::Input>(&self.id()).as_unit();
+            }
+        })
+    }
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
@@ -301,6 +358,14 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
         txn: &'h TransactionUpdate,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         <dyn DynPipeline<T>>::handle_tx_end(&**self, txn)
+    }
+
+    #[inline]
+    fn handle_cpi_return<'h>(
+        &'h self,
+        caller_cpi_path: &'h CpiPath,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        <dyn DynPipeline<T>>::handle_cpi_return(&**self, caller_cpi_path)
     }
 }
 
