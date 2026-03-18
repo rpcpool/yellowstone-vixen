@@ -17,8 +17,9 @@
 ///   - `repeated AnchorEvents anchor_events = 2;`
 ///
 /// Returns `(combined_schema, wrapper_message_index)` where
-/// `wrapper_message_index` is the 0-based-from-end index for the Confluent
-/// wire format (always `0` since the wrapper is the last message).
+/// `wrapper_message_index` is the 0-based position of the `AnchorEventOutput`
+/// message in the proto file (matching how `INSTRUCTION_DISPATCH_MESSAGE_INDEX`
+/// works in the proc-macro).
 ///
 /// # Example
 ///
@@ -29,6 +30,7 @@
 /// );
 /// ```
 ///
+#[must_use]
 pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32) {
     let ix_messages = parse_message_blocks(ix_schema);
     let event_messages = parse_message_blocks(event_schema);
@@ -50,7 +52,9 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
         }
 
         if msg.name == "Instructions" {
-            let renamed = msg.raw.replacen("message Instructions", "message AnchorEvents", 1);
+            let renamed = msg
+                .raw
+                .replacen("message Instructions", "message AnchorEvents", 1);
             out.push_str(&renamed);
         } else {
             out.push_str(&msg.raw);
@@ -61,15 +65,23 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
 
     // Append the wrapper message.
     out.push_str(
-        "message AnchorEventOutput {\n\
-         \x20 optional Instructions instruction = 1;\n\
-         \x20 repeated AnchorEvents anchor_events = 2;\n\
-         }\n",
+        "message AnchorEventOutput {\n\x20 optional Instructions instruction = 1;\n\x20 repeated \
+         AnchorEvents anchor_events = 2;\n}\n",
     );
 
-    // Confluent wire format: message_index is 0-based from the last message
-    // in the file. Since AnchorEventOutput is the last message, index = 0.
-    (out, 0)
+    // message_index is the 0-based position of the target message in the
+    // proto file (matching INSTRUCTION_DISPATCH_MESSAGE_INDEX from proc-macro).
+    // Count: all ix messages + event messages (minus PublicKey) + AnchorEventOutput.
+    let event_count = event_messages
+        .iter()
+        .filter(|m| m.name != "PublicKey")
+        .count();
+    let total = ix_messages.len() + event_count + 1; // +1 for AnchorEventOutput
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    let message_index = (total - 1) as i32;
+
+    (out, message_index)
 }
 
 /// A parsed proto message block: its name and the raw text (including the
@@ -106,8 +118,8 @@ fn parse_message_blocks(schema: &str) -> Vec<MessageBlock> {
         raw.push_str(line);
         raw.push('\n');
 
-        let mut depth: u32 = trimmed.matches('{').count() as u32;
-        depth -= trimmed.matches('}').count() as u32;
+        let mut depth = trimmed.matches('{').count();
+        depth -= trimmed.matches('}').count();
 
         while depth > 0 {
             let Some(inner) = lines.next() else {
@@ -117,8 +129,8 @@ fn parse_message_blocks(schema: &str) -> Vec<MessageBlock> {
             raw.push_str(inner);
             raw.push('\n');
 
-            depth += inner.matches('{').count() as u32;
-            depth -= inner.matches('}').count() as u32;
+            depth += inner.matches('{').count();
+            depth -= inner.matches('}').count();
         }
 
         // Trim trailing newline for cleaner output.
@@ -222,7 +234,7 @@ message Instructions {
         assert!(combined.contains("optional Instructions instruction = 1;"));
         assert!(combined.contains("repeated AnchorEvents anchor_events = 2;"));
 
-        // Message index for Confluent
-        assert_eq!(message_index, 0);
+        // Message index: 5 ix + 4 event (minus PublicKey) + 1 wrapper = 10, index = 9
+        assert_eq!(message_index, 9);
     }
 }

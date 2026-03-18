@@ -42,7 +42,10 @@ fn check_merged_protobuf_schema() {
         perpetuals_events::PROTOBUF_SCHEMA,
     );
 
-    assert_eq!(message_index, 0);
+    // message_index should point to AnchorEventOutput (the last message)
+    let message_count =
+        schema.matches("\nmessage ").count() + if schema.starts_with("message ") { 1 } else { 0 };
+    assert_eq!(message_index, (message_count - 1) as i32);
 
     common::check_protobuf_format(&schema);
     insta::assert_snapshot!(schema);
