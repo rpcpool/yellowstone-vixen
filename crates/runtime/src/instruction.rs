@@ -5,7 +5,7 @@ use std::fmt::{self, Debug};
 
 use tracing::trace;
 use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
-use vixen_core::instruction::Thing;
+use vixen_core::instruction::TreeStep;
 use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
 #[cfg(feature = "prometheus")]
 use crate::metrics;
@@ -48,11 +48,11 @@ impl InstructionPipeline {
             for pipe in &*self.0 {
 
                 let insn = match thing {
-                    Thing::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
+                    TreeStep::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
                         pipe.handle_cpi_return(caller_cpi_path).await;
                         continue;
                     },
-                    Thing::PhysicalNode(insn) => insn,
+                    TreeStep::PhysicalNode(insn) => insn,
                 };
 
                 let res = pipe.handle(insn).await;
@@ -122,11 +122,11 @@ impl SingleInstructionPipeline {
 
         for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match thing {
-                Thing::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
+                TreeStep::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
                     pipe.handle_cpi_return(caller_cpi_path).await;
                     continue;
                 },
-                Thing::PhysicalNode(insn) => insn,
+                TreeStep::PhysicalNode(insn) => insn,
             };
 
             let depth = insn.path.len();

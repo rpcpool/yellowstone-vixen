@@ -437,8 +437,8 @@ impl InstructionUpdate {
     pub fn visit_all(&self) -> impl Iterator<Item = &Self> {
         VisitAll::new(self)
             .filter_map(|thing| match thing {
-                Thing::PhysicalNode(ix) => Some(ix),
-                Thing::ReturnFromCpiCallsToNode{ .. } => None,
+                TreeStep::PhysicalNode(ix) => Some(ix),
+                TreeStep::ReturnFromCpiCallsToNode{ .. } => None,
             })
     }
 
@@ -489,10 +489,10 @@ enum VisitAllState<'a, T: Node> {
 }
 
 #[derive(Debug)]
-pub enum Thing<'a, T: Node> {
-    // instruction returned to consumer
+pub enum TreeStep<'a, T: Node> {
+    /// instruction node of tree
     PhysicalNode(&'a T),
-    // pseudo object representing return from CPI calls to a node(=caller/parent)
+    /// pseudo object representing return from CPI calls to a node(=caller/parent)
     ReturnFromCpiCallsToNode{ caller_cpi_path: Path },
 }
 
@@ -502,7 +502,7 @@ impl<'a, T: Node> VisitAll<'a, T> {
 }
 
 impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
-    type Item = Thing<'a, T>;
+    type Item = TreeStep<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
@@ -511,10 +511,9 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
                 // let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
 
                 let mut d = VecDeque::new();
-                // d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
                 d.push_back((ix.inner_iter(), ix));
                 self.0 = VisitAllState::Started(d);
-                Some(Thing::PhysicalNode(ix))
+                Some(TreeStep::PhysicalNode(ix))
             }
             VisitAllState::Started(d) => 'walk_up: loop {
                 let (children, invoking_node) = d.back_mut()?;
@@ -527,7 +526,7 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
 
                     if !invoking_node_is_leaf {
                         // walk-up is not done yet, but we need to return the pseudo node
-                        break 'walk_up Some(Thing::ReturnFromCpiCallsToNode{ caller_cpi_path: invoking_path });
+                        break 'walk_up Some(TreeStep::ReturnFromCpiCallsToNode{ caller_cpi_path: invoking_path });
                     } else {
                         // walking up to first non-leaf
                         continue 'walk_up;
@@ -535,7 +534,7 @@ impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
 
                 };
                 d.push_back((ix.inner_iter(), ix));
-                break 'walk_up Some(Thing::PhysicalNode(ix));
+                break 'walk_up Some(TreeStep::PhysicalNode(ix));
             },
         }
     }

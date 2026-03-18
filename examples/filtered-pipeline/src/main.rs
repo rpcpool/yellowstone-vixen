@@ -36,9 +36,7 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
         Ok(())
     }
 
-    async fn handle(&self, value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
-        // TODO
-        // println!("ix {:?} - {value:?}", input.path);
+    async fn handle(&self, _value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
         let sig = Signature::try_from(input.shared.signature.as_slice()).unwrap();
         println!("{} > {:?} tx {}", indent(&input.path), input.path, sig);
         Ok(())
