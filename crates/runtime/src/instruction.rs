@@ -39,7 +39,7 @@ impl InstructionPipeline {
         let mut err = None;
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
-        for thing in ixs.iter().flat_map(|i| i.visit_all()) {
+        for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
             for pipe in &*self.0 {
 
                 let insn = match thing {
@@ -113,7 +113,7 @@ impl SingleInstructionPipeline {
         let pipe = &self.0;
         let mut prev_depth: usize = 0;
 
-        for thing in ixs.iter().flat_map(|i| i.visit_all()) {
+        for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match thing {
                 Thing::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
                     pipe.handle_cpi_return(caller_cpi_path).await;

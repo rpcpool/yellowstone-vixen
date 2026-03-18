@@ -434,7 +434,17 @@ impl InstructionUpdate {
 
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_, Self> { VisitAll::new(self) }
+    pub fn visit_all(&self) -> impl Iterator<Item = &Self> {
+        VisitAll::new(self)
+            .filter_map(|thing| match thing {
+                Thing::PhysicalNode(ix) => Some(ix),
+                Thing::ReturnFromCpiCallsToNode{ .. } => None,
+            })
+    }
+
+    /// Iterate over all inner instructions stored in this instruction and alos emit pseudo nodes representing return from CPI calls to parent nodes.
+    #[inline]
+    pub fn visit_tree(&self) -> VisitAll<'_, Self> { VisitAll::new(self) }
 }
 
 /// Trait for tree nodes that have children of the same type.

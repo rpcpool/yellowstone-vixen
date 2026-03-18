@@ -13912,9 +13912,7 @@ dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
  "serde",
- "solana-signature 3.1.0",
  "thiserror 1.0.69",
- "tracing",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-proto",
 ]
