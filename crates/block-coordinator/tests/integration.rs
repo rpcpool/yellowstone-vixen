@@ -1157,3 +1157,108 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
     let acct = harness.expect_account_flush(100).await;
     acct.records(&["acct1", "acct2"]);
 }
+
+// =============================================================================
+// DLQ / Incomplete Slot Tests
+// =============================================================================
+
+/// When the block machine DLQ's a slot as Incomplete (out-of-order BlockMeta
+/// for a parent with no entries), the coordinator must discard it so that
+/// subsequent children can still flush.
+#[tokio::test]
+async fn dlq_incomplete_slot_unblocks_subsequent_flush() {
+    let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
+    let (parsed_tx, parsed_rx) = mpsc::channel::<CoordinatorMessage<String>>(256);
+    let (output_tx, mut output_rx) = mpsc::channel(64);
+
+    tokio::spawn(BlockMachineCoordinator::run(
+        input_rx,
+        parsed_rx,
+        Some(output_tx),
+        None,
+        AccountCommitAt::Confirmed,
+        true,
+    ));
+
+    // --- Step 1: Parent slot 100 (parent=99) gets lifecycle events but NO entries.
+    // This puts it into the block machine's block_buffer_map without any entries.
+    for status in [
+        SlotStatus::SlotFirstShredReceived,
+        SlotStatus::SlotCreatedBank,
+    ] {
+        input_tx
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
+                100, 99, status,
+            ))))
+            .await
+            .unwrap();
+    }
+
+    // --- Step 2: Child slot 101 (parent=100) gets FULL lifecycle including entry + BlockMeta.
+    // When child's BlockMeta triggers handle_block_summary, it finds parent 100 still
+    // in block_buffer_map → need_optimistic_freeze. Since parent has no entries,
+    // optimistic freeze fails → DeadletterEvent::Incomplete(100) pushed to DLQ.
+    for status in [
+        SlotStatus::SlotFirstShredReceived,
+        SlotStatus::SlotCreatedBank,
+    ] {
+        input_tx
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
+                101, 100, status,
+            ))))
+            .await
+            .unwrap();
+    }
+
+    input_tx
+        .send(CoordinatorInput::GeyserUpdate(Box::new(make_entry_update(
+            101, 0, 1,
+        ))))
+        .await
+        .unwrap();
+
+    input_tx
+        .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
+            101,
+            100,
+            SlotStatus::SlotCompleted,
+        ))))
+        .await
+        .unwrap();
+
+    {
+        let blockhash = Hash::new_unique();
+        input_tx
+            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                make_block_meta_update(101, 100, 1, &blockhash),
+            )))
+            .await
+            .unwrap();
+    }
+
+    // Allow event processing.
+    tokio::time::sleep(Duration::from_millis(20)).await;
+
+    // --- Step 3: Send a TransactionParsed for slot 101 so the tx gate is satisfied.
+    parsed_tx
+        .send(CoordinatorMessage::TransactionParsed { slot: 101 })
+        .await
+        .unwrap();
+
+    // --- Step 4: Confirm slot 101. If the DLQ was drained, parent 100 is in
+    // discarded_slots, so 101's flush check (parent_slot in discarded) passes.
+    input_tx
+        .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
+            101,
+            100,
+            SlotStatus::SlotConfirmed,
+        ))))
+        .await
+        .unwrap();
+
+    let flushed = tokio::time::timeout(Duration::from_secs(2), output_rx.recv())
+        .await
+        .expect("Timed out — slot 101 never flushed (DLQ not drained?)")
+        .expect("Channel closed");
+    assert_eq!(flushed.slot, 101);
+}

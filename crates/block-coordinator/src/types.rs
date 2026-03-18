@@ -19,6 +19,7 @@ pub enum DiscardReason {
     Dead,
     Forked,
     Untracked,
+    Incomplete,
 }
 
 impl fmt::Display for DiscardReason {
@@ -27,6 +28,7 @@ impl fmt::Display for DiscardReason {
             Self::Dead => "dead",
             Self::Forked => "forked",
             Self::Untracked => "untracked",
+            Self::Incomplete => "incomplete",
         };
         f.write_str(label)
     }
