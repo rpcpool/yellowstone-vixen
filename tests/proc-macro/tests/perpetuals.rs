@@ -1,5 +1,5 @@
-use vixen_test_utils::{check_protobuf_format, p};
 use prost::Message;
+use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::{Parser, Pubkey};
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;

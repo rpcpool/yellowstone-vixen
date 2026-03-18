@@ -1,5 +1,5 @@
-use vixen_test_utils::{check_protobuf_format, p};
 use prost::Message;
+use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_anchor_event::{
     merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput, EVENT_IX_TAG,
 };
