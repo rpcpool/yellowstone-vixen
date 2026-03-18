@@ -437,7 +437,7 @@ impl InstructionUpdate {
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
     pub fn visit_all(&self) -> impl Iterator<Item = &Self> {
-        VisitAll::new(self).filter_map(|thing| match thing {
+        VisitAll::new(self).filter_map(|n| match n {
             TreeStep::PhysicalNode(ix) => Some(ix),
             TreeStep::EnterCpiCallFromNode { .. } | TreeStep::ReturnFromCpiCallsToNode { .. } => {
                 None

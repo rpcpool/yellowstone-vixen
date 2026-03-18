@@ -47,9 +47,9 @@ impl InstructionPipeline {
         }
 
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
-        for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
+        for node in ixs.iter().flat_map(|i| i.visit_tree()) {
             for pipe in &*self.0 {
-                let insn = match thing {
+                let insn = match node {
                     TreeStep::EnterCpiCallFromNode {
                         ref caller_cpi_path,
                     } => {
@@ -130,8 +130,8 @@ impl SingleInstructionPipeline {
 
         pipe.handle_tx_start(txn).await;
 
-        for thing in ixs.iter().flat_map(|i| i.visit_tree()) {
-            let insn = match thing {
+        for mode in ixs.iter().flat_map(|i| i.visit_tree()) {
+            let insn = match mode {
                 TreeStep::EnterCpiCallFromNode {
                     ref caller_cpi_path,
                 } => {
