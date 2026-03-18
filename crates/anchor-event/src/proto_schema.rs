@@ -9,9 +9,12 @@
 /// has an `Instructions` dispatch message as the last entry.
 ///
 /// The merged schema:
-/// - Keeps all instruction schema messages unchanged
+/// - Keeps all instruction schema messages, renaming non-identical collisions
+///   with a `Struct` suffix (e.g. `TradeEvent` → `TradeEventStruct`) so the
+///   event schema's wrapper message keeps the clean name
 /// - Includes all event schema messages (except `PublicKey`, which is shared),
-///   renaming `Instructions` → `AnchorEvents`
+///   renaming `Instructions` → `AnchorEvents`. Identical collisions are
+///   deduplicated (the instruction copy is kept)
 /// - Appends an `AnchorEventOutput` wrapper message with:
 ///   - `optional Instructions instruction = 1;`
 ///   - `repeated AnchorEvents anchor_events = 2;`
@@ -35,33 +38,82 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
     let ix_messages = parse_message_blocks(ix_schema);
     let event_messages = parse_message_blocks(event_schema);
 
+    // Build lookups for collision detection.
+    let ix_map: std::collections::HashMap<&str, &str> = ix_messages
+        .iter()
+        .map(|m| (m.name.as_str(), m.raw.as_str()))
+        .collect();
+
+    let event_map: std::collections::HashMap<&str, &str> = event_messages
+        .iter()
+        .map(|m| (m.name.as_str(), m.raw.as_str()))
+        .collect();
+
+    // Determine which instruction messages need a `Struct` suffix because they
+    // collide with a non-identical event message of the same name.
+    // The event schema's wrapper message keeps the clean name.
+    let mut ix_rename_map: std::collections::HashMap<&str, String> =
+        std::collections::HashMap::new();
+
+    for msg in &ix_messages {
+        if msg.name == "PublicKey" || msg.name == "Instructions" {
+            continue;
+        }
+
+        if let Some(ev_raw) = event_map.get(msg.name.as_str()) {
+            if *ev_raw != msg.raw {
+                ix_rename_map.insert(
+                    msg.name.as_str(),
+                    format!("{}Struct", msg.name),
+                );
+            }
+        }
+    }
+
     let mut out = String::with_capacity(ix_schema.len() + event_schema.len() + 256);
 
     out.push_str("syntax = \"proto3\";\n\n");
 
-    // Emit all instruction schema messages as-is.
+    // Emit instruction schema messages, renaming non-identical collisions.
     for msg in &ix_messages {
-        out.push_str(&msg.raw);
+        let mut block = msg.raw.clone();
+
+        for (old_name, new_name) in &ix_rename_map {
+            block = block.replace(old_name, new_name);
+        }
+
+        out.push_str(&block);
         out.push_str("\n\n");
     }
 
-    // Emit event schema messages, skipping PublicKey and renaming Instructions.
+    // Emit event schema messages:
+    //  - Skip `PublicKey` (shared, already emitted from instruction schema)
+    //  - Skip messages identical to ones in the instruction schema (dedup)
+    //  - Rename `Instructions` → `AnchorEvents`
+    let mut emitted_count = 0;
+
     for msg in &event_messages {
         if msg.name == "PublicKey" {
             continue;
         }
 
-        if msg.name == "Instructions" {
-            let renamed = msg
-                .raw
-                .replacen("message Instructions", "message AnchorEvents", 1);
-
-            out.push_str(&renamed);
-        } else {
-            out.push_str(&msg.raw);
+        // Deduplicate: identical definitions already emitted from the
+        // instruction schema (possibly under a renamed name — skip either way).
+        if msg.name != "Instructions" && ix_map.contains_key(msg.name.as_str()) {
+            if !ix_rename_map.contains_key(msg.name.as_str()) {
+                continue;
+            }
         }
 
+        let mut block = msg.raw.clone();
+
+        if msg.name == "Instructions" {
+            block = block.replacen("message Instructions", "message AnchorEvents", 1);
+        }
+
+        out.push_str(&block);
         out.push_str("\n\n");
+        emitted_count += 1;
     }
 
     // Append the wrapper message.
@@ -72,13 +124,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
 
     // message_index is the 0-based position of the target message in the
     // proto file (matching INSTRUCTION_DISPATCH_MESSAGE_INDEX from proc-macro).
-    // Count: all ix messages + event messages (minus PublicKey) + AnchorEventOutput.
-    let event_count = event_messages
-        .iter()
-        .filter(|m| m.name != "PublicKey")
-        .count();
-
-    let total = ix_messages.len() + event_count + 1; // +1 for AnchorEventOutput
+    let total = ix_messages.len() + emitted_count + 1; // +1 for AnchorEventOutput
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     let message_index = (total - 1) as i32;
@@ -240,5 +286,122 @@ message Instructions {
 
         // Message index: 5 ix + 4 event (minus PublicKey) + 1 wrapper = 10, index = 9
         assert_eq!(message_index, 9);
+    }
+
+    #[test]
+    fn merge_dedup_identical_collision() {
+        let ix_schema = "\
+syntax = \"proto3\";
+
+message PublicKey {
+  bytes value = 1;
+}
+
+message SharedType {
+  uint64 amount = 1;
+}
+
+message Instructions {
+  oneof instruction {
+    SharedType shared_type = 1;
+  }
+}
+";
+
+        let event_schema = "\
+syntax = \"proto3\";
+
+message PublicKey {
+  bytes value = 1;
+}
+
+message SharedType {
+  uint64 amount = 1;
+}
+
+message Instructions {
+  oneof instruction {
+    SharedType shared_type = 1;
+  }
+}
+";
+
+        let (combined, _) = merge_proto_schemas(ix_schema, event_schema);
+
+        // Identical `SharedType` should appear only once (deduplicated).
+        assert_eq!(
+            combined.matches("message SharedType {").count(),
+            1,
+            "Identical collision should be deduplicated"
+        );
+    }
+
+    #[test]
+    fn merge_rename_ix_side_non_identical_collision() {
+        let ix_schema = "\
+syntax = \"proto3\";
+
+message PublicKey {
+  bytes value = 1;
+}
+
+message Overlap {
+  uint64 amount = 1;
+}
+
+message Instructions {
+  oneof instruction {
+    Overlap overlap = 1;
+  }
+}
+";
+
+        let event_schema = "\
+syntax = \"proto3\";
+
+message PublicKey {
+  bytes value = 1;
+}
+
+message Overlap {
+  string name = 1;
+  uint64 price = 2;
+}
+
+message Instructions {
+  oneof instruction {
+    Overlap overlap = 1;
+  }
+}
+";
+
+        let (combined, message_index) = merge_proto_schemas(ix_schema, event_schema);
+
+        // Instruction-side `Overlap` renamed to `OverlapStruct`.
+        assert!(
+            combined.contains("message OverlapStruct {"),
+            "Instruction Overlap should be renamed to OverlapStruct"
+        );
+
+        // References inside instruction dispatch updated.
+        assert!(
+            combined.contains("OverlapStruct overlap"),
+            "Instruction dispatch should reference OverlapStruct"
+        );
+
+        // Event-side `Overlap` keeps the clean name.
+        assert!(
+            combined.contains("message Overlap {"),
+            "Event Overlap should keep the clean name"
+        );
+
+        // Event dispatch references unchanged.
+        assert!(
+            combined.contains("    Overlap overlap"),
+            "Event dispatch (AnchorEvents) should reference Overlap"
+        );
+
+        // 3 ix + 2 event (Overlap + AnchorEvents) + 1 wrapper = 6, index = 5
+        assert_eq!(message_index, 5);
     }
 }

@@ -9,6 +9,9 @@ pub fn p(s: &str) -> Pubkey { s.parse().unwrap() }
 ///
 /// Skipped when `protoc` is not found on `$PATH` or when the `SKIP_PROTOC` env var is set.
 ///
+/// Each invocation uses a unique temp directory to avoid races when tests run
+/// in parallel.
+///
 /// ```sh
 /// SKIP_PROTOC=1 cargo test          # skip protoc validation
 /// ```
@@ -27,10 +30,8 @@ pub fn check_protobuf_format(schema: &str) {
         return;
     }
 
-    let dir = std::env::temp_dir().join("vixen_proto_check");
-    std::fs::create_dir_all(&dir).expect("failed to create temp dir");
-
-    let proto_path = dir.join("check.proto");
+    let dir = tempfile::tempdir().expect("failed to create temp dir");
+    let proto_path = dir.path().join("check.proto");
 
     let mut f = std::fs::File::create(&proto_path).expect("failed to create temp proto file");
 
@@ -40,7 +41,7 @@ pub fn check_protobuf_format(schema: &str) {
     let output = Command::new("protoc")
         .arg("--descriptor_set_out=/dev/null")
         .arg(&proto_path)
-        .arg(format!("--proto_path={}", dir.display()))
+        .arg(format!("--proto_path={}", dir.path().display()))
         .output()
         .expect("protoc invocation failed");
 

@@ -1,0 +1,89 @@
+---
+source: tests/anchor-events/tests/lo_v2.rs
+expression: "limit_order2_events::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package limit_order2_events;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message CancelDustOrderEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CancelDustOrderEventArgs {
+  PublicKey order_key = 1;
+  uint64 one_usd_input_mint_amount = 2;
+}
+    
+message CancelDustOrderEvent {
+  CancelDustOrderEventAccounts accounts = 1;
+  CancelDustOrderEventArgs args = 2;
+}
+    
+message CancelOrderEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CancelOrderEventArgs {
+  PublicKey order_key = 1;
+}
+    
+message CancelOrderEvent {
+  CancelOrderEventAccounts accounts = 1;
+  CancelOrderEventArgs args = 2;
+}
+    
+message CreateOrderEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CreateOrderEventArgs {
+  PublicKey order_key = 1;
+  PublicKey maker = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey input_token_program = 5;
+  PublicKey output_token_program = 6;
+  uint64 making_amount = 7;
+  uint64 taking_amount = 8;
+  optional int64 expired_at = 9;
+  uint32 fee_bps = 10;
+  PublicKey fee_account = 11;
+  uint32 slippage_bps = 12;
+}
+    
+message CreateOrderEvent {
+  CreateOrderEventAccounts accounts = 1;
+  CreateOrderEventArgs args = 2;
+}
+    
+message TradeEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message TradeEventArgs {
+  PublicKey order_key = 1;
+  PublicKey taker = 2;
+  uint64 remaining_making_amount = 3;
+  uint64 remaining_taking_amount = 4;
+  uint64 making_amount = 5;
+  uint64 taking_amount = 6;
+}
+    
+message TradeEvent {
+  TradeEventAccounts accounts = 1;
+  TradeEventArgs args = 2;
+}
+    
+message Instructions {
+  oneof instruction {
+    CancelDustOrderEvent cancel_dust_order_event = 1;
+    CancelOrderEvent cancel_order_event = 2;
+    CreateOrderEvent create_order_event = 3;
+    TradeEvent trade_event = 4;
+  }
+}

@@ -5,3 +5,4 @@ edition.workspace = true
 
 [dependencies]
 yellowstone-vixen-core = { workspace = true }
+tempfile = "3"
