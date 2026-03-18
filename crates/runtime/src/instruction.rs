@@ -44,10 +44,10 @@ impl InstructionPipeline {
 
                 // TODO
                 let insn = match thing {
-                    Thing::ReturnFromCpiCallsToNode(ref debug_node) => {
+                    Thing::ReturnFromCpiCallsToNode{ ref caller_cpi_path } => {
                         println!(
-                            "Returning from CPI nesting: {}",
-                            debug_node
+                            "Returning from CPI nesting: {:?}",
+                            caller_cpi_path
                         );
                         continue;
                     }
@@ -120,10 +120,10 @@ impl SingleInstructionPipeline {
         for thing in ixs.iter().flat_map(|i| i.visit_all()) {
             // TODO
             let insn = match thing {
-                Thing::ReturnFromCpiCallsToNode(ref debug_node) => {
+                Thing::ReturnFromCpiCallsToNode{ caller_cpi_path } => {
                     println!(
-                        "Returning from CPI nesting: {}",
-                        debug_node
+                        "Returning from CPI nesting to {:?}",
+                        caller_cpi_path
                     );
                     continue;
                 }
