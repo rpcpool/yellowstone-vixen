@@ -158,29 +158,40 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
 }
 
 impl From<&SerializableInstructionUpdate> for InstructionUpdate {
-    #[allow(clippy::cast_possible_truncation)]
     fn from(value: &SerializableInstructionUpdate) -> Self {
-        let log_range = 0..value.log_messages.len();
-
         let shared = Arc::new(InstructionShared {
             log_messages: value.log_messages.clone(),
             ..InstructionShared::default()
         });
 
-        Self {
-            program: value.program.into(),
-            accounts: value.accounts.iter().copied().map(Into::into).collect(),
-            data: value.data.clone(),
-            shared,
-            inner: value.inner.iter().map(Into::into).collect(),
-            log_range,
-            path: value
-                .ix_index
-                .iter()
-                .map(|x| *x as u32)
-                .collect::<Vec<u32>>()
-                .into(),
-        }
+        convert_instruction(value, &shared)
+    }
+}
+
+#[allow(clippy::cast_possible_truncation)]
+fn convert_instruction(
+    value: &SerializableInstructionUpdate,
+    shared: &Arc<InstructionShared>,
+) -> InstructionUpdate {
+    let log_range = 0..shared.log_messages.len();
+
+    InstructionUpdate {
+        program: value.program.into(),
+        accounts: value.accounts.iter().copied().map(Into::into).collect(),
+        data: value.data.clone(),
+        shared: Arc::clone(shared),
+        inner: value
+            .inner
+            .iter()
+            .map(|inner| convert_instruction(inner, shared))
+            .collect(),
+        log_range,
+        path: value
+            .ix_index
+            .iter()
+            .map(|x| *x as u32)
+            .collect::<Vec<u32>>()
+            .into(),
     }
 }
 

@@ -2,7 +2,7 @@
 //!
 //! Uses the Confluent Schema Registry REST API (compatible with Redpanda).
 
-use std::{borrow::Cow, collections::HashMap, io};
+use std::{collections::HashMap, io};
 
 use serde::{Deserialize, Serialize};
 
@@ -12,11 +12,7 @@ pub struct SchemaDefinition {
     /// Subject name (typically "<topic>-value" or "<topic>-key").
     pub subject: String,
     /// The protobuf schema content.
-    ///
-    /// Use `Cow::Borrowed` for static schemas (e.g. `MyParser::PROTOBUF_SCHEMA`)
-    /// or `Cow::Owned` for runtime-generated schemas (e.g. from
-    /// `merge_proto_schemas`).
-    pub schema: Cow<'static, str>,
+    pub schema: &'static str,
     /// Index of the message type within the schema (0-indexed from the last message).
     /// For a schema with only one message, this should be 0.
     /// For our TokenProgramInstruction which is the last message, this is 0.

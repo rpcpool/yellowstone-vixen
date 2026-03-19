@@ -182,7 +182,18 @@ fn extract_log_event_payloads(logs: &[String]) -> Vec<Vec<u8>> {
         .collect()
 }
 
-/// Build a synthetic [`InstructionUpdate`] for feeding log event data to the event parser.
+/// Build a synthetic [`InstructionUpdate`] to feed log-based event data to the
+/// event parser.
+///
+/// Log events ("Program data:" lines) are not real instructions — they are just
+/// base64 payloads embedded in transaction logs. To reuse the same event parser
+/// that handles CPI self-invocation events, we wrap the decoded payload in a
+/// fake `InstructionUpdate` with empty accounts and no inner instructions.
+/// The `data` field layout matches a real CPI event instruction:
+///
+/// ```text
+/// [ EVENT_IX_TAG (8 bytes) | discriminator (8 bytes) | borsh payload ]
+/// ```
 fn synthetic_instruction(
     program_id: Pubkey,
     data: Vec<u8>,
@@ -271,22 +282,6 @@ macro_rules! impl_parser {
     };
 }
 
-#[cfg(feature = "proto")]
-impl<InstructionParser, EventParser> Parser
-    for AnchorEventInstructionParser<InstructionParser, EventParser>
-where
-    InstructionParser: Parser<Input = InstructionUpdate> + Send + Sync,
-    EventParser: Parser<Input = InstructionUpdate> + Send + Sync,
-    InstructionParser::Output: Send,
-    EventParser::Output: Send,
-{
-    type Input = InstructionUpdate;
-    type Output = AnchorEventOutput<InstructionParser::Output, EventParser::Output>;
-
-    impl_parser!();
-}
-
-#[cfg(not(feature = "proto"))]
 impl<InstructionParser, EventParser> Parser
     for AnchorEventInstructionParser<InstructionParser, EventParser>
 where

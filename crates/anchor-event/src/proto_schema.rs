@@ -135,6 +135,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
 
         out.push_str(&block);
         out.push_str("\n\n");
+
         emitted_count += 1;
     }
 
@@ -154,11 +155,13 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
     (out, message_index)
 }
 
+///
 /// Replace proto type names as whole words in a block of text.
 ///
 /// Sorts rename pairs longest-first so `ExpireToken` is matched before `Expire`,
 /// then replaces only at word boundaries (preceded/followed by a non-alphanumeric
 /// character or start/end of string).
+///
 fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>) -> String {
     if renames.is_empty() {
         return block.to_string();
@@ -181,6 +184,7 @@ fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>)
             } else {
                 remaining.as_bytes().get(pos - 1).copied()
             };
+
             let after = remaining.as_bytes().get(pos + old.len()).copied();
 
             let is_word_boundary =
@@ -198,6 +202,7 @@ fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>)
         }
 
         out.push_str(remaining);
+
         result = out;
     }
 
@@ -209,6 +214,7 @@ fn apply_renames(block: &str, renames: &std::collections::HashMap<&str, String>)
 fn references_renamed_type(raw: &str, renames: &std::collections::HashMap<&str, String>) -> bool {
     for old in renames.keys() {
         let mut remaining = raw.as_bytes();
+
         let old_bytes = old.as_bytes();
 
         while let Some(pos) = remaining
@@ -220,6 +226,7 @@ fn references_renamed_type(raw: &str, renames: &std::collections::HashMap<&str, 
             } else {
                 Some(remaining[pos - 1])
             };
+
             let after = remaining.get(pos + old_bytes.len()).copied();
 
             let is_word_boundary =
