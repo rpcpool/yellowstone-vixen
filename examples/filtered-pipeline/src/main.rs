@@ -45,7 +45,7 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     async fn handle_lifecycle(
         &self,
         txn: &TransactionUpdate,
-        instruction_shared: &InstructionShared,
+        _instruction_shared: &InstructionShared,
         event: &LifecycleEvent<'_>,
     ) -> HandlerResult<()> {
         match event {

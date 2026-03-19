@@ -140,7 +140,7 @@ impl SingleInstructionPipeline {
         let pipe = &self.0;
         let mut prev_depth: usize = 0;
 
-        pipe.handle_lifecycle(txn, &instruction_shared, &LifecycleEvent::TxStart)
+        pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart)
             .await;
 
         for mode in ixs.iter().flat_map(|i| i.visit_tree()) {
