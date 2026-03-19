@@ -3,9 +3,13 @@
 
 use std::fmt::{self, Debug};
 
-use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
+use tracing::trace;
+use vixen_core::{
+    instruction::{InstructionUpdate, TreeStep},
+    GetPrefilter, ParserId, TransactionUpdate,
+};
 
-use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
+use crate::handler::{BoxPipeline, DynPipeline, LifecycleEvent, PipelineErrors};
 #[cfg(feature = "prometheus")]
 use crate::metrics;
 
@@ -36,10 +40,41 @@ impl InstructionPipeline {
     /// Returns an error if any of the sub-pipelines return an error.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let mut err = None;
-        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let (ref instruction_shared, ixs) =
+            InstructionUpdate::parse_from_txn_detailed(txn).map_err(PipelineErrors::parse)?;
+
+        for pipe in &*self.0 {
+            pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart)
+                .await;
+        }
+
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
-        for insn in ixs.iter().flat_map(|i| i.visit_all()) {
+        for node in ixs.iter().flat_map(|i| i.visit_tree()) {
             for pipe in &*self.0 {
+                let insn = match node {
+                    TreeStep::EnterCpiCallFromNode {
+                        ref caller_cpi_path,
+                    } => {
+                        pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::CpiEnter {
+                            caller_cpi_path,
+                        })
+                        .await;
+                        continue;
+                    },
+                    TreeStep::ReturnFromCpiCallsToNode {
+                        ref caller_cpi_path,
+                    } => {
+                        pipe.handle_lifecycle(
+                            txn,
+                            instruction_shared,
+                            &LifecycleEvent::CpiReturn { caller_cpi_path },
+                        )
+                        .await;
+                        continue;
+                    },
+                    TreeStep::PhysicalNode(insn) => insn,
+                };
+
                 let res = pipe.handle(insn).await;
 
                 #[cfg(feature = "prometheus")]
@@ -51,6 +86,11 @@ impl InstructionPipeline {
                     Err(e) => err = Some(e.handle::<InstructionUpdate>(&pipe.id())),
                 }
             }
+        }
+
+        for pipe in &*self.0 {
+            pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxEnd)
+                .await;
         }
 
         if let Some(h) = err {
@@ -95,10 +135,50 @@ impl SingleInstructionPipeline {
     /// # Errors
     /// Returns an error if the inner pipeline fails.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
-        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let (ref instruction_shared, ixs) =
+            InstructionUpdate::parse_from_txn_detailed(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
+        let mut prev_depth: usize = 0;
 
-        for insn in ixs.iter().flat_map(|i| i.visit_all()) {
+        pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart)
+            .await;
+
+        for mode in ixs.iter().flat_map(|i| i.visit_tree()) {
+            let insn = match mode {
+                TreeStep::EnterCpiCallFromNode {
+                    ref caller_cpi_path,
+                } => {
+                    pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::CpiEnter {
+                        caller_cpi_path,
+                    })
+                    .await;
+                    continue;
+                },
+                TreeStep::ReturnFromCpiCallsToNode {
+                    ref caller_cpi_path,
+                } => {
+                    pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::CpiReturn {
+                        caller_cpi_path,
+                    })
+                    .await;
+                    continue;
+                },
+                TreeStep::PhysicalNode(insn) => insn,
+            };
+
+            let depth = insn.path.len();
+
+            if depth < prev_depth {
+                trace!(
+                    from_depth = prev_depth,
+                    to_depth = depth,
+                    path = ?insn.path,
+                    "Returning from CPI nesting"
+                );
+            }
+
+            prev_depth = depth;
+
             let res = pipe.handle(insn).await;
 
             #[cfg(feature = "prometheus")]
@@ -114,6 +194,9 @@ impl SingleInstructionPipeline {
                 },
             }
         }
+
+        pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxEnd)
+            .await;
 
         Ok(())
     }

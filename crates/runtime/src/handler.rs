@@ -7,8 +7,8 @@ use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
 use tracing::{trace, Instrument, Span};
 use vixen_core::{
-    AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter, ParserId, SlotUpdate,
-    TransactionUpdate,
+    instruction::Path as CpiPath, AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter,
+    ParserId, SlotUpdate, TransactionUpdate,
 };
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
@@ -19,12 +19,55 @@ type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
 pub type HandlerResult<T> = Result<T, BoxedError>;
 
+// --- starttx 5PkaEdcz...
+//    >>> 3 ENTER
+//      > 3.1 tx 5PkaEdcz...
+//      > 3.3 tx 5PkaEdcz...
+//      > 3.4 tx 5PkaEdcz...
+//    <<< 3 RETURN
+//    >>> 4 ENTER
+//      > 4.2 tx 5PkaEdcz...
+//    <<< 4 RETURN
+//    > 5 tx 5PkaEdcz...
+// ==
+
+/// More callback hooks from transaction traversal.
+#[derive(Debug)]
+pub enum LifecycleEvent<'a> {
+    /// A transaction has started.
+    TxStart,
+    /// A transaction has ended.
+    TxEnd,
+    /// CPI call from the provided path has been entered.
+    /// note: called for all CPI enters - not only the filtered ones
+    CpiEnter {
+        /// CPI caller path (i.e. the parent in the parent-child relation)
+        caller_cpi_path: &'a CpiPath,
+    },
+    /// CPI call returned to the provided path.
+    /// note: called for all CPI returns - not only the filtered ones
+    CpiReturn {
+        /// CPI caller path (i.e. the parent in the parent-child relation)
+        caller_cpi_path: &'a CpiPath,
+    },
+}
+
 /// A handler callback for a parsed value and its corresponding raw event.
 pub trait Handler<T, R>
 where R: Sync
 {
     /// Consume the parsed value together with the raw event.
     fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
+
+    /// Called on lifecycle events (transaction start/end, CPI enter/return).
+    fn handle_lifecycle(
+        &self,
+        _txn: &TransactionUpdate,
+        _instruction_shared: &InstructionShared,
+        _event: &LifecycleEvent<'_>,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        async { Ok(()) }
+    }
 }
 
 impl<T: Handler<U, R>, U, R> Handler<U, R> for &T
@@ -34,9 +77,20 @@ where R: Sync
     fn handle(&self, value: &U, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send {
         <T as Handler<U, R>>::handle(self, value, raw_event)
     }
+
+    #[inline]
+    fn handle_lifecycle(
+        &self,
+        txn: &TransactionUpdate,
+        instruction_shared: &InstructionShared,
+        event: &LifecycleEvent<'_>,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        <T as Handler<U, R>>::handle_lifecycle(self, txn, instruction_shared, event)
+    }
 }
 
 pub(crate) use pipeline_error::Errors as PipelineErrors;
+use vixen_core::instruction::InstructionShared;
 
 mod pipeline_error {
     use smallvec::SmallVec;
@@ -187,6 +241,31 @@ where
             Err(PipelineErrors::Handlers(errs))
         }
     }
+
+    /// Notify all handlers of a lifecycle event.
+    ///
+    /// # Errors
+    /// If any handler returns an error, all errors are collected and returned.
+    pub async fn handle_lifecycle(
+        &self,
+        txn: &TransactionUpdate,
+        instruction_shared: &InstructionShared,
+        event: &LifecycleEvent<'_>,
+    ) -> Result<(), PipelineErrors> {
+        let errs = (&self.1)
+            .into_iter()
+            .map(|h| async move { h.handle_lifecycle(txn, instruction_shared, event).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
+
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(PipelineErrors::Handlers(errs))
+        }
+    }
 }
 
 /// Object-safe trait for parsing and handling values.
@@ -197,6 +276,16 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
         &'h self,
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>>;
+
+    /// Optional callback for lifecycle events (tx start/end, CPI enter/return).
+    fn handle_lifecycle<'h>(
+        &'h self,
+        _txn: &'h TransactionUpdate,
+        _instruction_shared: &'h InstructionShared,
+        _event: &'h LifecycleEvent<'h>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {})
+    }
 }
 
 impl<T> DynPipeline<T> for std::convert::Infallible {
@@ -222,6 +311,19 @@ where
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         Box::pin(Pipeline::handle(self, value))
     }
+
+    fn handle_lifecycle<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+        instruction_shared: &'h InstructionShared,
+        event: &'h LifecycleEvent<'h>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {
+            if let Err(e) = Pipeline::handle_lifecycle(self, txn, instruction_shared, event).await {
+                e.handle::<P::Input>(&self.id()).as_unit();
+            }
+        })
+    }
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
@@ -240,6 +342,16 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         <dyn DynPipeline<T>>::handle(&**self, value)
+    }
+
+    #[inline]
+    fn handle_lifecycle<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+        instruction_shared: &'h InstructionShared,
+        event: &'h LifecycleEvent<'h>,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn, instruction_shared, event)
     }
 }
 
