@@ -39,11 +39,13 @@ pub enum LifecycleEvent<'a> {
     /// A transaction has ended.
     TxEnd,
     /// CPI call from the provided path has been entered.
+    /// note: called for all CPI enters - not only the filtered ones
     CpiEnter {
         /// CPI caller path (i.e. the parent in the parent-child relation)
         caller_cpi_path: &'a CpiPath,
     },
     /// CPI call returned to the provided path.
+    /// note: called for all CPI returns - not only the filtered ones
     CpiReturn {
         /// CPI caller path (i.e. the parent in the parent-child relation)
         caller_cpi_path: &'a CpiPath,
