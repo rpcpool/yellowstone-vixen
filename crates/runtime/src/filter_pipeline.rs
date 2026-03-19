@@ -4,7 +4,9 @@ use std::{borrow::Cow, fmt::Debug};
 
 use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
-use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
+use vixen_core::{
+    GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder, TransactionUpdate,
+};
 
 use crate::{
     handler::{DynPipeline, LifecycleEvent, PipelineErrors},
@@ -111,12 +113,13 @@ where
     /// If any handler returns an error, all errors are collected and returned.
     pub async fn handle_lifecycle(
         &self,
+        txn: &TransactionUpdate,
         event: &LifecycleEvent<'_>,
     ) -> Result<(), PipelineErrors> {
         let errs = self
             .handlers
             .into_iter()
-            .map(|h| async move { h.handle_lifecycle(event).await })
+            .map(|h| async move { h.handle_lifecycle(txn, event).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -150,10 +153,11 @@ where
 
     fn handle_lifecycle<'h>(
         &'h self,
+        txn: &'h TransactionUpdate,
         event: &'h LifecycleEvent<'h>,
     ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
-            if let Err(e) = FilterPipeline::handle_lifecycle(self, event).await {
+            if let Err(e) = FilterPipeline::handle_lifecycle(self, txn, event).await {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })

@@ -21,8 +21,8 @@ pub type HandlerResult<T> = Result<T, BoxedError>;
 
 #[derive(Debug)]
 pub enum LifecycleEvent<'a> {
-    TxStart(&'a TransactionUpdate),
-    TxEnd(&'a TransactionUpdate),
+    TxStart,
+    TxEnd,
     CpiEnter(&'a CpiPath),
     CpiReturn(&'a CpiPath),
 }
@@ -37,6 +37,7 @@ where R: Sync
     /// Called on lifecycle events (transaction start/end, CPI enter/return).
     fn handle_lifecycle(
         &self,
+        _txn: &TransactionUpdate,
         _event: &LifecycleEvent<'_>,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
         async { Ok(()) }
@@ -54,9 +55,10 @@ where R: Sync
     #[inline]
     fn handle_lifecycle(
         &self,
+        txn: &TransactionUpdate,
         event: &LifecycleEvent<'_>,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U, R>>::handle_lifecycle(self, event)
+        <T as Handler<U, R>>::handle_lifecycle(self, txn, event)
     }
 }
 
@@ -218,11 +220,12 @@ where
     /// If any handler returns an error, all errors are collected and returned.
     pub async fn handle_lifecycle(
         &self,
+        txn: &TransactionUpdate,
         event: &LifecycleEvent<'_>,
     ) -> Result<(), PipelineErrors> {
         let errs = (&self.1)
             .into_iter()
-            .map(|h| async move { h.handle_lifecycle(event).await })
+            .map(|h| async move { h.handle_lifecycle(txn, event).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -248,6 +251,7 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
     /// Optional callback for lifecycle events (tx start/end, CPI enter/return).
     fn handle_lifecycle<'h>(
         &'h self,
+        _txn: &'h TransactionUpdate,
         _event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {})
@@ -280,10 +284,11 @@ where
 
     fn handle_lifecycle<'h>(
         &'h self,
+        txn: &'h TransactionUpdate,
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
-            if let Err(e) = Pipeline::handle_lifecycle(self, event).await {
+            if let Err(e) = Pipeline::handle_lifecycle(self, txn, event).await {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })
@@ -311,9 +316,10 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
     #[inline]
     fn handle_lifecycle<'h>(
         &'h self,
+        txn: &'h TransactionUpdate,
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_lifecycle(&**self, event)
+        <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn, event)
     }
 }
 

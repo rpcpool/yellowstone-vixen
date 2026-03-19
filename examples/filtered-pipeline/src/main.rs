@@ -42,16 +42,20 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
         Ok(())
     }
 
-    async fn handle_lifecycle(&self, event: &LifecycleEvent<'_>) -> HandlerResult<()> {
+    async fn handle_lifecycle(
+        &self,
+        txn: &TransactionUpdate,
+        event: &LifecycleEvent<'_>,
+    ) -> HandlerResult<()> {
         match event {
-            LifecycleEvent::TxStart(txn) => {
+            LifecycleEvent::TxStart => {
                 let sig = Signature::try_from(
                     txn.transaction.as_ref().unwrap().signature.as_slice(),
                 )
                 .unwrap();
                 println!("--- starttx {sig}");
             },
-            LifecycleEvent::TxEnd(txn) => {
+            LifecycleEvent::TxEnd => {
                 let sig = Signature::try_from(
                     txn.transaction.as_ref().unwrap().signature.as_slice(),
                 )
