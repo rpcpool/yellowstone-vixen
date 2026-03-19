@@ -4,13 +4,10 @@ use std::{borrow::Cow, fmt::Debug};
 
 use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
-use vixen_core::{
-    instruction::Path, GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder,
-    TransactionUpdate,
-};
+use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 
 use crate::{
-    handler::{DynPipeline, PipelineErrors},
+    handler::{DynPipeline, LifecycleEvent, PipelineErrors},
     Handler,
 };
 
@@ -108,80 +105,18 @@ where
         Ok(())
     }
 
-    /// Notify all handlers that a transaction has been entered.
+    /// Notify all handlers of a lifecycle event.
     ///
     /// # Errors
     /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_tx_start(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+    pub async fn handle_lifecycle(
+        &self,
+        event: &LifecycleEvent<'_>,
+    ) -> Result<(), PipelineErrors> {
         let errs = self
             .handlers
             .into_iter()
-            .map(|h| async move { h.handle_tx_start(txn).await })
-            .collect::<futures_util::stream::FuturesUnordered<_>>()
-            .filter_map(|r| async move { r.err() })
-            .collect::<SmallVec<[_; 1]>>()
-            .await;
-
-        if errs.is_empty() {
-            Ok(())
-        } else {
-            Err(PipelineErrors::Handlers(errs))
-        }
-    }
-
-    /// Notify all handlers that the transaction has ended.
-    ///
-    /// # Errors
-    /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_tx_end(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
-        let errs = self
-            .handlers
-            .into_iter()
-            .map(|h| async move { h.handle_tx_end(txn).await })
-            .collect::<futures_util::stream::FuturesUnordered<_>>()
-            .filter_map(|r| async move { r.err() })
-            .collect::<SmallVec<[_; 1]>>()
-            .await;
-
-        if errs.is_empty() {
-            Ok(())
-        } else {
-            Err(PipelineErrors::Handlers(errs))
-        }
-    }
-
-    /// Notify all handlers that execution is entering CPI calls from a caller
-    /// node into its children.
-    ///
-    /// # Errors
-    /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_enter(&self, caller_cpi_path: &Path) -> Result<(), PipelineErrors> {
-        let errs = self
-            .handlers
-            .into_iter()
-            .map(|h| async move { h.handle_cpi_enter(caller_cpi_path).await })
-            .collect::<futures_util::stream::FuturesUnordered<_>>()
-            .filter_map(|r| async move { r.err() })
-            .collect::<SmallVec<[_; 1]>>()
-            .await;
-
-        if errs.is_empty() {
-            Ok(())
-        } else {
-            Err(PipelineErrors::Handlers(errs))
-        }
-    }
-
-    /// Notify all handlers that execution has returned from CPI calls to a
-    /// caller node.
-    ///
-    /// # Errors
-    /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> Result<(), PipelineErrors> {
-        let errs = self
-            .handlers
-            .into_iter()
-            .map(|h| async move { h.handle_cpi_return(caller_cpi_path).await })
+            .map(|h| async move { h.handle_lifecycle(event).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -213,45 +148,12 @@ where
         Box::pin(FilterPipeline::handle_value(self, value))
     }
 
-    fn handle_tx_start<'h>(
+    fn handle_lifecycle<'h>(
         &'h self,
-        txn: &'h TransactionUpdate,
+        event: &'h LifecycleEvent<'h>,
     ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
-            if let Err(e) = FilterPipeline::handle_tx_start(self, txn).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
-    }
-
-    fn handle_tx_end<'h>(
-        &'h self,
-        txn: &'h TransactionUpdate,
-    ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = FilterPipeline::handle_tx_end(self, txn).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
-    }
-
-    fn handle_cpi_enter<'h>(
-        &'h self,
-        caller_cpi_path: &'h Path,
-    ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = FilterPipeline::handle_cpi_enter(self, caller_cpi_path).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
-    }
-
-    fn handle_cpi_return<'h>(
-        &'h self,
-        caller_cpi_path: &'h Path,
-    ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = FilterPipeline::handle_cpi_return(self, caller_cpi_path).await {
+            if let Err(e) = FilterPipeline::handle_lifecycle(self, event).await {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })

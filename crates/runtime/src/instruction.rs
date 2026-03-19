@@ -9,7 +9,7 @@ use vixen_core::{
     GetPrefilter, ParserId, TransactionUpdate,
 };
 
-use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
+use crate::handler::{BoxPipeline, DynPipeline, LifecycleEvent, PipelineErrors};
 #[cfg(feature = "prometheus")]
 use crate::metrics;
 
@@ -43,7 +43,7 @@ impl InstructionPipeline {
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
 
         for pipe in &*self.0 {
-            pipe.handle_tx_start(txn).await;
+            pipe.handle_lifecycle(&LifecycleEvent::TxStart(txn)).await;
         }
 
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
@@ -53,13 +53,15 @@ impl InstructionPipeline {
                     TreeStep::EnterCpiCallFromNode {
                         ref caller_cpi_path,
                     } => {
-                        pipe.handle_cpi_enter(caller_cpi_path).await;
+                        pipe.handle_lifecycle(&LifecycleEvent::CpiEnter(caller_cpi_path))
+                            .await;
                         continue;
                     },
                     TreeStep::ReturnFromCpiCallsToNode {
                         ref caller_cpi_path,
                     } => {
-                        pipe.handle_cpi_return(caller_cpi_path).await;
+                        pipe.handle_lifecycle(&LifecycleEvent::CpiReturn(caller_cpi_path))
+                            .await;
                         continue;
                     },
                     TreeStep::PhysicalNode(insn) => insn,
@@ -79,7 +81,7 @@ impl InstructionPipeline {
         }
 
         for pipe in &*self.0 {
-            pipe.handle_tx_end(txn).await;
+            pipe.handle_lifecycle(&LifecycleEvent::TxEnd(txn)).await;
         }
 
         if let Some(h) = err {
@@ -128,20 +130,22 @@ impl SingleInstructionPipeline {
         let pipe = &self.0;
         let mut prev_depth: usize = 0;
 
-        pipe.handle_tx_start(txn).await;
+        pipe.handle_lifecycle(&LifecycleEvent::TxStart(txn)).await;
 
         for mode in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match mode {
                 TreeStep::EnterCpiCallFromNode {
                     ref caller_cpi_path,
                 } => {
-                    pipe.handle_cpi_enter(caller_cpi_path).await;
+                    pipe.handle_lifecycle(&LifecycleEvent::CpiEnter(caller_cpi_path))
+                        .await;
                     continue;
                 },
                 TreeStep::ReturnFromCpiCallsToNode {
                     ref caller_cpi_path,
                 } => {
-                    pipe.handle_cpi_return(caller_cpi_path).await;
+                    pipe.handle_lifecycle(&LifecycleEvent::CpiReturn(caller_cpi_path))
+                        .await;
                     continue;
                 },
                 TreeStep::PhysicalNode(insn) => insn,
@@ -176,7 +180,7 @@ impl SingleInstructionPipeline {
             }
         }
 
-        pipe.handle_tx_end(txn).await;
+        pipe.handle_lifecycle(&LifecycleEvent::TxEnd(txn)).await;
 
         Ok(())
     }

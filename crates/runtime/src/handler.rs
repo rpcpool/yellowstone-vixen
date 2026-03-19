@@ -19,6 +19,14 @@ type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
 pub type HandlerResult<T> = Result<T, BoxedError>;
 
+#[derive(Debug)]
+pub enum LifecycleEvent<'a> {
+    TxStart(&'a TransactionUpdate),
+    TxEnd(&'a TransactionUpdate),
+    CpiEnter(&'a CpiPath),
+    CpiReturn(&'a CpiPath),
+}
+
 /// A handler callback for a parsed value and its corresponding raw event.
 pub trait Handler<T, R>
 where R: Sync
@@ -26,34 +34,10 @@ where R: Sync
     /// Consume the parsed value together with the raw event.
     fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
 
-    /// Called when a transaction is entered, before any instructions are processed.
-    fn handle_tx_start(
+    /// Called on lifecycle events (transaction start/end, CPI enter/return).
+    fn handle_lifecycle(
         &self,
-        _txn: &TransactionUpdate,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        async { Ok(()) }
-    }
-
-    /// Called after all instructions in a transaction have been processed.
-    fn handle_tx_end(
-        &self,
-        _txn: &TransactionUpdate,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        async { Ok(()) }
-    }
-
-    /// Called when entering CPI calls from a caller node into its children.
-    fn handle_cpi_enter(
-        &self,
-        _caller_cpi_path: &CpiPath,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        async { Ok(()) }
-    }
-
-    /// Called when returning from CPI calls back to a caller node.
-    fn handle_cpi_return(
-        &self,
-        _caller_cpi_path: &CpiPath,
+        _event: &LifecycleEvent<'_>,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
         async { Ok(()) }
     }
@@ -68,35 +52,11 @@ where R: Sync
     }
 
     #[inline]
-    fn handle_tx_start(
+    fn handle_lifecycle(
         &self,
-        txn: &TransactionUpdate,
+        event: &LifecycleEvent<'_>,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U, R>>::handle_tx_start(self, txn)
-    }
-
-    #[inline]
-    fn handle_tx_end(
-        &self,
-        txn: &TransactionUpdate,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U, R>>::handle_tx_end(self, txn)
-    }
-
-    #[inline]
-    fn handle_cpi_enter(
-        &self,
-        caller_cpi_path: &CpiPath,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U, R>>::handle_cpi_enter(self, caller_cpi_path)
-    }
-
-    #[inline]
-    fn handle_cpi_return(
-        &self,
-        caller_cpi_path: &CpiPath,
-    ) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U, R>>::handle_cpi_return(self, caller_cpi_path)
+        <T as Handler<U, R>>::handle_lifecycle(self, event)
     }
 }
 
@@ -252,76 +212,17 @@ where
         }
     }
 
-    /// Notify all handlers that a transaction has been entered.
+    /// Notify all handlers of a lifecycle event.
     ///
     /// # Errors
     /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_tx_start(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+    pub async fn handle_lifecycle(
+        &self,
+        event: &LifecycleEvent<'_>,
+    ) -> Result<(), PipelineErrors> {
         let errs = (&self.1)
             .into_iter()
-            .map(|h| async move { h.handle_tx_start(txn).await })
-            .collect::<futures_util::stream::FuturesUnordered<_>>()
-            .filter_map(|r| async move { r.err() })
-            .collect::<SmallVec<[_; 1]>>()
-            .await;
-
-        if errs.is_empty() {
-            Ok(())
-        } else {
-            Err(PipelineErrors::Handlers(errs))
-        }
-    }
-
-    /// Notify all handlers that the transaction has ended.
-    ///
-    /// # Errors
-    /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_tx_end(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
-        let errs = (&self.1)
-            .into_iter()
-            .map(|h| async move { h.handle_tx_end(txn).await })
-            .collect::<futures_util::stream::FuturesUnordered<_>>()
-            .filter_map(|r| async move { r.err() })
-            .collect::<SmallVec<[_; 1]>>()
-            .await;
-
-        if errs.is_empty() {
-            Ok(())
-        } else {
-            Err(PipelineErrors::Handlers(errs))
-        }
-    }
-
-    /// Notify all handlers that execution is entering CPI calls from a caller
-    /// node into its children.
-    ///
-    /// # Errors
-    /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_enter(&self, caller_cpi_path: &CpiPath) -> Result<(), PipelineErrors> {
-        let errs = (&self.1)
-            .into_iter()
-            .map(|h| async move { h.handle_cpi_enter(caller_cpi_path).await })
-            .collect::<futures_util::stream::FuturesUnordered<_>>()
-            .filter_map(|r| async move { r.err() })
-            .collect::<SmallVec<[_; 1]>>()
-            .await;
-
-        if errs.is_empty() {
-            Ok(())
-        } else {
-            Err(PipelineErrors::Handlers(errs))
-        }
-    }
-
-    /// Notify all handlers that execution has returned from CPI calls to a
-    /// caller node.
-    ///
-    /// # Errors
-    /// If any handler returns an error, all errors are collected and returned.
-    pub async fn handle_cpi_return(&self, caller_cpi_path: &CpiPath) -> Result<(), PipelineErrors> {
-        let errs = (&self.1)
-            .into_iter()
-            .map(|h| async move { h.handle_cpi_return(caller_cpi_path).await })
+            .map(|h| async move { h.handle_lifecycle(event).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -344,39 +245,11 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>>;
 
-    /// optional callback when a transaction is entered
-    fn handle_tx_start<'h>(
+    /// Optional callback for lifecycle events (tx start/end, CPI enter/return).
+    fn handle_lifecycle<'h>(
         &'h self,
-        _txn: &'h TransactionUpdate,
+        _event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        // optional
-        Box::pin(async move {})
-    }
-
-    /// optional callback to end of transaction
-    fn handle_tx_end<'h>(
-        &'h self,
-        _txn: &'h TransactionUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        // optional
-        Box::pin(async move {})
-    }
-
-    /// optional callback when entering CPI calls from a caller node
-    fn handle_cpi_enter<'h>(
-        &'h self,
-        _caller_cpi_path: &'h CpiPath,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        // optional
-        Box::pin(async move {})
-    }
-
-    /// optional callback when returning from CPI calls to a caller node
-    fn handle_cpi_return<'h>(
-        &'h self,
-        _caller_cpi_path: &'h CpiPath,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        // optional
         Box::pin(async move {})
     }
 }
@@ -405,45 +278,12 @@ where
         Box::pin(Pipeline::handle(self, value))
     }
 
-    fn handle_tx_start<'h>(
+    fn handle_lifecycle<'h>(
         &'h self,
-        txn: &'h TransactionUpdate,
+        event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
-            if let Err(e) = Pipeline::handle_tx_start(self, txn).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
-    }
-
-    fn handle_tx_end<'h>(
-        &'h self,
-        txn: &'h TransactionUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = Pipeline::handle_tx_end(self, txn).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
-    }
-
-    fn handle_cpi_enter<'h>(
-        &'h self,
-        caller_cpi_path: &'h CpiPath,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = Pipeline::handle_cpi_enter(self, caller_cpi_path).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
-    }
-
-    fn handle_cpi_return<'h>(
-        &'h self,
-        caller_cpi_path: &'h CpiPath,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = Pipeline::handle_cpi_return(self, caller_cpi_path).await {
+            if let Err(e) = Pipeline::handle_lifecycle(self, event).await {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })
@@ -469,35 +309,11 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
     }
 
     #[inline]
-    fn handle_tx_start<'h>(
+    fn handle_lifecycle<'h>(
         &'h self,
-        txn: &'h TransactionUpdate,
+        event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_tx_start(&**self, txn)
-    }
-
-    #[inline]
-    fn handle_tx_end<'h>(
-        &'h self,
-        txn: &'h TransactionUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_tx_end(&**self, txn)
-    }
-
-    #[inline]
-    fn handle_cpi_enter<'h>(
-        &'h self,
-        caller_cpi_path: &'h CpiPath,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_cpi_enter(&**self, caller_cpi_path)
-    }
-
-    #[inline]
-    fn handle_cpi_return<'h>(
-        &'h self,
-        caller_cpi_path: &'h CpiPath,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_cpi_return(&**self, caller_cpi_path)
+        <dyn DynPipeline<T>>::handle_lifecycle(&**self, event)
     }
 }
 

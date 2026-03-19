@@ -15,6 +15,7 @@ use yellowstone_vixen::{
     self as vixen,
     config::VixenConfig,
     filter_pipeline::FilterPipeline,
+    handler::LifecycleEvent,
     vixen_core::{
         instruction::{InstructionUpdate, Path},
         KeyBytes, Prefilter, TransactionUpdate,
@@ -35,42 +36,44 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger {
-    async fn handle_tx_start(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
-        let sig =
-            Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
-        println!("--- starttx {sig}");
-        Ok(())
-    }
-
-    async fn handle_cpi_enter(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
-        println!(
-            "{} >>> {:?} ENTER",
-            indent(caller_cpi_path),
-            caller_cpi_path
-        );
-        Ok(())
-    }
-
     async fn handle(&self, _value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
         let sig = Signature::try_from(input.shared.signature.as_slice()).unwrap();
         println!("{} > {:?} tx {}", indent(&input.path), input.path, sig);
         Ok(())
     }
 
-    async fn handle_cpi_return(&self, caller_cpi_path: &Path) -> HandlerResult<()> {
-        println!(
-            "{} <<< {:?} RETURN",
-            indent(caller_cpi_path),
-            caller_cpi_path
-        );
-        Ok(())
-    }
-
-    async fn handle_tx_end(&self, txn: &TransactionUpdate) -> HandlerResult<()> {
-        let sig =
-            Signature::try_from(txn.transaction.as_ref().unwrap().signature.as_slice()).unwrap();
-        println!("=== endtx {sig}");
-        println!();
+    async fn handle_lifecycle(&self, event: &LifecycleEvent<'_>) -> HandlerResult<()> {
+        match event {
+            LifecycleEvent::TxStart(txn) => {
+                let sig = Signature::try_from(
+                    txn.transaction.as_ref().unwrap().signature.as_slice(),
+                )
+                .unwrap();
+                println!("--- starttx {sig}");
+            },
+            LifecycleEvent::TxEnd(txn) => {
+                let sig = Signature::try_from(
+                    txn.transaction.as_ref().unwrap().signature.as_slice(),
+                )
+                .unwrap();
+                println!("=== endtx {sig}");
+                println!();
+            },
+            LifecycleEvent::CpiEnter(caller_cpi_path) => {
+                println!(
+                    "{} >>> {:?} ENTER",
+                    indent(caller_cpi_path),
+                    caller_cpi_path
+                );
+            },
+            LifecycleEvent::CpiReturn(caller_cpi_path) => {
+                println!(
+                    "{} <<< {:?} RETURN",
+                    indent(caller_cpi_path),
+                    caller_cpi_path
+                );
+            },
+        }
         Ok(())
     }
 }
