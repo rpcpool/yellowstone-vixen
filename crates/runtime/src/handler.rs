@@ -39,9 +39,15 @@ pub enum LifecycleEvent<'a> {
     /// A transaction has ended.
     TxEnd,
     /// CPI call from the provided path has been entered.
-    CpiEnter { caller: &'a CpiPath },
+    CpiEnter {
+        /// CPI caller path (i.e. the parent in the parent-child relation)
+        caller: &'a CpiPath
+    },
     /// CPI call returned to the provided path.
-    CpiReturn { caller: &'a CpiPath },
+    CpiReturn {
+        /// CPI caller path (i.e. the parent in the parent-child relation)
+        caller: &'a CpiPath
+    },
 }
 
 /// A handler callback for a parsed value and its corresponding raw event.
