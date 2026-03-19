@@ -246,6 +246,11 @@ impl InstructionUpdate {
     /// Returns an error if the transaction update received is in an unparseable
     /// form.
     pub fn parse_from_txn(txn: &TransactionUpdate) -> Result<Vec<Self>, ParseError> {
+        Self::parse_from_txn_detailed(txn).map(|(_, ixs)| ixs)
+    }
+
+    /// add the shared struct
+    pub fn parse_from_txn_detailed(txn: &TransactionUpdate) -> Result<(Arc<InstructionShared>, Vec<Self>), ParseError> {
         let TransactionUpdate { transaction, slot } = txn.clone();
         let SubscribeUpdateTransactionInfo {
             signature,
@@ -319,7 +324,7 @@ impl InstructionUpdate {
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
 
-        Ok(outer)
+        Ok((shared, outer))
     }
 
     // called once per tx

@@ -86,6 +86,7 @@ where R: Sync
 }
 
 pub(crate) use pipeline_error::Errors as PipelineErrors;
+use vixen_core::instruction::InstructionShared;
 
 mod pipeline_error {
     use smallvec::SmallVec;
@@ -275,6 +276,7 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
     fn handle_lifecycle<'h>(
         &'h self,
         _txn: &'h TransactionUpdate,
+        _instruction_shared: &'h InstructionShared,
         _event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {})
@@ -308,6 +310,7 @@ where
     fn handle_lifecycle<'h>(
         &'h self,
         txn: &'h TransactionUpdate,
+        instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
@@ -340,9 +343,10 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
     fn handle_lifecycle<'h>(
         &'h self,
         txn: &'h TransactionUpdate,
+        instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn, event)
+        <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn,instruction_shared, event)
     }
 }
 

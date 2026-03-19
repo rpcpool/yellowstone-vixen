@@ -40,10 +40,10 @@ impl InstructionPipeline {
     /// Returns an error if any of the sub-pipelines return an error.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let mut err = None;
-        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let (ref instruction_shared, ixs) = InstructionUpdate::parse_from_txn_detailed(txn).map_err(PipelineErrors::parse)?;
 
         for pipe in &*self.0 {
-            pipe.handle_lifecycle(txn, &LifecycleEvent::TxStart).await;
+            pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart).await;
         }
 
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
@@ -53,7 +53,7 @@ impl InstructionPipeline {
                     TreeStep::EnterCpiCallFromNode {
                         ref caller_cpi_path,
                     } => {
-                        pipe.handle_lifecycle(txn, &LifecycleEvent::CpiEnter {
+                        pipe.handle_lifecycle(txn, instruction_shared,&LifecycleEvent::CpiEnter {
                             caller_cpi_path: caller_cpi_path,
                         })
                         .await;
@@ -62,7 +62,7 @@ impl InstructionPipeline {
                     TreeStep::ReturnFromCpiCallsToNode {
                         ref caller_cpi_path,
                     } => {
-                        pipe.handle_lifecycle(txn, &LifecycleEvent::CpiReturn {
+                        pipe.handle_lifecycle(txn,  instruction_shared,&LifecycleEvent::CpiReturn {
                             caller_cpi_path: caller_cpi_path,
                         })
                         .await;
@@ -85,7 +85,7 @@ impl InstructionPipeline {
         }
 
         for pipe in &*self.0 {
-            pipe.handle_lifecycle(txn, &LifecycleEvent::TxEnd).await;
+            pipe.handle_lifecycle(txn, instruction_shared,&LifecycleEvent::TxEnd).await;
         }
 
         if let Some(h) = err {
@@ -130,18 +130,18 @@ impl SingleInstructionPipeline {
     /// # Errors
     /// Returns an error if the inner pipeline fails.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
-        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let (ref instruction_shared, ixs) = InstructionUpdate::parse_from_txn_detailed(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
         let mut prev_depth: usize = 0;
 
-        pipe.handle_lifecycle(txn, &LifecycleEvent::TxStart).await;
+        pipe.handle_lifecycle(txn, &instruction_shared, &LifecycleEvent::TxStart).await;
 
         for mode in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match mode {
                 TreeStep::EnterCpiCallFromNode {
                     ref caller_cpi_path,
                 } => {
-                    pipe.handle_lifecycle(txn, &LifecycleEvent::CpiEnter {
+                    pipe.handle_lifecycle(txn, instruction_shared,&LifecycleEvent::CpiEnter {
                         caller_cpi_path: caller_cpi_path,
                     })
                     .await;
@@ -150,7 +150,7 @@ impl SingleInstructionPipeline {
                 TreeStep::ReturnFromCpiCallsToNode {
                     ref caller_cpi_path,
                 } => {
-                    pipe.handle_lifecycle(txn, &LifecycleEvent::CpiReturn {
+                    pipe.handle_lifecycle(txn, instruction_shared,&LifecycleEvent::CpiReturn {
                         caller_cpi_path: caller_cpi_path,
                     })
                     .await;
@@ -188,7 +188,7 @@ impl SingleInstructionPipeline {
             }
         }
 
-        pipe.handle_lifecycle(txn, &LifecycleEvent::TxEnd).await;
+        pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxEnd).await;
 
         Ok(())
     }

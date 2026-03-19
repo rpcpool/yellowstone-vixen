@@ -7,7 +7,7 @@ use smallvec::SmallVec;
 use vixen_core::{
     GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder, TransactionUpdate,
 };
-
+use vixen_core::instruction::InstructionShared;
 use crate::{
     handler::{DynPipeline, LifecycleEvent, PipelineErrors},
     Handler,
@@ -154,6 +154,7 @@ where
     fn handle_lifecycle<'h>(
         &'h self,
         txn: &'h TransactionUpdate,
+        instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
     ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
