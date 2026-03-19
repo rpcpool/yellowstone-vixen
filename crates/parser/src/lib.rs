@@ -16,6 +16,9 @@ pub use error::*;
 
 pub mod prelude;
 
+/// Re-exported for use by `include_vixen_parser!` generated code.
+#[doc(hidden)]
+pub use base64;
 pub use yellowstone_vixen_core::{KeyBytes, Pubkey};
 yellowstone_vixen_core::pubkey_convert_helpers!(solana_pubkey::Pubkey);
 

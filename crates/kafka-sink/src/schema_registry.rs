@@ -210,7 +210,7 @@ pub fn ensure_schemas_registered(
     tracing::info!(url = %base_url, "Registering schemas with Schema Registry");
 
     for schema_def in schemas {
-        let schema_id = register_schema(&client, base_url, &schema_def.subject, &schema_def.schema, config)
+        let schema_id = register_schema(&client, base_url, &schema_def.subject, schema_def.schema, config)
             .or_else(|e| {
                 tracing::debug!(subject = %schema_def.subject, error = %e, "Registration failed, trying existing");
                 get_latest_schema_id_for_subject(&client, base_url, &schema_def.subject, config)

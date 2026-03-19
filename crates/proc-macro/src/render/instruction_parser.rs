@@ -447,14 +447,15 @@ pub fn instruction_parser(
             logs: &[String],
         ) -> Vec<#wrapper_ident> {
             const PREFIX: &str = "Program data: ";
+            // First 8 bytes of sha256("anchor:event"), see anchor-lang event.rs
             const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
             logs.iter()
                 .filter_map(|line| {
                     let encoded = line.strip_prefix(PREFIX)?;
 
-                    let decoded = base64::Engine::decode(
-                        &base64::engine::general_purpose::STANDARD,
+                    let decoded = yellowstone_vixen_parser::base64::Engine::decode(
+                        &yellowstone_vixen_parser::base64::engine::general_purpose::STANDARD,
                         encoded.trim(),
                     ).ok()?;
 
