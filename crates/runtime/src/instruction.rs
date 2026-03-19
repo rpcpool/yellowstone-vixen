@@ -53,14 +53,14 @@ impl InstructionPipeline {
                     TreeStep::EnterCpiCallFromNode {
                         ref caller_cpi_path,
                     } => {
-                        pipe.handle_lifecycle(txn, &LifecycleEvent::CpiEnter(caller_cpi_path))
+                        pipe.handle_lifecycle(txn, &LifecycleEvent::CpiEnter{ caller: caller_cpi_path })
                             .await;
                         continue;
                     },
                     TreeStep::ReturnFromCpiCallsToNode {
                         ref caller_cpi_path,
                     } => {
-                        pipe.handle_lifecycle(txn, &LifecycleEvent::CpiReturn(caller_cpi_path))
+                        pipe.handle_lifecycle(txn, &LifecycleEvent::CpiReturn{ caller: caller_cpi_path })
                             .await;
                         continue;
                     },
@@ -137,14 +137,14 @@ impl SingleInstructionPipeline {
                 TreeStep::EnterCpiCallFromNode {
                     ref caller_cpi_path,
                 } => {
-                    pipe.handle_lifecycle(txn, &LifecycleEvent::CpiEnter(caller_cpi_path))
+                    pipe.handle_lifecycle(txn, &LifecycleEvent::CpiEnter{ caller: caller_cpi_path })
                         .await;
                     continue;
                 },
                 TreeStep::ReturnFromCpiCallsToNode {
                     ref caller_cpi_path,
                 } => {
-                    pipe.handle_lifecycle(txn, &LifecycleEvent::CpiReturn(caller_cpi_path))
+                    pipe.handle_lifecycle(txn, &LifecycleEvent::CpiReturn{ caller: caller_cpi_path })
                         .await;
                     continue;
                 },

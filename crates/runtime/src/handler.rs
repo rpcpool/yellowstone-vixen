@@ -19,6 +19,19 @@ type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
 pub type HandlerResult<T> = Result<T, BoxedError>;
 
+// --- starttx 5PkaEdcz...
+//    >>> 3 ENTER
+//      > 3.1 tx 5PkaEdcz...
+//      > 3.3 tx 5PkaEdcz...
+//      > 3.4 tx 5PkaEdcz...
+//    <<< 3 RETURN
+//    >>> 4 ENTER
+//      > 4.2 tx 5PkaEdcz...
+//    <<< 4 RETURN
+//    > 5 tx 5PkaEdcz...
+// ==
+
+
 /// More callback hooks from transaction traversal.
 #[derive(Debug)]
 pub enum LifecycleEvent<'a> {
@@ -27,9 +40,9 @@ pub enum LifecycleEvent<'a> {
     /// A transaction has ended.
     TxEnd,
     /// CPI call from the provided path has been entered.
-    CpiEnter(&'a CpiPath),
+    CpiEnter{caller: &'a CpiPath},
     /// CPI call returned to the provided path.
-    CpiReturn(&'a CpiPath),
+    CpiReturn{caller: &'a CpiPath},
 }
 
 /// A handler callback for a parsed value and its corresponding raw event.

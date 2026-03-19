@@ -61,18 +61,18 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
                 println!("=== endtx {sig}");
                 println!();
             },
-            LifecycleEvent::CpiEnter(caller_cpi_path) => {
+            LifecycleEvent::CpiEnter{ caller } => {
                 println!(
                     "{} >>> {:?} ENTER",
-                    indent(caller_cpi_path),
-                    caller_cpi_path
+                    indent(caller),
+                    caller
                 );
             },
-            LifecycleEvent::CpiReturn(caller_cpi_path) => {
+            LifecycleEvent::CpiReturn{ caller } => {
                 println!(
                     "{} <<< {:?} RETURN",
-                    indent(caller_cpi_path),
-                    caller_cpi_path
+                    indent(caller),
+                    caller
                 );
             },
         }
