@@ -19,6 +19,7 @@ type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
 pub type HandlerResult<T> = Result<T, BoxedError>;
 
+/// More callback hooks from transaction traversal.
 #[derive(Debug)]
 pub enum LifecycleEvent<'a> {
     /// A transaction has started.
