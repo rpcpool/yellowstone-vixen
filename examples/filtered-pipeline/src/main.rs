@@ -22,6 +22,7 @@ use yellowstone_vixen::{
     },
     HandlerResult,
 };
+use yellowstone_vixen::vixen_core::instruction::InstructionShared;
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::{YellowstoneGrpcConfig, YellowstoneGrpcSource};
 
@@ -45,6 +46,7 @@ impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger 
     async fn handle_lifecycle(
         &self,
         txn: &TransactionUpdate,
+        instruction_shared: &InstructionShared,
         event: &LifecycleEvent<'_>,
     ) -> HandlerResult<()> {
         match event {

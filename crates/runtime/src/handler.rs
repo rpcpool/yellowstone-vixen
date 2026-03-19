@@ -61,6 +61,7 @@ where R: Sync
     fn handle_lifecycle(
         &self,
         _txn: &TransactionUpdate,
+        _instruction_shared: &InstructionShared,
         _event: &LifecycleEvent<'_>,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
         async { Ok(()) }
@@ -79,9 +80,10 @@ where R: Sync
     fn handle_lifecycle(
         &self,
         txn: &TransactionUpdate,
+        instruction_shared: &InstructionShared,
         event: &LifecycleEvent<'_>,
     ) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U, R>>::handle_lifecycle(self, txn, event)
+        <T as Handler<U, R>>::handle_lifecycle(self, txn, instruction_shared,event)
     }
 }
 
@@ -245,11 +247,12 @@ where
     pub async fn handle_lifecycle(
         &self,
         txn: &TransactionUpdate,
+        instruction_shared: &InstructionShared,
         event: &LifecycleEvent<'_>,
     ) -> Result<(), PipelineErrors> {
         let errs = (&self.1)
             .into_iter()
-            .map(|h| async move { h.handle_lifecycle(txn, event).await })
+            .map(|h| async move { h.handle_lifecycle(txn, instruction_shared,event).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -314,7 +317,7 @@ where
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
-            if let Err(e) = Pipeline::handle_lifecycle(self, txn, event).await {
+            if let Err(e) = Pipeline::handle_lifecycle(self, txn, instruction_shared,event).await {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })
