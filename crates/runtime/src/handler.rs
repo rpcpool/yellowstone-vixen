@@ -41,12 +41,12 @@ pub enum LifecycleEvent<'a> {
     /// CPI call from the provided path has been entered.
     CpiEnter {
         /// CPI caller path (i.e. the parent in the parent-child relation)
-        caller: &'a CpiPath
+        caller_cpi_path: &'a CpiPath
     },
     /// CPI call returned to the provided path.
     CpiReturn {
         /// CPI caller path (i.e. the parent in the parent-child relation)
-        caller: &'a CpiPath
+        caller_cpi_path: &'a CpiPath
     },
 }
 
