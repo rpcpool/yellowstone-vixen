@@ -31,7 +31,6 @@ pub type HandlerResult<T> = Result<T, BoxedError>;
 //    > 5 tx 5PkaEdcz...
 // ==
 
-
 /// More callback hooks from transaction traversal.
 #[derive(Debug)]
 pub enum LifecycleEvent<'a> {
@@ -40,9 +39,9 @@ pub enum LifecycleEvent<'a> {
     /// A transaction has ended.
     TxEnd,
     /// CPI call from the provided path has been entered.
-    CpiEnter{caller: &'a CpiPath},
+    CpiEnter { caller: &'a CpiPath },
     /// CPI call returned to the provided path.
-    CpiReturn{caller: &'a CpiPath},
+    CpiReturn { caller: &'a CpiPath },
 }
 
 /// A handler callback for a parsed value and its corresponding raw event.
