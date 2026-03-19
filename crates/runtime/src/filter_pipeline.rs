@@ -121,7 +121,7 @@ where
         let errs = self
             .handlers
             .into_iter()
-            .map(|h| async move { h.handle_lifecycle(txn, instruction_shared,event).await })
+            .map(|h| async move { h.handle_lifecycle(txn, instruction_shared, event).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -160,7 +160,9 @@ where
         event: &'h LifecycleEvent<'h>,
     ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         Box::pin(async move {
-            if let Err(e) = FilterPipeline::handle_lifecycle(self, txn, instruction_shared,event).await {
+            if let Err(e) =
+                FilterPipeline::handle_lifecycle(self, txn, instruction_shared, event).await
+            {
                 e.handle::<P::Input>(&self.id()).as_unit();
             }
         })

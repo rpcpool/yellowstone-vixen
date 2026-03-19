@@ -17,12 +17,11 @@ use yellowstone_vixen::{
     filter_pipeline::FilterPipeline,
     handler::LifecycleEvent,
     vixen_core::{
-        instruction::{InstructionUpdate, Path},
+        instruction::{InstructionShared, InstructionUpdate, Path},
         KeyBytes, Prefilter, TransactionUpdate,
     },
     HandlerResult,
 };
-use yellowstone_vixen::vixen_core::instruction::InstructionShared;
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::{YellowstoneGrpcConfig, YellowstoneGrpcSource};
 
