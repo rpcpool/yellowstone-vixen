@@ -41,12 +41,12 @@ pub enum LifecycleEvent<'a> {
     /// CPI call from the provided path has been entered.
     CpiEnter {
         /// CPI caller path (i.e. the parent in the parent-child relation)
-        caller_cpi_path: &'a CpiPath
+        caller_cpi_path: &'a CpiPath,
     },
     /// CPI call returned to the provided path.
     CpiReturn {
         /// CPI caller path (i.e. the parent in the parent-child relation)
-        caller_cpi_path: &'a CpiPath
+        caller_cpi_path: &'a CpiPath,
     },
 }
 
@@ -346,7 +346,7 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
         instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn,instruction_shared, event)
+        <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn, instruction_shared, event)
     }
 }
 

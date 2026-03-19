@@ -5,9 +5,10 @@ use std::{borrow::Cow, fmt::Debug};
 use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
 use vixen_core::{
-    GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder, TransactionUpdate,
+    instruction::InstructionShared, GetPrefilter, ParseError, Parser, ParserId, Prefilter,
+    PrefilterBuilder, TransactionUpdate,
 };
-use vixen_core::instruction::InstructionShared;
+
 use crate::{
     handler::{DynPipeline, LifecycleEvent, PipelineErrors},
     Handler,
