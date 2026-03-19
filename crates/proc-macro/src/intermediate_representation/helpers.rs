@@ -219,7 +219,11 @@ fn map_type(t: &codama_nodes::TypeNode) -> FieldTypeIr {
     use codama_nodes::{NumberFormat as NF, TypeNode as T};
 
     match t {
-        T::String(_) | T::SizePrefix(_) => FieldTypeIr::Scalar(ScalarIr::String),
+        T::String(_) => FieldTypeIr::Scalar(ScalarIr::String),
+        T::SizePrefix(sp) => match sp.r#type.as_ref() {
+            T::Bytes(_) => FieldTypeIr::Scalar(ScalarIr::Bytes),
+            _ => FieldTypeIr::Scalar(ScalarIr::String),
+        },
         T::Bytes(_) => FieldTypeIr::Scalar(ScalarIr::Bytes),
         T::PublicKey(_) => FieldTypeIr::Scalar(ScalarIr::PublicKey),
         T::Boolean(_) => FieldTypeIr::Scalar(ScalarIr::Bool),
