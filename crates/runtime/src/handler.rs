@@ -21,9 +21,13 @@ pub type HandlerResult<T> = Result<T, BoxedError>;
 
 #[derive(Debug)]
 pub enum LifecycleEvent<'a> {
+    /// A transaction has started.
     TxStart,
+    /// A transaction has ended.
     TxEnd,
+    /// CPI call from the provided path has been entered.
     CpiEnter(&'a CpiPath),
+    /// CPI call returned to the provided path.
     CpiReturn(&'a CpiPath),
 }
 
