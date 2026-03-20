@@ -17,7 +17,7 @@
 ///   deduplicated (the instruction copy is kept)
 /// - Appends an `AnchorEventOutput` wrapper message with:
 ///   - `optional Instructions instruction = 1;`
-///   - `repeated AnchorEvents anchor_events = 2;`
+///   - `repeated AnchorEvents program_events = 2;`
 ///
 /// Returns `(combined_schema, wrapper_message_index)` where
 /// `wrapper_message_index` is the 0-based position of the `AnchorEventOutput`
@@ -142,7 +142,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
     // Append the wrapper message.
     out.push_str(
         "message AnchorEventOutput {\n\x20 optional Instructions instruction = 1;\n\x20 repeated \
-         AnchorEvents anchor_events = 2;\n}\n",
+         AnchorEvents program_events = 2;\n}\n",
     );
 
     // message_index is the 0-based position of the target message in the
@@ -393,7 +393,7 @@ message Instructions {
         // Wrapper message
         assert!(combined.contains("message AnchorEventOutput {"));
         assert!(combined.contains("optional Instructions instruction = 1;"));
-        assert!(combined.contains("repeated AnchorEvents anchor_events = 2;"));
+        assert!(combined.contains("repeated AnchorEvents program_events = 2;"));
 
         // Message index: 5 ix + 4 event (minus PublicKey) + 1 wrapper = 10, index = 9
         assert_eq!(message_index, 9);

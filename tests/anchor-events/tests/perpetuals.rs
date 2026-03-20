@@ -61,7 +61,7 @@ fn check_merged_protobuf_schema() {
 /// 2. BorrowFromCustodyEvent — CPI self-invocation event
 ///
 /// The composable parser routes each to the correct inner parser, producing
-/// `AnchorEventOutput { instruction, anchor_events }`.
+/// `AnchorEventOutput { instruction, program_events }`.
 ///
 #[tokio::test]
 async fn parse_borrow_from_custody_with_cpi_event() {
@@ -110,7 +110,7 @@ async fn parse_borrow_from_custody_with_cpi_event() {
                 },
             },
         }),
-        anchor_events: vec![perpetuals_events::Instructions {
+        program_events: vec![perpetuals_events::Instructions {
             instruction: perpetuals_events::instruction::Instruction::BorrowFromCustodyEvent {
                 accounts: perpetuals_events::instruction::BorrowFromCustodyEventAccounts {
                     remaining_accounts: vec![p("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN")],
@@ -157,7 +157,7 @@ async fn proto_round_trip_anchor_event_output() {
         .expect("no parsed output");
 
     assert!(output.instruction.is_some());
-    assert!(!output.anchor_events.is_empty());
+    assert!(!output.program_events.is_empty());
 
     let mut buf = Vec::new();
 

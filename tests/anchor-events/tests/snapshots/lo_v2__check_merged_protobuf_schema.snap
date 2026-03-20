@@ -357,5 +357,5 @@ message AnchorEvents {
 
 message AnchorEventOutput {
   optional Instructions instruction = 1;
-  repeated AnchorEvents anchor_events = 2;
+  repeated AnchorEvents program_events = 2;
 }

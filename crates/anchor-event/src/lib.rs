@@ -60,7 +60,7 @@ pub struct AnchorEventOutput<InstructionOut, EventOut> {
     /// Parsed instruction (None if this was a CPI event or filtered).
     pub instruction: Option<InstructionOut>,
     /// Events parsed from logs and/or CPI self-invocations.
-    pub anchor_events: Vec<EventOut>,
+    pub program_events: Vec<EventOut>,
 }
 
 #[cfg(feature = "proto")]
@@ -74,7 +74,7 @@ where
             prost::encoding::message::encode(1, ix, buf);
         }
 
-        for event in &self.anchor_events {
+        for event in &self.program_events {
             prost::encoding::message::encode(2, event, buf);
         }
     }
@@ -100,7 +100,7 @@ where
             len += prost::encoding::message::encoded_len(1, ix);
         }
 
-        for event in &self.anchor_events {
+        for event in &self.program_events {
             len += prost::encoding::message::encoded_len(2, event);
         }
 
@@ -110,7 +110,7 @@ where
     fn clear(&mut self) {
         self.instruction = None;
 
-        self.anchor_events.clear();
+        self.program_events.clear();
     }
 }
 
@@ -119,7 +119,7 @@ impl<InstructionOut, EventOut> Default for AnchorEventOutput<InstructionOut, Eve
     fn default() -> Self {
         Self {
             instruction: None,
-            anchor_events: Vec::new(),
+            program_events: Vec::new(),
         }
     }
 }
@@ -244,13 +244,13 @@ macro_rules! impl_parser {
                     Err(e) => return Err(e),
                 };
 
-                let mut anchor_events = Vec::new();
+                let mut program_events = Vec::new();
 
                 // 2. Scan inner instructions for CPI self-invocation events.
                 for inner in &value.inner {
                     if is_anchor_cpi_event(&inner.data) && inner.program == self.program_id {
                         match self.event_parser.parse(inner).await {
-                            Ok(event) => anchor_events.push(event),
+                            Ok(event) => program_events.push(event),
                             Err(ParseError::Filtered) => continue,
                             Err(e) => return Err(e),
                         }
@@ -265,20 +265,20 @@ macro_rules! impl_parser {
                         synthetic_instruction(self.program_id, payload, &value.shared, &value.path);
 
                     match self.event_parser.parse(&synthetic).await {
-                        Ok(event) => anchor_events.push(event),
+                        Ok(event) => program_events.push(event),
                         Err(ParseError::Filtered) => continue,
                         Err(e) => return Err(e),
                     }
                 }
 
                 // If we got neither an instruction nor any events, filter.
-                if ix_result.is_none() && anchor_events.is_empty() {
+                if ix_result.is_none() && program_events.is_empty() {
                     return Err(ParseError::Filtered);
                 }
 
                 Ok(AnchorEventOutput {
                     instruction: ix_result,
-                    anchor_events,
+                    program_events,
                 })
             }
         }

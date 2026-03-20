@@ -113,7 +113,7 @@ async fn parse_fill_order_transaction() {
                 },
             },
         }),
-        anchor_events: vec![],
+        program_events: vec![],
     }];
 
     let expected_refs: Vec<_> = expected.iter().collect();

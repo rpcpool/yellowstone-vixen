@@ -73,7 +73,7 @@ async fn parse_flash_fill_transaction() {
                     },
                 },
             }),
-            anchor_events: vec![],
+            program_events: vec![],
         },
         // 2. FlashFillOrder — instruction + TradeEvent from "Program data:" log
         AnchorEventOutput {
@@ -101,7 +101,7 @@ async fn parse_flash_fill_transaction() {
                     },
                 },
             }),
-            anchor_events: vec![limit_order_events::Instructions {
+            program_events: vec![limit_order_events::Instructions {
                 instruction: limit_order_events::instruction::Instruction::TradeEvent {
                     accounts: limit_order_events::instruction::TradeEventAccounts {
                         remaining_accounts: vec![],

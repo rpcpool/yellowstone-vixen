@@ -86,7 +86,7 @@ async fn parse_initialize_token_transaction() {
                 },
             },
         }),
-        anchor_events: vec![invite_escrow_events::Instructions {
+        program_events: vec![invite_escrow_events::Instructions {
             instruction: invite_escrow_events::instruction::Instruction::Initialize {
                 accounts: invite_escrow_events::instruction::InitializeAccounts {
                     remaining_accounts: vec![],
