@@ -465,7 +465,10 @@ pub fn instruction_parser(
 
                     // Skip standalone CPI events — they are collected by the
                     // parent instruction's parse call below.
-                    if yellowstone_vixen_parser::is_cpi_event(&ix_update.data) {
+                    // First 8 bytes of sha256("anchor:event"), see anchor-lang event.rs
+                    const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
+
+                    if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
                         return Err(ParseError::Filtered);
                     }
 
@@ -479,7 +482,8 @@ pub fn instruction_parser(
 
                     // 2. Scan inner instructions for CPI self-invocation events.
                     for inner in &ix_update.inner {
-                        if yellowstone_vixen_parser::is_cpi_event(&inner.data)
+                        if inner.data.len() >= 8
+                            && inner.data[..8] == EVENT_IX_TAG
                             && *inner.program == PROGRAM_ID
                         {
                             if let Ok(ev) = resolve_event_default(&inner.accounts, &inner.data) {

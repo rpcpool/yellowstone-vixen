@@ -2,8 +2,9 @@ use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_parser::EVENT_IX_TAG;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
+
+const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
 include_vixen_parser!("idls/perpetuals.json");
 

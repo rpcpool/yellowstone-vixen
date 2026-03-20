@@ -16,9 +16,6 @@ pub use error::*;
 
 pub mod prelude;
 
-mod program_event;
-pub use program_event::*;
-
 /// Re-exported for use by `include_vixen_parser!` generated code.
 #[doc(hidden)]
 pub use base64;
