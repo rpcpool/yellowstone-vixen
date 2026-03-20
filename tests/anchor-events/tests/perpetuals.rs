@@ -1,7 +1,7 @@
 use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_anchor_event::{
-    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput, EVENT_IX_TAG,
+    merge_proto_schemas, AnchorEventInstructionParser, ProgramEventOutput, EVENT_IX_TAG,
 };
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
@@ -40,7 +40,7 @@ fn check_merged_protobuf_schema() {
         perpetuals_events::PROTOBUF_SCHEMA,
     );
 
-    // message_index should point to AnchorEventOutput (the last message)
+    // message_index should point to ProgramEventOutput (the last message)
     let message_count =
         schema.matches("\nmessage ").count() + if schema.starts_with("message ") { 1 } else { 0 };
     assert_eq!(message_index, (message_count - 1) as i32);
@@ -61,7 +61,7 @@ fn check_merged_protobuf_schema() {
 /// 2. BorrowFromCustodyEvent — CPI self-invocation event
 ///
 /// The composable parser routes each to the correct inner parser, producing
-/// `AnchorEventOutput { instruction, program_events }`.
+/// `ProgramEventOutput { instruction, program_events }`.
 ///
 #[tokio::test]
 async fn parse_borrow_from_custody_with_cpi_event() {
@@ -76,7 +76,7 @@ async fn parse_borrow_from_custody_with_cpi_event() {
         .find_map(|out| out.as_ref())
         .expect("no parsed output found");
 
-    let expected = AnchorEventOutput {
+    let expected = ProgramEventOutput {
         instruction: Some(perpetuals::Instructions {
             instruction: perpetuals::instruction::Instruction::BorrowFromCustody {
                 accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
@@ -135,13 +135,13 @@ async fn parse_borrow_from_custody_with_cpi_event() {
 }
 
 // ---------------------------------------------------------------------------
-// Proto encode round-trip for AnchorEventOutput
+// Proto encode round-trip for ProgramEventOutput
 // ---------------------------------------------------------------------------
 
 ///
-/// Proto encode round-trip for the combined `AnchorEventOutput` wrapper.
+/// Proto encode round-trip for the combined `ProgramEventOutput` wrapper.
 ///
-/// Verifies that the manual `prost::Message` impl on `AnchorEventOutput`
+/// Verifies that the manual `prost::Message` impl on `ProgramEventOutput`
 /// correctly encodes both the instruction (tag 1) and events (tag 2),
 /// and that `encoded_len()` matches the actual output size.
 ///

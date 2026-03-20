@@ -1,5 +1,5 @@
 use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_anchor_event::{AnchorEventInstructionParser, AnchorEventOutput};
+use yellowstone_vixen_anchor_event::{AnchorEventInstructionParser, ProgramEventOutput};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
@@ -54,7 +54,7 @@ async fn parse_flash_fill_transaction() {
 
     let expected = vec![
         // 1. PreFlashFillOrder — instruction only, no events
-        AnchorEventOutput {
+        ProgramEventOutput {
             instruction: Some(limit_order::Instructions {
                 instruction: limit_order::instruction::Instruction::PreFlashFillOrder {
                     accounts: limit_order::instruction::PreFlashFillOrderAccounts {
@@ -76,7 +76,7 @@ async fn parse_flash_fill_transaction() {
             program_events: vec![],
         },
         // 2. FlashFillOrder — instruction + TradeEvent from "Program data:" log
-        AnchorEventOutput {
+        ProgramEventOutput {
             instruction: Some(limit_order::Instructions {
                 instruction: limit_order::instruction::Instruction::FlashFillOrder {
                     accounts: limit_order::instruction::FlashFillOrderAccounts {

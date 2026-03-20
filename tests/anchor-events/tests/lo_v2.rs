@@ -1,6 +1,6 @@
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_anchor_event::{
-    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput,
+    merge_proto_schemas, AnchorEventInstructionParser, ProgramEventOutput,
 };
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
@@ -45,7 +45,7 @@ async fn parse_fill_order_transaction() {
 
     let outputs: Vec<_> = ixs.iter().filter_map(|out| out.as_ref()).collect();
 
-    let expected = vec![AnchorEventOutput {
+    let expected = vec![ProgramEventOutput {
         instruction: Some(limit_order2::Instructions {
             instruction: limit_order2::instruction::Instruction::FillOrder {
                 accounts: limit_order2::instruction::FillOrderAccounts {

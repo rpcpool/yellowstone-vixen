@@ -331,7 +331,7 @@ message ProgramEvents {
   }
 }
 
-message AnchorEventOutput {
+message ProgramEventOutput {
   optional Instructions instruction = 1;
   repeated ProgramEvents program_events = 2;
 }

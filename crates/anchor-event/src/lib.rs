@@ -56,7 +56,7 @@ pub const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
 /// Combined output from instruction + event parsing.
 #[derive(Debug, PartialEq)]
-pub struct AnchorEventOutput<InstructionOut, EventOut> {
+pub struct ProgramEventOutput<InstructionOut, EventOut> {
     /// Parsed instruction (None if this was a CPI event or filtered).
     pub instruction: Option<InstructionOut>,
     /// Events parsed from logs and/or CPI self-invocations.
@@ -64,7 +64,7 @@ pub struct AnchorEventOutput<InstructionOut, EventOut> {
 }
 
 #[cfg(feature = "proto")]
-impl<InstructionOut, EventOut> prost::Message for AnchorEventOutput<InstructionOut, EventOut>
+impl<InstructionOut, EventOut> prost::Message for ProgramEventOutput<InstructionOut, EventOut>
 where
     InstructionOut: prost::Message,
     EventOut: prost::Message,
@@ -86,10 +86,10 @@ where
         _buf: &mut impl prost::bytes::Buf,
         _ctx: prost::encoding::DecodeContext,
     ) -> Result<(), prost::DecodeError> {
-        // AnchorEventOutput is encode-only. Decoding from proto is not supported
+        // ProgramEventOutput is encode-only. Decoding from proto is not supported
         // because the inner types (Instructions) do not implement Default.
         Err(prost::DecodeError::new(
-            "AnchorEventOutput does not support proto decoding",
+            "ProgramEventOutput does not support proto decoding",
         ))
     }
 
@@ -115,7 +115,7 @@ where
 }
 
 #[cfg(feature = "proto")]
-impl<InstructionOut, EventOut> Default for AnchorEventOutput<InstructionOut, EventOut> {
+impl<InstructionOut, EventOut> Default for ProgramEventOutput<InstructionOut, EventOut> {
     fn default() -> Self {
         Self {
             instruction: None,
@@ -276,7 +276,7 @@ macro_rules! impl_parser {
                     return Err(ParseError::Filtered);
                 }
 
-                Ok(AnchorEventOutput {
+                Ok(ProgramEventOutput {
                     instruction: ix_result,
                     program_events,
                 })
@@ -294,7 +294,7 @@ where
     EventParser::Output: Send,
 {
     type Input = InstructionUpdate;
-    type Output = AnchorEventOutput<InstructionParser::Output, EventParser::Output>;
+    type Output = ProgramEventOutput<InstructionParser::Output, EventParser::Output>;
 
     impl_parser!();
 }

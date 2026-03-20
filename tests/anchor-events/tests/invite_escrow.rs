@@ -1,7 +1,7 @@
 use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_anchor_event::{
-    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput,
+    merge_proto_schemas, AnchorEventInstructionParser, ProgramEventOutput,
 };
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
@@ -70,7 +70,7 @@ async fn parse_initialize_token_transaction() {
         .find_map(|out| out.as_ref())
         .expect("no parsed output");
 
-    let expected = AnchorEventOutput {
+    let expected = ProgramEventOutput {
         instruction: Some(invite_escrow::Instructions {
             instruction: invite_escrow::instruction::Instruction::Initialize {
                 accounts: invite_escrow::instruction::InitializeAccounts {
