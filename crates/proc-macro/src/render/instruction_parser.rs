@@ -8,7 +8,7 @@ use quote::{format_ident, quote};
 /// A key that identifies a discriminator for collision detection.
 /// Instructions with the same key will match the same discriminator check.
 #[derive(PartialEq, Eq, Clone)]
-enum DiscriminatorKey {
+pub(crate) enum DiscriminatorKey {
     Constant { offset: usize, value: u64 },
     Field { offset: usize, bytes: Vec<u8> },
     Size { size: usize },
@@ -30,7 +30,7 @@ fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec
 }
 
 /// Extract a comparable discriminator key from an instruction for collision detection.
-fn extract_discriminator_key(
+pub(crate) fn extract_discriminator_key(
     instruction: &codama_nodes::InstructionNode,
 ) -> Option<DiscriminatorKey> {
     let discriminator = instruction.discriminators.first()?;
@@ -75,18 +75,18 @@ fn extract_discriminator_key(
 }
 
 /// Information extracted from a discriminator that's needed by both the match arm and helper fn.
-struct DiscriminatorInfo {
+pub(crate) struct DiscriminatorInfo {
     /// TokenStream for the args expression inside the helper fn body.
     /// `None` when the instruction has no arguments.
-    args_expr: Option<TokenStream>,
+    pub(crate) args_expr: Option<TokenStream>,
     /// TokenStream for the discriminator check in the match arm.
-    check: TokenStream,
+    pub(crate) check: TokenStream,
 }
 
 /// Extract discriminator info from an instruction node.
 ///
 /// Returns None if the discriminator can't be processed (unsupported format).
-fn extract_discriminator_info(
+pub(crate) fn extract_discriminator_info(
     instruction: &codama_nodes::InstructionNode,
     args_ident: &syn::Ident,
     has_args: bool,
@@ -321,7 +321,7 @@ fn single_instruction_match_arm(
 /// automatically (highest count first). Instructions sharing both discriminator and account
 /// count produce a runtime error directing the user to [`CustomInstructionParser`].
 ///
-fn collision_group_match_arm(instructions: &[&codama_nodes::InstructionNode]) -> TokenStream {
+pub(crate) fn collision_group_match_arm(instructions: &[&codama_nodes::InstructionNode]) -> TokenStream {
     // Use the first instruction to get the shared discriminator check.
     let first = instructions[0];
 
@@ -430,46 +430,6 @@ pub fn instruction_parser(
         })
         .collect();
 
-    let resolve_events_from_logs = quote! {
-        ///
-        /// Resolve Anchor events from `"Program data: "` transaction log lines.
-        ///
-        /// For each matching line, base64-decodes the payload, prepends the
-        /// Anchor self-CPI event prefix (`EVENT_IX_TAG`), and runs it through
-        /// the standard discriminator matching.  This lets an events-IDL
-        /// parser decode log-emitted events directly, without needing the
-        /// `AnchorEventInstructionParser` wrapper.
-        ///
-        /// Returns successfully parsed events; lines that don't match any
-        /// discriminator are silently skipped.
-        ///
-        pub fn resolve_events_from_logs(
-            logs: &[String],
-        ) -> Vec<#wrapper_ident> {
-            const PREFIX: &str = "Program data: ";
-            // First 8 bytes of sha256("anchor:event"), see anchor-lang event.rs
-            const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
-
-            logs.iter()
-                .filter_map(|line| {
-                    let encoded = line.strip_prefix(PREFIX)?;
-
-                    let decoded = yellowstone_vixen_parser::base64::Engine::decode(
-                        &yellowstone_vixen_parser::base64::engine::general_purpose::STANDARD,
-                        encoded.trim(),
-                    ).ok()?;
-
-                    let mut data = Vec::with_capacity(8 + decoded.len());
-
-                    data.extend_from_slice(&EVENT_IX_TAG);
-                    data.extend_from_slice(&decoded);
-
-                    resolve_instruction_default(&[], &data).ok()
-                })
-                .collect()
-        }
-    };
-
     quote! {
         //
         // Per-instruction parse helper functions.
@@ -496,8 +456,6 @@ pub fn instruction_parser(
 
             Err(ParseError::Filtered)
         }
-
-        #resolve_events_from_logs
 
         ///
         ///  Trait for customizing instruction resolution logic.

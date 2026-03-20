@@ -1,33 +1,19 @@
 use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_anchor_event::{
-    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput,
-};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
+use yellowstone_vixen_parser::ProgramEventOutput;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/lo_v2.json");
-include_vixen_parser!("idls/lo_v2.events.json");
-
-fn make_parser() -> AnchorEventInstructionParser<
-    limit_order2::InstructionParser,
-    limit_order2_events::InstructionParser,
-> {
-    AnchorEventInstructionParser::new(
-        limit_order2::InstructionParser,
-        limit_order2_events::InstructionParser,
-        limit_order2::PROGRAM_ID,
-    )
-}
 
 #[test]
-fn check_events_protobuf_schema() {
-    check_protobuf_format(limit_order2_events::PROTOBUF_SCHEMA);
-    insta::assert_snapshot!(limit_order2_events::PROTOBUF_SCHEMA);
+fn check_protobuf_schema() {
+    check_protobuf_format(limit_order2::PROTOBUF_SCHEMA);
+    insta::assert_snapshot!(limit_order2::PROTOBUF_SCHEMA);
 }
 
 ///
-/// Parse a fill-order transaction using `AnchorEventInstructionParser`.
+/// Parse a fill-order transaction using `program_event_parser()`.
 ///
 /// The fixture contains a `FillOrder` instruction with a binary `swapData`
 /// bytes field (routed through Jupiter). The CPI self-invocation event is
@@ -36,7 +22,7 @@ fn check_events_protobuf_schema() {
 ///
 #[tokio::test]
 async fn parse_fill_order_transaction() {
-    let parser = make_parser();
+    let parser = limit_order2::program_event_parser();
 
     let ixs = tx_fixture!(
         "VLzYfuPuxFcAV841yKgyvuYeJK9VgBKf9YSH4jHGLAJhc84jJZzYbrh97XJRQh3tfsLEAEkws3CRcmhsGeDEdFk",
@@ -45,7 +31,7 @@ async fn parse_fill_order_transaction() {
 
     let outputs: Vec<_> = ixs.iter().filter_map(|out| out.as_ref()).collect();
 
-    let expected = vec![AnchorEventOutput {
+    let expected = vec![ProgramEventOutput {
         instruction: Some(limit_order2::Instructions {
             instruction: limit_order2::instruction::Instruction::FillOrder {
                 accounts: limit_order2::instruction::FillOrderAccounts {
@@ -107,30 +93,15 @@ async fn parse_fill_order_transaction() {
                 args: limit_order2::instruction::FillOrderArgs {
                     input_amount: 111_914_692_932,
                     swap_data: vec![
-                        229, 23, 203, 151, 122, 227, 173, 42, 1, 0, 0, 0, 100, 100, 0, 1, 68, 177,
-                        162, 14, 26, 0, 0, 0, 210, 167, 213, 175, 0, 0, 0, 0, 50, 0, 0,
+                        229, 23, 203, 151, 122, 227, 173, 42, 1, 0, 0, 0, 100, 100, 0, 1, 68,
+                        177, 162, 14, 26, 0, 0, 0, 210, 167, 213, 175, 0, 0, 0, 0, 50, 0, 0,
                     ],
                 },
             },
         }),
-        anchor_events: vec![],
+        events: vec![],
     }];
 
     let expected_refs: Vec<_> = expected.iter().collect();
     assert_eq!(outputs, expected_refs);
-}
-
-#[test]
-fn check_merged_protobuf_schema() {
-    let (schema, message_index) = merge_proto_schemas(
-        limit_order2::PROTOBUF_SCHEMA,
-        limit_order2_events::PROTOBUF_SCHEMA,
-    );
-
-    let message_count =
-        schema.matches("\nmessage ").count() + if schema.starts_with("message ") { 1 } else { 0 };
-    assert_eq!(message_index, (message_count - 1) as i32);
-
-    check_protobuf_format(&schema);
-    insta::assert_snapshot!(schema);
 }

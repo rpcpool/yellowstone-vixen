@@ -13,6 +13,9 @@ pub struct ProtoSchemaOutput {
     /// 0-based index of the `Instructions` message in the proto file descriptor.
     /// `None` if the program has no instructions.
     pub instruction_dispatch_index: Option<usize>,
+    /// 0-based index of the `ProgramEventOutput` wrapper message in the proto file descriptor.
+    /// `None` if the program has no events.
+    pub program_event_output_index: Option<usize>,
 }
 
 ///
@@ -95,6 +98,7 @@ pub fn proto_schema_string(
     };
 
     let mut instruction_dispatch_index = None;
+    let mut has_event_dispatch = false;
 
     for oneof in &schema.oneofs {
         if oneof.variants.is_empty() {
@@ -105,15 +109,37 @@ pub fn proto_schema_string(
             instruction_dispatch_index = Some(message_count);
         }
 
+        if oneof.kind == OneofKindIr::EventDispatch {
+            has_event_dispatch = true;
+        }
+
         render_oneof_parent(&mut out, oneof);
 
         message_count += 1;
     }
 
+    // If we have both instructions and events, emit the ProgramEventOutput wrapper.
+    let program_event_output_index = if has_event_dispatch && instruction_dispatch_index.is_some() {
+        let idx = message_count;
+
+        writeln!(&mut out, "message ProgramEventOutput {{").unwrap();
+        writeln!(&mut out, "  optional Instructions instruction = 1;").unwrap();
+        writeln!(&mut out, "  repeated ProgramEvents events = 2;").unwrap();
+        writeln!(&mut out, "}}").unwrap();
+
+        message_count += 1;
+        let _ = message_count; // suppress unused warning
+
+        Some(idx)
+    } else {
+        None
+    };
+
     ProtoSchemaOutput {
         schema: out,
         account_dispatch_index,
         instruction_dispatch_index,
+        program_event_output_index,
     }
 }
 

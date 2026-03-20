@@ -1,5 +1,5 @@
 ---
-source: tests/anchor-events/tests/invite_escrow.rs
+source: tests/proc-macro-events/tests/invite_escrow.rs
 expression: "invite_escrow::PROTOBUF_SCHEMA"
 ---
 syntax = "proto3";
@@ -191,4 +191,20 @@ message Instructions {
     ClawbackToken clawback_token = 7;
     ExpireToken expire_token = 8;
   }
+}
+message ProgramEvents {
+  oneof event {
+    Initialize initialize = 1;
+    Claim claim = 2;
+    Clawback clawback = 3;
+    Expire expire = 4;
+    InitializeToken initialize_token = 5;
+    ClaimToken claim_token = 6;
+    ClawbackToken clawback_token = 7;
+    ExpireToken expire_token = 8;
+  }
+}
+message ProgramEventOutput {
+  optional Instructions instruction = 1;
+  repeated ProgramEvents events = 2;
 }

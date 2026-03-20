@@ -1,24 +1,11 @@
 use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_anchor_event::{
-    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput, EVENT_IX_TAG,
-};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
+use yellowstone_vixen_parser::{ProgramEventOutput, EVENT_IX_TAG};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/perpetuals.json");
-include_vixen_parser!("idls/perpetuals.events.json");
-
-fn make_parser(
-) -> AnchorEventInstructionParser<perpetuals::InstructionParser, perpetuals_events::InstructionParser>
-{
-    AnchorEventInstructionParser::new(
-        perpetuals::InstructionParser,
-        perpetuals_events::InstructionParser,
-        perpetuals::PROGRAM_ID,
-    )
-}
 
 const BORROW_FROM_CUSTODY_TX: &str =
     "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj";
@@ -28,25 +15,9 @@ const BORROW_FROM_CUSTODY_TX: &str =
 // ---------------------------------------------------------------------------
 
 #[test]
-fn check_events_protobuf_schema() {
-    check_protobuf_format(perpetuals_events::PROTOBUF_SCHEMA);
-    insta::assert_snapshot!(perpetuals_events::PROTOBUF_SCHEMA);
-}
-
-#[test]
-fn check_merged_protobuf_schema() {
-    let (schema, message_index) = merge_proto_schemas(
-        perpetuals::PROTOBUF_SCHEMA,
-        perpetuals_events::PROTOBUF_SCHEMA,
-    );
-
-    // message_index should point to AnchorEventOutput (the last message)
-    let message_count =
-        schema.matches("\nmessage ").count() + if schema.starts_with("message ") { 1 } else { 0 };
-    assert_eq!(message_index, (message_count - 1) as i32);
-
-    check_protobuf_format(&schema);
-    insta::assert_snapshot!(schema);
+fn check_protobuf_schema() {
+    check_protobuf_format(perpetuals::PROTOBUF_SCHEMA);
+    insta::assert_snapshot!(perpetuals::PROTOBUF_SCHEMA);
 }
 
 // ---------------------------------------------------------------------------
@@ -54,29 +25,27 @@ fn check_merged_protobuf_schema() {
 // ---------------------------------------------------------------------------
 
 ///
-/// Parse the BorrowFromCustody transaction using `AnchorEventInstructionParser`.
+/// Parse the BorrowFromCustody transaction using `program_event_parser()`.
 ///
 /// The fixture contains two perpetuals instructions:
 /// 1. BorrowFromCustody — regular instruction
 /// 2. BorrowFromCustodyEvent — CPI self-invocation event
 ///
 /// The composable parser routes each to the correct inner parser, producing
-/// `AnchorEventOutput { instruction, anchor_events }`.
+/// `ProgramEventOutput { instruction, events }`.
 ///
 #[tokio::test]
 async fn parse_borrow_from_custody_with_cpi_event() {
-    let parser = make_parser();
+    let parser = perpetuals::program_event_parser();
 
     let ixs = tx_fixture!(BORROW_FROM_CUSTODY_TX, &parser);
 
-    // The fixture has one BorrowFromCustody instruction with a CPI event
-    // inner instruction. The parser should produce a single output combining both.
     let output = ixs
         .iter()
         .find_map(|out| out.as_ref())
         .expect("no parsed output found");
 
-    let expected = AnchorEventOutput {
+    let expected = ProgramEventOutput {
         instruction: Some(perpetuals::Instructions {
             instruction: perpetuals::instruction::Instruction::BorrowFromCustody {
                 accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
@@ -110,12 +79,12 @@ async fn parse_borrow_from_custody_with_cpi_event() {
                 },
             },
         }),
-        anchor_events: vec![perpetuals_events::Instructions {
-            instruction: perpetuals_events::instruction::Instruction::BorrowFromCustodyEvent {
-                accounts: perpetuals_events::instruction::BorrowFromCustodyEventAccounts {
-                    remaining_accounts: vec![p("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN")],
+        events: vec![perpetuals::Events {
+            event: perpetuals::event::Event::BorrowFromCustodyEvent {
+                accounts: perpetuals::event::BorrowFromCustodyEventAccounts {
+                    remaining_accounts: vec![],
                 },
-                args: perpetuals_events::instruction::BorrowFromCustodyEventArgs {
+                args: perpetuals::event::BorrowFromCustodyEventArgs {
                     owner: p("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC"),
                     pool: p("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
                     position_key: p("iUzDVme5Mc21GdULKK2JFuvjNWY4TaULF2kNGTcoXf9"),
@@ -135,19 +104,19 @@ async fn parse_borrow_from_custody_with_cpi_event() {
 }
 
 // ---------------------------------------------------------------------------
-// Proto encode round-trip for AnchorEventOutput
+// Proto encode round-trip for ProgramEventOutput
 // ---------------------------------------------------------------------------
 
 ///
-/// Proto encode round-trip for the combined `AnchorEventOutput` wrapper.
+/// Proto encode round-trip for the combined `ProgramEventOutput` wrapper.
 ///
-/// Verifies that the manual `prost::Message` impl on `AnchorEventOutput`
+/// Verifies that the manual `prost::Message` impl on `ProgramEventOutput`
 /// correctly encodes both the instruction (tag 1) and events (tag 2),
 /// and that `encoded_len()` matches the actual output size.
 ///
 #[tokio::test]
 async fn proto_round_trip_anchor_event_output() {
-    let parser = make_parser();
+    let parser = perpetuals::program_event_parser();
 
     let ixs = tx_fixture!(BORROW_FROM_CUSTODY_TX, &parser);
 
@@ -157,7 +126,7 @@ async fn proto_round_trip_anchor_event_output() {
         .expect("no parsed output");
 
     assert!(output.instruction.is_some());
-    assert!(!output.anchor_events.is_empty());
+    assert!(!output.events.is_empty());
 
     let mut buf = Vec::new();
 
@@ -222,21 +191,24 @@ fn resolve_events_from_logs_with_real_event_data() {
         "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".to_string(),
     ];
 
-    let events = perpetuals_events::resolve_events_from_logs(&logs);
+    let events = perpetuals::resolve_events_from_logs(&logs);
     assert_eq!(events.len(), 1, "should parse exactly one event from logs");
 
-    let (event_accounts, event_args) = match &events[0].instruction {
-        perpetuals_events::instruction::Instruction::BorrowFromCustodyEvent { accounts, args } => {
-            (accounts, args)
-        },
+    let (event_accounts, event_args) = match &events[0].event {
+        perpetuals::event::Event::BorrowFromCustodyEvent { accounts, args } => (accounts, args),
         other => panic!("Expected BorrowFromCustodyEvent, got {other:?}"),
     };
 
-    let expected = perpetuals_events::instruction::BorrowFromCustodyEvent {
-        accounts: perpetuals_events::instruction::BorrowFromCustodyEventAccounts {
+    assert_eq!(
+        event_accounts,
+        &perpetuals::event::BorrowFromCustodyEventAccounts {
             remaining_accounts: vec![],
-        },
-        args: perpetuals_events::instruction::BorrowFromCustodyEventArgs {
+        }
+    );
+
+    assert_eq!(
+        event_args,
+        &perpetuals::event::BorrowFromCustodyEventArgs {
             owner: p("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC"),
             pool: p("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
             position_key: p("iUzDVme5Mc21GdULKK2JFuvjNWY4TaULF2kNGTcoXf9"),
@@ -247,11 +219,8 @@ fn resolve_events_from_logs_with_real_event_data() {
             collateral_amount_usd: 11_148_464_949_892,
             margin_usd: 10_033_618_454_902,
             update_time: 1_772_150_417,
-        },
-    };
-
-    assert_eq!(event_accounts, &expected.accounts);
-    assert_eq!(event_args, &expected.args);
+        }
+    );
 }
 
 /// Verify that the fixture's real logs (which have no "Program data:" lines)
@@ -266,7 +235,7 @@ fn resolve_events_from_fixture_logs_returns_empty() {
         _ => panic!("expected instructions fixture"),
     };
 
-    let events = perpetuals_events::resolve_events_from_logs(&fixture.log_messages);
+    let events = perpetuals::resolve_events_from_logs(&fixture.log_messages);
     assert!(
         events.is_empty(),
         "perpetuals uses CPI events, not log events"
@@ -284,14 +253,14 @@ fn resolve_events_from_logs_returns_empty_for_no_matches() {
         "Program log: hello".to_string(),
         "Program ABC success".to_string(),
     ];
-    let events = perpetuals_events::resolve_events_from_logs(&logs);
+    let events = perpetuals::resolve_events_from_logs(&logs);
     assert!(events.is_empty());
 }
 
 #[test]
 fn resolve_events_from_logs_skips_invalid_base64() {
     let logs = vec!["Program data: !!!invalid-base64!!!".to_string()];
-    let events = perpetuals_events::resolve_events_from_logs(&logs);
+    let events = perpetuals::resolve_events_from_logs(&logs);
     assert!(events.is_empty());
 }
 
@@ -303,7 +272,7 @@ fn resolve_events_from_logs_skips_non_matching_discriminator() {
     let encoded = base64::engine::general_purpose::STANDARD.encode(&fake_data);
     let logs = vec![format!("Program data: {encoded}")];
 
-    let events = perpetuals_events::resolve_events_from_logs(&logs);
+    let events = perpetuals::resolve_events_from_logs(&logs);
     assert!(events.is_empty());
 }
 
@@ -314,16 +283,16 @@ fn event_ix_tag_constant_is_correct() {
 }
 
 #[test]
-fn anchor_event_parser_implements_prefilter() {
-    let parser = make_parser();
+fn program_event_parser_implements_prefilter() {
+    let parser = perpetuals::program_event_parser();
     let _pf = parser.prefilter();
 }
 
 #[test]
-fn anchor_event_parser_implements_id() {
+fn program_event_parser_implements_id() {
     use std::borrow::Cow;
 
-    let parser = make_parser();
+    let parser = perpetuals::program_event_parser();
     let id: Cow<'static, str> = parser.id();
     assert!(!id.is_empty());
 }

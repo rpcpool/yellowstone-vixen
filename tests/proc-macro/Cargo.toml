@@ -32,7 +32,6 @@ yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
 ] }
 yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
-yellowstone-vixen-anchor-event = { workspace = true, features = ["proto"] }
 
 [dev-dependencies]
 yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }

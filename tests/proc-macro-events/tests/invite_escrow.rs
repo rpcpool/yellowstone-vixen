@@ -1,55 +1,20 @@
 use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_anchor_event::{
-    merge_proto_schemas, AnchorEventInstructionParser, AnchorEventOutput,
-};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
+use yellowstone_vixen_parser::ProgramEventOutput;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/invite_escrow.json");
-include_vixen_parser!("idls/invite_escrow.events.json");
-
-fn make_parser() -> AnchorEventInstructionParser<
-    invite_escrow::InstructionParser,
-    invite_escrow_events::InstructionParser,
-> {
-    AnchorEventInstructionParser::new(
-        invite_escrow::InstructionParser,
-        invite_escrow_events::InstructionParser,
-        invite_escrow::PROGRAM_ID,
-    )
-}
 
 // ---------------------------------------------------------------------------
 // Proto schemas
 // ---------------------------------------------------------------------------
 
 #[test]
-fn check_ix_protobuf_schema() {
+fn check_protobuf_schema() {
     check_protobuf_format(invite_escrow::PROTOBUF_SCHEMA);
     insta::assert_snapshot!(invite_escrow::PROTOBUF_SCHEMA);
-}
-
-#[test]
-fn check_events_protobuf_schema() {
-    check_protobuf_format(invite_escrow_events::PROTOBUF_SCHEMA);
-    insta::assert_snapshot!(invite_escrow_events::PROTOBUF_SCHEMA);
-}
-
-#[test]
-fn check_merged_protobuf_schema() {
-    let (schema, message_index) = merge_proto_schemas(
-        invite_escrow::PROTOBUF_SCHEMA,
-        invite_escrow_events::PROTOBUF_SCHEMA,
-    );
-
-    let message_count =
-        schema.matches("\nmessage ").count() + if schema.starts_with("message ") { 1 } else { 0 };
-    assert_eq!(message_index, (message_count - 1) as i32);
-
-    check_protobuf_format(&schema);
-    insta::assert_snapshot!(schema);
 }
 
 // ---------------------------------------------------------------------------
@@ -58,7 +23,7 @@ fn check_merged_protobuf_schema() {
 
 #[tokio::test]
 async fn parse_initialize_token_transaction() {
-    let parser = make_parser();
+    let parser = invite_escrow::program_event_parser();
 
     let ixs = tx_fixture!(
         "5esX3MC2s6rQcG1y9npt2jL5HjtUUSSXst1v16vuSng3wAv9uaskiL47kxb5zFnNZVqZVKYdYQVM92hXRKYkYU8x",
@@ -70,7 +35,7 @@ async fn parse_initialize_token_transaction() {
         .find_map(|out| out.as_ref())
         .expect("no parsed output");
 
-    let expected = AnchorEventOutput {
+    let expected = ProgramEventOutput {
         instruction: Some(invite_escrow::Instructions {
             instruction: invite_escrow::instruction::Instruction::Initialize {
                 accounts: invite_escrow::instruction::InitializeAccounts {
@@ -86,12 +51,12 @@ async fn parse_initialize_token_transaction() {
                 },
             },
         }),
-        anchor_events: vec![invite_escrow_events::Instructions {
-            instruction: invite_escrow_events::instruction::Instruction::Initialize {
-                accounts: invite_escrow_events::instruction::InitializeAccounts {
+        events: vec![invite_escrow::Events {
+            event: invite_escrow::event::Event::Initialize {
+                accounts: invite_escrow::event::InitializeAccounts {
                     remaining_accounts: vec![],
                 },
-                args: invite_escrow_events::instruction::InitializeArgs {
+                args: invite_escrow::event::InitializeArgs {
                     sender: p("6fPYzB3LD8XNFFeNs2RuLgyS2YT6zk5zpHE563YvWSGs"),
                     invite_signer: p("EndSeFWW1yEVgSwmehUv4TkqPMsVzyGyKrrxgzsgf74D"),
                     amount: 1_004_273_804,
@@ -110,7 +75,7 @@ async fn parse_initialize_token_transaction() {
 
 #[tokio::test]
 async fn proto_round_trip() {
-    let parser = make_parser();
+    let parser = invite_escrow::program_event_parser();
 
     let ixs = tx_fixture!(
         "5esX3MC2s6rQcG1y9npt2jL5HjtUUSSXst1v16vuSng3wAv9uaskiL47kxb5zFnNZVqZVKYdYQVM92hXRKYkYU8x",

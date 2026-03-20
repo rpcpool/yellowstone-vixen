@@ -25,15 +25,23 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|t| t.name.as_str())
         .collect();
 
-    // Render non-instruction types at top level (exclude oneof parents, rendered separately).
+    // Collect event-kind type names (these go inside the event module)
+    let event_type_names: HashSet<&str> = schema_ir
+        .types
+        .iter()
+        .filter(|t| t.kind == TypeKindIr::Event)
+        .map(|t| t.name.as_str())
+        .collect();
+
+    // Render non-instruction, non-event types at top level (exclude oneof parents, rendered separately).
     // Use kind-based filtering (not name-based) so that defined types whose names
-    // collide with instruction wrapper types are still rendered at the top level.
+    // collide with instruction/event wrapper types are still rendered at the top level.
     for t in &schema_ir.types {
         if oneof_parents.contains(t.name.as_str()) {
             continue;
         }
 
-        if t.kind == TypeKindIr::Instruction {
+        if t.kind == TypeKindIr::Instruction || t.kind == TypeKindIr::Event {
             continue;
         }
 
@@ -55,6 +63,20 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     oneof,
                     &ix_types,
                     &instruction_type_names,
+                ));
+            },
+            OneofKindIr::EventDispatch => {
+                let ev_types: Vec<&TypeIr> = schema_ir
+                    .types
+                    .iter()
+                    .filter(|t| t.kind == TypeKindIr::Event)
+                    .filter(|t| !oneof_parents.contains(t.name.as_str()))
+                    .collect();
+
+                out.extend(render_event_dispatch(
+                    oneof,
+                    &ev_types,
+                    &event_type_names,
                 ));
             },
             OneofKindIr::Enum => {
@@ -216,6 +238,145 @@ fn render_instruction_dispatch(
         }
 
         impl ::borsh::BorshDeserialize for #parent_ident {
+            fn deserialize_reader<R: ::borsh::io::Read>(
+                reader: &mut R
+            ) -> ::core::result::Result<Self, ::borsh::io::Error> {
+                let disc: u8 = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
+
+                let #field_ident = match disc {
+                    #(#borsh_deserialize_arms,)*
+
+                    _ => {
+                        return ::core::result::Result::Err(::borsh::io::Error::new(
+                            ::borsh::io::ErrorKind::InvalidData,
+                            "invalid discriminant"
+                        ));
+                    }
+                };
+
+                ::core::result::Result::Ok(Self { #field_ident })
+            }
+        }
+    }
+}
+
+///
+/// Render event dispatch: module-wrapped.
+///
+/// Same pattern as `render_instruction_dispatch` but uses:
+/// - `pub mod event { ... }` instead of `pub mod instruction { ... }`
+/// - `Event` enum instead of `Instruction`
+/// - `Events` wrapper struct instead of `Instructions`
+///
+fn render_event_dispatch(
+    oneof_ir: &OneofIr,
+    ev_types: &[&TypeIr],
+    local_names: &HashSet<&str>,
+) -> TokenStream {
+    let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "ProgramEvents"
+    // Use "Events" as the Rust wrapper struct name (not "ProgramEvents" which is the proto name)
+    let rust_parent_ident = format_ident!("Events");
+    let mod_ident = format_ident!("event");
+    let oneof_ident = format_ident!("Event");
+    let field_ident = format_ident!("{}", oneof_ir.field_name);
+
+    let module_types: Vec<TokenStream> = ev_types
+        .iter()
+        .map(|t| render_struct_type(t, Some(local_names)))
+        .collect();
+
+    let variants = oneof_ir.variants.iter().map(|v| {
+        let v_ident = format_ident!("{}", v.variant_name);
+        let accounts_ident = format_ident!("{}Accounts", v.message_type);
+        let args_ident = format_ident!("{}Args", v.message_type);
+
+        quote! {
+            #v_ident { accounts: #accounts_ident, args: #args_ident }
+        }
+    });
+
+    let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
+        let disc = i as u8;
+        let v_ident = format_ident!("{}", v.variant_name);
+        let msg_ident = format_ident!("{}", v.message_type);
+
+        quote! {
+            #mod_ident::#oneof_ident::#v_ident { accounts, args } => {
+                ::borsh::BorshSerialize::serialize(&#disc, writer)?;
+                ::borsh::BorshSerialize::serialize(&(#mod_ident::#msg_ident { accounts: accounts.clone(), args: args.clone() }), writer)
+            }
+        }
+    });
+
+    let borsh_deserialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
+        let disc = i as u8;
+        let v_ident = format_ident!("{}", v.variant_name);
+        let msg_ident = format_ident!("{}", v.message_type);
+
+        quote! {
+            #disc => {
+                let v: #mod_ident::#msg_ident = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
+
+                #mod_ident::#oneof_ident::#v_ident { accounts: v.accounts, args: v.args }
+            }
+        }
+    });
+
+    let proto_impls = if cfg!(feature = "proto") {
+        // Use a renamed oneof_ir for proto that maps parent_message to "Events" in Rust
+        let oneof_impl =
+            super::manual_prost::manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
+
+        let message_impl = super::manual_prost::manual_prost_message_impl(
+            &rust_parent_ident,
+            &field_ident,
+            &mod_ident,
+            &oneof_ident,
+        );
+
+        quote! { #oneof_impl #message_impl }
+    } else {
+        quote! {}
+    };
+
+    let parent_debug_derive = if cfg!(feature = "proto") {
+        quote! {}
+    } else {
+        quote! { Debug, }
+    };
+
+    // Suppress unused warning for parent_ident (proto name "ProgramEvents")
+    let _ = parent_ident;
+
+    quote! {
+        #[derive(Clone, #parent_debug_derive PartialEq)]
+        pub struct #rust_parent_ident {
+            pub #field_ident: #mod_ident::#oneof_ident,
+        }
+
+        pub mod #mod_ident {
+            #(#module_types)*
+
+            #[derive(Clone, Debug, PartialEq)]
+            pub enum #oneof_ident {
+                #(#variants),*
+            }
+        }
+
+        #proto_impls
+
+        impl ::borsh::BorshSerialize for #rust_parent_ident {
+            fn serialize<W: ::borsh::io::Write>(
+                &self,
+                writer: &mut W
+            ) -> ::core::result::Result<(), ::borsh::io::Error> {
+                match &self.#field_ident {
+                    #(#borsh_serialize_arms,)*
+                }
+            }
+        }
+
+        impl ::borsh::BorshDeserialize for #rust_parent_ident {
             fn deserialize_reader<R: ::borsh::io::Read>(
                 reader: &mut R
             ) -> ::core::result::Result<Self, ::borsh::io::Error> {

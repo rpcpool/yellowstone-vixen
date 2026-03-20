@@ -1,31 +1,19 @@
 use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_anchor_event::{AnchorEventInstructionParser, AnchorEventOutput};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
+use yellowstone_vixen_parser::ProgramEventOutput;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/lo_v1.json");
-include_vixen_parser!("idls/lo_v1.events.json");
-
-fn make_parser() -> AnchorEventInstructionParser<
-    limit_order::InstructionParser,
-    limit_order_events::InstructionParser,
-> {
-    AnchorEventInstructionParser::new(
-        limit_order::InstructionParser,
-        limit_order_events::InstructionParser,
-        limit_order::PROGRAM_ID,
-    )
-}
 
 // ---------------------------------------------------------------------------
 // Proto schemas
 // ---------------------------------------------------------------------------
 
 #[test]
-fn check_events_protobuf_schema() {
-    check_protobuf_format(limit_order_events::PROTOBUF_SCHEMA);
-    insta::assert_snapshot!(limit_order_events::PROTOBUF_SCHEMA);
+fn check_protobuf_schema() {
+    check_protobuf_format(limit_order::PROTOBUF_SCHEMA);
+    insta::assert_snapshot!(limit_order::PROTOBUF_SCHEMA);
 }
 
 // ---------------------------------------------------------------------------
@@ -33,7 +21,7 @@ fn check_events_protobuf_schema() {
 // ---------------------------------------------------------------------------
 
 ///
-/// Parse the flash-fill transaction using `AnchorEventInstructionParser`.
+/// Parse the flash-fill transaction using `program_event_parser()`.
 ///
 /// The fixture contains two limit_order instructions:
 /// 1. PreFlashFillOrder — no anchor events
@@ -43,7 +31,7 @@ fn check_events_protobuf_schema() {
 ///
 #[tokio::test]
 async fn parse_flash_fill_transaction() {
-    let parser = make_parser();
+    let parser = limit_order::program_event_parser();
 
     let ixs = tx_fixture!(
         "3jaLYNHZBxPxAcXUYdsMRhrDL19YpS7jDgkq5p4GDcsfUK82sLAuDv9gnRhw5KkAh8yWgomZnHn8Lbz3uvbqKpAC",
@@ -54,7 +42,7 @@ async fn parse_flash_fill_transaction() {
 
     let expected = vec![
         // 1. PreFlashFillOrder — instruction only, no events
-        AnchorEventOutput {
+        ProgramEventOutput {
             instruction: Some(limit_order::Instructions {
                 instruction: limit_order::instruction::Instruction::PreFlashFillOrder {
                     accounts: limit_order::instruction::PreFlashFillOrderAccounts {
@@ -73,10 +61,10 @@ async fn parse_flash_fill_transaction() {
                     },
                 },
             }),
-            anchor_events: vec![],
+            events: vec![],
         },
         // 2. FlashFillOrder — instruction + TradeEvent from "Program data:" log
-        AnchorEventOutput {
+        ProgramEventOutput {
             instruction: Some(limit_order::Instructions {
                 instruction: limit_order::instruction::Instruction::FlashFillOrder {
                     accounts: limit_order::instruction::FlashFillOrderAccounts {
@@ -101,12 +89,12 @@ async fn parse_flash_fill_transaction() {
                     },
                 },
             }),
-            anchor_events: vec![limit_order_events::Instructions {
-                instruction: limit_order_events::instruction::Instruction::TradeEvent {
-                    accounts: limit_order_events::instruction::TradeEventAccounts {
+            events: vec![limit_order::Events {
+                event: limit_order::event::Event::TradeEvent {
+                    accounts: limit_order::event::TradeEventAccounts {
                         remaining_accounts: vec![],
                     },
-                    args: limit_order_events::instruction::TradeEventArgs {
+                    args: limit_order::event::TradeEventArgs {
                         order_key: p("HzKfs1qTtpvV9u9yh2imBh7aKtFBeuffAFbn3L1pA6Qw"),
                         taker: p("71WDyyCsZwyEYDV91Qrb212rdg6woCHYQhFnmZUBxiJ6"),
                         remaining_in_amount: 0,

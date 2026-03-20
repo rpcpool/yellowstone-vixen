@@ -313,30 +313,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
-name = "anchor-events-test"
-version = "0.7.0"
-dependencies = [
- "base64 0.22.1",
- "borsh 1.6.0",
- "hex",
- "insta",
- "prost 0.14.1",
- "regex",
- "tokio",
- "vixen-test-utils",
- "yellowstone-vixen",
- "yellowstone-vixen-anchor-event",
- "yellowstone-vixen-block-meta-parser",
- "yellowstone-vixen-core",
- "yellowstone-vixen-mock",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-spl-token-extensions-parser",
- "yellowstone-vixen-spl-token-parser",
- "yellowstone-vixen-stake-pool-parser",
-]
-
-[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5287,6 +5263,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-events-test"
+version = "0.7.0"
+dependencies = [
+ "base64 0.22.1",
+ "borsh 1.6.0",
+ "hex",
+ "insta",
+ "prost 0.14.1",
+ "regex",
+ "tokio",
+ "vixen-test-utils",
+ "yellowstone-vixen",
+ "yellowstone-vixen-block-meta-parser",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-spl-token-extensions-parser",
+ "yellowstone-vixen-spl-token-parser",
+ "yellowstone-vixen-stake-pool-parser",
+]
+
+[[package]]
 name = "proc-macro-test"
 version = "0.7.0"
 dependencies = [
@@ -5297,7 +5296,6 @@ dependencies = [
  "tokio",
  "vixen-test-utils",
  "yellowstone-vixen",
- "yellowstone-vixen-anchor-event",
  "yellowstone-vixen-block-meta-parser",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
@@ -13884,15 +13882,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "yellowstone-vixen-anchor-event"
-version = "0.7.0"
-dependencies = [
- "base64 0.22.1",
- "prost 0.14.1",
- "yellowstone-vixen-core",
-]
-
-[[package]]
 name = "yellowstone-vixen-block-coordinator"
 version = "0.7.0"
 dependencies = [
@@ -14141,6 +14130,7 @@ version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
+ "prost 0.14.1",
  "solana-program-option 3.0.0",
  "solana-pubkey 3.0.0",
  "thiserror 1.0.69",
