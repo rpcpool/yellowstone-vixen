@@ -124,7 +124,7 @@ pub fn proto_schema_string(
 
         writeln!(&mut out, "message ProgramEventOutput {{").unwrap();
         writeln!(&mut out, "  optional Instructions instruction = 1;").unwrap();
-        writeln!(&mut out, "  repeated ProgramEvents events = 2;").unwrap();
+        writeln!(&mut out, "  repeated ProgramEvents program_events = 2;").unwrap();
         writeln!(&mut out, "}}").unwrap();
 
         message_count += 1;

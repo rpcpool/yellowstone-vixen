@@ -3,19 +3,16 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 ///
-/// Generate event parser code: `resolve_event_default()`, `resolve_events_from_logs()`,
-/// and `EventParser` struct.
+/// Generate event support code: `resolve_event_default()`, `resolve_events_from_logs()`,
+/// and `ProgramEventOutput` struct.
 ///
-/// Mirrors `instruction_parser()` but for events. Events use the same discriminator
-/// matching logic — the only difference is they live in the `event` module and use
-/// the `Events` wrapper type.
+/// The event resolution functions are called by `InstructionParser` (when
+/// `program-events` feature is active) to handle CPI and log-based events.
 ///
 pub fn event_parser(
-    program_name_camel: &CamelCaseString,
+    _program_name_camel: &CamelCaseString,
     events: &[codama_nodes::InstructionNode],
 ) -> TokenStream {
-    let program_name = crate::utils::to_pascal_case(program_name_camel);
-    let event_parser_id = format!("{}::EventParser", program_name);
     let wrapper_ident = format_ident!("Events");
 
     // Per-event parse helper functions
@@ -87,6 +84,8 @@ pub fn event_parser(
         }
     };
 
+    let program_event_output = generate_program_event_output();
+
     quote! {
         #(#helper_fns)*
 
@@ -104,56 +103,87 @@ pub fn event_parser(
 
         #resolve_events_from_logs
 
-        #[derive(Debug, Copy, Clone)]
-        pub struct EventParser;
+        #program_event_output
+    }
+}
 
-        impl Parser for EventParser {
-            type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
-            type Output = #wrapper_ident;
+/// Generate the concrete `ProgramEventOutput` struct and optionally its
+/// `prost::Message` impl (behind `proto` feature).
+fn generate_program_event_output() -> TokenStream {
+    let proto_impl = if cfg!(feature = "proto") {
+        quote! {
+            impl ::prost::Message for ProgramEventOutput {
+                fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
+                    if let Some(ref ix) = self.instruction {
+                        ::prost::encoding::message::encode(1, ix, buf);
+                    }
 
-            fn id(&self) -> std::borrow::Cow<'static, str> {
-                #event_parser_id.into()
-            }
-
-            fn prefilter(&self) -> Prefilter {
-                Prefilter::builder()
-                    .transaction_accounts([PROGRAM_ID])
-                    .build()
-                    .unwrap()
-            }
-
-            async fn parse(
-                &self,
-                ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
-            ) -> ParseResult<Self::Output> {
-                if *ix_update.program != PROGRAM_ID {
-                    return Err(ParseError::Filtered);
+                    for event in &self.program_events {
+                        ::prost::encoding::message::encode(2, event, buf);
+                    }
                 }
 
-                resolve_event_default(&ix_update.accounts, &ix_update.data)
+                fn merge_field(
+                    &mut self,
+                    _tag: u32,
+                    _wire_type: ::prost::encoding::WireType,
+                    _buf: &mut impl ::prost::bytes::Buf,
+                    _ctx: ::prost::encoding::DecodeContext,
+                ) -> Result<(), ::prost::DecodeError> {
+                    // ProgramEventOutput is encode-only. Decoding from proto is not supported
+                    // because the inner types (Instructions) do not implement Default.
+                    Err(::prost::DecodeError::new(
+                        "ProgramEventOutput does not support proto decoding",
+                    ))
+                }
+
+                fn encoded_len(&self) -> usize {
+                    let mut len = 0;
+
+                    if let Some(ref ix) = self.instruction {
+                        len += ::prost::encoding::message::encoded_len(1, ix);
+                    }
+
+                    for event in &self.program_events {
+                        len += ::prost::encoding::message::encoded_len(2, event);
+                    }
+
+                    len
+                }
+
+                fn clear(&mut self) {
+                    self.instruction = None;
+                    self.program_events.clear();
+                }
+            }
+
+            impl Default for ProgramEventOutput {
+                fn default() -> Self {
+                    Self {
+                        instruction: None,
+                        program_events: Vec::new(),
+                    }
+                }
             }
         }
+    } else {
+        quote! {}
+    };
 
-        impl ::yellowstone_vixen_core::ProgramParser for EventParser {
-            #[inline]
-            fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-                yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
-            }
-        }
-
-        /// Create a combined instruction + event parser.
+    quote! {
+        /// Combined output from instruction + event parsing.
         ///
-        /// Returns a `ProgramEventParser` that wraps both `InstructionParser`
-        /// and `EventParser`, automatically detecting CPI events and log events.
-        pub fn program_event_parser(
-        ) -> yellowstone_vixen_parser::ProgramEventParser<InstructionParser, EventParser>
-        {
-            yellowstone_vixen_parser::ProgramEventParser::new(
-                InstructionParser,
-                EventParser,
-                PROGRAM_ID,
-            )
+        /// Generated per-program by the proc-macro with concrete `Instructions`
+        /// and `Events` types.
+        #[derive(Debug, PartialEq)]
+        pub struct ProgramEventOutput {
+            /// Parsed instruction (None if this was a CPI event or filtered).
+            pub instruction: Option<Instructions>,
+            /// Events parsed from logs and/or CPI self-invocations.
+            pub program_events: Vec<Events>,
         }
+
+        #proto_impl
     }
 }
 

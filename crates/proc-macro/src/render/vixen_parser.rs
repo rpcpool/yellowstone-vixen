@@ -13,10 +13,12 @@ pub fn vixen_parser(idl: &RootNode, events: &[codama_nodes::InstructionNode]) ->
 
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
-    let instruction_parser =
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions);
+    let has_events = cfg!(feature = "program-events") && !events.is_empty();
 
-    let event_parser = if cfg!(feature = "program-events") && !events.is_empty() {
+    let instruction_parser =
+        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events);
+
+    let event_parser = if has_events {
         crate::render::event_parser(&idl.program.name, events)
     } else {
         quote! {}

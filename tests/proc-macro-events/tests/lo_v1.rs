@@ -1,7 +1,6 @@
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_parser::ProgramEventOutput;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/lo_v1.json");
@@ -31,7 +30,7 @@ fn check_protobuf_schema() {
 ///
 #[tokio::test]
 async fn parse_flash_fill_transaction() {
-    let parser = limit_order::program_event_parser();
+    let parser = limit_order::InstructionParser;
 
     let ixs = tx_fixture!(
         "3jaLYNHZBxPxAcXUYdsMRhrDL19YpS7jDgkq5p4GDcsfUK82sLAuDv9gnRhw5KkAh8yWgomZnHn8Lbz3uvbqKpAC",
@@ -42,7 +41,7 @@ async fn parse_flash_fill_transaction() {
 
     let expected = vec![
         // 1. PreFlashFillOrder — instruction only, no events
-        ProgramEventOutput {
+        limit_order::ProgramEventOutput {
             instruction: Some(limit_order::Instructions {
                 instruction: limit_order::instruction::Instruction::PreFlashFillOrder {
                     accounts: limit_order::instruction::PreFlashFillOrderAccounts {
@@ -61,10 +60,10 @@ async fn parse_flash_fill_transaction() {
                     },
                 },
             }),
-            events: vec![],
+            program_events: vec![],
         },
         // 2. FlashFillOrder — instruction + TradeEvent from "Program data:" log
-        ProgramEventOutput {
+        limit_order::ProgramEventOutput {
             instruction: Some(limit_order::Instructions {
                 instruction: limit_order::instruction::Instruction::FlashFillOrder {
                     accounts: limit_order::instruction::FlashFillOrderAccounts {
@@ -89,7 +88,7 @@ async fn parse_flash_fill_transaction() {
                     },
                 },
             }),
-            events: vec![limit_order::Events {
+            program_events: vec![limit_order::Events {
                 event: limit_order::event::Event::TradeEvent {
                     accounts: limit_order::event::TradeEventAccounts {
                         remaining_accounts: vec![],

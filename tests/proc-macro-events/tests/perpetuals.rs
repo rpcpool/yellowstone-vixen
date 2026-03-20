@@ -2,7 +2,7 @@ use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_parser::{ProgramEventOutput, EVENT_IX_TAG};
+use yellowstone_vixen_parser::EVENT_IX_TAG;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/perpetuals.json");
@@ -25,18 +25,18 @@ fn check_protobuf_schema() {
 // ---------------------------------------------------------------------------
 
 ///
-/// Parse the BorrowFromCustody transaction using `program_event_parser()`.
+/// Parse the BorrowFromCustody transaction using `InstructionParser`.
 ///
 /// The fixture contains two perpetuals instructions:
 /// 1. BorrowFromCustody — regular instruction
 /// 2. BorrowFromCustodyEvent — CPI self-invocation event
 ///
-/// The composable parser routes each to the correct inner parser, producing
-/// `ProgramEventOutput { instruction, events }`.
+/// With `program-events` active, `InstructionParser` outputs
+/// `ProgramEventOutput { instruction, program_events }`.
 ///
 #[tokio::test]
 async fn parse_borrow_from_custody_with_cpi_event() {
-    let parser = perpetuals::program_event_parser();
+    let parser = perpetuals::InstructionParser;
 
     let ixs = tx_fixture!(BORROW_FROM_CUSTODY_TX, &parser);
 
@@ -45,7 +45,7 @@ async fn parse_borrow_from_custody_with_cpi_event() {
         .find_map(|out| out.as_ref())
         .expect("no parsed output found");
 
-    let expected = ProgramEventOutput {
+    let expected = perpetuals::ProgramEventOutput {
         instruction: Some(perpetuals::Instructions {
             instruction: perpetuals::instruction::Instruction::BorrowFromCustody {
                 accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
@@ -79,7 +79,7 @@ async fn parse_borrow_from_custody_with_cpi_event() {
                 },
             },
         }),
-        events: vec![perpetuals::Events {
+        program_events: vec![perpetuals::Events {
             event: perpetuals::event::Event::BorrowFromCustodyEvent {
                 accounts: perpetuals::event::BorrowFromCustodyEventAccounts {
                     remaining_accounts: vec![],
@@ -116,7 +116,7 @@ async fn parse_borrow_from_custody_with_cpi_event() {
 ///
 #[tokio::test]
 async fn proto_round_trip_anchor_event_output() {
-    let parser = perpetuals::program_event_parser();
+    let parser = perpetuals::InstructionParser;
 
     let ixs = tx_fixture!(BORROW_FROM_CUSTODY_TX, &parser);
 
@@ -126,7 +126,7 @@ async fn proto_round_trip_anchor_event_output() {
         .expect("no parsed output");
 
     assert!(output.instruction.is_some());
-    assert!(!output.events.is_empty());
+    assert!(!output.program_events.is_empty());
 
     let mut buf = Vec::new();
 
@@ -283,16 +283,16 @@ fn event_ix_tag_constant_is_correct() {
 }
 
 #[test]
-fn program_event_parser_implements_prefilter() {
-    let parser = perpetuals::program_event_parser();
+fn instruction_parser_implements_prefilter() {
+    let parser = perpetuals::InstructionParser;
     let _pf = parser.prefilter();
 }
 
 #[test]
-fn program_event_parser_implements_id() {
+fn instruction_parser_implements_id() {
     use std::borrow::Cow;
 
-    let parser = perpetuals::program_event_parser();
+    let parser = perpetuals::InstructionParser;
     let id: Cow<'static, str> = parser.id();
     assert!(!id.is_empty());
 }

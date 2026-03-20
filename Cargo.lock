@@ -14130,7 +14130,6 @@ version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
- "prost 0.14.1",
  "solana-program-option 3.0.0",
  "solana-pubkey 3.0.0",
  "thiserror 1.0.69",

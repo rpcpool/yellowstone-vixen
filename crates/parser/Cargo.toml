@@ -16,7 +16,6 @@ solana-pubkey = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, features = [
   "parser",
 ], optional = true }
-prost = { workspace = true, optional = true }
 thiserror.workspace = true
 bs58.workspace = true
 base64 = { workspace = true }
@@ -32,6 +31,5 @@ proto = [
   "yellowstone-vixen-core/proto",
   "yellowstone-vixen-proto/parser",
   "solana-program-option",
-  "dep:prost",
 ]
 program-events = []

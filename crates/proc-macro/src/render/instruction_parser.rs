@@ -392,6 +392,7 @@ pub(crate) fn collision_group_match_arm(instructions: &[&codama_nodes::Instructi
 pub fn instruction_parser(
     program_name_camel: &CamelCaseString,
     instructions: &[codama_nodes::InstructionNode],
+    has_events: bool,
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
@@ -429,6 +430,122 @@ pub fn instruction_parser(
             }
         })
         .collect();
+
+    // When program-events feature is active and the IDL has events,
+    // InstructionParser outputs ProgramEventOutput instead of Instructions.
+    let instruction_parser_impl = if has_events {
+        let output_ident = format_ident!("ProgramEventOutput");
+
+        quote! {
+            #[derive(Debug, Copy, Clone)]
+            pub struct InstructionParser;
+
+            impl Parser for InstructionParser {
+                type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
+                type Output = #output_ident;
+
+                fn id(&self) -> std::borrow::Cow<'static, str> {
+                    #instruction_parser_id.into()
+                }
+
+                fn prefilter(&self) -> Prefilter {
+                    Prefilter::builder()
+                        .transaction_accounts([PROGRAM_ID])
+                        .build()
+                        .unwrap()
+                }
+
+                async fn parse(
+                    &self,
+                    ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
+                ) -> ParseResult<Self::Output> {
+                    if *ix_update.program != PROGRAM_ID {
+                        return Err(ParseError::Filtered);
+                    }
+
+                    // Skip standalone CPI events — they are collected by the
+                    // parent instruction's parse call below.
+                    if yellowstone_vixen_parser::is_cpi_event(&ix_update.data) {
+                        return Err(ParseError::Filtered);
+                    }
+
+                    // 1. Try parsing the regular instruction.
+                    let instruction = resolve_instruction_default(
+                        &ix_update.accounts,
+                        &ix_update.data,
+                    ).ok();
+
+                    let mut program_events = Vec::new();
+
+                    // 2. Scan inner instructions for CPI self-invocation events.
+                    for inner in &ix_update.inner {
+                        if yellowstone_vixen_parser::is_cpi_event(&inner.data)
+                            && *inner.program == PROGRAM_ID
+                        {
+                            if let Ok(ev) = resolve_event_default(&inner.accounts, &inner.data) {
+                                program_events.push(ev);
+                            }
+                        }
+                    }
+
+                    // 3. Scan logs for "Program data:" events.
+                    program_events.extend(resolve_events_from_logs(ix_update.log_messages()));
+
+                    if instruction.is_none() && program_events.is_empty() {
+                        return Err(ParseError::Filtered);
+                    }
+
+                    Ok(#output_ident { instruction, program_events })
+                }
+            }
+
+            impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
+                #[inline]
+                fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+                    yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
+                }
+            }
+        }
+    } else {
+        quote! {
+            #[derive(Debug, Copy, Clone)]
+            pub struct InstructionParser;
+
+            impl Parser for InstructionParser {
+                type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
+                type Output = #wrapper_ident;
+
+                fn id(&self) -> std::borrow::Cow<'static, str> {
+                    #instruction_parser_id.into()
+                }
+
+                fn prefilter(&self) -> Prefilter {
+                    Prefilter::builder()
+                        .transaction_accounts([PROGRAM_ID])
+                        .build()
+                        .unwrap()
+                }
+
+                async fn parse(
+                    &self,
+                    ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
+                ) -> ParseResult<Self::Output> {
+                    if *ix_update.program != PROGRAM_ID {
+                        return Err(ParseError::Filtered);
+                    }
+
+                    resolve_instruction_default(&ix_update.accounts, &ix_update.data)
+                }
+            }
+
+            impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
+                #[inline]
+                fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+                    yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
+                }
+            }
+        }
+    };
 
     quote! {
         //
@@ -538,42 +655,6 @@ pub fn instruction_parser(
             }
         }
 
-        #[derive(Debug, Copy, Clone)]
-        pub struct InstructionParser;
-
-        impl Parser for InstructionParser {
-            type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
-            type Output = #wrapper_ident;
-
-            fn id(&self) -> std::borrow::Cow<'static, str> {
-                #instruction_parser_id.into()
-            }
-
-            fn prefilter(&self) -> Prefilter {
-                Prefilter::builder()
-                    .transaction_accounts([PROGRAM_ID])
-                    .build()
-                    .unwrap()
-            }
-
-            async fn parse(
-                &self,
-                ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
-            ) -> ParseResult<Self::Output> {
-                if *ix_update.program != PROGRAM_ID {
-                    return Err(ParseError::Filtered);
-                }
-
-                resolve_instruction_default(&ix_update.accounts, &ix_update.data)
-            }
-        }
-
-        // Implement the trait for Mock
-        impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
-            #[inline]
-            fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-                yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
-            }
-        }
+        #instruction_parser_impl
     }
 }

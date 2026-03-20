@@ -2,7 +2,6 @@ use prost::Message;
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_parser::ProgramEventOutput;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/invite_escrow.json");
@@ -23,7 +22,7 @@ fn check_protobuf_schema() {
 
 #[tokio::test]
 async fn parse_initialize_token_transaction() {
-    let parser = invite_escrow::program_event_parser();
+    let parser = invite_escrow::InstructionParser;
 
     let ixs = tx_fixture!(
         "5esX3MC2s6rQcG1y9npt2jL5HjtUUSSXst1v16vuSng3wAv9uaskiL47kxb5zFnNZVqZVKYdYQVM92hXRKYkYU8x",
@@ -35,7 +34,7 @@ async fn parse_initialize_token_transaction() {
         .find_map(|out| out.as_ref())
         .expect("no parsed output");
 
-    let expected = ProgramEventOutput {
+    let expected = invite_escrow::ProgramEventOutput {
         instruction: Some(invite_escrow::Instructions {
             instruction: invite_escrow::instruction::Instruction::Initialize {
                 accounts: invite_escrow::instruction::InitializeAccounts {
@@ -51,7 +50,7 @@ async fn parse_initialize_token_transaction() {
                 },
             },
         }),
-        events: vec![invite_escrow::Events {
+        program_events: vec![invite_escrow::Events {
             event: invite_escrow::event::Event::Initialize {
                 accounts: invite_escrow::event::InitializeAccounts {
                     remaining_accounts: vec![],
@@ -75,7 +74,7 @@ async fn parse_initialize_token_transaction() {
 
 #[tokio::test]
 async fn proto_round_trip() {
-    let parser = invite_escrow::program_event_parser();
+    let parser = invite_escrow::InstructionParser;
 
     let ixs = tx_fixture!(
         "5esX3MC2s6rQcG1y9npt2jL5HjtUUSSXst1v16vuSng3wAv9uaskiL47kxb5zFnNZVqZVKYdYQVM92hXRKYkYU8x",

@@ -1,7 +1,6 @@
 use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_parser::ProgramEventOutput;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/lo_v2.json");
@@ -22,7 +21,7 @@ fn check_protobuf_schema() {
 ///
 #[tokio::test]
 async fn parse_fill_order_transaction() {
-    let parser = limit_order2::program_event_parser();
+    let parser = limit_order2::InstructionParser;
 
     let ixs = tx_fixture!(
         "VLzYfuPuxFcAV841yKgyvuYeJK9VgBKf9YSH4jHGLAJhc84jJZzYbrh97XJRQh3tfsLEAEkws3CRcmhsGeDEdFk",
@@ -31,7 +30,7 @@ async fn parse_fill_order_transaction() {
 
     let outputs: Vec<_> = ixs.iter().filter_map(|out| out.as_ref()).collect();
 
-    let expected = vec![ProgramEventOutput {
+    let expected = vec![limit_order2::ProgramEventOutput {
         instruction: Some(limit_order2::Instructions {
             instruction: limit_order2::instruction::Instruction::FillOrder {
                 accounts: limit_order2::instruction::FillOrderAccounts {
@@ -99,7 +98,7 @@ async fn parse_fill_order_transaction() {
                 },
             },
         }),
-        events: vec![],
+        program_events: vec![],
     }];
 
     let expected_refs: Vec<_> = expected.iter().collect();
