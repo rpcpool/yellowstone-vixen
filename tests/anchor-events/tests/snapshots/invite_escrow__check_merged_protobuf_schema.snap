@@ -318,7 +318,7 @@ message ExpireToken {
   ExpireTokenArgs args = 2;
 }
 
-message AnchorEvents {
+message ProgramEvents {
   oneof instruction {
     Initialize initialize = 1;
     Claim claim = 2;
@@ -333,5 +333,5 @@ message AnchorEvents {
 
 message AnchorEventOutput {
   optional Instructions instruction = 1;
-  repeated AnchorEvents program_events = 2;
+  repeated ProgramEvents program_events = 2;
 }

@@ -13,11 +13,11 @@
 ///   with a `Struct` suffix (e.g. `TradeEvent` → `TradeEventStruct`) so the
 ///   event schema's wrapper message keeps the clean name
 /// - Includes all event schema messages (except `PublicKey`, which is shared),
-///   renaming `Instructions` → `AnchorEvents`. Identical collisions are
+///   renaming `Instructions` → `ProgramEvents`. Identical collisions are
 ///   deduplicated (the instruction copy is kept)
 /// - Appends an `AnchorEventOutput` wrapper message with:
 ///   - `optional Instructions instruction = 1;`
-///   - `repeated AnchorEvents program_events = 2;`
+///   - `repeated ProgramEvents program_events = 2;`
 ///
 /// Returns `(combined_schema, wrapper_message_index)` where
 /// `wrapper_message_index` is the 0-based position of the `AnchorEventOutput`
@@ -108,7 +108,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
     // Emit event schema messages:
     //  - Skip `PublicKey` (shared, already emitted from instruction schema)
     //  - Skip messages identical to ones in the instruction schema (dedup)
-    //  - Rename `Instructions` → `AnchorEvents`
+    //  - Rename `Instructions` → `ProgramEvents`
     let mut emitted_count = 0;
 
     for msg in &event_messages {
@@ -130,7 +130,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
         let mut block = msg.raw.clone();
 
         if msg.name == "Instructions" {
-            block = block.replacen("message Instructions", "message AnchorEvents", 1);
+            block = block.replacen("message Instructions", "message ProgramEvents", 1);
         }
 
         out.push_str(&block);
@@ -142,7 +142,7 @@ pub fn merge_proto_schemas(ix_schema: &str, event_schema: &str) -> (String, i32)
     // Append the wrapper message.
     out.push_str(
         "message AnchorEventOutput {\n\x20 optional Instructions instruction = 1;\n\x20 repeated \
-         AnchorEvents program_events = 2;\n}\n",
+         ProgramEvents program_events = 2;\n}\n",
     );
 
     // message_index is the 0-based position of the target message in the
@@ -380,8 +380,8 @@ message Instructions {
         assert!(combined.contains("message TradeEventAccounts"));
         assert!(combined.contains("message TradeEvent {"));
 
-        // Instructions renamed to AnchorEvents
-        assert!(combined.contains("message AnchorEvents {"));
+        // Instructions renamed to ProgramEvents
+        assert!(combined.contains("message ProgramEvents {"));
 
         // PublicKey appears exactly once
         assert_eq!(
@@ -393,7 +393,7 @@ message Instructions {
         // Wrapper message
         assert!(combined.contains("message AnchorEventOutput {"));
         assert!(combined.contains("optional Instructions instruction = 1;"));
-        assert!(combined.contains("repeated AnchorEvents program_events = 2;"));
+        assert!(combined.contains("repeated ProgramEvents program_events = 2;"));
 
         // Message index: 5 ix + 4 event (minus PublicKey) + 1 wrapper = 10, index = 9
         assert_eq!(message_index, 9);
@@ -509,10 +509,10 @@ message Instructions {
         // Event dispatch references unchanged.
         assert!(
             combined.contains("    Overlap overlap"),
-            "Event dispatch (AnchorEvents) should reference Overlap"
+            "Event dispatch (ProgramEvents) should reference Overlap"
         );
 
-        // 3 ix + 2 event (Overlap + AnchorEvents) + 1 wrapper = 6, index = 5
+        // 3 ix + 2 event (Overlap + ProgramEvents) + 1 wrapper = 6, index = 5
         assert_eq!(message_index, 5);
     }
 }
