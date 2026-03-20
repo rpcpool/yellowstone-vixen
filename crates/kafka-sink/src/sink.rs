@@ -791,6 +791,7 @@ mod tests {
             shared: Arc::new(InstructionShared::default()),
             inner: vec![],
             path: Path::new_single(0),
+            log_range: 0..0,
         }
     }
 

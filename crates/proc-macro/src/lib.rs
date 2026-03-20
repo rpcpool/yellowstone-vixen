@@ -36,7 +36,7 @@ pub fn include_vixen_parser(input: TokenStream) -> TokenStream {
     let full_path = std::path::Path::new(&manifest_dir).join(&idl_path);
 
     match parse::load_codama_idl(&full_path) {
-        Ok(idl) => crate::render::vixen_parser(&idl).into(),
+        Ok((idl, events)) => crate::render::vixen_parser(&idl, &events).into(),
         Err(e) => {
             let error_msg = format!("Failed to load/parse IDL from {:?}: {}", full_path, e);
 

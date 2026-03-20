@@ -2,19 +2,27 @@ use codama_nodes::RootNode;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-pub fn vixen_parser(idl: &RootNode) -> TokenStream {
+pub fn vixen_parser(idl: &RootNode, events: &[codama_nodes::InstructionNode]) -> TokenStream {
     let program_mod_ident = format_ident!("{}", crate::utils::to_snake_case(&idl.program.name));
 
     let program_pubkey = crate::render::program_pubkey(&idl.program.public_key);
 
-    let schema_ir = crate::intermediate_representation::build_schema_ir(idl);
+    let schema_ir = crate::intermediate_representation::build_schema_ir(idl, events);
 
     let schema_types = crate::render::rust_types_from_ir(&schema_ir);
 
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
+    let has_events = cfg!(feature = "program-events") && !events.is_empty();
+
     let instruction_parser =
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions);
+        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events);
+
+    let event_parser = if has_events {
+        crate::render::event_parser(&idl.program.name, events)
+    } else {
+        quote! {}
+    };
 
     let program_name_pascal = crate::utils::to_pascal_case(&idl.program.name);
 
@@ -49,12 +57,24 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
             },
         };
 
+        let program_event_output_const = match output.program_event_output_index {
+            Some(idx) => quote! {
+                /// 0-based index of the ProgramEventOutput wrapper message in the proto file descriptor.
+                pub const PROGRAM_EVENT_OUTPUT_MESSAGE_INDEX: Option<usize> = Some(#idx);
+            },
+            None => quote! {
+                /// 0-based index of the ProgramEventOutput wrapper message in the proto file descriptor.
+                pub const PROGRAM_EVENT_OUTPUT_MESSAGE_INDEX: Option<usize> = None;
+            },
+        };
+
         quote! {
             /// Generated .proto schema for this program.
             pub const PROTOBUF_SCHEMA: &str = #proto_lit;
 
             #account_dispatch_const
             #instruction_dispatch_const
+            #program_event_output_const
         }
     } else {
         quote! {}
@@ -439,6 +459,7 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
             #schema_types
             #account_parser
             #instruction_parser
+            #event_parser
         }
     }
 }

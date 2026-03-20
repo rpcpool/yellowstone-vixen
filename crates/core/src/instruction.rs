@@ -11,7 +11,7 @@ use yellowstone_grpc_proto::{
     },
 };
 
-use crate::{Pubkey, TransactionUpdate};
+use crate::{log_messages::assign_log_messages, Pubkey, TransactionUpdate};
 
 /// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
@@ -112,6 +112,8 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
     /// The path of this instruction within the transaction.
     pub path: Path,
+    /// Range into `shared.log_messages` for this instruction's logs.
+    pub log_range: std::ops::Range<usize>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -240,6 +242,12 @@ impl AccountKeys {
 }
 
 impl InstructionUpdate {
+    /// Returns the log messages for this specific instruction.
+    ///
+    /// This is a zero-copy slice into the shared transaction log messages.
+    #[must_use]
+    pub fn log_messages(&self) -> &[String] { &self.shared.log_messages[self.log_range.clone()] }
+
     /// Parse a transaction update into a list of instructions.
     ///
     /// # Errors
@@ -318,6 +326,8 @@ impl InstructionUpdate {
             .collect::<Result<Vec<_>, _>>()?;
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
+
+        assign_log_messages(&shared.log_messages, &mut outer);
 
         Ok(outer)
     }
@@ -431,6 +441,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             path,
+            log_range: 0..0,
         })
     }
 

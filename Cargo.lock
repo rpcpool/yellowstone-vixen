@@ -5263,6 +5263,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-events-test"
+version = "0.7.0"
+dependencies = [
+ "base64 0.22.1",
+ "borsh 1.6.0",
+ "hex",
+ "insta",
+ "prost 0.14.1",
+ "regex",
+ "tokio",
+ "vixen-test-utils",
+ "yellowstone-vixen",
+ "yellowstone-vixen-block-meta-parser",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-spl-token-extensions-parser",
+ "yellowstone-vixen-spl-token-parser",
+ "yellowstone-vixen-stake-pool-parser",
+]
+
+[[package]]
 name = "proc-macro-test"
 version = "0.7.0"
 dependencies = [
@@ -5271,6 +5294,7 @@ dependencies = [
  "prost 0.14.1",
  "regex",
  "tokio",
+ "vixen-test-utils",
  "yellowstone-vixen",
  "yellowstone-vixen-block-meta-parser",
  "yellowstone-vixen-core",
@@ -13035,6 +13059,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
+name = "vixen-test-utils"
+version = "0.7.0"
+dependencies = [
+ "tempfile",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14096,6 +14128,7 @@ dependencies = [
 name = "yellowstone-vixen-parser"
 version = "0.7.0"
 dependencies = [
+ "base64 0.22.1",
  "bs58",
  "solana-program-option 3.0.0",
  "solana-pubkey 3.0.0",

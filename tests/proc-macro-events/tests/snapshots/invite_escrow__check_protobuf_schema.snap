@@ -1,0 +1,210 @@
+---
+source: tests/proc-macro-events/tests/invite_escrow.rs
+expression: "invite_escrow::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package invite_escrow;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message InviteInfo {
+  PublicKey sender = 1;
+  int64 expiry = 2;
+}
+    
+message InviteInfoToken {
+  PublicKey sender = 1;
+  PublicKey invite_signer = 2;
+  PublicKey escrow_token_account = 3;
+  int64 expiry = 4;
+  uint32 bump = 5;
+  bytes padding = 6;
+}
+    
+message InitializeAccounts {
+  PublicKey sender = 1;
+  PublicKey invite_signer = 2;
+  PublicKey invite_info = 3;
+  PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message InitializeArgs {
+  int64 expiry = 1;
+  uint64 amount = 2;
+}
+    
+message Initialize {
+  InitializeAccounts accounts = 1;
+  InitializeArgs args = 2;
+}
+    
+message ClaimAccounts {
+  PublicKey invite_info = 1;
+  PublicKey invite_signer = 2;
+  PublicKey claimer = 3;
+  PublicKey system_program = 4;
+  PublicKey keeper = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message ClaimArgs {
+}
+    
+message Claim {
+  ClaimAccounts accounts = 1;
+  ClaimArgs args = 2;
+}
+    
+message ClawbackAccounts {
+  PublicKey invite_info = 1;
+  PublicKey sender = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message ClawbackArgs {
+}
+    
+message Clawback {
+  ClawbackAccounts accounts = 1;
+  ClawbackArgs args = 2;
+}
+    
+message ExpireAccounts {
+  PublicKey invite_info = 1;
+  PublicKey sender = 2;
+  PublicKey keeper = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message ExpireArgs {
+}
+    
+message Expire {
+  ExpireAccounts accounts = 1;
+  ExpireArgs args = 2;
+}
+    
+message InitializeTokenAccounts {
+  PublicKey sender = 1;
+  PublicKey invite = 2;
+  PublicKey invite_info = 3;
+  PublicKey system_program = 4;
+  PublicKey sender_token_account = 5;
+  PublicKey escrow_token_account = 6;
+  PublicKey token_program = 7;
+  PublicKey mint = 8;
+  PublicKey associated_token_program = 9;
+  repeated PublicKey remaining_accounts = 10;
+}
+    
+message InitializeTokenArgs {
+  int64 expiry = 1;
+  uint64 amount = 2;
+}
+    
+message InitializeToken {
+  InitializeTokenAccounts accounts = 1;
+  InitializeTokenArgs args = 2;
+}
+    
+message ClaimTokenAccounts {
+  PublicKey invite_info = 1;
+  PublicKey invite_signer = 2;
+  PublicKey claimer = 3;
+  PublicKey system_program = 4;
+  PublicKey keeper = 5;
+  PublicKey claimer_token_account = 6;
+  PublicKey escrow_token_account = 7;
+  PublicKey token_program = 8;
+  PublicKey mint = 9;
+  PublicKey associated_token_program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message ClaimTokenArgs {
+}
+    
+message ClaimToken {
+  ClaimTokenAccounts accounts = 1;
+  ClaimTokenArgs args = 2;
+}
+    
+message ClawbackTokenAccounts {
+  PublicKey invite_info = 1;
+  PublicKey sender = 2;
+  PublicKey sender_token_account = 3;
+  PublicKey escrow_token_account = 4;
+  PublicKey token_program = 5;
+  PublicKey associated_token_program = 6;
+  PublicKey system_program = 7;
+  PublicKey mint = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message ClawbackTokenArgs {
+}
+    
+message ClawbackToken {
+  ClawbackTokenAccounts accounts = 1;
+  ClawbackTokenArgs args = 2;
+}
+    
+message ExpireTokenAccounts {
+  PublicKey invite_info = 1;
+  PublicKey sender = 2;
+  PublicKey sender_token_account = 3;
+  PublicKey escrow_token_account = 4;
+  PublicKey token_program = 5;
+  PublicKey associated_token_program = 6;
+  PublicKey system_program = 7;
+  PublicKey mint = 8;
+  PublicKey keeper = 9;
+  repeated PublicKey remaining_accounts = 10;
+}
+    
+message ExpireTokenArgs {
+}
+    
+message ExpireToken {
+  ExpireTokenAccounts accounts = 1;
+  ExpireTokenArgs args = 2;
+}
+    
+message InviteEscrowAccount {
+  oneof account {
+    InviteInfo invite_info = 1;
+    InviteInfoToken invite_info_token = 2;
+  }
+}
+message Instructions {
+  oneof instruction {
+    Initialize initialize = 1;
+    Claim claim = 2;
+    Clawback clawback = 3;
+    Expire expire = 4;
+    InitializeToken initialize_token = 5;
+    ClaimToken claim_token = 6;
+    ClawbackToken clawback_token = 7;
+    ExpireToken expire_token = 8;
+  }
+}
+message ProgramEvents {
+  oneof event {
+    Initialize initialize = 1;
+    Claim claim = 2;
+    Clawback clawback = 3;
+    Expire expire = 4;
+    InitializeToken initialize_token = 5;
+    ClaimToken claim_token = 6;
+    ClawbackToken clawback_token = 7;
+    ExpireToken expire_token = 8;
+  }
+}
+message ProgramEventOutput {
+  optional Instructions instruction = 1;
+  repeated ProgramEvents program_events = 2;
+}

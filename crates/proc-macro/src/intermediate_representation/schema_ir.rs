@@ -15,6 +15,7 @@ pub enum TypeKindIr {
     DefinedType,
     Account { len: Option<usize> },
     Instruction,
+    Event,
     Helper,
 }
 
@@ -102,6 +103,8 @@ pub enum ScalarIr {
 pub enum OneofKindIr {
     /// The top-level instruction dispatcher (e.g. PumpFun { oneof instruction { ... } })
     InstructionDispatch,
+    /// The top-level event dispatcher (e.g. ProgramEvents { oneof event { ... } })
+    EventDispatch,
     /// A user-defined enum (e.g. OrderType { oneof kind { ... } })
     Enum,
 }

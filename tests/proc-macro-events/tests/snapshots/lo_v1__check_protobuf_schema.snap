@@ -1,0 +1,312 @@
+---
+source: tests/proc-macro-events/tests/lo_v1.rs
+expression: "limit_order::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package limit_order;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message Fee {
+  uint64 maker_fee = 1;
+  uint64 maker_stable_fee = 2;
+  uint64 taker_fee = 3;
+  uint64 taker_stable_fee = 4;
+}
+    
+message Order {
+  PublicKey maker = 1;
+  PublicKey input_mint = 2;
+  PublicKey output_mint = 3;
+  bool waiting = 4;
+  uint64 ori_making_amount = 5;
+  uint64 ori_taking_amount = 6;
+  uint64 making_amount = 7;
+  uint64 taking_amount = 8;
+  PublicKey maker_input_account = 9;
+  PublicKey maker_output_account = 10;
+  PublicKey reserve = 11;
+  uint64 borrow_making_amount = 12;
+  optional int64 expired_at = 13;
+  PublicKey base = 14;
+  optional PublicKey referral = 15;
+}
+    
+message InitializeOrderAccounts {
+  PublicKey base = 1;
+  PublicKey maker = 2;
+  PublicKey order = 3;
+  PublicKey reserve = 4;
+  PublicKey maker_input_account = 5;
+  PublicKey input_mint = 6;
+  PublicKey maker_output_account = 7;
+  PublicKey referral = 8;
+  PublicKey output_mint = 9;
+  PublicKey system_program = 10;
+  PublicKey token_program = 11;
+  PublicKey rent = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message InitializeOrderArgs {
+  uint64 making_amount = 1;
+  uint64 taking_amount = 2;
+  optional int64 expired_at = 3;
+}
+    
+message InitializeOrder {
+  InitializeOrderAccounts accounts = 1;
+  InitializeOrderArgs args = 2;
+}
+    
+message FillOrderAccounts {
+  PublicKey order = 1;
+  PublicKey reserve = 2;
+  PublicKey maker = 3;
+  PublicKey taker = 4;
+  PublicKey taker_output_account = 5;
+  PublicKey maker_output_account = 6;
+  PublicKey taker_input_account = 7;
+  PublicKey fee_authority = 8;
+  PublicKey program_fee_account = 9;
+  PublicKey referral = 10;
+  PublicKey token_program = 11;
+  PublicKey system_program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message FillOrderArgs {
+  uint64 making_amount = 1;
+  uint64 max_taking_amount = 2;
+}
+    
+message FillOrder {
+  FillOrderAccounts accounts = 1;
+  FillOrderArgs args = 2;
+}
+    
+message PreFlashFillOrderAccounts {
+  PublicKey order = 1;
+  PublicKey reserve = 2;
+  PublicKey taker = 3;
+  PublicKey taker_output_account = 4;
+  PublicKey input_mint = 5;
+  PublicKey input_mint_token_program = 6;
+  PublicKey instruction = 7;
+  PublicKey system_program = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message PreFlashFillOrderArgs {
+  uint64 making_amount = 1;
+}
+    
+message PreFlashFillOrder {
+  PreFlashFillOrderAccounts accounts = 1;
+  PreFlashFillOrderArgs args = 2;
+}
+    
+message FlashFillOrderAccounts {
+  PublicKey order = 1;
+  PublicKey reserve = 2;
+  PublicKey maker = 3;
+  PublicKey taker = 4;
+  PublicKey maker_output_account = 5;
+  PublicKey taker_input_account = 6;
+  PublicKey fee_authority = 7;
+  PublicKey program_fee_account = 8;
+  PublicKey referral = 9;
+  PublicKey input_mint = 10;
+  PublicKey input_mint_token_program = 11;
+  PublicKey output_mint = 12;
+  PublicKey output_mint_token_program = 13;
+  PublicKey system_program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message FlashFillOrderArgs {
+  uint64 max_taking_amount = 1;
+}
+    
+message FlashFillOrder {
+  FlashFillOrderAccounts accounts = 1;
+  FlashFillOrderArgs args = 2;
+}
+    
+message CancelOrderAccounts {
+  PublicKey order = 1;
+  PublicKey reserve = 2;
+  PublicKey maker = 3;
+  PublicKey maker_input_account = 4;
+  PublicKey system_program = 5;
+  PublicKey token_program = 6;
+  PublicKey input_mint = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message CancelOrderArgs {
+}
+    
+message CancelOrder {
+  CancelOrderAccounts accounts = 1;
+  CancelOrderArgs args = 2;
+}
+    
+message CancelExpiredOrderAccounts {
+  PublicKey order = 1;
+  PublicKey reserve = 2;
+  PublicKey maker = 3;
+  PublicKey maker_input_account = 4;
+  PublicKey system_program = 5;
+  PublicKey token_program = 6;
+  PublicKey input_mint = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message CancelExpiredOrderArgs {
+}
+    
+message CancelExpiredOrder {
+  CancelExpiredOrderAccounts accounts = 1;
+  CancelExpiredOrderArgs args = 2;
+}
+    
+message WithdrawFeeAccounts {
+  PublicKey admin = 1;
+  PublicKey fee_authority = 2;
+  PublicKey program_fee_account = 3;
+  PublicKey admin_token_acocunt = 4;
+  PublicKey token_program = 5;
+  PublicKey mint = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message WithdrawFeeArgs {
+  uint64 amount = 1;
+}
+    
+message WithdrawFee {
+  WithdrawFeeAccounts accounts = 1;
+  WithdrawFeeArgs args = 2;
+}
+    
+message InitFeeAccounts {
+  PublicKey keeper = 1;
+  PublicKey fee_authority = 2;
+  PublicKey system_program = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message InitFeeArgs {
+  uint64 maker_fee = 1;
+  uint64 maker_stable_fee = 2;
+  uint64 taker_fee = 3;
+  uint64 taker_stable_fee = 4;
+}
+    
+message InitFee {
+  InitFeeAccounts accounts = 1;
+  InitFeeArgs args = 2;
+}
+    
+message UpdateFeeAccounts {
+  PublicKey keeper = 1;
+  PublicKey fee_authority = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message UpdateFeeArgs {
+  uint64 maker_fee = 1;
+  uint64 maker_stable_fee = 2;
+  uint64 taker_fee = 3;
+  uint64 taker_stable_fee = 4;
+}
+    
+message UpdateFee {
+  UpdateFeeAccounts accounts = 1;
+  UpdateFeeArgs args = 2;
+}
+    
+message TradeEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message TradeEventArgs {
+  PublicKey order_key = 1;
+  PublicKey taker = 2;
+  uint64 remaining_in_amount = 3;
+  uint64 remaining_out_amount = 4;
+  uint64 in_amount = 5;
+  uint64 out_amount = 6;
+}
+    
+message TradeEvent {
+  TradeEventAccounts accounts = 1;
+  TradeEventArgs args = 2;
+}
+    
+message CancelOrderEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CancelOrderEventArgs {
+  PublicKey order_key = 1;
+}
+    
+message CancelOrderEvent {
+  CancelOrderEventAccounts accounts = 1;
+  CancelOrderEventArgs args = 2;
+}
+    
+message CreateOrderEventAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CreateOrderEventArgs {
+  PublicKey order_key = 1;
+  PublicKey maker = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  uint64 in_amount = 5;
+  uint64 out_amount = 6;
+  optional int64 expired_at = 7;
+}
+    
+message CreateOrderEvent {
+  CreateOrderEventAccounts accounts = 1;
+  CreateOrderEventArgs args = 2;
+}
+    
+message LimitOrderAccount {
+  oneof account {
+    Fee fee = 1;
+    Order order = 2;
+  }
+}
+message Instructions {
+  oneof instruction {
+    InitializeOrder initialize_order = 1;
+    FillOrder fill_order = 2;
+    PreFlashFillOrder pre_flash_fill_order = 3;
+    FlashFillOrder flash_fill_order = 4;
+    CancelOrder cancel_order = 5;
+    CancelExpiredOrder cancel_expired_order = 6;
+    WithdrawFee withdraw_fee = 7;
+    InitFee init_fee = 8;
+    UpdateFee update_fee = 9;
+  }
+}
+message ProgramEvents {
+  oneof event {
+    TradeEvent trade_event = 1;
+    CancelOrderEvent cancel_order_event = 2;
+    CreateOrderEvent create_order_event = 3;
+  }
+}
+message ProgramEventOutput {
+  optional Instructions instruction = 1;
+  repeated ProgramEvents program_events = 2;
+}
