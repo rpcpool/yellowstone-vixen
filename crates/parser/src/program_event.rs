@@ -1,8 +1,4 @@
-//! Helpers for program event support.
-//!
-//! When the `program-events` feature is active, the proc-macro generates an
-//! `InstructionParser` that handles both regular instructions and events.
-//! This module provides constants and helpers used by the generated code.
+//! Constants and helpers for program event support, used by proc-macro generated code.
 
 /// 8-byte self-CPI event prefix.
 ///

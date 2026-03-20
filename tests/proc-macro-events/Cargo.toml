@@ -19,7 +19,7 @@ yellowstone-vixen-mock = { workspace = true }
 vixen-test-utils = { path = "../common" }
 
 # required by macro expansion
-yellowstone-vixen-parser = { workspace = true, features = ["program-events"] }
+yellowstone-vixen-parser = { workspace = true }
 yellowstone-vixen-core = { workspace = true, features = ["proto"] }
 yellowstone-vixen = { workspace = true }
 

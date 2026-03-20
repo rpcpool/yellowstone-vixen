@@ -16,10 +16,7 @@ pub use error::*;
 
 pub mod prelude;
 
-#[cfg(feature = "program-events")]
 mod program_event;
-
-#[cfg(feature = "program-events")]
 pub use program_event::*;
 
 /// Re-exported for use by `include_vixen_parser!` generated code.

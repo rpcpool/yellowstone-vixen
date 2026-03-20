@@ -32,4 +32,3 @@ proto = [
   "yellowstone-vixen-proto/parser",
   "solana-program-option",
 ]
-program-events = []
