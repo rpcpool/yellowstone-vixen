@@ -118,6 +118,7 @@ pub fn account_parser(
                                 }
                                 Err(e) => {
                                     println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
+
                                     return Err(ParseError::Other(e.into()));
                                 }
                             }
@@ -196,6 +197,7 @@ pub fn account_parser(
                                 }
                                 Err(e) => {
                                     println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
+
                                     return Err(ParseError::Other(e.into()));
                                 }
                             }
@@ -220,6 +222,7 @@ pub fn account_parser(
                             }
                             Err(e) => {
                                 println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
+
                                 return Err(ParseError::Other(e.into()));
                             }
                         }

@@ -49,13 +49,14 @@ pub fn event_parser(
         })
         .collect();
 
+    let anchor_event_tag_u64 = super::ANCHOR_EVENT_IX_TAG;
+
     let resolve_events_from_logs = quote! {
         ///
         /// Resolve events from `"Program data: "` transaction log lines.
         ///
         /// For each matching line, base64-decodes the payload, prepends the
-        /// self-CPI event prefix (`EVENT_IX_TAG`), and runs it through
-        /// the event discriminator matching.
+        /// self-CPI event prefix, and runs it through the event discriminator matching.
         ///
         /// Returns successfully parsed events; lines that don't match any
         /// discriminator are silently skipped.
@@ -64,8 +65,7 @@ pub fn event_parser(
             logs: &[String],
         ) -> Vec<#wrapper_ident> {
             const PREFIX: &str = "Program data: ";
-            // First 8 bytes of sha256("anchor:event"), see anchor-lang event.rs
-            const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
+            const EVENT_IX_TAG: [u8; 8] = (#anchor_event_tag_u64).to_le_bytes();
 
             logs.iter()
                 .filter_map(|line| {
@@ -126,9 +126,6 @@ fn generate_program_event_output() -> TokenStream {
                     }
                 }
 
-                // DecodeError::new is doc(hidden) + deprecated but explicitly intended
-                // for Message implementations, which is exactly our use case.
-                #[allow(deprecated)]
                 fn merge_field(
                     &mut self,
                     _tag: u32,

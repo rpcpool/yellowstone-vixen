@@ -1,3 +1,7 @@
+/// Anchor CPI event tag: first 8 bytes of `sha256("anchor:event")`.
+/// Used in generated code to identify self-CPI event instructions.
+const ANCHOR_EVENT_IX_TAG: u64 = 0x1d9a_cb51_2ea5_45e4;
+
 pub mod account_parser;
 pub mod event_parser;
 pub mod instruction_parser;

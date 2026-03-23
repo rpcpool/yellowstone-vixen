@@ -437,6 +437,7 @@ pub fn instruction_parser(
     // InstructionParser outputs ProgramEventOutput instead of Instructions.
     let instruction_parser_impl = if has_events {
         let output_ident = format_ident!("ProgramEventOutput");
+        let anchor_event_tag_u64 = super::ANCHOR_EVENT_IX_TAG;
 
         quote! {
             #[derive(Debug, Copy, Clone)]
@@ -467,8 +468,7 @@ pub fn instruction_parser(
 
                     // Skip standalone CPI events — they are collected by the
                     // parent instruction's parse call below.
-                    // First 8 bytes of sha256("anchor:event"), see anchor-lang event.rs
-                    const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
+                    const EVENT_IX_TAG: [u8; 8] = (#anchor_event_tag_u64).to_le_bytes();
 
                     if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
                         return Err(ParseError::Filtered);
