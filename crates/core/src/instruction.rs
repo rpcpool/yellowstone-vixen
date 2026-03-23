@@ -456,28 +456,15 @@ impl InstructionUpdate {
         })
     }
 
-    /// Iterate over all inner instructions stored in this instruction and alos emit pseudo nodes representing return from CPI calls to parent nodes.
+    /// Iterate over all inner instructions stored in this instruction and also emit pseudo nodes representing return from CPI calls to parent nodes.
     #[inline]
-    pub fn visit_tree(&self) -> VisitAll<'_, Self> { VisitAll::new(self) }
+    pub fn visit_tree(&self) -> VisitAll<'_> { VisitAll::new(self) }
 }
 
-/// Trait for tree nodes that have children of the same type.
-pub trait Node {
-    /// Returns the child nodes of this node.
-    fn inner_iter(&self) -> std::slice::Iter<'_, Self>
-    where Self: Sized;
+impl InstructionUpdate {
+    #[inline]
+    fn get_path(&self) -> Path { self.path.clone() }
 
-    /// Returns true if this node has no children.
-    fn is_leaf(&self) -> bool;
-}
-
-/// Trait for tree nodes that have a cpi path.
-pub trait NodeWithPath {
-    /// cpi path
-    fn get_path(&self) -> Path;
-}
-
-impl Node for InstructionUpdate {
     #[inline]
     fn inner_iter(&self) -> std::slice::Iter<'_, Self> { self.inner.iter() }
 
@@ -485,30 +472,31 @@ impl Node for InstructionUpdate {
     fn is_leaf(&self) -> bool { self.inner.is_empty() }
 }
 
-impl NodeWithPath for InstructionUpdate {
-    #[inline]
-    fn get_path(&self) -> Path { self.path.clone() }
-}
-
-/// A depth-first iterator over a tree of [`Node`] nodes.
+/// A depth-first iterator over a tree.
 ///
 /// Yields the root node first, then recursively visits all children.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
-pub struct VisitAll<'a, T: Node>(VisitAllState<'a, T>);
+pub struct VisitAll<'a>(VisitAllState<'a>);
 
 #[derive(Debug)]
-enum VisitAllState<'a, T: Node> {
-    Init(&'a T),
+enum VisitAllState<'a> {
+    Init(&'a InstructionUpdate),
     // (iterator over children, parent node, optional pending enter-CPI path)
-    Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>, Option<Path>),
+    Started(
+        VecDeque<(
+            std::slice::Iter<'a, InstructionUpdate>,
+            &'a InstructionUpdate,
+        )>,
+        Option<Path>,
+    ),
 }
 
 #[derive(Debug)]
 /// Items emitted from `VisitAll` tree traversal visitor.
-pub enum TreeStep<'a, T: Node> {
+pub enum TreeStep<'a> {
     /// instruction node of tree
-    PhysicalNode(&'a T),
+    PhysicalNode(&'a InstructionUpdate),
     /// pseudo event: about to recurse into CPI children of a node
     EnterCpiCallFromNode {
         /// path of the caller node whose CPI children we are entering
@@ -521,13 +509,13 @@ pub enum TreeStep<'a, T: Node> {
     },
 }
 
-impl<'a, T: Node> VisitAll<'a, T> {
+impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(root: &'a T) -> Self { Self(VisitAllState::Init(root)) }
+    fn new(root: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(root)) }
 }
 
-impl<'a, T: Node + NodeWithPath> Iterator for VisitAll<'a, T> {
-    type Item = TreeStep<'a, T>;
+impl<'a> Iterator for VisitAll<'a> {
+    type Item = TreeStep<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {

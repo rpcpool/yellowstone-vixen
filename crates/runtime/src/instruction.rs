@@ -3,7 +3,6 @@
 
 use std::fmt::{self, Debug};
 
-use tracing::trace;
 use vixen_core::{
     instruction::{InstructionUpdate, TreeStep},
     GetPrefilter, ParserId, TransactionUpdate,
@@ -138,8 +137,6 @@ impl SingleInstructionPipeline {
         let (ref instruction_shared, ixs) =
             InstructionUpdate::parse_from_txn_detailed(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
-        let mut prev_depth: usize = 0;
-
         pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart)
             .await;
 
@@ -165,19 +162,6 @@ impl SingleInstructionPipeline {
                 },
                 TreeStep::PhysicalNode(insn) => insn,
             };
-
-            let depth = insn.path.len();
-
-            if depth < prev_depth {
-                trace!(
-                    from_depth = prev_depth,
-                    to_depth = depth,
-                    path = ?insn.path,
-                    "Returning from CPI nesting"
-                );
-            }
-
-            prev_depth = depth;
 
             let res = pipe.handle(insn).await;
 
