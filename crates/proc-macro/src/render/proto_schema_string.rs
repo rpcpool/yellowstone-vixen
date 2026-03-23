@@ -1,4 +1,7 @@
-use std::{collections::HashSet, fmt::Write};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Write,
+};
 
 use crate::intermediate_representation::{
     FieldTypeIr, LabelIr, OneofIr, OneofKindIr, ScalarIr, SchemaIr, TypeIr, TypeKindIr,
@@ -51,6 +54,15 @@ pub fn proto_schema_string(
         message_count += 1;
     }
 
+    // Build rename map for event types whose names collide with non-event types.
+    //
+    // Instruction and event types live in separate Rust modules (`instruction::`
+    // and `event::`), so there's no collision in Rust. But proto has a flat
+    // namespace — without renaming, the second definition gets silently dropped,
+    // causing the consumer to decode event payloads using the instruction schema
+    // (wrong field structure → "unexpected EOF").
+    let proto_rename = build_event_rename_map(schema);
+
     // Oneof parents are rendered separately below — skip them here to avoid duplicates.
     let oneof_parents: HashSet<&str> = schema
         .oneofs
@@ -60,7 +72,7 @@ pub fn proto_schema_string(
 
     // Render all non-oneof-parent messages
     {
-        let mut seen_names: HashSet<&str> = HashSet::new();
+        let mut seen_names: HashSet<String> = HashSet::new();
 
         for t in &schema.types {
             // Do not render oneof parent messages here, they are rendered separately below and we want to avoid duplicates.
@@ -68,12 +80,19 @@ pub fn proto_schema_string(
                 continue;
             }
 
-            // Skip if we've already rendered a message with the same name (can happen with DefinedType/Instruction name collisions in the IR).
-            if !seen_names.insert(t.name.as_str()) {
+            // Only apply event renames to Event-kind types.
+            let proto_name = if matches!(t.kind, TypeKindIr::Event) {
+                resolve_proto_name(&t.name, &proto_rename)
+            } else {
+                t.name.clone()
+            };
+
+            // Skip if we've already rendered a message with the same proto name.
+            if !seen_names.insert(proto_name.clone()) {
                 continue;
             }
 
-            render_type(&mut out, t);
+            render_type(&mut out, t, &proto_name, &proto_rename);
 
             message_count += 1;
         }
@@ -113,7 +132,7 @@ pub fn proto_schema_string(
             has_event_dispatch = true;
         }
 
-        render_oneof_parent(&mut out, oneof);
+        render_oneof_parent(&mut out, oneof, &proto_rename);
 
         message_count += 1;
     }
@@ -143,8 +162,52 @@ pub fn proto_schema_string(
     }
 }
 
-fn render_type(out: &mut String, msg: &TypeIr) {
-    writeln!(out, "message {} {{", msg.name).unwrap();
+/// Build a rename map for event types that collide with non-event types.
+///
+/// When an IDL has both an instruction and an event with the same name
+/// (e.g. `withdraw`), the generated IR produces two sets of proto messages
+/// (`WithdrawAccounts`, `WithdrawArgs`, `Withdraw`) — one for instructions
+/// and one for events — with different field structures. In the flat proto
+/// namespace, these would collide. We prefix the event versions with `Evt`
+/// (e.g. `EvtWithdraw`, `EvtWithdrawAccounts`, `EvtWithdrawArgs`).
+fn build_event_rename_map<'a>(schema: &'a SchemaIr) -> HashMap<&'a str, String> {
+    let non_event_names: HashSet<&str> = schema
+        .types
+        .iter()
+        .filter(|t| !matches!(t.kind, TypeKindIr::Event))
+        .map(|t| t.name.as_str())
+        .collect();
+
+    let mut rename = HashMap::new();
+
+    for t in &schema.types {
+        if matches!(t.kind, TypeKindIr::Event) && non_event_names.contains(t.name.as_str()) {
+            rename.insert(t.name.as_str(), format!("Evt{}", t.name));
+        }
+    }
+
+    rename
+}
+
+/// Resolve a type name through the rename map.
+fn resolve_proto_name(name: &str, rename: &HashMap<&str, String>) -> String {
+    rename
+        .get(name)
+        .cloned()
+        .unwrap_or_else(|| name.to_string())
+}
+
+fn render_type(
+    out: &mut String,
+    msg: &TypeIr,
+    proto_name: &str,
+    rename: &HashMap<&str, String>,
+) {
+    // Only resolve field type references through the rename map for Event types.
+    // Instruction types reference instruction sub-messages (original names).
+    let apply_field_rename = matches!(msg.kind, TypeKindIr::Event);
+
+    writeln!(out, "message {} {{", proto_name).unwrap();
 
     for field in &msg.fields {
         let label = match field.label {
@@ -154,8 +217,11 @@ fn render_type(out: &mut String, msg: &TypeIr) {
         };
 
         let field_type = match &field.field_type {
-            FieldTypeIr::Scalar(s) => scalar_to_proto(s),
-            FieldTypeIr::Message(name) => name.as_str(),
+            FieldTypeIr::Scalar(s) => scalar_to_proto(s).to_string(),
+            FieldTypeIr::Message(name) if apply_field_rename => {
+                resolve_proto_name(name, rename)
+            },
+            FieldTypeIr::Message(name) => name.clone(),
         };
 
         writeln!(
@@ -204,14 +270,28 @@ fn render_account_dispatch(out: &mut String, program_name: &str, account_types: 
     writeln!(out, "}}").unwrap();
 }
 
-fn render_oneof_parent(out: &mut String, oneof: &OneofIr) {
+fn render_oneof_parent(
+    out: &mut String,
+    oneof: &OneofIr,
+    rename: &HashMap<&str, String>,
+) {
+    // Only apply the event rename map to EventDispatch oneofs.
+    // Instruction and Enum oneofs reference original (non-renamed) message types.
+    let apply_rename = matches!(oneof.kind, OneofKindIr::EventDispatch);
+
     writeln!(out, "message {} {{", oneof.parent_message).unwrap();
     writeln!(out, "  oneof {} {{", oneof.field_name).unwrap();
 
     for v in &oneof.variants {
         let field_name = crate::utils::to_snake_case(&v.variant_name);
 
-        writeln!(out, "    {} {} = {};", v.message_type, field_name, v.tag).unwrap();
+        let msg_type = if apply_rename {
+            resolve_proto_name(&v.message_type, rename)
+        } else {
+            v.message_type.clone()
+        };
+
+        writeln!(out, "    {} {} = {};", msg_type, field_name, v.tag).unwrap();
     }
 
     writeln!(out, "  }}").unwrap();
