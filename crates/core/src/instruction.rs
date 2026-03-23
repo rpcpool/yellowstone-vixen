@@ -248,12 +248,22 @@ impl InstructionUpdate {
     #[must_use]
     pub fn log_messages(&self) -> &[String] { &self.shared.log_messages[self.log_range.clone()] }
 
-    /// Parse a transaction update into a list of instructions.
+    /// Build instruction updates from a transaction update.
     ///
     /// # Errors
-    /// Returns an error if the transaction update received is in an unparseable
+    /// Returns an error if the transaction update received is in an unbuildable
     /// form.
+    #[deprecated(note = "use InstructionUpdate::build_from_txn instead")]
     pub fn parse_from_txn(txn: &TransactionUpdate) -> Result<Vec<Self>, ParseError> {
+        Self::build_from_txn(txn)
+    }
+
+    /// Build instruction updates from a transaction update.
+    ///
+    /// # Errors
+    /// Returns an error if the transaction update received is in an unbuildable
+    /// form.
+    pub fn build_from_txn(txn: &TransactionUpdate) -> Result<Vec<Self>, ParseError> {
         let TransactionUpdate { transaction, slot } = txn.clone();
         let SubscribeUpdateTransactionInfo {
             signature,
@@ -322,18 +332,21 @@ impl InstructionUpdate {
         let mut outer = instructions
             .into_iter()
             .enumerate()
-            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, Path::new_single(idx as u32)))
+            .map(|(idx, i)| {
+                Self::build_outer_instruction(Arc::clone(&shared), i, Path::new_single(idx as u32))
+            })
             .collect::<Result<Vec<_>, _>>()?;
 
-        Self::parse_inner(&shared, inner_instructions, &mut outer)?;
+        Self::attach_inner_instructions(&shared, inner_instructions, &mut outer)?;
 
         assign_log_messages(&shared.log_messages, &mut outer);
 
         Ok(outer)
     }
 
-    // called once per tx
-    fn parse_inner(
+    // Called once per transaction to reconstruct nested CPI instructions and
+    // attach them to their outer parent.
+    fn attach_inner_instructions(
         shared: &Arc<InstructionShared>,
         inner_instructions: Vec<InnerInstructions>,
         outer: &mut [Self],
@@ -360,7 +373,7 @@ impl InstructionUpdate {
                 .into_iter()
                 .enumerate()
                 .map(|(idx, i)| {
-                    Self::parse_one_inner(Arc::clone(shared), i, paths_at_index[idx].clone())
+                    Self::build_inner_instruction(Arc::clone(shared), i, paths_at_index[idx].clone())
                 })
                 .collect::<Result<Vec<_>, _>>()?;
 
@@ -396,7 +409,7 @@ impl InstructionUpdate {
     }
 
     #[inline]
-    fn parse_one(
+    fn build_outer_instruction(
         shared: Arc<InstructionShared>,
         ins: CompiledInstruction,
         path: Path,
@@ -406,10 +419,10 @@ impl InstructionUpdate {
             ref accounts,
             data,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, path)
+        Self::build_instruction(shared, program_id_index, accounts, data, path)
     }
 
-    fn parse_one_inner(
+    fn build_inner_instruction(
         shared: Arc<InstructionShared>,
         ins: InnerInstruction,
         path: Path,
@@ -420,11 +433,11 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, path)
+        Self::build_instruction(shared, program_id_index, accounts, data, path)
             .map(|i| (i, stack_height))
     }
 
-    fn parse_from_parts(
+    fn build_instruction(
         shared: Arc<InstructionShared>,
         program_id_index: u32,
         accounts: &[u8],

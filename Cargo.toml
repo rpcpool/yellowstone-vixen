@@ -118,7 +118,6 @@ yellowstone-vixen-mock = { path = "crates/mock", version = "0.7.0" }
 yellowstone-vixen-parser = { path = "crates/parser", version = "0.7.0" }
 yellowstone-vixen-proto = { path = "crates/proto", version = "0.7.0" }
 
-
 # Parsers
 yellowstone-vixen-bpf-loader-parser = { path = "crates/bpf-loader-parser", version = "0.7.0" }
 yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.7.0" }

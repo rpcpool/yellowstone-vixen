@@ -36,7 +36,7 @@ impl InstructionPipeline {
     /// Returns an error if any of the sub-pipelines return an error.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let mut err = None;
-        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let ixs = InstructionUpdate::build_from_txn(txn).map_err(PipelineErrors::parse)?;
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
             for pipe in &*self.0 {
@@ -95,7 +95,7 @@ impl SingleInstructionPipeline {
     /// # Errors
     /// Returns an error if the inner pipeline fails.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
-        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let ixs = InstructionUpdate::build_from_txn(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
 
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
