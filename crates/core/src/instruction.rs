@@ -373,7 +373,11 @@ impl InstructionUpdate {
                 .into_iter()
                 .enumerate()
                 .map(|(idx, i)| {
-                    Self::build_inner_instruction(Arc::clone(shared), i, paths_at_index[idx].clone())
+                    Self::build_inner_instruction(
+                        Arc::clone(shared),
+                        i,
+                        paths_at_index[idx].clone(),
+                    )
                 })
                 .collect::<Result<Vec<_>, _>>()?;
 
@@ -502,6 +506,28 @@ impl<'a> Iterator for VisitAll<'a> {
     }
 }
 
+///
+/// Derive instruction paths from the flat `stack_heights` array returned by the Solana runtime.
+///
+/// Each inner instruction carries a stack height indicating its nesting depth
+/// (1 = top-level CPI, 2 = CPI called by a CPI, etc.).
+/// This function reconstructs the full tree path for every instruction
+/// by tracking a virtual stack of child indices.
+///
+/// ## Example
+///
+/// Given outer instruction index 3 and these inner instructions:
+///
+/// ```text
+/// stack_heights: [1, 1, 2, 2, 1]
+///
+/// ix[0]: height=1  →  Path [3, 0]       (first child of outer ix 3)
+/// ix[1]: height=1  →  Path [3, 1]       (second child, same level)
+/// ix[2]: height=2  →  Path [3, 1, 0]    (first grandchild under ix[1])
+/// ix[3]: height=2  →  Path [3, 1, 1]    (second grandchild, same level)
+/// ix[4]: height=1  →  Path [3, 2]       (back up to child level)
+/// ```
+///
 fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<Path> {
     if stack_heights.is_empty() {
         return Vec::new();
@@ -509,50 +535,55 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
 
     let mut paths: Vec<Path> = Vec::with_capacity(stack_heights.len());
 
-    let mut stack: Vec<u32> = Vec::with_capacity(4);
-    stack.push(outer_index);
-    stack.push(0);
-    paths.push(Path(stack.clone()));
-    for (pos, ref sh_this) in stack_heights.iter().enumerate().skip(1) {
-        let (Some(sh_this), Some(sh_parent)) = (sh_this, stack_heights[pos - 1]) else {
-            // catch exceptional cases where stack height is missing
-            // assume same level
-            if let Some(top) = stack.last_mut() {
-                *top += 1;
+    // `path_stack` tracks the current position in the call tree as a list of child indices.
+    // e.g. [3, 1, 0] means: outer instruction 3 → child 1 → grandchild 0.
+    let mut path_stack: Vec<u32> = Vec::with_capacity(4);
+
+    path_stack.push(outer_index);
+    path_stack.push(0);
+    paths.push(Path(path_stack.clone()));
+
+    for (i, ref current_height) in stack_heights.iter().enumerate().skip(1) {
+        let (Some(current_height), Some(prev_height)) = (current_height, stack_heights[i - 1])
+        else {
+            // Stack height missing — assume same level as previous instruction.
+            if let Some(last) = path_stack.last_mut() {
+                *last += 1;
             }
-            paths.push(Path(stack.clone()));
+
+            paths.push(Path(path_stack.clone()));
+
             continue;
         };
-        match sh_this.cmp(&sh_parent) {
+
+        match current_height.cmp(&prev_height) {
             std::cmp::Ordering::Greater => {
-                // calling is always +1 stack height
+                // CPI call: descend one level (stack height always increments by exactly 1).
                 debug_assert_eq!(
-                    *sh_this,
-                    sh_parent + 1,
+                    *current_height,
+                    prev_height + 1,
                     "invalid stack heights: {stack_heights:?}"
                 );
-                // descend in tree to child node
-                stack.push(0);
+
+                path_stack.push(0);
             },
             std::cmp::Ordering::Equal => {
-                // same level
-                // stack is actually never empty here
-                if let Some(top) = stack.last_mut() {
-                    *top += 1;
+                // Sibling: same depth, advance to next child index.
+                if let Some(last) = path_stack.last_mut() {
+                    *last += 1;
                 }
             },
             std::cmp::Ordering::Less => {
-                // returning from calls might skip multiple levels (not only one link above)
-                // ascend in tree to parent node
-                stack.truncate(*sh_this as usize);
-                // stack is actually never empty here
-                if let Some(top) = stack.last_mut() {
-                    *top += 1;
+                // Return from CPI: may skip multiple levels at once (e.g. height 3 → 1).
+                path_stack.truncate(*current_height as usize);
+
+                if let Some(last) = path_stack.last_mut() {
+                    *last += 1;
                 }
             },
         }
 
-        paths.push(Path(stack.clone()));
+        paths.push(Path(path_stack.clone()));
     }
 
     debug_assert_eq!(
@@ -560,6 +591,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
         stack_heights.len(),
         "derived paths failed for {stack_heights:?}"
     );
+
     paths
 }
 
