@@ -170,7 +170,7 @@ pub fn proto_schema_string(
 /// and one for events — with different field structures. In the flat proto
 /// namespace, these would collide. We prefix the event versions with `Evt`
 /// (e.g. `EvtWithdraw`, `EvtWithdrawAccounts`, `EvtWithdrawArgs`).
-fn build_event_rename_map<'a>(schema: &'a SchemaIr) -> HashMap<&'a str, String> {
+fn build_event_rename_map(schema: &SchemaIr) -> HashMap<&str, String> {
     let non_event_names: HashSet<&str> = schema
         .types
         .iter()
@@ -197,12 +197,7 @@ fn resolve_proto_name(name: &str, rename: &HashMap<&str, String>) -> String {
         .unwrap_or_else(|| name.to_string())
 }
 
-fn render_type(
-    out: &mut String,
-    msg: &TypeIr,
-    proto_name: &str,
-    rename: &HashMap<&str, String>,
-) {
+fn render_type(out: &mut String, msg: &TypeIr, proto_name: &str, rename: &HashMap<&str, String>) {
     // Only resolve field type references through the rename map for Event types.
     // Instruction types reference instruction sub-messages (original names).
     let apply_field_rename = matches!(msg.kind, TypeKindIr::Event);
@@ -218,9 +213,7 @@ fn render_type(
 
         let field_type = match &field.field_type {
             FieldTypeIr::Scalar(s) => scalar_to_proto(s).to_string(),
-            FieldTypeIr::Message(name) if apply_field_rename => {
-                resolve_proto_name(name, rename)
-            },
+            FieldTypeIr::Message(name) if apply_field_rename => resolve_proto_name(name, rename),
             FieldTypeIr::Message(name) => name.clone(),
         };
 
@@ -270,11 +263,7 @@ fn render_account_dispatch(out: &mut String, program_name: &str, account_types: 
     writeln!(out, "}}").unwrap();
 }
 
-fn render_oneof_parent(
-    out: &mut String,
-    oneof: &OneofIr,
-    rename: &HashMap<&str, String>,
-) {
+fn render_oneof_parent(out: &mut String, oneof: &OneofIr, rename: &HashMap<&str, String>) {
     // Only apply the event rename map to EventDispatch oneofs.
     // Instruction and Enum oneofs reference original (non-renamed) message types.
     let apply_rename = matches!(oneof.kind, OneofKindIr::EventDispatch);
