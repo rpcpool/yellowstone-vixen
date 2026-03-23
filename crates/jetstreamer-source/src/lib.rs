@@ -1,6 +1,6 @@
 use std::sync::{
     atomic::{AtomicU64, Ordering},
-    Arc,
+    Arc, Once,
 };
 
 use async_trait::async_trait;
@@ -73,24 +73,12 @@ impl VixenStreamHandler {
                 block_matches.push(filter_id.clone());
             }
 
-            //BUG: 2. Calculate Transaction Matches
-            // NOTE: Instruction parsers NEED transactions to extract instructions from!
-            // We should NOT skip them here, otherwise they won't receive any transactions.
-
-            let mut tx_match = false;
+            // 2. Calculate Transaction Matches
+            // Instruction parsers need transactions to extract instructions from,
+            // so any parser with a transaction filter must receive all transactions.
+            // The jetstreamer-firehose API does not support per-account filtering,
+            // so we include all transactions whenever a transaction filter is present.
             if prefilter.transaction.is_some() {
-                // Note: We cannot check account keys with current jetstreamer-firehose API
-                // so we include all transactions when transaction filters are configured
-                tx_match = true;
-            }
-            if let Some(tx_filter) = &prefilter.transaction
-                && (!tx_filter.accounts_include.is_empty()
-                    || !tx_filter.accounts_required.is_empty())
-            {
-                tx_match = true;
-            }
-
-            if tx_match {
                 transaction_matches.push(filter_id.clone());
             }
         }
@@ -346,22 +334,29 @@ impl SourceTrait for JetstreamSource {
         let config = self.config.clone();
         let filters = self.filters.clone();
 
-        // SAFETY: jetstreamer-firehose reads these env vars when `firehose()` is
-        // called (inside the spawned task below). Setting them here — before that
-        // call — ensures the values are visible. The tokio runtime is already
-        // multi-threaded at this point, so a true data race is possible if other
-        // code reads these vars concurrently; in practice nothing else in this
-        // process touches them.
-        unsafe {
-            std::env::set_var("JETSTREAMER_NETWORK", &config.network);
-            std::env::set_var(
-                "JETSTREAMER_COMPACT_INDEX_BASE_URL",
-                &config.compact_index_base_url,
-            );
-            std::env::set_var(
-                "JETSTREAMER_NETWORK_CAPACITY_MB",
-                config.network_capacity_mb.to_string(),
-            );
+        // jetstreamer-firehose reads configuration exclusively through env vars.
+        // `set_var` is unsafe in multi-threaded programs (UB if another thread
+        // reads the environment concurrently). We use `Once` so the write happens
+        // at most once per process, minimising the race window. Callers should
+        // ensure `connect()` is invoked early — ideally before spawning work that
+        // reads the environment.
+        {
+            static ENV_INIT: Once = Once::new();
+            ENV_INIT.call_once(|| {
+                // SAFETY: called at most once, and as early as possible before
+                // the firehose spawns its own threads that read these vars.
+                unsafe {
+                    std::env::set_var("JETSTREAMER_NETWORK", &config.network);
+                    std::env::set_var(
+                        "JETSTREAMER_COMPACT_INDEX_BASE_URL",
+                        &config.compact_index_base_url,
+                    );
+                    std::env::set_var(
+                        "JETSTREAMER_NETWORK_CAPACITY_MB",
+                        config.network_capacity_mb.to_string(),
+                    );
+                }
+            });
         }
 
         let cancellation_token = CancellationToken::new();
@@ -501,7 +496,10 @@ impl From<Error> for VixenError {
     fn from(e: Error) -> Self {
         match e {
             Error::Io(io_err) => VixenError::Io(io_err),
-            other => VixenError::Io(std::io::Error::other(other.to_string())),
+            // VixenError only exposes an Io variant for generic errors.
+            // Wrap with `io::Error::other` but preserve the original error as
+            // the source (via `Box<dyn Error>`) so callers can still downcast.
+            other => VixenError::Io(std::io::Error::other(other)),
         }
     }
 }
@@ -588,61 +586,32 @@ mod convert {
     use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
 
     pub fn transaction(tx: VersionedTransaction) -> proto::Transaction {
-        proto::Transaction {
-            signatures: tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect(),
-            message: Some(match tx.message {
-                VersionedMessage::Legacy(msg) => proto::Message {
-                    header: Some(proto::MessageHeader {
-                        num_required_signatures: msg.header.num_required_signatures as u32,
-                        num_readonly_signed_accounts: msg.header.num_readonly_signed_accounts
-                            as u32,
-                        num_readonly_unsigned_accounts: msg.header.num_readonly_unsigned_accounts
-                            as u32,
-                    }),
-                    account_keys: msg
-                        .account_keys
-                        .iter()
-                        .map(|k| k.as_ref().to_vec())
-                        .collect(),
-                    recent_blockhash: msg.recent_blockhash.as_ref().to_vec(),
-                    instructions: msg
-                        .instructions
-                        .into_iter()
-                        .map(|ix| proto::CompiledInstruction {
-                            program_id_index: ix.program_id_index as u32,
-                            accounts: ix.accounts,
-                            data: ix.data,
-                        })
-                        .collect(),
-                    versioned: false,
-                    address_table_lookups: vec![],
-                },
-                VersionedMessage::V0(msg) => proto::Message {
-                    header: Some(proto::MessageHeader {
-                        num_required_signatures: msg.header.num_required_signatures as u32,
-                        num_readonly_signed_accounts: msg.header.num_readonly_signed_accounts
-                            as u32,
-                        num_readonly_unsigned_accounts: msg.header.num_readonly_unsigned_accounts
-                            as u32,
-                    }),
-                    account_keys: msg
-                        .account_keys
-                        .iter()
-                        .map(|k| k.as_ref().to_vec())
-                        .collect(),
-                    recent_blockhash: msg.recent_blockhash.as_ref().to_vec(),
-                    instructions: msg
-                        .instructions
-                        .into_iter()
-                        .map(|ix| proto::CompiledInstruction {
-                            program_id_index: ix.program_id_index as u32,
-                            accounts: ix.accounts,
-                            data: ix.data,
-                        })
-                        .collect(),
-                    versioned: true,
-                    address_table_lookups: msg
-                        .address_table_lookups
+        let signatures = tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect();
+
+        let message = {
+            let (
+                header,
+                account_keys,
+                recent_blockhash,
+                instructions,
+                versioned,
+                address_table_lookups,
+            ) = match tx.message {
+                VersionedMessage::Legacy(msg) => (
+                    msg.header,
+                    msg.account_keys,
+                    msg.recent_blockhash,
+                    msg.instructions,
+                    false,
+                    vec![],
+                ),
+                VersionedMessage::V0(msg) => (
+                    msg.header,
+                    msg.account_keys,
+                    msg.recent_blockhash,
+                    msg.instructions,
+                    true,
+                    msg.address_table_lookups
                         .into_iter()
                         .map(|l| proto::MessageAddressTableLookup {
                             account_key: l.account_key.as_ref().to_vec(),
@@ -650,8 +619,33 @@ mod convert {
                             readonly_indexes: l.readonly_indexes,
                         })
                         .collect(),
-                },
-            }),
+                ),
+            };
+
+            proto::Message {
+                header: Some(proto::MessageHeader {
+                    num_required_signatures: header.num_required_signatures as u32,
+                    num_readonly_signed_accounts: header.num_readonly_signed_accounts as u32,
+                    num_readonly_unsigned_accounts: header.num_readonly_unsigned_accounts as u32,
+                }),
+                account_keys: account_keys.iter().map(|k| k.as_ref().to_vec()).collect(),
+                recent_blockhash: recent_blockhash.as_ref().to_vec(),
+                instructions: instructions
+                    .into_iter()
+                    .map(|ix| proto::CompiledInstruction {
+                        program_id_index: ix.program_id_index as u32,
+                        accounts: ix.accounts,
+                        data: ix.data,
+                    })
+                    .collect(),
+                versioned,
+                address_table_lookups,
+            }
+        };
+
+        proto::Transaction {
+            signatures,
+            message: Some(message),
         }
     }
 
@@ -669,55 +663,55 @@ mod convert {
             post_balances: meta.post_balances,
             inner_instructions: meta
                 .inner_instructions
-                .map(|ixs| {
-                    ixs.into_iter()
-                        .map(|ix| proto::InnerInstructions {
-                            index: ix.index as u32,
-                            instructions: ix
-                                .instructions
-                                .into_iter()
-                                .map(|i| proto::InnerInstruction {
-                                    program_id_index: i.instruction.program_id_index as u32,
-                                    accounts: i.instruction.accounts,
-                                    data: i.instruction.data,
-                                    stack_height: i.stack_height,
-                                })
-                                .collect(),
+                .into_iter()
+                .flatten()
+                .map(|ix| proto::InnerInstructions {
+                    index: ix.index as u32,
+                    instructions: ix
+                        .instructions
+                        .into_iter()
+                        .map(|i| proto::InnerInstruction {
+                            program_id_index: i.instruction.program_id_index as u32,
+                            accounts: i.instruction.accounts,
+                            data: i.instruction.data,
+                            stack_height: i.stack_height,
                         })
-                        .collect()
+                        .collect(),
                 })
-                .unwrap_or_default(),
+                .collect(),
             inner_instructions_none,
             log_messages: meta.log_messages.unwrap_or_default(),
             log_messages_none,
             pre_token_balances: meta
                 .pre_token_balances
-                .map(|bs| bs.into_iter().map(convert_token_balance).collect())
-                .unwrap_or_default(),
+                .into_iter()
+                .flatten()
+                .map(convert_token_balance)
+                .collect(),
             post_token_balances: meta
                 .post_token_balances
-                .map(|bs| bs.into_iter().map(convert_token_balance).collect())
-                .unwrap_or_default(),
+                .into_iter()
+                .flatten()
+                .map(convert_token_balance)
+                .collect(),
             rewards: meta
                 .rewards
-                .map(|rs| {
-                    rs.into_iter()
-                        .map(|r| proto::Reward {
-                            pubkey: r.pubkey,
-                            lamports: r.lamports,
-                            post_balance: r.post_balance,
-                            reward_type: match r.reward_type {
-                                Some(RewardType::Fee) => proto::RewardType::Fee as i32,
-                                Some(RewardType::Rent) => proto::RewardType::Rent as i32,
-                                Some(RewardType::Staking) => proto::RewardType::Staking as i32,
-                                Some(RewardType::Voting) => proto::RewardType::Voting as i32,
-                                _ => proto::RewardType::Unspecified as i32,
-                            },
-                            commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
-                        })
-                        .collect()
+                .into_iter()
+                .flatten()
+                .map(|r| proto::Reward {
+                    pubkey: r.pubkey,
+                    lamports: r.lamports,
+                    post_balance: r.post_balance,
+                    reward_type: match r.reward_type {
+                        Some(RewardType::Fee) => proto::RewardType::Fee as i32,
+                        Some(RewardType::Rent) => proto::RewardType::Rent as i32,
+                        Some(RewardType::Staking) => proto::RewardType::Staking as i32,
+                        Some(RewardType::Voting) => proto::RewardType::Voting as i32,
+                        _ => proto::RewardType::Unspecified as i32,
+                    },
+                    commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
                 })
-                .unwrap_or_default(),
+                .collect(),
             loaded_writable_addresses: meta
                 .loaded_addresses
                 .writable
