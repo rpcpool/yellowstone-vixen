@@ -126,6 +126,9 @@ fn generate_program_event_output() -> TokenStream {
                     }
                 }
 
+                // DecodeError::new is doc(hidden) + deprecated but explicitly intended
+                // for Message implementations, which is exactly our use case.
+                #[allow(deprecated)]
                 fn merge_field(
                     &mut self,
                     _tag: u32,
