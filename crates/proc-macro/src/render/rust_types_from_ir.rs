@@ -59,10 +59,13 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .filter(|t| !oneof_parents.contains(t.name.as_str()))
                     .collect();
 
-                out.extend(render_instruction_dispatch(
+                out.extend(render_dispatch(
                     oneof,
                     &ix_types,
                     &instruction_type_names,
+                    &oneof.parent_message,
+                    "instruction",
+                    "Instruction",
                 ));
             },
             OneofKindIr::EventDispatch => {
@@ -73,7 +76,15 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .filter(|t| !oneof_parents.contains(t.name.as_str()))
                     .collect();
 
-                out.extend(render_event_dispatch(oneof, &ev_types, &event_type_names));
+                // Use "Events" as the Rust wrapper name (not "ProgramEvents" which is the proto name)
+                out.extend(render_dispatch(
+                    oneof,
+                    &ev_types,
+                    &event_type_names,
+                    "Events",
+                    "event",
+                    "Event",
+                ));
             },
             OneofKindIr::Enum => {
                 out.extend(render_enum_oneof(oneof));
@@ -115,27 +126,28 @@ fn render_struct_type(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> TokenS
 }
 
 ///
-/// Render instruction dispatch: module-wrapped.
+/// Render a dispatch module: wrapper struct + inner module with enum + payload types.
 ///
 /// Generates:
-/// - `pub mod instruction { pub enum Instruction { ... } /* + payload types */ }`
-/// - Wrapper struct `Instructions` with `instruction: instruction::Instruction` (non-Option)
-/// - Custom Borsh impls for `Instructions`
+/// - `pub mod <mod_name> { pub enum <enum_name> { ... } /* + payload types */ }`
+/// - Wrapper struct with a single field of the enum type (non-Option)
+/// - Custom Borsh impls for the wrapper
 /// - When proto: manual `prost::Message` impl (no prost derive on the wrapper)
 ///
-fn render_instruction_dispatch(
+fn render_dispatch(
     oneof_ir: &OneofIr,
-    ix_types: &[&TypeIr],
+    payload_types: &[&TypeIr],
     local_names: &HashSet<&str>,
+    rust_wrapper_name: &str,
+    mod_name: &str,
+    enum_name: &str,
 ) -> TokenStream {
-    let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "Instructions"
-    let mod_ident = format_ident!("instruction");
-    let oneof_ident = format_ident!("Instruction");
+    let wrapper_ident = format_ident!("{}", rust_wrapper_name);
+    let mod_ident = format_ident!("{}", mod_name);
+    let oneof_ident = format_ident!("{}", enum_name);
     let field_ident = format_ident!("{}", oneof_ir.field_name);
 
-    // Render instruction types inside the module (wrapper structs still exist
-    // for proto merge decoding and for users who want them).
-    let module_types: Vec<TokenStream> = ix_types
+    let module_types: Vec<TokenStream> = payload_types
         .iter()
         .map(|t| render_struct_type(t, Some(local_names)))
         .collect();
@@ -143,146 +155,6 @@ fn render_instruction_dispatch(
     // Struct variants: `Swap { accounts: SwapAccounts, args: SwapArgs }`
     let variants = oneof_ir.variants.iter().map(|v| {
         let v_ident = format_ident!("{}", v.variant_name);
-
-        let accounts_ident = format_ident!("{}Accounts", v.message_type);
-        let args_ident = format_ident!("{}Args", v.message_type);
-
-        quote! {
-            #v_ident { accounts: #accounts_ident, args: #args_ident }
-        }
-    });
-
-    let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
-        let disc = i as u8;
-
-        let v_ident = format_ident!("{}", v.variant_name);
-        let msg_ident = format_ident!("{}", v.message_type);
-
-        quote! {
-            #mod_ident::#oneof_ident::#v_ident { accounts, args } => {
-                ::borsh::BorshSerialize::serialize(&#disc, writer)?;
-                ::borsh::BorshSerialize::serialize(&(#mod_ident::#msg_ident { accounts: accounts.clone(), args: args.clone() }), writer)
-            }
-        }
-    });
-
-    let borsh_deserialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
-        let disc = i as u8;
-        let v_ident = format_ident!("{}", v.variant_name);
-        let msg_ident = format_ident!("{}", v.message_type);
-
-        quote! {
-            #disc => {
-                let v: #mod_ident::#msg_ident = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                #mod_ident::#oneof_ident::#v_ident { accounts: v.accounts, args: v.args }
-            }
-        }
-    });
-
-    let proto_impls = if cfg!(feature = "proto") {
-        let oneof_impl =
-            super::manual_prost::manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
-
-        let message_impl = super::manual_prost::manual_prost_message_impl(
-            &parent_ident,
-            &field_ident,
-            &mod_ident,
-            &oneof_ident,
-        );
-
-        quote! { #oneof_impl #message_impl }
-    } else {
-        quote! {}
-    };
-
-    // For the parent `Instructions` struct, Debug is manual in proto mode
-    // (provided by manual_prost_message_impl). For the `Instruction` enum
-    // we always derive Debug since struct variants don't use prost::Oneof.
-    let parent_debug_derive = if cfg!(feature = "proto") {
-        quote! {}
-    } else {
-        quote! { Debug, }
-    };
-
-    quote! {
-        #[derive(Clone, #parent_debug_derive PartialEq)]
-        pub struct #parent_ident {
-            pub #field_ident: #mod_ident::#oneof_ident,
-        }
-
-        pub mod #mod_ident {
-            #(#module_types)*
-
-            #[derive(Clone, Debug, PartialEq)]
-            pub enum #oneof_ident {
-                #(#variants),*
-            }
-        }
-
-        #proto_impls
-
-        impl ::borsh::BorshSerialize for #parent_ident {
-            fn serialize<W: ::borsh::io::Write>(
-                &self,
-                writer: &mut W
-            ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                match &self.#field_ident {
-                    #(#borsh_serialize_arms,)*
-                }
-            }
-        }
-
-        impl ::borsh::BorshDeserialize for #parent_ident {
-            fn deserialize_reader<R: ::borsh::io::Read>(
-                reader: &mut R
-            ) -> ::core::result::Result<Self, ::borsh::io::Error> {
-                let disc: u8 = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
-
-                let #field_ident = match disc {
-                    #(#borsh_deserialize_arms,)*
-
-                    _ => {
-                        return ::core::result::Result::Err(::borsh::io::Error::new(
-                            ::borsh::io::ErrorKind::InvalidData,
-                            "invalid discriminant"
-                        ));
-                    }
-                };
-
-                ::core::result::Result::Ok(Self { #field_ident })
-            }
-        }
-    }
-}
-
-///
-/// Render event dispatch: module-wrapped.
-///
-/// Same pattern as `render_instruction_dispatch` but uses:
-/// - `pub mod event { ... }` instead of `pub mod instruction { ... }`
-/// - `Event` enum instead of `Instruction`
-/// - `Events` wrapper struct instead of `Instructions`
-///
-fn render_event_dispatch(
-    oneof_ir: &OneofIr,
-    ev_types: &[&TypeIr],
-    local_names: &HashSet<&str>,
-) -> TokenStream {
-    let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "ProgramEvents"
-                                                                     // Use "Events" as the Rust wrapper struct name (not "ProgramEvents" which is the proto name)
-    let rust_parent_ident = format_ident!("Events");
-    let mod_ident = format_ident!("event");
-    let oneof_ident = format_ident!("Event");
-    let field_ident = format_ident!("{}", oneof_ir.field_name);
-
-    let module_types: Vec<TokenStream> = ev_types
-        .iter()
-        .map(|t| render_struct_type(t, Some(local_names)))
-        .collect();
-
-    let variants = oneof_ir.variants.iter().map(|v| {
-        let v_ident = format_ident!("{}", v.variant_name);
         let accounts_ident = format_ident!("{}Accounts", v.message_type);
         let args_ident = format_ident!("{}Args", v.message_type);
 
@@ -319,12 +191,11 @@ fn render_event_dispatch(
     });
 
     let proto_impls = if cfg!(feature = "proto") {
-        // Use a renamed oneof_ir for proto that maps parent_message to "Events" in Rust
         let oneof_impl =
             super::manual_prost::manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
 
         let message_impl = super::manual_prost::manual_prost_message_impl(
-            &rust_parent_ident,
+            &wrapper_ident,
             &field_ident,
             &mod_ident,
             &oneof_ident,
@@ -335,18 +206,16 @@ fn render_event_dispatch(
         quote! {}
     };
 
+    // Debug is manual in proto mode (provided by manual_prost_message_impl).
     let parent_debug_derive = if cfg!(feature = "proto") {
         quote! {}
     } else {
         quote! { Debug, }
     };
 
-    // Suppress unused warning for parent_ident (proto name "ProgramEvents")
-    let _ = parent_ident;
-
     quote! {
         #[derive(Clone, #parent_debug_derive PartialEq)]
-        pub struct #rust_parent_ident {
+        pub struct #wrapper_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
         }
 
@@ -361,7 +230,7 @@ fn render_event_dispatch(
 
         #proto_impls
 
-        impl ::borsh::BorshSerialize for #rust_parent_ident {
+        impl ::borsh::BorshSerialize for #wrapper_ident {
             fn serialize<W: ::borsh::io::Write>(
                 &self,
                 writer: &mut W
@@ -372,7 +241,7 @@ fn render_event_dispatch(
             }
         }
 
-        impl ::borsh::BorshDeserialize for #rust_parent_ident {
+        impl ::borsh::BorshDeserialize for #wrapper_ident {
             fn deserialize_reader<R: ::borsh::io::Read>(
                 reader: &mut R
             ) -> ::core::result::Result<Self, ::borsh::io::Error> {
@@ -802,6 +671,7 @@ pub(super) fn map_ir_type_to_native(field_type: &FieldTypeIr, in_module: bool) -
         },
         FieldTypeIr::Message(name) => {
             let ident = format_ident!("{}", name);
+
             quote!(#ident)
         },
     }
