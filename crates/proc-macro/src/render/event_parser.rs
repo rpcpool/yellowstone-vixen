@@ -22,7 +22,10 @@ pub fn event_parser(
         .collect();
 
     // Discriminator match arms
-    let mut groups: Vec<(super::instruction_parser::DiscriminatorKey, Vec<&codama_nodes::InstructionNode>)> = Vec::new();
+    let mut groups: Vec<(
+        super::instruction_parser::DiscriminatorKey,
+        Vec<&codama_nodes::InstructionNode>,
+    )> = Vec::new();
 
     for ev in events {
         if let Some(key) = super::instruction_parser::extract_discriminator_key(ev) {
@@ -231,9 +234,7 @@ fn single_event_helper_fn(
     })
 }
 
-fn single_event_match_arm(
-    event: &codama_nodes::InstructionNode,
-) -> Option<TokenStream> {
+fn single_event_match_arm(event: &codama_nodes::InstructionNode) -> Option<TokenStream> {
     let ev_name_snake = crate::utils::to_snake_case(&event.name);
     let fn_ident = format_ident!("parse_event_{}", ev_name_snake);
     let args_ident = format_ident!("{}Args", crate::utils::to_pascal_case(&event.name));

@@ -321,7 +321,9 @@ fn single_instruction_match_arm(
 /// automatically (highest count first). Instructions sharing both discriminator and account
 /// count produce a runtime error directing the user to [`CustomInstructionParser`].
 ///
-pub(crate) fn collision_group_match_arm(instructions: &[&codama_nodes::InstructionNode]) -> TokenStream {
+pub(crate) fn collision_group_match_arm(
+    instructions: &[&codama_nodes::InstructionNode],
+) -> TokenStream {
     // Use the first instruction to get the shared discriminator check.
     let first = instructions[0];
 

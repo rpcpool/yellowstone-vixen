@@ -28,8 +28,7 @@ pub fn load_codama_idl<P: AsRef<Path>>(
 ) -> Result<(RootNode, Vec<InstructionNode>), IdlError> {
     let data = fs::read_to_string(&path).map_err(IdlError::ReadFile)?;
 
-    let value: serde_json::Value =
-        serde_json::from_str(&data).map_err(IdlError::ParseFile)?;
+    let value: serde_json::Value = serde_json::from_str(&data).map_err(IdlError::ParseFile)?;
 
     let events = value
         .get("program")

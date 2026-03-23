@@ -6,7 +6,7 @@ use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
-include_vixen_parser!("idls/perpetuals.json");
+include_vixen_parser!("../idls/perpetuals.json");
 
 const BORROW_FROM_CUSTODY_TX: &str =
     "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj";

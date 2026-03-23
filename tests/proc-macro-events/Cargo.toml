@@ -1,35 +1,42 @@
 [package]
 name = "proc-macro-events-test"
-version.workspace = true
-edition.workspace = true
+version = "0.7.0"
+edition = "2024"
+
+# This crate is excluded from the main workspace to avoid feature unification.
+# When built inside the workspace, `program-events` would bleed into
+# `proc-macro-test` via Cargo's feature-unification, causing its
+# `InstructionParser::Output` to become `ProgramEventOutput` instead of
+# `Instructions`. Keeping this crate isolated ensures each test crate
+# sees exactly the features it declares.
 
 # See tests/proc-macro/Cargo.toml for an explanation of why parser crates
 # must appear here as [dependencies] with `features = ["proto"]`.
 [dependencies]
-yellowstone-vixen-spl-token-parser = { workspace = true, features = ["proto"] }
-yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
+yellowstone-vixen-spl-token-parser = { path = "../../crates/spl-token-parser", features = ["proto"] }
+yellowstone-vixen-spl-token-extensions-parser = { path = "../../crates/spl-token-extensions-parser", features = [
     "proto",
 ] }
-yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
-yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-block-meta-parser = { path = "../../crates/block-meta-parser", features = ["proto"] }
+yellowstone-vixen-stake-pool-parser = { path = "../../crates/stake-pool-parser", features = ["proto"] }
 
 [dev-dependencies]
-yellowstone-vixen-proc-macro = { workspace = true, features = ["proto", "program-events"] }
-yellowstone-vixen-mock = { workspace = true }
+yellowstone-vixen-proc-macro = { path = "../../crates/proc-macro", features = ["proto", "program-events"] }
+yellowstone-vixen-mock = { path = "../../crates/mock" }
 vixen-test-utils = { path = "../common" }
 
 # required by macro expansion
-yellowstone-vixen-parser = { workspace = true }
-yellowstone-vixen-core = { workspace = true, features = ["proto"] }
-yellowstone-vixen = { workspace = true }
+yellowstone-vixen-parser = { path = "../../crates/parser" }
+yellowstone-vixen-core = { path = "../../crates/core", features = ["proto"] }
+yellowstone-vixen = { path = "../../crates/runtime" }
 
-base64 = { workspace = true }
-hex = { workspace = true }
-prost = { workspace = true }
-borsh = { workspace = true }
+base64 = "^0.22.1"
+hex = "^0.4.3"
+prost = "^0.14.0"
+borsh = "1.5.7"
 
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { version = "^1.48.0", features = ["macros", "rt-multi-thread"] }
 
-regex = { workspace = true }
+regex = "^1.11.0"
 
 insta = "1.46.3"

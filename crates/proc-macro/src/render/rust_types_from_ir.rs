@@ -73,11 +73,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .filter(|t| !oneof_parents.contains(t.name.as_str()))
                     .collect();
 
-                out.extend(render_event_dispatch(
-                    oneof,
-                    &ev_types,
-                    &event_type_names,
-                ));
+                out.extend(render_event_dispatch(oneof, &ev_types, &event_type_names));
             },
             OneofKindIr::Enum => {
                 out.extend(render_enum_oneof(oneof));
@@ -274,7 +270,7 @@ fn render_event_dispatch(
     local_names: &HashSet<&str>,
 ) -> TokenStream {
     let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "ProgramEvents"
-    // Use "Events" as the Rust wrapper struct name (not "ProgramEvents" which is the proto name)
+                                                                     // Use "Events" as the Rust wrapper struct name (not "ProgramEvents" which is the proto name)
     let rust_parent_ident = format_ident!("Events");
     let mod_ident = format_ident!("event");
     let oneof_ident = format_ident!("Event");

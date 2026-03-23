@@ -1,11 +1,11 @@
 {
   "kind": "rootNode",
   "standard": "codama",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "program": {
     "kind": "programNode",
     "name": "orderEngine",
-    "publicKey": "RderEngine111111111111111111111111111111112",
+    "publicKey": "61DFfeTKM7trxYcPQCM78bJ794ddZprZpAwAnLiwTpYH",
     "version": "0.1.0",
     "origin": "anchor",
     "docs": [],

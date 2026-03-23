@@ -3,7 +3,7 @@ use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("idls/lo_v1.json");
+include_vixen_parser!("../idls/lo_v1.json");
 
 // ---------------------------------------------------------------------------
 // Proto schemas
