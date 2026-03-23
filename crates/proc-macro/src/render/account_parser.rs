@@ -118,7 +118,6 @@ pub fn account_parser(
                                 }
                                 Err(e) => {
                                     println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
-
                                     return Err(ParseError::Other(e.into()));
                                 }
                             }
@@ -197,7 +196,6 @@ pub fn account_parser(
                                 }
                                 Err(e) => {
                                     println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
-
                                     return Err(ParseError::Other(e.into()));
                                 }
                             }
@@ -217,7 +215,7 @@ pub fn account_parser(
                         match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                             Ok(parsed) => {
                                 return Ok(#account_struct_ident {
-                                    account: Some(#account_mod_ident::Account::#account_ident(parsed))
+                                    account: #account_mod_ident::Account::#account_ident(parsed),
                                 });
                             }
                             Err(e) => {
@@ -343,8 +341,6 @@ pub fn account_parser(
                     .filter(|p| p.len() == 32)
                     .map(|p| ::yellowstone_vixen_core::bs58::encode(p).into_string())
                     .unwrap_or_else(|| "<unknown>".to_string());
-
-                let first_bytes: String = data.iter().take(16).map(|b| format!("{:02x}", b)).collect::<Vec<_>>().join(" ");
 
                 #(#account_matches)*
 
