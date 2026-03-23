@@ -208,6 +208,7 @@ impl KafkaSinkBuilder {
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
+
         self.instruction_parsers
             .push(Arc::new(InstructionParserWrapper {
                 parser,
@@ -216,6 +217,7 @@ impl KafkaSinkBuilder {
                 program_id,
                 fallback_topic: None,
             }));
+
         self
     }
 
@@ -227,6 +229,7 @@ impl KafkaSinkBuilder {
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
+
         self.account_parsers.push(Arc::new(AccountParserWrapper {
             parser,
             topic: topic.to_string(),
@@ -234,6 +237,7 @@ impl KafkaSinkBuilder {
             program_id,
             fallback_topic: None,
         }));
+
         self
     }
 
@@ -250,6 +254,7 @@ impl KafkaSinkBuilder {
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
+
         self.instruction_parsers
             .push(Arc::new(InstructionParserWrapper {
                 parser,
@@ -258,6 +263,7 @@ impl KafkaSinkBuilder {
                 program_id,
                 fallback_topic: Some(fallback_topic.to_string()),
             }));
+
         self
     }
 
@@ -275,6 +281,7 @@ impl KafkaSinkBuilder {
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
+
         self.account_parsers.push(Arc::new(AccountParserWrapper {
             parser,
             topic: topic.to_string(),
@@ -282,6 +289,7 @@ impl KafkaSinkBuilder {
             program_id,
             fallback_topic: Some(fallback_topic.to_string()),
         }));
+
         self
     }
 
@@ -333,13 +341,16 @@ impl KafkaSink {
                 "Registered schema for encoding"
             );
         }
+
         self.schema_ids = schemas;
     }
 
     /// Get schema ID for a topic (looks up "<topic>-value" subject).
     fn get_schema_for_topic(&self, topic: &str) -> Option<&RegisteredSchema> {
         let subject = format!("{}-value", topic);
+
         let result = self.schema_ids.get(&subject);
+
         if result.is_none() {
             tracing::warn!(
                 topic,
@@ -348,6 +359,7 @@ impl KafkaSink {
                 "No schema found for topic"
             );
         }
+
         result
     }
 
@@ -367,11 +379,13 @@ impl KafkaSink {
         ix: &InstructionUpdate,
     ) -> (Option<PreparedRecord>, bool) {
         let mut had_error = false;
+
         for parser in &self.instruction_parsers {
             // Only dispatch to parsers for this instruction's program.
             if ix.program != parser.program_id() {
                 continue;
             }
+
             match parser.try_parse(ix).await {
                 ParseOutcome::Parsed(parsed) => {
                     let record = self.prepare_decoded_instruction_record(
@@ -381,6 +395,7 @@ impl KafkaSink {
                         parsed,
                         parser.topic(),
                     );
+
                     return (Some(record), false);
                 },
                 ParseOutcome::Filtered => {
@@ -388,10 +403,12 @@ impl KafkaSink {
                 },
                 ParseOutcome::Error => {
                     had_error = true;
+
                     if let Some(fallback) = parser.fallback_topic() {
                         let record = self.prepare_fallback_instruction_record(
                             slot, signature, path, ix, fallback,
                         );
+
                         return (Some(record), true);
                     }
                 },
@@ -407,8 +424,11 @@ impl KafkaSink {
         path: &Path,
     ) -> (String, Vec<RecordHeader>) {
         let sig_str = bs58::encode(signature).into_string();
+
         let path_str = format!("{path:?}");
+
         let key = make_instruction_record_key(slot, &sig_str, &path_str);
+
         let headers = vec![
             RecordHeader {
                 key: "slot",
@@ -423,6 +443,7 @@ impl KafkaSink {
                 value: path_str,
             },
         ];
+
         (key, headers)
     }
 
@@ -436,6 +457,7 @@ impl KafkaSink {
                 } else {
                     &[schema.message_index]
                 };
+
                 wrap_payload_with_confluent_wire_format(schema.schema_id, indices, &raw_data)
             },
             None => raw_data,
@@ -453,6 +475,7 @@ impl KafkaSink {
         topic: &str,
     ) -> PreparedRecord {
         let (key, headers) = Self::instruction_base_record(slot, signature, path);
+
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
         PreparedRecord {
@@ -476,6 +499,7 @@ impl KafkaSink {
         fallback_topic: &str,
     ) -> PreparedRecord {
         let (key, mut headers) = Self::instruction_base_record(slot, signature, path);
+
         let program_id = bs58::encode(ix.program).into_string();
 
         headers.push(RecordHeader {
@@ -490,6 +514,7 @@ impl KafkaSink {
             program_id: program_id.clone(),
             data: bs58::encode(&ix.data).into_string(),
         };
+
         let payload = serde_json::to_vec(&fallback_event)
             .expect("RawInstructionEvent serialization is infallible");
 
@@ -536,10 +561,12 @@ impl KafkaSink {
             Some(inner) => inner,
             None => return (None, false),
         };
+
         let pubkey_str = bs58::encode(&inner.pubkey).into_string();
         let owner_str = bs58::encode(&inner.owner).into_string();
 
         let mut had_error = false;
+
         for parser in &self.account_parsers {
             match parser.try_parse(acct).await {
                 ParseOutcome::Parsed(parsed) => {
@@ -559,6 +586,7 @@ impl KafkaSink {
                 },
                 ParseOutcome::Error => {
                     had_error = true;
+
                     if let Some(fallback) = parser.fallback_topic() {
                         return (
                             Some(self.prepare_fallback_account_record(
@@ -647,6 +675,7 @@ impl KafkaSink {
             owner: owner.to_string(),
             data: bs58::encode(data).into_string(),
         };
+
         let payload = serde_json::to_vec(&fallback_event)
             .expect("RawAccountEvent serialization is infallible");
 
@@ -714,6 +743,7 @@ mod tests {
 
         async fn parse(&self, _value: &Self::Input) -> ParseResult<Self::Output> {
             self.calls.fetch_add(1, Ordering::Relaxed);
+
             match self.outcome {
                 TestInstructionOutcome::Parsed => Ok(TestInstructionMessage { value: 42 }),
                 TestInstructionOutcome::Filtered => Err(ParseError::Filtered),
@@ -765,9 +795,11 @@ mod tests {
                 .as_ref()
                 .map(|a| a.owner.as_slice())
                 .unwrap_or_default();
+
             if owner != self.program_id.0 {
                 return Err(ParseError::Filtered);
             }
+
             match self.outcome {
                 TestAccountOutcome::Parsed => Ok(TestAccountMessage { value: 7 }),
                 TestAccountOutcome::Filtered => Err(ParseError::Filtered),
@@ -816,11 +848,13 @@ mod tests {
     #[test]
     fn unrelated_instruction_does_not_route_to_fallback_topic() {
         let calls = Arc::new(AtomicUsize::new(0));
+
         let parser = TestInstructionParser {
             program_id: [1; 32].into(),
             outcome: TestInstructionOutcome::Filtered,
             calls: Arc::clone(&calls),
         };
+
         let sink = KafkaSinkBuilder::new()
             .instruction_parser_with_fallback(
                 parser,
@@ -831,6 +865,7 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([9; 32].into());
+
         let (record, had_error) =
             futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
@@ -849,6 +884,7 @@ mod tests {
             outcome: TestInstructionOutcome::Filtered,
             calls: Arc::new(AtomicUsize::new(0)),
         };
+
         let sink = KafkaSinkBuilder::new()
             .instruction_parser_with_fallback(
                 parser,
@@ -859,6 +895,7 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([1; 32].into());
+
         let (record, had_error) =
             futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
@@ -873,6 +910,7 @@ mod tests {
             outcome: TestInstructionOutcome::Error,
             calls: Arc::new(AtomicUsize::new(0)),
         };
+
         let sink = KafkaSinkBuilder::new()
             .instruction_parser_with_fallback(
                 parser,
@@ -883,14 +921,18 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([1; 32].into());
+
         let (record, had_error) =
             futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
         let record = record.expect("expected fallback record");
+
         assert_eq!(record.topic, "failed.test.instructions");
         assert!(had_error);
+
         let event: RawInstructionEvent =
             serde_json::from_slice(&record.payload).expect("fallback payload must be JSON");
+
         assert_eq!(event.slot, 100);
         assert_eq!(
             event.signature,
@@ -914,6 +956,7 @@ mod tests {
             outcome: TestInstructionOutcome::Parsed,
             calls: Arc::new(AtomicUsize::new(0)),
         };
+
         let sink = KafkaSinkBuilder::new()
             .instruction_parser_with_fallback(
                 parser,
@@ -924,10 +967,12 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([1; 32].into());
+
         let (record, had_error) =
             futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
         let record = record.expect("expected decoded record");
+
         assert_eq!(record.topic, "test.instructions");
         assert!(!had_error);
         assert!(record.is_decoded);
@@ -940,6 +985,7 @@ mod tests {
             program_id: [1; 32].into(),
             outcome: TestAccountOutcome::Filtered,
         };
+
         let sink = KafkaSinkBuilder::new()
             .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
             .build();
@@ -958,18 +1004,23 @@ mod tests {
             program_id: [1; 32].into(),
             outcome: TestAccountOutcome::Error,
         };
+
         let sink = KafkaSinkBuilder::new()
             .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
             .build();
 
         let acct = account_with_owner([1; 32].into());
+
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected fallback record");
+
         assert_eq!(record.topic, "failed.test.accounts");
         assert!(had_error);
+
         let event: RawAccountEvent =
             serde_json::from_slice(&record.payload).expect("fallback payload must be JSON");
+
         assert_eq!(event.slot, 100);
         assert_eq!(
             event.owner,
@@ -988,14 +1039,17 @@ mod tests {
             program_id: [1; 32].into(),
             outcome: TestAccountOutcome::Parsed,
         };
+
         let sink = KafkaSinkBuilder::new()
             .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
             .build();
 
         let acct = account_with_owner([1; 32].into());
+
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected decoded record");
+
         assert_eq!(record.topic, "test.accounts");
         assert!(!had_error);
         assert!(record.is_decoded);

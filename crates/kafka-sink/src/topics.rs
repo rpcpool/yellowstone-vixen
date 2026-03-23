@@ -45,6 +45,7 @@ fn read_last_slot_from_topic(
     topic: &str,
 ) -> Result<Option<LastCommitted>, String> {
     let mut client_config = ClientConfig::new();
+
     client_config
         .set("bootstrap.servers", &config.brokers)
         .set("group.id", "vixen-startup-reader")
@@ -73,6 +74,7 @@ fn read_last_slot_from_topic(
 
     if topic_metadata.partitions().is_empty() {
         tracing::info!(topic, "Topic has no partitions — starting fresh");
+
         return Ok(None);
     }
 
@@ -94,6 +96,7 @@ fn read_last_slot_from_topic(
         }
 
         let scan_low = startup_scan_low_offset(low, high);
+
         let candidate =
             read_tail_candidate_in_range(&consumer, topic, partition_id, scan_low, high)?;
 
@@ -115,11 +118,13 @@ fn read_last_slot_from_topic(
             }
         } else if high > low {
             let scanned_offsets = high - scan_low;
+
             let reason = if scan_low > low {
                 "scan limit reached before finding a checkpoint"
             } else {
                 "no parseable checkpoint record found"
             };
+
             return Err(format!(
                 "Failed to find committed checkpoint in topic {topic} partition {partition_id} \
                  after scanning {scanned_offsets} tail offsets (low={low}, high={high}); {reason}"
@@ -142,6 +147,7 @@ fn read_tail_candidate_in_range(
     scan_high: i64,
 ) -> Result<Option<LastCommittedCandidate>, String> {
     let mut tpl = TopicPartitionList::new();
+
     tpl.add_partition_offset(topic, partition_id, rdkafka::Offset::Offset(scan_low))
         .map_err(|e| {
             format!(
@@ -149,12 +155,14 @@ fn read_tail_candidate_in_range(
                  {partition_id} offset {scan_low}: {e}"
             )
         })?;
+
     consumer.assign(&tpl).map_err(|e| {
         format!(
             "Failed to assign startup checkpoint consumer for topic {topic} partition \
              {partition_id} offset {scan_low}: {e}"
         )
     })?;
+
     consumer
         .seek(
             topic,
