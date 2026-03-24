@@ -1,6 +1,6 @@
 use std::sync::{
     atomic::{AtomicU64, Ordering},
-    Arc, Once,
+    Arc,
 };
 
 use async_trait::async_trait;
@@ -20,6 +20,115 @@ use yellowstone_vixen::{
 use yellowstone_vixen_core::Filters;
 
 type SharedError = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+/// Env vars that `jetstreamer-firehose` reads at startup.
+///
+/// Because `std::env::set_var` is unsound once other threads exist,
+/// callers must apply these **before** the async runtime starts.
+/// [`connect`] then validates that the process env still matches.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProcessEnvConfig {
+    pub network: String,
+    pub compact_index_base_url: String,
+    pub network_capacity_mb: String,
+}
+
+impl ProcessEnvConfig {
+    /// Extract the expected env configuration from a [`JetstreamSourceConfig`].
+    pub fn from_config(config: &JetstreamSourceConfig) -> Self {
+        Self {
+            network: config.network.clone(),
+            compact_index_base_url: config.compact_index_base_url.clone(),
+            network_capacity_mb: config.network_capacity_mb.to_string(),
+        }
+    }
+
+    /// Snapshot the *current* process environment.
+    pub fn from_process() -> Self {
+        Self {
+            network: std::env::var("JETSTREAMER_NETWORK").unwrap_or_default(),
+            compact_index_base_url: std::env::var("JETSTREAMER_COMPACT_INDEX_BASE_URL")
+                .unwrap_or_default(),
+            network_capacity_mb: std::env::var("JETSTREAMER_NETWORK_CAPACITY_MB")
+                .unwrap_or_default(),
+        }
+    }
+
+    /// Write the values into the process environment.
+    ///
+    /// # Safety
+    ///
+    /// Must be called while no other threads are running (i.e. before
+    /// the Tokio runtime is created). Calling this after other threads
+    /// exist is undefined behaviour on most platforms.
+    pub unsafe fn apply(&self) {
+        unsafe {
+            std::env::set_var("JETSTREAMER_NETWORK", &self.network);
+            std::env::set_var(
+                "JETSTREAMER_COMPACT_INDEX_BASE_URL",
+                &self.compact_index_base_url,
+            );
+            std::env::set_var("JETSTREAMER_NETWORK_CAPACITY_MB", &self.network_capacity_mb);
+        }
+    }
+
+    /// Return `Ok(())` if `self` matches `actual`, or a descriptive error.
+    pub fn validate_matches(&self, actual: &ProcessEnvConfig) -> Result<(), Error> {
+        let mut mismatches = Vec::new();
+
+        if self.network != actual.network {
+            mismatches.push(format!(
+                "JETSTREAMER_NETWORK: expected {:?}, got {:?}",
+                self.network, actual.network
+            ));
+        }
+        if self.compact_index_base_url != actual.compact_index_base_url {
+            mismatches.push(format!(
+                "JETSTREAMER_COMPACT_INDEX_BASE_URL: expected {:?}, got {:?}",
+                self.compact_index_base_url, actual.compact_index_base_url
+            ));
+        }
+        if self.network_capacity_mb != actual.network_capacity_mb {
+            mismatches.push(format!(
+                "JETSTREAMER_NETWORK_CAPACITY_MB: expected {:?}, got {:?}",
+                self.network_capacity_mb, actual.network_capacity_mb
+            ));
+        }
+
+        if mismatches.is_empty() {
+            Ok(())
+        } else {
+            Err(Error::EnvMismatch(mismatches.join("; ")))
+        }
+    }
+}
+
+/// Set the jetstreamer-firehose env vars from `config`.
+///
+/// # Safety
+///
+/// Must be called **before** the Tokio runtime (or any other threads)
+/// are started. The canonical call-site is the top of `fn main()`,
+/// before `#[tokio::main]` or `Runtime::new()`.
+///
+/// ## Example
+///
+/// ```rust, ignore
+/// fn main() -> anyhow::Result<()> {
+///     // … parse CLI / config …
+///     unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
+///     tokio_main(config)
+/// }
+///
+/// #[tokio::main]
+/// async fn tokio_main(config: JetstreamSourceConfig) -> anyhow::Result<()> {
+///     // … build runtime, connect, etc. …
+/// }
+/// ```
+pub unsafe fn init_process_env(config: &JetstreamSourceConfig) {
+    let env_config = ProcessEnvConfig::from_config(config);
+    unsafe { env_config.apply() };
+}
 
 struct VixenStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
@@ -324,7 +433,9 @@ pub struct JetstreamSource {
 impl SourceTrait for JetstreamSource {
     type Config = JetstreamSourceConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(
         &self,
@@ -335,28 +446,11 @@ impl SourceTrait for JetstreamSource {
         let filters = self.filters.clone();
 
         // jetstreamer-firehose reads configuration exclusively through env vars.
-        // `set_var` is unsafe in multi-threaded programs (UB if another thread
-        // reads the environment concurrently). We use `Once` so the write happens
-        // at most once per process, minimising the race window. Callers should
-        // ensure `connect()` is invoked early — ideally before spawning work that
-        // reads the environment.
+        // The caller must have set them *before* the runtime started via
+        // `init_process_env()`. We only validate here — no mutation.
         {
-            static ENV_INIT: Once = Once::new();
-            ENV_INIT.call_once(|| {
-                // SAFETY: called at most once, and as early as possible before
-                // the firehose spawns its own threads that read these vars.
-                unsafe {
-                    std::env::set_var("JETSTREAMER_NETWORK", &config.network);
-                    std::env::set_var(
-                        "JETSTREAMER_COMPACT_INDEX_BASE_URL",
-                        &config.compact_index_base_url,
-                    );
-                    std::env::set_var(
-                        "JETSTREAMER_NETWORK_CAPACITY_MB",
-                        config.network_capacity_mb.to_string(),
-                    );
-                }
-            });
+            let expected = ProcessEnvConfig::from_config(&config);
+            expected.validate_matches(&ProcessEnvConfig::from_process())?;
         }
 
         let cancellation_token = CancellationToken::new();
@@ -490,6 +584,9 @@ pub enum Error {
 
     #[error("Jetstreamer firehose error: {0}")]
     Jetstreamer(String),
+
+    #[error("Process env does not match config (did you call init_process_env?): {0}")]
+    EnvMismatch(String),
 }
 
 impl From<Error> for VixenError {

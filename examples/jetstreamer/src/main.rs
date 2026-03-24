@@ -13,7 +13,9 @@ use yellowstone_vixen_spl_token_parser::{
     instruction::Instruction, InstructionParser, TokenProgram,
 };
 
-fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
+fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String {
+    pubkey.to_string()
+}
 
 fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::Pubkey>) -> String {
     match pubkey {
@@ -154,16 +156,15 @@ struct Opts {
     archive_url: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Initialize tracing
+/// Entry point: set env vars while the process is still single-threaded,
+/// then hand off to the async runtime.
+fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
     let opts = Opts::parse();
 
-    // Build slot range config from CLI args
     let range = SlotRangeConfig {
         slot_start: opts.slot_start,
         slot_end: opts.slot_end,
@@ -183,6 +184,13 @@ async fn main() -> Result<()> {
         network_capacity_mb: 100000,
     };
 
+    // SAFETY: No other threads exist yet — the Tokio runtime hasn't started.
+    unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
+
+    tokio::runtime::Runtime::new()?.block_on(run(config))
+}
+
+async fn run(config: JetstreamSourceConfig) -> Result<()> {
     info!("Starting Jetstream replay with SPL Token parsing");
     info!(archive_url = %config.archive_url, "Configuration");
     info!(
