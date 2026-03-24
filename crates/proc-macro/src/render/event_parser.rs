@@ -126,6 +126,7 @@ fn generate_program_event_output() -> TokenStream {
                     }
                 }
 
+                #[allow(deprecated)]
                 fn merge_field(
                     &mut self,
                     _tag: u32,
