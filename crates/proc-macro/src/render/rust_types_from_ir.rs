@@ -253,7 +253,7 @@ fn render_dispatch(
                     _ => {
                         return ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
-                            "invalid discriminant"
+                            format!("invalid discriminant {disc} (type {})", stringify!(#wrapper_ident))
                         ));
                     }
                 };
@@ -394,7 +394,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
                     _ => {
                         return ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
-                            "invalid discriminant"
+                            format!("invalid enum discriminant {disc} (type {})", stringify!(#parent_ident))
                         ));
                     }
                 };
