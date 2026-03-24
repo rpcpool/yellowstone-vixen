@@ -73,6 +73,7 @@ where
                     fatal = txn.is_fatal(),
                     "Kafka transactional operation failed, retrying"
                 );
+
                 sleep(backoff).await;
             },
             Err(err) => {
@@ -102,6 +103,7 @@ where
             Ok(()) => return Ok(()),
             Err(KafkaError::Transaction(txn)) if txn.txn_requires_abort() => {
                 let err = KafkaError::Transaction(txn);
+
                 return Err(TransactionCommitError::AbortRequired(kafka_error(
                     context,
                     transaction_error_context(&err),
@@ -117,6 +119,7 @@ where
                     fatal = txn.is_fatal(),
                     "Kafka transactional commit failed, retrying"
                 );
+
                 sleep(backoff).await;
             },
             Err(err) => {
@@ -145,11 +148,13 @@ where
     R: FnMut(&SinkError, u32, u32),
 {
     let max_attempts = max_attempts.max(1);
+
     for attempt in 1..=max_attempts {
         match f().await {
             Ok(()) => return Ok(()),
             Err(e) if attempt < max_attempts => {
                 on_retry(&e, attempt, max_attempts);
+
                 sleep(backoff).await;
             },
             Err(e) => {
@@ -190,6 +195,7 @@ async fn batch_publish_records(
         .iter()
         .map(|record| {
             let headers = to_kafka_headers(&record.headers);
+
             producer.send(
                 FutureRecord::to(&record.topic)
                     .payload(&record.payload)
@@ -210,6 +216,7 @@ async fn batch_publish_records(
                 error_prefix,
                 "Kafka write failed"
             );
+
             kafka_send_error(error_prefix, slot, e)
         })?;
     }
@@ -409,6 +416,7 @@ impl SlotWriteExecutor {
                 transactional_id = %transactional_id,
                 "Kafka transactions already initialized before sink startup"
             );
+
             return Ok(());
         }
 
@@ -416,6 +424,7 @@ impl SlotWriteExecutor {
             transactional_id = %transactional_id,
             "Initializing Kafka transactions"
         );
+
         run_transactional_op(
             self.producer(),
             *timeout,
@@ -501,6 +510,7 @@ impl SlotWriteExecutor {
                     timeout,
                 )
                 .await?;
+
                 Err(err)
             },
             Err(TransactionCommitError::Failed(err)) => Err(err),
@@ -597,6 +607,7 @@ impl TransactionSlotSink {
                 ix_slot.slot,
                 || async {
                     let plan = self.build_slot_write_plan(&ix_slot)?;
+
                     self.executor.execute(&plan).await
                 },
                 |e, attempt, max| {
@@ -705,6 +716,7 @@ impl AccountSlotSink {
                 acct_slot.slot,
                 || async {
                     let plan = self.build_slot_write_plan(&acct_slot)?;
+
                     self.executor.execute(&plan).await
                 },
                 |e, attempt, max| {
@@ -787,6 +799,7 @@ impl AccountPassthroughSink {
                     if let Some(prev) = current_slot {
                         if slot > prev {
                             self.emit_watermark_with_retry(prev).await?;
+
                             current_slot = Some(slot);
                         }
                     } else {
@@ -853,7 +866,9 @@ impl AccountPassthroughSink {
             decode_error_account_count: None,
             fallback_account_count: None,
         };
+
         let payload = serde_json::to_string(&event)?;
+
         let slot_key = slot.to_string();
 
         self.producer
@@ -867,6 +882,7 @@ impl AccountPassthroughSink {
             .map_err(|(e, _)| kafka_send_error("Failed to emit watermark", slot, e))?;
 
         tracing::debug!(slot, "Emitted account watermark");
+
         Ok(())
     }
 }
@@ -879,6 +895,7 @@ fn build_transaction_slot_commit_event(
         .iter()
         .filter(|r| r.is_decoded && r.kind == RecordKind::Instruction)
         .count() as u64;
+
     let fallback_instruction_count = ix_slot
         .records
         .iter()
@@ -974,6 +991,7 @@ mod tests {
         };
 
         let event = build_transaction_slot_commit_event(&ix_slot);
+
         assert_eq!(event.slot, 42);
         assert_eq!(event.transaction_count, 10);
         assert_eq!(event.decoded_instruction_count, 1);
@@ -1001,6 +1019,7 @@ mod tests {
         };
 
         let event = build_account_slot_commit_event(&acct_slot, CommitScope::Confirmed);
+
         assert_eq!(event.slot, 55);
         assert_eq!(event.marker_type, MarkerType::Completed);
         assert_eq!(event.account_commit_at, CommitScope::Confirmed);
@@ -1020,7 +1039,9 @@ mod tests {
             filtered_account_count: 0,
             failed_account_count: 0,
         };
+
         let event = build_account_slot_commit_event(&acct_slot, CommitScope::Finalized);
+
         assert_eq!(event.marker_type, MarkerType::Completed);
         assert_eq!(event.account_commit_at, CommitScope::Finalized);
     }
@@ -1038,7 +1059,9 @@ mod tests {
         };
 
         let value = serde_json::to_value(&event).expect("serialize watermark");
+
         let obj = value.as_object().expect("object");
+
         assert!(!obj.contains_key("decoded_account_count"));
         assert!(!obj.contains_key("decode_filtered_account_count"));
         assert!(!obj.contains_key("decode_error_account_count"));
@@ -1058,10 +1081,12 @@ mod tests {
             filtered_account_count: 9,
             failed_account_count: 3,
         };
+
         let event = build_account_slot_commit_event(&acct_slot, CommitScope::Confirmed);
 
         let value = serde_json::to_value(&event).expect("serialize completed marker");
         let obj = value.as_object().expect("object");
+
         assert_eq!(
             obj.get("decoded_account_count").and_then(|v| v.as_u64()),
             Some(1)

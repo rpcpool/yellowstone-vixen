@@ -215,11 +215,12 @@ pub fn account_parser(
                         match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                             Ok(parsed) => {
                                 return Ok(#account_struct_ident {
-                                    account: Some(#account_mod_ident::Account::#account_ident(parsed))
+                                    account: #account_mod_ident::Account::#account_ident(parsed),
                                 });
                             }
                             Err(e) => {
                                 println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
+
                                 return Err(ParseError::Other(e.into()));
                             }
                         }
@@ -277,47 +278,12 @@ pub fn account_parser(
             let account_field = format_ident!("account");
             let account_enum = format_ident!("Account");
 
-            quote! {
-                impl ::core::fmt::Debug for #account_struct_ident {
-                    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                        f.debug_struct(stringify!(#account_struct_ident))
-                            .field("account", &self.account)
-                            .finish()
-                    }
-                }
-
-                impl ::prost::Message for #account_struct_ident {
-                    fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
-                        self.#account_field.encode(buf);
-                    }
-
-                    fn merge_field(
-                        &mut self,
-                        tag: u32,
-                        wire_type: ::prost::encoding::WireType,
-                        buf: &mut impl ::prost::bytes::Buf,
-                        ctx: ::prost::encoding::DecodeContext,
-                    ) -> ::core::result::Result<(), ::prost::DecodeError> {
-                        // Oneof::merge() requires `&mut Option<Self>`, so we wrap our non-Option
-                        // field into Some, call merge, then unwrap back.
-                        let mut opt = ::core::option::Option::Some(self.#account_field.clone());
-
-                        #account_mod_ident::#account_enum::merge(&mut opt, tag, wire_type, buf, ctx)?;
-
-                        if let ::core::option::Option::Some(v) = opt {
-                            self.#account_field = v;
-                        }
-
-                        ::core::result::Result::Ok(())
-                    }
-
-                    fn encoded_len(&self) -> usize {
-                        self.#account_field.encoded_len()
-                    }
-
-                    fn clear(&mut self) {}
-                }
-            }
+            super::manual_prost::manual_prost_message_impl(
+                &account_struct_ident,
+                &account_field,
+                &account_mod_ident,
+                &account_enum,
+            )
         } else {
             quote! {}
         };
@@ -340,8 +306,6 @@ pub fn account_parser(
                     .filter(|p| p.len() == 32)
                     .map(|p| ::yellowstone_vixen_core::bs58::encode(p).into_string())
                     .unwrap_or_else(|| "<unknown>".to_string());
-
-                let first_bytes: String = data.iter().take(16).map(|b| format!("{:02x}", b)).collect::<Vec<_>>().join(" ");
 
                 #(#account_matches)*
 

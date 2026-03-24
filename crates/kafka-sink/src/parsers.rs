@@ -36,11 +36,13 @@ impl Parser for TransactionSubscription {
             }),
             ..Default::default()
         };
+
         tracing::info!(
             parser_id = %self.id(),
             has_transaction_filter = prefilter.transaction.is_some(),
             "TransactionSubscription prefilter created - receiving all transactions"
         );
+
         prefilter
     }
 
@@ -65,6 +67,7 @@ impl AccountSubscription {
         if !sink.has_account_parsers() {
             return None;
         }
+
         let owners: Vec<Pubkey> = sink
             .account_parsers()
             .iter()
@@ -72,6 +75,7 @@ impl AccountSubscription {
             .collect::<HashSet<_>>()
             .into_iter()
             .collect();
+
         Some(Self { owners })
     }
 
@@ -96,6 +100,7 @@ impl Parser for AccountSubscription {
             owner_count = self.owners.len(),
             "AccountSubscription prefilter created"
         );
+
         prefilter
     }
 

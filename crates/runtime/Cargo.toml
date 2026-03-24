@@ -8,7 +8,6 @@ repository.workspace = true
 authors.workspace = true
 readme = "./../../README.md"
 
-
 [dependencies]
 async-trait = { workspace = true }
 clap = { workspace = true, features = ["env", "derive", "std"] }

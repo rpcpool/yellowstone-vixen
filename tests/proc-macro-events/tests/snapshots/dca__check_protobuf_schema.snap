@@ -1,0 +1,500 @@
+---
+source: tests/dca.rs
+expression: "dca::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package dca;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message WithdrawalIn {
+}
+    
+message WithdrawalOut {
+}
+    
+message Dca {
+  PublicKey user = 1;
+  PublicKey input_mint = 2;
+  PublicKey output_mint = 3;
+  uint64 idx = 4;
+  int64 next_cycle_at = 5;
+  uint64 in_deposited = 6;
+  uint64 in_withdrawn = 7;
+  uint64 out_withdrawn = 8;
+  uint64 in_used = 9;
+  uint64 out_received = 10;
+  uint64 in_amount_per_cycle = 11;
+  int64 cycle_frequency = 12;
+  uint64 next_cycle_amount_left = 13;
+  PublicKey in_account = 14;
+  PublicKey out_account = 15;
+  uint64 min_out_amount = 16;
+  uint64 max_out_amount = 17;
+  uint64 keeper_in_balance_before_borrow = 18;
+  uint64 dca_out_balance_before_swap = 19;
+  int64 created_at = 20;
+  uint32 bump = 21;
+}
+    
+message OpenDcaAccounts {
+  PublicKey dca = 1;
+  PublicKey user = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey user_ata = 5;
+  PublicKey in_ata = 6;
+  PublicKey out_ata = 7;
+  PublicKey system_program = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey event_authority = 11;
+  PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message OpenDcaArgs {
+  uint64 application_idx = 1;
+  uint64 in_amount = 2;
+  uint64 in_amount_per_cycle = 3;
+  int64 cycle_frequency = 4;
+  optional uint64 min_out_amount = 5;
+  optional uint64 max_out_amount = 6;
+  optional int64 start_at = 7;
+  optional bool close_wsol_in_ata = 8;
+}
+    
+message OpenDca {
+  OpenDcaAccounts accounts = 1;
+  OpenDcaArgs args = 2;
+}
+    
+message OpenDcaV2Accounts {
+  PublicKey dca = 1;
+  PublicKey user = 2;
+  PublicKey payer = 3;
+  PublicKey input_mint = 4;
+  PublicKey output_mint = 5;
+  PublicKey user_ata = 6;
+  PublicKey in_ata = 7;
+  PublicKey out_ata = 8;
+  PublicKey system_program = 9;
+  PublicKey token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey event_authority = 12;
+  PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message OpenDcaV2Args {
+  uint64 application_idx = 1;
+  uint64 in_amount = 2;
+  uint64 in_amount_per_cycle = 3;
+  int64 cycle_frequency = 4;
+  optional uint64 min_out_amount = 5;
+  optional uint64 max_out_amount = 6;
+  optional int64 start_at = 7;
+}
+    
+message OpenDcaV2 {
+  OpenDcaV2Accounts accounts = 1;
+  OpenDcaV2Args args = 2;
+}
+    
+message CloseDcaAccounts {
+  PublicKey user = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey in_ata = 5;
+  PublicKey out_ata = 6;
+  PublicKey user_in_ata = 7;
+  PublicKey user_out_ata = 8;
+  PublicKey system_program = 9;
+  PublicKey token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey event_authority = 12;
+  PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message CloseDcaArgs {
+}
+    
+message CloseDca {
+  CloseDcaAccounts accounts = 1;
+  CloseDcaArgs args = 2;
+}
+    
+message WithdrawAccounts {
+  PublicKey user = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey dca_ata = 5;
+  PublicKey user_in_ata = 6;
+  PublicKey user_out_ata = 7;
+  PublicKey system_program = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey event_authority = 11;
+  PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message WithdrawArgs {
+  uint64 withdraw_amount = 1;
+  Withdrawal withdrawal = 2;
+}
+    
+message Withdraw {
+  WithdrawAccounts accounts = 1;
+  WithdrawArgs args = 2;
+}
+    
+message DepositAccounts {
+  PublicKey user = 1;
+  PublicKey dca = 2;
+  PublicKey in_ata = 3;
+  PublicKey user_in_ata = 4;
+  PublicKey token_program = 5;
+  PublicKey event_authority = 6;
+  PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message DepositArgs {
+  uint64 deposit_in = 1;
+}
+    
+message Deposit {
+  DepositAccounts accounts = 1;
+  DepositArgs args = 2;
+}
+    
+message WithdrawFeesAccounts {
+  PublicKey admin = 1;
+  PublicKey mint = 2;
+  PublicKey fee_authority = 3;
+  PublicKey program_fee_ata = 4;
+  PublicKey admin_fee_ata = 5;
+  PublicKey system_program = 6;
+  PublicKey token_program = 7;
+  PublicKey associated_token_program = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message WithdrawFeesArgs {
+  uint64 amount = 1;
+}
+    
+message WithdrawFees {
+  WithdrawFeesAccounts accounts = 1;
+  WithdrawFeesArgs args = 2;
+}
+    
+message InitiateFlashFillAccounts {
+  PublicKey keeper = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey keeper_in_ata = 4;
+  PublicKey in_ata = 5;
+  PublicKey out_ata = 6;
+  PublicKey instructions_sysvar = 7;
+  PublicKey system_program = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message InitiateFlashFillArgs {
+}
+    
+message InitiateFlashFill {
+  InitiateFlashFillAccounts accounts = 1;
+  InitiateFlashFillArgs args = 2;
+}
+    
+message FulfillFlashFillAccounts {
+  PublicKey keeper = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey keeper_in_ata = 5;
+  PublicKey in_ata = 6;
+  PublicKey out_ata = 7;
+  PublicKey fee_authority = 8;
+  PublicKey fee_ata = 9;
+  PublicKey instructions_sysvar = 10;
+  PublicKey system_program = 11;
+  PublicKey token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey event_authority = 14;
+  PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message FulfillFlashFillArgs {
+  uint64 repay_amount = 1;
+}
+    
+message FulfillFlashFill {
+  FulfillFlashFillAccounts accounts = 1;
+  FulfillFlashFillArgs args = 2;
+}
+    
+message InitiateDlmmFillAccounts {
+  PublicKey keeper = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey keeper_in_ata = 4;
+  PublicKey in_ata = 5;
+  PublicKey out_ata = 6;
+  PublicKey instructions_sysvar = 7;
+  PublicKey system_program = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message InitiateDlmmFillArgs {
+}
+    
+message InitiateDlmmFill {
+  InitiateDlmmFillAccounts accounts = 1;
+  InitiateDlmmFillArgs args = 2;
+}
+    
+message FulfillDlmmFillAccounts {
+  PublicKey keeper = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey keeper_in_ata = 5;
+  PublicKey in_ata = 6;
+  PublicKey out_ata = 7;
+  PublicKey fee_authority = 8;
+  PublicKey fee_ata = 9;
+  PublicKey instructions_sysvar = 10;
+  PublicKey system_program = 11;
+  PublicKey token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey event_authority = 14;
+  PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message FulfillDlmmFillArgs {
+  uint64 repay_amount = 1;
+}
+    
+message FulfillDlmmFill {
+  FulfillDlmmFillAccounts accounts = 1;
+  FulfillDlmmFillArgs args = 2;
+}
+    
+message TransferAccounts {
+  PublicKey keeper = 1;
+  PublicKey dca = 2;
+  PublicKey user = 3;
+  PublicKey output_mint = 4;
+  PublicKey dca_out_ata = 5;
+  PublicKey user_out_ata = 6;
+  PublicKey intermediate_account = 7;
+  PublicKey system_program = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey event_authority = 11;
+  PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message TransferArgs {
+}
+    
+message Transfer {
+  TransferAccounts accounts = 1;
+  TransferArgs args = 2;
+}
+    
+message EndAndCloseAccounts {
+  PublicKey keeper = 1;
+  PublicKey dca = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  PublicKey in_ata = 5;
+  PublicKey out_ata = 6;
+  PublicKey user = 7;
+  PublicKey user_out_ata = 8;
+  PublicKey init_user_out_ata = 9;
+  PublicKey intermediate_account = 10;
+  PublicKey system_program = 11;
+  PublicKey token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey event_authority = 14;
+  PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message EndAndCloseArgs {
+}
+    
+message EndAndClose {
+  EndAndCloseAccounts accounts = 1;
+  EndAndCloseArgs args = 2;
+}
+    
+message CollectedFeeAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message CollectedFeeArgs {
+  PublicKey user_key = 1;
+  PublicKey dca_key = 2;
+  PublicKey mint = 3;
+  uint64 amount = 4;
+}
+    
+message CollectedFee {
+  CollectedFeeAccounts accounts = 1;
+  CollectedFeeArgs args = 2;
+}
+    
+message FilledAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message FilledArgs {
+  PublicKey user_key = 1;
+  PublicKey dca_key = 2;
+  PublicKey input_mint = 3;
+  PublicKey output_mint = 4;
+  uint64 in_amount = 5;
+  uint64 out_amount = 6;
+  PublicKey fee_mint = 7;
+  uint64 fee = 8;
+}
+    
+message Filled {
+  FilledAccounts accounts = 1;
+  FilledArgs args = 2;
+}
+    
+message OpenedAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message OpenedArgs {
+  PublicKey user_key = 1;
+  PublicKey dca_key = 2;
+  uint64 in_deposited = 3;
+  PublicKey input_mint = 4;
+  PublicKey output_mint = 5;
+  int64 cycle_frequency = 6;
+  uint64 in_amount_per_cycle = 7;
+  int64 created_at = 8;
+}
+    
+message Opened {
+  OpenedAccounts accounts = 1;
+  OpenedArgs args = 2;
+}
+    
+message ClosedAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message ClosedArgs {
+  PublicKey user_key = 1;
+  PublicKey dca_key = 2;
+  uint64 in_deposited = 3;
+  PublicKey input_mint = 4;
+  PublicKey output_mint = 5;
+  int64 cycle_frequency = 6;
+  uint64 in_amount_per_cycle = 7;
+  int64 created_at = 8;
+  uint64 total_in_withdrawn = 9;
+  uint64 total_out_withdrawn = 10;
+  uint64 unfilled_amount = 11;
+  bool user_closed = 12;
+}
+    
+message Closed {
+  ClosedAccounts accounts = 1;
+  ClosedArgs args = 2;
+}
+    
+message EvtWithdrawAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtWithdrawArgs {
+  PublicKey dca_key = 1;
+  uint64 in_amount = 2;
+  uint64 out_amount = 3;
+  bool user_withdraw = 4;
+}
+    
+message EvtWithdraw {
+  EvtWithdrawAccounts accounts = 1;
+  EvtWithdrawArgs args = 2;
+}
+    
+message EvtDepositAccounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message EvtDepositArgs {
+  PublicKey dca_key = 1;
+  uint64 amount = 2;
+}
+    
+message EvtDeposit {
+  EvtDepositAccounts accounts = 1;
+  EvtDepositArgs args = 2;
+}
+    
+message DcaAccount {
+  oneof account {
+    Dca dca = 1;
+  }
+}
+message Withdrawal {
+  oneof kind {
+    WithdrawalIn in = 1;
+    WithdrawalOut out = 2;
+  }
+}
+message Instructions {
+  oneof instruction {
+    OpenDca open_dca = 1;
+    OpenDcaV2 open_dca_v2 = 2;
+    CloseDca close_dca = 3;
+    Withdraw withdraw = 4;
+    Deposit deposit = 5;
+    WithdrawFees withdraw_fees = 6;
+    InitiateFlashFill initiate_flash_fill = 7;
+    FulfillFlashFill fulfill_flash_fill = 8;
+    InitiateDlmmFill initiate_dlmm_fill = 9;
+    FulfillDlmmFill fulfill_dlmm_fill = 10;
+    Transfer transfer = 11;
+    EndAndClose end_and_close = 12;
+  }
+}
+message ProgramEvents {
+  oneof event {
+    CollectedFee collected_fee = 1;
+    Filled filled = 2;
+    Opened opened = 3;
+    Closed closed = 4;
+    EvtWithdraw withdraw = 5;
+    EvtDeposit deposit = 6;
+  }
+}
+message ProgramEventOutput {
+  optional Instructions instruction = 1;
+  repeated ProgramEvents program_events = 2;
+}

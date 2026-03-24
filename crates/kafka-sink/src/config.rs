@@ -317,6 +317,7 @@ mod tests {
     #[test]
     fn account_mode_defaults_to_finalized_passthrough() {
         let config = KafkaSinkConfig::default();
+
         assert!(matches!(
             config.account_mode,
             AccountMode::FinalizedPassthrough
@@ -326,6 +327,7 @@ mod tests {
     #[test]
     fn account_commit_at_defaults_to_confirmed() {
         let commit_at = AccountCommitAt::default();
+
         assert_eq!(commit_at, AccountCommitAt::Confirmed);
     }
 
@@ -334,8 +336,11 @@ mod tests {
         let mode = AccountMode::Processed {
             commit_at: AccountCommitAt::Finalized,
         };
+
         let json = serde_json::to_string(&mode).unwrap();
+
         let deserialized: AccountMode = serde_json::from_str(&json).unwrap();
+
         match deserialized {
             AccountMode::Processed { commit_at } => {
                 assert_eq!(commit_at, AccountCommitAt::Finalized);
@@ -347,6 +352,7 @@ mod tests {
     #[test]
     fn slots_topic_defaults() {
         let config = KafkaSinkConfig::default();
+
         assert_eq!(config.transaction_slots_topic, "transaction.slots");
         assert_eq!(config.account_slots_topic, "account.slots");
     }
@@ -354,6 +360,7 @@ mod tests {
     #[test]
     fn kafka_retry_defaults() {
         let config = KafkaSinkConfig::default();
+
         assert_eq!(config.kafka_write_max_attempts, 3);
         assert_eq!(config.kafka_transaction_op_max_attempts, 2);
         assert_eq!(config.kafka_retry_backoff_ms, 200);
@@ -366,6 +373,7 @@ mod tests {
             sasl_password: None,
             ..KafkaSinkConfig::default()
         };
+
         let err = config.validate_credentials().unwrap_err();
         assert!(err.to_string().contains("KAFKA_SASL_PASSWORD is missing"));
 
@@ -374,6 +382,7 @@ mod tests {
             sasl_password: Some("pass".into()),
             ..KafkaSinkConfig::default()
         };
+
         let err = config.validate_credentials().unwrap_err();
         assert!(err.to_string().contains("KAFKA_SASL_USERNAME is missing"));
     }
@@ -385,6 +394,7 @@ mod tests {
             schema_registry_password: None,
             ..KafkaSinkConfig::default()
         };
+
         let err = config.validate_credentials().unwrap_err();
         assert!(err
             .to_string()
@@ -395,6 +405,7 @@ mod tests {
             schema_registry_password: Some("pass".into()),
             ..KafkaSinkConfig::default()
         };
+
         let err = config.validate_credentials().unwrap_err();
         assert!(err
             .to_string()
@@ -414,6 +425,7 @@ mod tests {
             schema_registry_password: Some("sr-pass".into()),
             ..KafkaSinkConfig::default()
         };
+
         config.validate_credentials().unwrap();
     }
 
@@ -424,6 +436,7 @@ mod tests {
             sasl_password: Some("pass".into()),
             ..KafkaSinkConfig::default()
         };
+
         config.validate_credentials().unwrap();
     }
 

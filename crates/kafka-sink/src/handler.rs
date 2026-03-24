@@ -65,11 +65,14 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
         _raw: &TransactionUpdate,
     ) -> HandlerResult<()> {
         let slot = update.slot;
+
         let Some(ref tx_info) = update.transaction else {
             // Still count this as parsed so the gate count matches.
             self.cancelable_send(self.handle.send_transaction_parsed(slot).await);
+
             return Ok(());
         };
+
         let tx_index = tx_info.index;
 
         // Skip failed transactions — no instruction parsing, no records to Kafka.
@@ -79,7 +82,9 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     .send_parse_stats(slot, ParseStatsKind::TransactionStatusFailed)
                     .await,
             );
+
             self.cancelable_send(self.handle.send_transaction_parsed(slot).await);
+
             return Ok(());
         }
 
@@ -89,11 +94,13 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                 .await,
         );
 
-        let instructions = match InstructionUpdate::parse_from_txn(update) {
+        let instructions = match InstructionUpdate::build_from_txn(update) {
             Ok(ixs) => ixs,
             Err(e) => {
                 tracing::warn!(?e, slot, tx_index, "Failed to parse instructions");
+
                 self.cancelable_send(self.handle.send_transaction_parsed(slot).await);
+
                 return Ok(());
             },
         };
@@ -107,14 +114,18 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 
                 if let Some(record) = result {
                     let is_decoded = record.is_decoded;
+
                     let send_result = self
                         .handle
                         .send_instruction_parsed(slot, sort_key(tx_index, &ix.path), record)
                         .await;
+
                     if let Err(e) = send_result {
                         tracing::error!(slot, tx_index, "Failed to send parsed record");
+
                         self.cancelable_send(Err(e));
                     }
+
                     // Fallback instruction records are still filtered/error outcomes.
                     // Count them so slot stats reflect decode quality.
                     if !is_decoded {
@@ -123,6 +134,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                         } else {
                             ParseStatsKind::InstructionFiltered
                         };
+
                         self.cancelable_send(self.handle.send_parse_stats(slot, kind).await);
                     }
                 } else {
@@ -131,6 +143,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     } else {
                         ParseStatsKind::InstructionFiltered
                     };
+
                     self.cancelable_send(self.handle.send_parse_stats(slot, kind).await);
                 }
             }
@@ -138,6 +151,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 
         // Signal this transaction is fully parsed.
         self.cancelable_send(self.handle.send_transaction_parsed(slot).await);
+
         Ok(())
     }
 }
@@ -152,6 +166,7 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
                 .account
                 .as_ref()
                 .expect("parse_account returned Some so account must exist");
+
             let pubkey: [u8; 32] = match info.pubkey.as_slice().try_into() {
                 Ok(pk) => pk,
                 Err(_) => {
@@ -160,19 +175,26 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
                         pubkey_len = info.pubkey.len(),
                         "Malformed pubkey in account update"
                     );
+
                     self.cancelable_send(
                         self.handle
                             .send_parse_stats(slot, ParseStatsKind::AccountError)
                             .await,
                     );
+
                     return Ok(());
                 },
             };
+
             let write_version = info.write_version;
+
             let key = AccountRecordSortKey::new(write_version, pubkey);
+
             let send_result = self.handle.send_account_parsed(slot, key, record).await;
+
             if let Err(e) = send_result {
                 tracing::error!(slot, "Failed to send account parsed record");
+
                 self.cancelable_send(Err(e));
             }
         } else {
@@ -181,6 +203,7 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
             } else {
                 ParseStatsKind::AccountFiltered
             };
+
             self.cancelable_send(self.handle.send_parse_stats(slot, kind).await);
         }
         // No send_transaction_parsed — accounts don't affect the TX gate.
@@ -236,6 +259,7 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for PassthroughAccountHandler 
             .await
         {
             tracing::error!(?e, slot, "Failed to send passthrough account msg");
+
             self.cancel.cancel();
         }
         Ok(())

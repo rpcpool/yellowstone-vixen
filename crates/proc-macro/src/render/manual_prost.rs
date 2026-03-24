@@ -274,7 +274,7 @@ pub(super) fn manual_prost_struct_impl(
     let mut default_stmts = Vec::new();
 
     for f in &t.fields {
-        build_field_prost_stmts(
+        emit_prost_field_codegen(
             f,
             in_module,
             &resolve_msg,
@@ -348,7 +348,7 @@ pub(super) fn manual_prost_struct_impl(
 
 /// Build encode/merge/encoded_len/clear/default statements for a single field.
 #[allow(clippy::too_many_arguments)]
-fn build_field_prost_stmts(
+fn emit_prost_field_codegen(
     f: &FieldIr,
     in_module: bool,
     resolve_msg: &dyn Fn(&str) -> TokenStream,

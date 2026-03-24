@@ -1,6 +1,11 @@
 [workspace]
 members = ["crates/*", "examples/*", "tests/*"]
-exclude = ["examples/multi-dex-stream"]
+# proc-macro-events is excluded to avoid workspace feature unification:
+# its `program-events` feature on the proc-macro crate would bleed into
+# proc-macro-test, changing InstructionParser::Output from Instructions
+# to ProgramEventOutput. Run its tests separately with:
+#   cd tests/proc-macro-events && cargo test
+exclude = ["examples/multi-dex-stream", "tests/idls", "tests/proc-macro-events"]
 resolver = "2"
 
 [workspace.package]

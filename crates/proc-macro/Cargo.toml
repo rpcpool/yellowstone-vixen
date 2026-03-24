@@ -28,6 +28,7 @@ base64 = { workspace = true }
 
 [features]
 proto = []
+program-events = []
 
 [dev-dependencies]
 prettyplease = { workspace = true }

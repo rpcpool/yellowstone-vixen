@@ -11,6 +11,7 @@ use crate::config::KafkaSinkConfig;
 
 pub fn create_producer(config: &KafkaSinkConfig) -> FutureProducer {
     let mut client_config = ClientConfig::new();
+
     client_config
         .set("bootstrap.servers", &config.brokers)
         .set("message.timeout.ms", config.message_timeout_ms.to_string())
@@ -89,6 +90,7 @@ pub fn initialize_transactional_producer(
                     fatal = txn.is_fatal(),
                     "Failed to initialize Kafka transactions before checkpoint read, retrying"
                 );
+
                 thread::sleep(backoff);
             },
             Err(err) => {
