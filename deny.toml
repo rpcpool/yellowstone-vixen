@@ -32,6 +32,9 @@ ignore = [
     "RUSTSEC-2025-0119", # number_prefix
     "RUSTSEC-2024-0436", # paste
     "RUSTSEC-2025-0134", # rustls-pemfile
+
+    # rustls-webpki 0.101.7 CRL distribution point matching (solana transitive dep via rustls 0.21)
+    "RUSTSEC-2026-0049",
 ]
 
 [licenses]

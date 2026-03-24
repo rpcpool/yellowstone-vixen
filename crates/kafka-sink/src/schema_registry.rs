@@ -32,6 +32,7 @@ const MAX_VARINT_SIZE: usize = 10;
 // TODO: maybe can be optimized to not waste bytes
 fn wire_format_max_capacity(indices_count: usize, payload_len: usize) -> usize {
     let max_indices_bytes = (1 + indices_count) * MAX_VARINT_SIZE;
+
     1 + SCHEMA_ID_SIZE + max_indices_bytes + payload_len
 }
 
@@ -43,11 +44,14 @@ pub fn wrap_payload_with_confluent_wire_format(
     payload: &[u8],
 ) -> Vec<u8> {
     let capacity = wire_format_max_capacity(message_indices.len(), payload.len());
+
     let mut buf = Vec::with_capacity(capacity);
+
     buf.push(MAGIC_BYTE);
     buf.extend_from_slice(&schema_id.to_be_bytes());
     buf.extend(encode_indices(message_indices));
     buf.extend_from_slice(payload);
+
     buf
 }
 
@@ -59,6 +63,7 @@ fn encode_indices(indices: &[i32]) -> impl Iterator<Item = u8> + '_ {
 /// Zig-zag encoding: (n << 1) ^ (n >> 63) maps signed to unsigned for efficient varint.
 fn encode_zigzag(value: i64) -> ZigzagIter {
     let zigzag = ((value << 1) ^ (value >> 63)) as u64;
+
     ZigzagIter {
         value: zigzag,
         done: false,
@@ -78,13 +83,17 @@ impl Iterator for ZigzagIter {
         if self.done {
             return None;
         }
+
         let mut byte = (self.value & 0x7f) as u8;
+
         self.value >>= 7;
+
         if self.value != 0 {
             byte |= 0x80;
         } else {
             self.done = true;
         }
+
         Some(byte)
     }
 }
@@ -136,6 +145,7 @@ fn register_schema(
         .post(&url)
         .header("Content-Type", "application/vnd.schemaregistry.v1+json")
         .json(&request);
+
     let req = config.apply_schema_registry_auth_if_configured(req);
 
     let response = req
@@ -148,12 +158,14 @@ fn register_schema(
         let result: RegisterSchemaResponse = response
             .json()
             .map_err(|e| format!("Failed to parse response: {}", e))?;
+
         Ok(result.id)
     } else if status.as_u16() == 409 {
         // Schema already exists or is incompatible
         let error: SchemaRegistryError = response
             .json()
             .map_err(|e| format!("Failed to parse error response: {}", e))?;
+
         Err(format!(
             "Schema conflict (code {}): {}",
             error.error_code, error.message
@@ -162,6 +174,7 @@ fn register_schema(
         let error_text = response
             .text()
             .unwrap_or_else(|_| "Unknown error".to_string());
+
         Err(format!("HTTP {}: {}", status, error_text))
     }
 }
@@ -174,6 +187,7 @@ fn check_schema_registry(
     let req = client
         .get(format!("{}/subjects", base_url))
         .timeout(std::time::Duration::from_secs(5));
+
     let req = config.apply_schema_registry_auth_if_configured(req);
 
     match req.send() {
@@ -224,6 +238,7 @@ pub fn ensure_schemas_registered(
             })?;
 
         tracing::debug!(subject = %schema_def.subject, schema_id, "Schema ready");
+
         registered.insert(schema_def.subject.clone(), RegisteredSchema {
             schema_id,
             message_index: schema_def.message_index,
@@ -249,7 +264,9 @@ fn get_latest_schema_id_for_subject(
         struct SchemaVersion {
             id: i32,
         }
+
         let version: SchemaVersion = response.json().ok()?;
+
         Some(version.id)
     } else {
         None
@@ -263,6 +280,7 @@ mod tests {
     #[test]
     fn schema_registry_auth_sends_basic_auth_header() {
         let mut server = mockito::Server::new();
+
         let mock = server
             .mock("GET", "/subjects")
             .match_header("authorization", "Basic dXNlcjpwYXNz") // base64("user:pass")
@@ -278,14 +296,18 @@ mod tests {
         };
 
         let client = reqwest::blocking::Client::new();
+
         let result = check_schema_registry(&client, &server.url(), &config);
+
         assert!(result.is_ok());
+
         mock.assert();
     }
 
     #[test]
     fn schema_registry_auth_falls_back_to_sasl_creds() {
         let mut server = mockito::Server::new();
+
         let mock = server
             .mock("GET", "/subjects")
             .match_header("authorization", "Basic dXNlcjpwYXNz")
@@ -303,14 +325,18 @@ mod tests {
         };
 
         let client = reqwest::blocking::Client::new();
+
         let result = check_schema_registry(&client, &server.url(), &config);
+
         assert!(result.is_ok());
+
         mock.assert();
     }
 
     #[test]
     fn schema_registry_no_auth_when_no_creds() {
         let mut server = mockito::Server::new();
+
         let mock = server
             .mock("GET", "/subjects")
             .match_header("authorization", mockito::Matcher::Missing)
@@ -324,14 +350,18 @@ mod tests {
         };
 
         let client = reqwest::blocking::Client::new();
+
         let result = check_schema_registry(&client, &server.url(), &config);
+
         assert!(result.is_ok());
+
         mock.assert();
     }
 
     #[test]
     fn check_schema_registry_401_is_fatal() {
         let mut server = mockito::Server::new();
+
         server.mock("GET", "/subjects").with_status(401).create();
 
         let config = KafkaSinkConfig {
@@ -340,13 +370,16 @@ mod tests {
         };
 
         let client = reqwest::blocking::Client::new();
+
         let err = check_schema_registry(&client, &server.url(), &config).unwrap_err();
+
         assert!(err.to_string().contains("auth failed"));
     }
 
     #[test]
     fn check_schema_registry_403_is_fatal() {
         let mut server = mockito::Server::new();
+
         server.mock("GET", "/subjects").with_status(403).create();
 
         let config = KafkaSinkConfig {
@@ -355,7 +388,9 @@ mod tests {
         };
 
         let client = reqwest::blocking::Client::new();
+
         let err = check_schema_registry(&client, &server.url(), &config).unwrap_err();
+
         assert!(err.to_string().contains("auth failed"));
     }
 
@@ -372,6 +407,7 @@ mod tests {
             .unwrap();
 
         let err = check_schema_registry(&client, &config.schema_registry_url, &config).unwrap_err();
+
         assert!(err.to_string().contains("unreachable"));
     }
 }

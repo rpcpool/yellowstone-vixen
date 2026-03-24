@@ -25,15 +25,23 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|t| t.name.as_str())
         .collect();
 
-    // Render non-instruction types at top level (exclude oneof parents, rendered separately).
+    // Collect event-kind type names (these go inside the event module)
+    let event_type_names: HashSet<&str> = schema_ir
+        .types
+        .iter()
+        .filter(|t| t.kind == TypeKindIr::Event)
+        .map(|t| t.name.as_str())
+        .collect();
+
+    // Render non-instruction, non-event types at top level (exclude oneof parents, rendered separately).
     // Use kind-based filtering (not name-based) so that defined types whose names
-    // collide with instruction wrapper types are still rendered at the top level.
+    // collide with instruction/event wrapper types are still rendered at the top level.
     for t in &schema_ir.types {
         if oneof_parents.contains(t.name.as_str()) {
             continue;
         }
 
-        if t.kind == TypeKindIr::Instruction {
+        if t.kind == TypeKindIr::Instruction || t.kind == TypeKindIr::Event {
             continue;
         }
 
@@ -51,10 +59,31 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .filter(|t| !oneof_parents.contains(t.name.as_str()))
                     .collect();
 
-                out.extend(render_instruction_dispatch(
+                out.extend(render_dispatch(
                     oneof,
                     &ix_types,
                     &instruction_type_names,
+                    &oneof.parent_message,
+                    "instruction",
+                    "Instruction",
+                ));
+            },
+            OneofKindIr::EventDispatch => {
+                let ev_types: Vec<&TypeIr> = schema_ir
+                    .types
+                    .iter()
+                    .filter(|t| t.kind == TypeKindIr::Event)
+                    .filter(|t| !oneof_parents.contains(t.name.as_str()))
+                    .collect();
+
+                // Use "Events" as the Rust wrapper name (not "ProgramEvents" which is the proto name)
+                out.extend(render_dispatch(
+                    oneof,
+                    &ev_types,
+                    &event_type_names,
+                    "Events",
+                    "event",
+                    "Event",
                 ));
             },
             OneofKindIr::Enum => {
@@ -97,27 +126,28 @@ fn render_struct_type(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> TokenS
 }
 
 ///
-/// Render instruction dispatch: module-wrapped.
+/// Render a dispatch module: wrapper struct + inner module with enum + payload types.
 ///
 /// Generates:
-/// - `pub mod instruction { pub enum Instruction { ... } /* + payload types */ }`
-/// - Wrapper struct `Instructions` with `instruction: instruction::Instruction` (non-Option)
-/// - Custom Borsh impls for `Instructions`
+/// - `pub mod <mod_name> { pub enum <enum_name> { ... } /* + payload types */ }`
+/// - Wrapper struct with a single field of the enum type (non-Option)
+/// - Custom Borsh impls for the wrapper
 /// - When proto: manual `prost::Message` impl (no prost derive on the wrapper)
 ///
-fn render_instruction_dispatch(
+fn render_dispatch(
     oneof_ir: &OneofIr,
-    ix_types: &[&TypeIr],
+    payload_types: &[&TypeIr],
     local_names: &HashSet<&str>,
+    rust_wrapper_name: &str,
+    mod_name: &str,
+    enum_name: &str,
 ) -> TokenStream {
-    let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "Instructions"
-    let mod_ident = format_ident!("instruction");
-    let oneof_ident = format_ident!("Instruction");
+    let wrapper_ident = format_ident!("{}", rust_wrapper_name);
+    let mod_ident = format_ident!("{}", mod_name);
+    let oneof_ident = format_ident!("{}", enum_name);
     let field_ident = format_ident!("{}", oneof_ir.field_name);
 
-    // Render instruction types inside the module (wrapper structs still exist
-    // for proto merge decoding and for users who want them).
-    let module_types: Vec<TokenStream> = ix_types
+    let module_types: Vec<TokenStream> = payload_types
         .iter()
         .map(|t| render_struct_type(t, Some(local_names)))
         .collect();
@@ -125,7 +155,6 @@ fn render_instruction_dispatch(
     // Struct variants: `Swap { accounts: SwapAccounts, args: SwapArgs }`
     let variants = oneof_ir.variants.iter().map(|v| {
         let v_ident = format_ident!("{}", v.variant_name);
-
         let accounts_ident = format_ident!("{}Accounts", v.message_type);
         let args_ident = format_ident!("{}Args", v.message_type);
 
@@ -136,7 +165,6 @@ fn render_instruction_dispatch(
 
     let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
         let disc = i as u8;
-
         let v_ident = format_ident!("{}", v.variant_name);
         let msg_ident = format_ident!("{}", v.message_type);
 
@@ -167,7 +195,7 @@ fn render_instruction_dispatch(
             super::manual_prost::manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
 
         let message_impl = super::manual_prost::manual_prost_message_impl(
-            &parent_ident,
+            &wrapper_ident,
             &field_ident,
             &mod_ident,
             &oneof_ident,
@@ -178,9 +206,7 @@ fn render_instruction_dispatch(
         quote! {}
     };
 
-    // For the parent `Instructions` struct, Debug is manual in proto mode
-    // (provided by manual_prost_message_impl). For the `Instruction` enum
-    // we always derive Debug since struct variants don't use prost::Oneof.
+    // Debug is manual in proto mode (provided by manual_prost_message_impl).
     let parent_debug_derive = if cfg!(feature = "proto") {
         quote! {}
     } else {
@@ -189,7 +215,7 @@ fn render_instruction_dispatch(
 
     quote! {
         #[derive(Clone, #parent_debug_derive PartialEq)]
-        pub struct #parent_ident {
+        pub struct #wrapper_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
         }
 
@@ -204,7 +230,7 @@ fn render_instruction_dispatch(
 
         #proto_impls
 
-        impl ::borsh::BorshSerialize for #parent_ident {
+        impl ::borsh::BorshSerialize for #wrapper_ident {
             fn serialize<W: ::borsh::io::Write>(
                 &self,
                 writer: &mut W
@@ -215,7 +241,7 @@ fn render_instruction_dispatch(
             }
         }
 
-        impl ::borsh::BorshDeserialize for #parent_ident {
+        impl ::borsh::BorshDeserialize for #wrapper_ident {
             fn deserialize_reader<R: ::borsh::io::Read>(
                 reader: &mut R
             ) -> ::core::result::Result<Self, ::borsh::io::Error> {
@@ -227,7 +253,7 @@ fn render_instruction_dispatch(
                     _ => {
                         return ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
-                            "invalid discriminant"
+                            format!("invalid discriminant {disc} (type {})", stringify!(#wrapper_ident))
                         ));
                     }
                 };
@@ -368,7 +394,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
                     _ => {
                         return ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
-                            "invalid discriminant"
+                            format!("invalid enum discriminant {disc} (type {})", stringify!(#parent_ident))
                         ));
                     }
                 };
@@ -645,6 +671,7 @@ pub(super) fn map_ir_type_to_native(field_type: &FieldTypeIr, in_module: bool) -
         },
         FieldTypeIr::Message(name) => {
             let ident = format_ident!("{}", name);
+
             quote!(#ident)
         },
     }

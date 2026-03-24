@@ -1,16 +1,14 @@
-mod common;
-
-use common::p;
 use prost::Message;
+use vixen_test_utils::{check_protobuf_format, p};
 use yellowstone_vixen_core::{Parser, Pubkey};
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("idls/perp_idl.json");
+include_vixen_parser!("../idls/perpetuals.json");
 
 #[test]
 fn check_protobuf_schema() {
-    common::check_protobuf_format(perpetuals::PROTOBUF_SCHEMA);
+    check_protobuf_format(perpetuals::PROTOBUF_SCHEMA);
 
     insta::assert_snapshot!(perpetuals::PROTOBUF_SCHEMA);
 }
@@ -265,8 +263,9 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
             })
             .expect("no decrease position ix found");
 
-        let expected = perpetuals::instruction::DecreasePositionWithTpsl {
-            accounts: perpetuals::instruction::DecreasePositionWithTpslAccounts {
+        assert_eq!(
+            decrease_accounts,
+            &perpetuals::instruction::DecreasePositionWithTpslAccounts {
                 keeper: p("H3dDE6K6uqBp5kBKctH6w8hzpV5eAmxUiqvcdHxuE9i4"),
                 owner: p("AHjZmPJ3swFKz6nVhoeV3Y2zB94rd2QFbAoEPvNo6DXX"),
                 transfer_authority: p("AVzP2GeRmqGphJsMxWoqjpUifPpCret7LqWhD8NWQK49"),
@@ -286,12 +285,12 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                 event_authority: p("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
                 program: Pubkey::new(perpetuals::PROGRAM_ID),
                 remaining_accounts: vec![],
-            },
-            args: perpetuals::instruction::DecreasePositionWithTpslArgs {},
-        };
-
-        assert_eq!(decrease_accounts, &expected.accounts);
-        assert_eq!(decrease_args, &expected.args);
+            }
+        );
+        assert_eq!(
+            decrease_args,
+            &perpetuals::instruction::DecreasePositionWithTpslArgs {}
+        );
     }
 
     {
@@ -305,8 +304,9 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
             })
             .expect("no close position request 2 ix found");
 
-        let expected = perpetuals::instruction::ClosePositionRequest2 {
-            accounts: perpetuals::instruction::ClosePositionRequest2Accounts {
+        assert_eq!(
+            close_accounts,
+            &perpetuals::instruction::ClosePositionRequest2Accounts {
                 keeper: p("H3dDE6K6uqBp5kBKctH6w8hzpV5eAmxUiqvcdHxuE9i4"),
                 owner: p("AHjZmPJ3swFKz6nVhoeV3Y2zB94rd2QFbAoEPvNo6DXX"),
                 owner_ata: p("BPRnMmfxF7QYepU9ypvBMA4eXwbHGST79bUgKvoZ6Jsk"),
@@ -321,12 +321,12 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                 event_authority: p("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
                 program: Pubkey::new(perpetuals::PROGRAM_ID),
                 remaining_accounts: vec![],
-            },
-            args: perpetuals::instruction::ClosePositionRequest2Args {},
-        };
-
-        assert_eq!(close_accounts, &expected.accounts);
-        assert_eq!(close_args, &expected.args);
+            }
+        );
+        assert_eq!(
+            close_args,
+            &perpetuals::instruction::ClosePositionRequest2Args {}
+        );
     }
 }
 
@@ -349,8 +349,9 @@ async fn parse_borrow_from_custody_ix() {
         })
         .expect("no borrow from custody ix found");
 
-    let expected = perpetuals::instruction::BorrowFromCustody {
-        accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
+    assert_eq!(
+        borrow_accounts,
+        &perpetuals::instruction::BorrowFromCustodyAccounts {
             owner: p("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC"),
             perpetuals: p("H4ND9aYttUVLFmNypZqLjZ52FYiGvdEB45GmwNoKEjTj"),
             pool: p("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
@@ -375,14 +376,14 @@ async fn parse_borrow_from_custody_ix() {
                 p("6Jp2xZUTWdDD2ZyUPRzeMdc6AFQ5K3pFgZxk2EijfjnM"),
                 p("Fgc93D641F8N2d1xLjQ4jmShuD3GE3BsCXA56KBQbF5u"),
             ],
-        },
-        args: perpetuals::instruction::BorrowFromCustodyArgs {
+        }
+    );
+    assert_eq!(
+        borrow_args,
+        &perpetuals::instruction::BorrowFromCustodyArgs {
             amount: 8_463_144_037,
-        },
-    };
-
-    assert_eq!(borrow_accounts, &expected.accounts);
-    assert_eq!(borrow_args, &expected.args);
+        }
+    );
 }
 
 ///

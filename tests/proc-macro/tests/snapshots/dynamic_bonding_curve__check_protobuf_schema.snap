@@ -53,8 +53,9 @@ message ConfigParameters {
   uint32 migrated_pool_base_fee_mode = 23;
   MigratedPoolMarketCapFeeSchedulerParams migrated_pool_market_cap_fee_scheduler_params = 24;
   bool enable_first_swap_with_min_fee = 25;
-  bytes padding = 26;
-  repeated LiquidityDistributionParameters curve = 27;
+  uint32 compounding_fee_bps = 26;
+  bytes padding = 27;
+  repeated LiquidityDistributionParameters curve = 28;
 }
     
 message DynamicFeeConfig {
@@ -78,173 +79,6 @@ message DynamicFeeParameters {
   uint32 reduction_factor = 5;
   uint32 max_volatility_accumulator = 6;
   uint32 variable_fee_control = 7;
-}
-    
-message EvtClaimCreatorTradingFee {
-  PublicKey pool = 1;
-  uint64 token_base_amount = 2;
-  uint64 token_quote_amount = 3;
-}
-    
-message EvtClaimPoolCreationFee {
-  PublicKey pool = 1;
-  PublicKey receiver = 2;
-  uint64 creation_fee = 3;
-}
-    
-message EvtClaimProtocolFee {
-  PublicKey pool = 1;
-  uint64 token_base_amount = 2;
-  uint64 token_quote_amount = 3;
-}
-    
-message EvtClaimProtocolLiquidityMigrationFee {
-  PublicKey pool = 1;
-  uint64 token_base_amount = 2;
-  uint64 token_quote_amount = 3;
-}
-    
-message EvtClaimTradingFee {
-  PublicKey pool = 1;
-  uint64 token_base_amount = 2;
-  uint64 token_quote_amount = 3;
-}
-    
-message EvtCloseClaimFeeOperator {
-  PublicKey claim_fee_operator = 1;
-  PublicKey operator = 2;
-}
-    
-message EvtCreateClaimFeeOperator {
-  PublicKey operator = 1;
-}
-    
-message EvtCreateConfig {
-  PublicKey config = 1;
-  PublicKey quote_mint = 2;
-  PublicKey fee_claimer = 3;
-  PublicKey owner = 4;
-  PoolFeeParameters pool_fees = 5;
-  uint32 collect_fee_mode = 6;
-  uint32 migration_option = 7;
-  uint32 activation_type = 8;
-  uint32 token_decimal = 9;
-  uint32 token_type = 10;
-  uint32 partner_permanent_locked_liquidity_percentage = 11;
-  uint32 partner_liquidity_percentage = 12;
-  uint32 creator_permanent_locked_liquidity_percentage = 13;
-  uint32 creator_liquidity_percentage = 14;
-  uint64 swap_base_amount = 15;
-  uint64 migration_quote_threshold = 16;
-  uint64 migration_base_amount = 17;
-  bytes sqrt_start_price = 18;
-  LockedVestingParams locked_vesting = 19;
-  uint32 migration_fee_option = 20;
-  uint32 fixed_token_supply_flag = 21;
-  uint64 pre_migration_token_supply = 22;
-  uint64 post_migration_token_supply = 23;
-  repeated LiquidityDistributionParameters curve = 24;
-}
-    
-message EvtCreateConfigV2 {
-  PublicKey config = 1;
-  PublicKey quote_mint = 2;
-  PublicKey fee_claimer = 3;
-  PublicKey leftover_receiver = 4;
-  ConfigParameters config_parameters = 5;
-}
-    
-message EvtCreateMeteoraMigrationMetadata {
-  PublicKey virtual_pool = 1;
-}
-    
-message EvtCreatorWithdrawSurplus {
-  PublicKey pool = 1;
-  uint64 surplus_amount = 2;
-}
-    
-message EvtCurveComplete {
-  PublicKey pool = 1;
-  PublicKey config = 2;
-  uint64 base_reserve = 3;
-  uint64 quote_reserve = 4;
-}
-    
-message EvtInitializePool {
-  PublicKey pool = 1;
-  PublicKey config = 2;
-  PublicKey creator = 3;
-  PublicKey base_mint = 4;
-  uint32 pool_type = 5;
-  uint64 activation_point = 6;
-}
-    
-message EvtPartnerClaimPoolCreationFee {
-  PublicKey pool = 1;
-  PublicKey partner = 2;
-  uint64 creation_fee = 3;
-  PublicKey fee_receiver = 4;
-}
-    
-message EvtPartnerMetadata {
-  PublicKey partner_metadata = 1;
-  PublicKey fee_claimer = 2;
-}
-    
-message EvtPartnerWithdrawMigrationFee {
-  PublicKey pool = 1;
-  uint64 fee = 2;
-}
-    
-message EvtPartnerWithdrawSurplus {
-  PublicKey pool = 1;
-  uint64 surplus_amount = 2;
-}
-    
-message EvtSwap {
-  PublicKey pool = 1;
-  PublicKey config = 2;
-  uint32 trade_direction = 3;
-  bool has_referral = 4;
-  SwapParameters params = 5;
-  SwapResult swap_result = 6;
-  uint64 amount_in = 7;
-  uint64 current_timestamp = 8;
-}
-    
-message EvtSwap2 {
-  PublicKey pool = 1;
-  PublicKey config = 2;
-  uint32 trade_direction = 3;
-  bool has_referral = 4;
-  SwapParameters2 swap_parameters = 5;
-  SwapResult2 swap_result = 6;
-  uint64 quote_reserve_amount = 7;
-  uint64 migration_threshold = 8;
-  uint64 current_timestamp = 9;
-}
-    
-message EvtUpdatePoolCreator {
-  PublicKey pool = 1;
-  PublicKey creator = 2;
-  PublicKey new_creator = 3;
-}
-    
-message EvtVirtualPoolMetadata {
-  PublicKey virtual_pool_metadata = 1;
-  PublicKey virtual_pool = 2;
-}
-    
-message EvtWithdrawLeftover {
-  PublicKey pool = 1;
-  PublicKey leftover_receiver = 2;
-  uint64 leftover_amount = 3;
-}
-    
-message EvtWithdrawMigrationFee {
-  PublicKey pool = 1;
-  uint64 fee = 2;
-  uint32 flag = 3;
 }
     
 message InitializePoolParameters {
@@ -351,26 +185,6 @@ message SwapParameters2 {
   uint32 swap_mode = 3;
 }
     
-message SwapResult {
-  uint64 actual_input_amount = 1;
-  uint64 output_amount = 2;
-  bytes next_sqrt_price = 3;
-  uint64 trading_fee = 4;
-  uint64 protocol_fee = 5;
-  uint64 referral_fee = 6;
-}
-    
-message SwapResult2 {
-  uint64 included_fee_input_amount = 1;
-  uint64 excluded_fee_input_amount = 2;
-  uint64 amount_left = 3;
-  uint64 output_amount = 4;
-  bytes next_sqrt_price = 5;
-  uint64 trading_fee = 6;
-  uint64 protocol_fee = 7;
-  uint64 referral_fee = 8;
-}
-    
 message TokenSupplyParams {
   uint64 pre_migration_token_supply = 1;
   uint64 post_migration_token_supply = 2;
@@ -428,6 +242,12 @@ message MeteoraDammMigrationMetadata {
   bytes padding = 14;
 }
     
+message Operator {
+  PublicKey whitelisted_address = 1;
+  bytes permission = 2;
+  repeated uint64 padding = 3;
+}
+    
 message PartnerMetadata {
   PublicKey fee_claimer = 1;
   repeated bytes padding = 2;
@@ -475,7 +295,7 @@ message PoolConfig {
   uint32 migrated_pool_fee_bps = 36;
   uint32 migrated_pool_base_fee_mode = 37;
   uint32 enable_first_swap_with_min_fee = 38;
-  bytes padding1_2 = 39;
+  uint32 migrated_compounding_fee_bps = 39;
   uint64 pool_creation_fee = 40;
   bytes migrated_pool_base_fee_bytes = 41;
   bytes sqrt_start_price = 42;
@@ -583,7 +403,7 @@ message ClaimProtocolFeeAccounts {
   PublicKey quote_mint = 7;
   PublicKey token_base_account = 8;
   PublicKey token_quote_account = 9;
-  PublicKey claim_fee_operator = 10;
+  PublicKey operator = 10;
   PublicKey signer = 11;
   PublicKey token_base_program = 12;
   PublicKey token_quote_program = 13;
@@ -605,7 +425,7 @@ message ClaimProtocolFee {
 message ClaimProtocolPoolCreationFeeAccounts {
   PublicKey config = 1;
   PublicKey pool = 2;
-  PublicKey claim_fee_operator = 3;
+  PublicKey operator = 3;
   PublicKey signer = 4;
   PublicKey treasury = 5;
   PublicKey event_authority = 6;
@@ -666,23 +486,19 @@ message CloseClaimProtocolFeeOperator {
   CloseClaimProtocolFeeOperatorArgs args = 2;
 }
     
-message CreateClaimProtocolFeeOperatorAccounts {
-  PublicKey claim_fee_operator = 1;
-  PublicKey operator = 2;
-  PublicKey signer = 3;
-  PublicKey payer = 4;
-  PublicKey system_program = 5;
-  PublicKey event_authority = 6;
-  PublicKey program = 7;
-  repeated PublicKey remaining_accounts = 8;
+message CloseOperatorAccountAccounts {
+  PublicKey operator = 1;
+  PublicKey signer = 2;
+  PublicKey rent_receiver = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
-message CreateClaimProtocolFeeOperatorArgs {
+message CloseOperatorAccountArgs {
 }
     
-message CreateClaimProtocolFeeOperator {
-  CreateClaimProtocolFeeOperatorAccounts accounts = 1;
-  CreateClaimProtocolFeeOperatorArgs args = 2;
+message CloseOperatorAccount {
+  CloseOperatorAccountAccounts accounts = 1;
+  CloseOperatorAccountArgs args = 2;
 }
     
 message CreateConfigAccounts {
@@ -730,6 +546,26 @@ message CreateLockerArgs {
 message CreateLocker {
   CreateLockerAccounts accounts = 1;
   CreateLockerArgs args = 2;
+}
+    
+message CreateOperatorAccountAccounts {
+  PublicKey operator = 1;
+  PublicKey whitelisted_address = 2;
+  PublicKey signer = 3;
+  PublicKey payer = 4;
+  PublicKey system_program = 5;
+  PublicKey event_authority = 6;
+  PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message CreateOperatorAccountArgs {
+  bytes permission = 1;
+}
+    
+message CreateOperatorAccount {
+  CreateOperatorAccountAccounts accounts = 1;
+  CreateOperatorAccountArgs args = 2;
 }
     
 message CreatePartnerMetadataAccounts {
@@ -1164,16 +1000,40 @@ message WithdrawMigrationFee {
   WithdrawMigrationFeeArgs args = 2;
 }
     
+message ZapProtocolFeeAccounts {
+  PublicKey pool_authority = 1;
+  PublicKey config = 2;
+  PublicKey pool = 3;
+  PublicKey token_vault = 4;
+  PublicKey token_mint = 5;
+  PublicKey receiver_token = 6;
+  PublicKey operator = 7;
+  PublicKey signer = 8;
+  PublicKey token_program = 9;
+  PublicKey sysvar_instructions = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message ZapProtocolFeeArgs {
+  uint64 max_amount = 1;
+}
+    
+message ZapProtocolFee {
+  ZapProtocolFeeAccounts accounts = 1;
+  ZapProtocolFeeArgs args = 2;
+}
+    
 message DynamicBondingCurveAccount {
   oneof account {
     ClaimFeeOperator claim_fee_operator = 1;
     Config config = 2;
     LockEscrow lock_escrow = 3;
     MeteoraDammMigrationMetadata meteora_damm_migration_metadata = 4;
-    PartnerMetadata partner_metadata = 5;
-    PoolConfig pool_config = 6;
-    VirtualPool virtual_pool = 7;
-    VirtualPoolMetadata virtual_pool_metadata = 8;
+    Operator operator = 5;
+    PartnerMetadata partner_metadata = 6;
+    PoolConfig pool_config = 7;
+    VirtualPool virtual_pool = 8;
+    VirtualPoolMetadata virtual_pool_metadata = 9;
   }
 }
 message Instructions {
@@ -1184,25 +1044,27 @@ message Instructions {
     ClaimProtocolPoolCreationFee claim_protocol_pool_creation_fee = 4;
     ClaimTradingFee claim_trading_fee = 5;
     CloseClaimProtocolFeeOperator close_claim_protocol_fee_operator = 6;
-    CreateClaimProtocolFeeOperator create_claim_protocol_fee_operator = 7;
+    CloseOperatorAccount close_operator_account = 7;
     CreateConfig create_config = 8;
     CreateLocker create_locker = 9;
-    CreatePartnerMetadata create_partner_metadata = 10;
-    CreateVirtualPoolMetadata create_virtual_pool_metadata = 11;
-    CreatorWithdrawSurplus creator_withdraw_surplus = 12;
-    InitializeVirtualPoolWithSplToken initialize_virtual_pool_with_spl_token = 13;
-    InitializeVirtualPoolWithToken2022 initialize_virtual_pool_with_token2022 = 14;
-    MigrateMeteoraDamm migrate_meteora_damm = 15;
-    MigrateMeteoraDammClaimLpToken migrate_meteora_damm_claim_lp_token = 16;
-    MigrateMeteoraDammLockLpToken migrate_meteora_damm_lock_lp_token = 17;
-    MigrationDammV2 migration_damm_v2 = 18;
-    MigrationDammV2CreateMetadata migration_damm_v2_create_metadata = 19;
-    MigrationMeteoraDammCreateMetadata migration_meteora_damm_create_metadata = 20;
-    PartnerWithdrawSurplus partner_withdraw_surplus = 21;
-    Swap swap = 22;
-    Swap2 swap2 = 23;
-    TransferPoolCreator transfer_pool_creator = 24;
-    WithdrawLeftover withdraw_leftover = 25;
-    WithdrawMigrationFee withdraw_migration_fee = 26;
+    CreateOperatorAccount create_operator_account = 10;
+    CreatePartnerMetadata create_partner_metadata = 11;
+    CreateVirtualPoolMetadata create_virtual_pool_metadata = 12;
+    CreatorWithdrawSurplus creator_withdraw_surplus = 13;
+    InitializeVirtualPoolWithSplToken initialize_virtual_pool_with_spl_token = 14;
+    InitializeVirtualPoolWithToken2022 initialize_virtual_pool_with_token2022 = 15;
+    MigrateMeteoraDamm migrate_meteora_damm = 16;
+    MigrateMeteoraDammClaimLpToken migrate_meteora_damm_claim_lp_token = 17;
+    MigrateMeteoraDammLockLpToken migrate_meteora_damm_lock_lp_token = 18;
+    MigrationDammV2 migration_damm_v2 = 19;
+    MigrationDammV2CreateMetadata migration_damm_v2_create_metadata = 20;
+    MigrationMeteoraDammCreateMetadata migration_meteora_damm_create_metadata = 21;
+    PartnerWithdrawSurplus partner_withdraw_surplus = 22;
+    Swap swap = 23;
+    Swap2 swap2 = 24;
+    TransferPoolCreator transfer_pool_creator = 25;
+    WithdrawLeftover withdraw_leftover = 26;
+    WithdrawMigrationFee withdraw_migration_fee = 27;
+    ZapProtocolFee zap_protocol_fee = 28;
   }
 }
