@@ -44,11 +44,11 @@ impl InstructionPipeline {
 
         for pipe in &*self.0 {
             pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart)
-                .await;
+                .await?;
         }
 
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
-        for node in ixs.iter().flat_map(|i| i.visit_tree()) {
+        'outer: for node in ixs.iter().flat_map(|i| i.visit_tree()) {
             for pipe in &*self.0 {
                 let insn = match node {
                     TreeStep::EnterCpiCallFromNode {
@@ -57,7 +57,7 @@ impl InstructionPipeline {
                         pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::CpiEnter {
                             caller_cpi_path,
                         })
-                        .await;
+                        .await?;
                         continue;
                     },
                     TreeStep::ReturnFromCpiCallsToNode {
@@ -68,7 +68,7 @@ impl InstructionPipeline {
                             instruction_shared,
                             &LifecycleEvent::CpiReturn { caller_cpi_path },
                         )
-                        .await;
+                        .await?;
                         continue;
                     },
                     TreeStep::PhysicalNode(insn) => insn,
@@ -82,14 +82,17 @@ impl InstructionPipeline {
                 match res {
                     Ok(()) => (),
                     Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
-                    Err(e) => err = Some(e.handle::<InstructionUpdate>(&pipe.id())),
+                    Err(e) => {
+                        err = Some(e.handle::<InstructionUpdate>(&pipe.id()));
+                        break 'outer;
+                    },
                 }
             }
         }
 
         for pipe in &*self.0 {
             pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxEnd)
-                .await;
+                .await?;
         }
 
         if let Some(h) = err {
@@ -138,7 +141,7 @@ impl SingleInstructionPipeline {
             InstructionUpdate::parse_from_txn_detailed(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
         pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxStart)
-            .await;
+            .await?;
 
         for mode in ixs.iter().flat_map(|i| i.visit_tree()) {
             let insn = match mode {
@@ -148,7 +151,7 @@ impl SingleInstructionPipeline {
                     pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::CpiEnter {
                         caller_cpi_path,
                     })
-                    .await;
+                    .await?;
                     continue;
                 },
                 TreeStep::ReturnFromCpiCallsToNode {
@@ -157,7 +160,7 @@ impl SingleInstructionPipeline {
                     pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::CpiReturn {
                         caller_cpi_path,
                     })
-                    .await;
+                    .await?;
                     continue;
                 },
                 TreeStep::PhysicalNode(insn) => insn,
@@ -180,7 +183,7 @@ impl SingleInstructionPipeline {
         }
 
         pipe.handle_lifecycle(txn, instruction_shared, &LifecycleEvent::TxEnd)
-            .await;
+            .await?;
 
         Ok(())
     }

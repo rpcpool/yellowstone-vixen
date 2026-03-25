@@ -60,6 +60,13 @@ where R: Sync
     fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
 
     /// Called on lifecycle events (transaction start/end, CPI enter/return).
+    ///
+    /// / ! \ Lifecycle delivery is fail-fast. / ! \
+    /// If a lifecycle handler returns an error, dispatch stops immediately and
+    /// subsequent lifecycle events for the current transaction are not guaranteed
+    /// to be emitted. Consumers must not rely on receiving a complete, balanced
+    /// lifecycle sequence (for example `CpiEnter` without `CpiReturn`, or `TxStart`
+    /// without `TxEnd`).
     fn handle_lifecycle(
         &self,
         _txn: &TransactionUpdate,
@@ -283,8 +290,8 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
         _txn: &'h TransactionUpdate,
         _instruction_shared: &'h InstructionShared,
         _event: &'h LifecycleEvent<'h>,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {})
+    ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
+        Box::pin(async move { Ok(()) })
     }
 }
 
@@ -317,12 +324,8 @@ where
         txn: &'h TransactionUpdate,
         instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) = Pipeline::handle_lifecycle(self, txn, instruction_shared, event).await {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
+    ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
+        Box::pin(Pipeline::handle_lifecycle(self, txn, instruction_shared, event))
     }
 }
 
@@ -350,7 +353,7 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
         txn: &'h TransactionUpdate,
         instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         <dyn DynPipeline<T>>::handle_lifecycle(&**self, txn, instruction_shared, event)
     }
 }

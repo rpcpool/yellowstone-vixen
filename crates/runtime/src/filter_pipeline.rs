@@ -158,13 +158,14 @@ where
         txn: &'h TransactionUpdate,
         instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
-    ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
-        Box::pin(async move {
-            if let Err(e) =
-                FilterPipeline::handle_lifecycle(self, txn, instruction_shared, event).await
-            {
-                e.handle::<P::Input>(&self.id()).as_unit();
-            }
-        })
+    ) -> std::pin::Pin<
+        Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>,
+    > {
+        Box::pin(FilterPipeline::handle_lifecycle(
+            self,
+            txn,
+            instruction_shared,
+            event,
+        ))
     }
 }
