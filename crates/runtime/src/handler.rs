@@ -422,6 +422,7 @@ impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
     }
 }
 
+
 #[derive(Debug)]
 pub(crate) struct Pipelines<'m, H, I>(&'m PipelineSet<H>, I);
 
@@ -466,6 +467,224 @@ where I::Item: AsRef<str> + Send + 'm
                 })
                 .in_current_span()
         }))
-        .map(move |v| v.into_iter().collect())
+            .map(move |v| v.into_iter().collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::borrow::Cow;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    use vixen_core::instruction::InstructionShared;
+    use vixen_core::{ParseError, Parser, Prefilter, TransactionUpdate};
+
+    use super::{Handler, HandlerResult, LifecycleEvent, Pipeline, PipelineErrors};
+    use crate::handler::DynPipeline;
+
+    // -- helpers ----------------------------------------------------------
+
+    /// A trivial parsed output type.
+    #[derive(Debug)]
+    struct Unit;
+
+    /// A parser that always succeeds and returns `Unit`.
+    #[derive(Debug)]
+    struct OkParser;
+
+    impl Parser for OkParser {
+        type Input = TransactionUpdate;
+        type Output = Unit;
+
+        fn id(&self) -> Cow<'static, str> { "OkParser".into() }
+
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+        async fn parse(
+            &self,
+            _value: &Self::Input,
+        ) -> Result<Self::Output, ParseError> {
+            Ok(Unit)
+        }
+    }
+
+    /// Handler whose `handle_lifecycle` always returns an error.
+    #[derive(Debug)]
+    struct FailLifecycle;
+
+    impl Handler<Unit, TransactionUpdate> for FailLifecycle {
+        async fn handle(
+            &self,
+            _value: &Unit,
+            _raw: &TransactionUpdate,
+        ) -> HandlerResult<()> {
+            Ok(())
+        }
+
+        async fn handle_lifecycle(
+            &self,
+            _txn: &TransactionUpdate,
+            _instruction_shared: &InstructionShared,
+            _event: &LifecycleEvent<'_>,
+        ) -> HandlerResult<()> {
+            Err("lifecycle error".into())
+        }
+    }
+
+    /// Handler whose `handle_lifecycle` always succeeds (default impl).
+    struct OkHandler;
+
+    impl Handler<Unit, TransactionUpdate> for OkHandler {
+        async fn handle(
+            &self,
+            _value: &Unit,
+            _raw: &TransactionUpdate,
+        ) -> HandlerResult<()> {
+            Ok(())
+        }
+    }
+
+    /// Handler that counts how many times `handle_lifecycle` is called.
+    struct CountingHandler {
+        count: AtomicUsize,
+    }
+
+    impl CountingHandler {
+        fn new() -> Self {
+            Self {
+                count: AtomicUsize::new(0),
+            }
+        }
+
+        fn count(&self) -> usize { self.count.load(Ordering::SeqCst) }
+    }
+
+    impl Handler<Unit, TransactionUpdate> for CountingHandler {
+        async fn handle(
+            &self,
+            _value: &Unit,
+            _raw: &TransactionUpdate,
+        ) -> HandlerResult<()> {
+            Ok(())
+        }
+
+        async fn handle_lifecycle(
+            &self,
+            _txn: &TransactionUpdate,
+            _instruction_shared: &InstructionShared,
+            _event: &LifecycleEvent<'_>,
+        ) -> HandlerResult<()> {
+            self.count.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        }
+    }
+
+    // -- tests ------------------------------------------------------------
+
+    #[tokio::test]
+    async fn pipeline_handle_lifecycle_propagates_error() {
+        let pipeline = Pipeline::new(OkParser, [FailLifecycle]);
+        let txn = TransactionUpdate::default();
+        let shared = InstructionShared::default();
+
+        let result = pipeline
+            .handle_lifecycle(&txn, &shared, &LifecycleEvent::TxStart)
+            .await;
+
+        assert!(result.is_err(), "expected lifecycle error to propagate");
+    }
+
+    #[tokio::test]
+    async fn pipeline_handle_lifecycle_ok_when_handler_succeeds() {
+        let pipeline = Pipeline::new(OkParser, [OkHandler]);
+        let txn = TransactionUpdate::default();
+        let shared = InstructionShared::default();
+
+        let result = pipeline
+            .handle_lifecycle(&txn, &shared, &LifecycleEvent::TxEnd)
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn dyn_pipeline_handle_lifecycle_propagates_error() {
+        let pipeline = Pipeline::new(OkParser, [FailLifecycle]);
+        let txn = TransactionUpdate::default();
+        let shared = InstructionShared::default();
+
+        let dyn_pipe: &dyn DynPipeline<TransactionUpdate> = &pipeline;
+        let result = dyn_pipe
+            .handle_lifecycle(&txn, &shared, &LifecycleEvent::TxStart)
+            .await;
+
+        assert!(result.is_err(), "DynPipeline should propagate lifecycle errors");
+    }
+
+    #[tokio::test]
+    async fn lifecycle_error_from_one_handler_is_collected() {
+        // One handler succeeds, one fails — the error should still surface.
+        let pipeline = Pipeline::new(OkParser, [FailLifecycle]);
+        let txn = TransactionUpdate::default();
+        let shared = InstructionShared::default();
+
+        let result = pipeline
+            .handle_lifecycle(&txn, &shared, &LifecycleEvent::CpiEnter {
+                caller_cpi_path: &vec![0u32].into(),
+            })
+            .await;
+
+        match result {
+            Err(PipelineErrors::Handlers(errs)) => {
+                assert_eq!(errs.len(), 1, "expected exactly one handler error");
+            },
+            other => panic!("expected Handlers error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handler_default_lifecycle_returns_ok() {
+        let handler = OkHandler;
+        let txn = TransactionUpdate::default();
+        let shared = InstructionShared::default();
+
+        let result = Handler::<Unit, TransactionUpdate>::handle_lifecycle(
+            &handler,
+            &txn,
+            &shared,
+            &LifecycleEvent::TxStart,
+        )
+        .await;
+
+        assert!(result.is_ok(), "default handle_lifecycle should return Ok");
+    }
+
+    #[tokio::test]
+    async fn lifecycle_called_for_each_event_variant() {
+        let handler = CountingHandler::new();
+        let pipeline = Pipeline::new(OkParser, [&handler]);
+        let txn = TransactionUpdate::default();
+        let shared = InstructionShared::default();
+        let cpi_path = vec![1u32].into();
+
+        let events = [
+            LifecycleEvent::TxStart,
+            LifecycleEvent::CpiEnter {
+                caller_cpi_path: &cpi_path,
+            },
+            LifecycleEvent::CpiReturn {
+                caller_cpi_path: &cpi_path,
+            },
+            LifecycleEvent::TxEnd,
+        ];
+
+        for event in &events {
+            pipeline
+                .handle_lifecycle(&txn, &shared, event)
+                .await
+                .expect("lifecycle should succeed");
+        }
+
+        assert_eq!(handler.count(), 4, "expected one call per lifecycle event");
     }
 }
