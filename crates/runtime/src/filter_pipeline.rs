@@ -85,6 +85,9 @@ where
         let parsed = match self.parser.parse(value).await {
             Ok(p) => p,
             Err(ParseError::Filtered) => return Ok(()),
+            Err(ParseError::DiscriminatorNotFound(msg)) => {
+                return Err(PipelineErrors::Parse(msg.into()));
+            },
             Err(ParseError::Other(e)) => return Err(PipelineErrors::Parse(e)),
         };
         let parsed = &parsed;

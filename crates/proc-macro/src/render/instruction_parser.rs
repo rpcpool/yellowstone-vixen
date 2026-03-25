@@ -435,9 +435,10 @@ pub fn instruction_parser(
 
     // When program-events feature is active and the IDL has events,
     // InstructionParser outputs ProgramEventOutput instead of Instructions.
+    let anchor_event_tag_u64 = super::ANCHOR_EVENT_IX_TAG;
+
     let instruction_parser_impl = if has_events {
         let output_ident = format_ident!("ProgramEventOutput");
-        let anchor_event_tag_u64 = super::ANCHOR_EVENT_IX_TAG;
 
         quote! {
             #[derive(Debug, Copy, Clone)]
@@ -540,7 +541,17 @@ pub fn instruction_parser(
                         return Err(ParseError::Filtered);
                     }
 
-                    resolve_instruction_default(&ix_update.accounts, &ix_update.data)
+                    // Skip CPI event self-invocations (anchor event tag).
+                    const EVENT_IX_TAG: [u8; 8] = (#anchor_event_tag_u64).to_le_bytes();
+
+                    if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
+                        return Err(ParseError::Filtered);
+                    }
+
+                    resolve_instruction_default(
+                        &ix_update.accounts,
+                        &ix_update.data,
+                    )
                 }
             }
 
@@ -577,7 +588,14 @@ pub fn instruction_parser(
         ) -> ParseResult<#wrapper_ident> {
             #(#match_arms)*
 
-            Err(ParseError::Filtered)
+            let disc: String = data.iter().take(8)
+                .map(|b| format!("{b:02x}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+
+            Err(ParseError::DiscriminatorNotFound(format!(
+                "instruction discriminator not found [{disc}]"
+            )))
         }
 
         ///

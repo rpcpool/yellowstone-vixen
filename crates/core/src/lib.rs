@@ -54,6 +54,8 @@ pub enum ParseError {
     /// processing for it.  No error will be logged by the Vixen runtime, and
     /// no handlers registered to this parser will be executed.
     Filtered,
+    /// No instruction discriminator matched the input data.
+    DiscriminatorNotFound(String),
     /// The parser encountered an error while processing an update.
     Other(BoxedError),
 }
