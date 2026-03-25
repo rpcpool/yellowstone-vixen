@@ -36,6 +36,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
             &self,
             accounts: &[Pubkey],
             data: &[u8],
+            path: &yellowstone_vixen_core::instruction::Path,
         ) -> Result<raydium_amm::Instructions, ParseError> {
             // SwapBaseIn discriminator is 0x09 — both variants share it.
             // Disambiguate by account count.
@@ -48,7 +49,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
             }
 
             // Everything else: default resolution
-            raydium_amm::resolve_instruction_default(accounts, data)
+            raydium_amm::resolve_instruction_default(accounts, data, path)
         }
     }
 
