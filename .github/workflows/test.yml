@@ -4,10 +4,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# # This may be adjusted to whatever suits best your runners config.
-# # Current config will build on manual trigger or pull-request (each push)
 on:
-  # pull_request can be removed, to save minutes on github runners
   pull_request:
   push:
     branches:
@@ -30,18 +27,31 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Cache cargo registry
+      # Cache layout:
+      #   ~/.cargo/registry  — downloaded crate sources (avoids re-downloading)
+      #   ~/.cargo/git       — git-based dependencies
+      #   target/debug/build — C/C++ build outputs (librdkafka cmake, ~2min to rebuild)
+      #   target/debug/.fingerprint — cargo's dep-tracking metadata
+      #   target/debug/deps  — compiled dependency .rlib files
+      #
+      # We skip target/debug/incremental (large, not useful across commits)
+      # and final binaries (rebuilt from cached deps in seconds).
+      #
+      # Key includes rust-toolchain.toml so the cache invalidates on compiler upgrades.
+      - name: Cache cargo registry and build artifacts
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry/cache/
             ~/.cargo/registry/index/
             ~/.cargo/git/db/
-          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-registry-
-
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+            target/debug/build/
+            target/debug/.fingerprint/
+            target/debug/deps/
+          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-build-
 
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
@@ -68,21 +78,11 @@ jobs:
 
       - name: Run clippy
         run: cargo clippy --all-targets --tests -- -Dwarnings
-        env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: true
 
       - name: Run tests
         run: cargo test --workspace --lib --tests
-        env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: true
 
       # Excluded from workspace to prevent `program-events` feature from
       # bleeding into proc-macro-test via feature unification.
       - name: Run proc-macro-events tests
-        run: cargo test --lib --tests --manifest-path tests/proc-macro-events/Cargo.toml
-        env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: true
-
+        run: cargo test --tests --manifest-path tests/proc-macro-events/Cargo.toml
