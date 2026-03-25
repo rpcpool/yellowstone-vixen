@@ -21,6 +21,115 @@ use yellowstone_vixen_core::Filters;
 
 type SharedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
+/// Env vars that `jetstreamer-firehose` reads at startup.
+///
+/// Because `std::env::set_var` is unsound once other threads exist,
+/// callers must apply these **before** the async runtime starts.
+/// [`connect`] then validates that the process env still matches.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProcessEnvConfig {
+    pub network: String,
+    pub compact_index_base_url: String,
+    pub network_capacity_mb: String,
+}
+
+impl ProcessEnvConfig {
+    /// Extract the expected env configuration from a [`JetstreamSourceConfig`].
+    pub fn from_config(config: &JetstreamSourceConfig) -> Self {
+        Self {
+            network: config.network.clone(),
+            compact_index_base_url: config.compact_index_base_url.clone(),
+            network_capacity_mb: config.network_capacity_mb.to_string(),
+        }
+    }
+
+    /// Snapshot the *current* process environment.
+    pub fn from_process() -> Self {
+        Self {
+            network: std::env::var("JETSTREAMER_NETWORK").unwrap_or_default(),
+            compact_index_base_url: std::env::var("JETSTREAMER_COMPACT_INDEX_BASE_URL")
+                .unwrap_or_default(),
+            network_capacity_mb: std::env::var("JETSTREAMER_NETWORK_CAPACITY_MB")
+                .unwrap_or_default(),
+        }
+    }
+
+    /// Write the values into the process environment.
+    ///
+    /// # Safety
+    ///
+    /// Must be called while no other threads are running (i.e. before
+    /// the Tokio runtime is created). Calling this after other threads
+    /// exist is undefined behaviour on most platforms.
+    pub unsafe fn apply(&self) {
+        unsafe {
+            std::env::set_var("JETSTREAMER_NETWORK", &self.network);
+            std::env::set_var(
+                "JETSTREAMER_COMPACT_INDEX_BASE_URL",
+                &self.compact_index_base_url,
+            );
+            std::env::set_var("JETSTREAMER_NETWORK_CAPACITY_MB", &self.network_capacity_mb);
+        }
+    }
+
+    /// Return `Ok(())` if `self` matches `actual`, or a descriptive error.
+    pub fn validate_matches(&self, actual: &ProcessEnvConfig) -> Result<(), Error> {
+        let mut mismatches = Vec::new();
+
+        if self.network != actual.network {
+            mismatches.push(format!(
+                "JETSTREAMER_NETWORK: expected {:?}, got {:?}",
+                self.network, actual.network
+            ));
+        }
+        if self.compact_index_base_url != actual.compact_index_base_url {
+            mismatches.push(format!(
+                "JETSTREAMER_COMPACT_INDEX_BASE_URL: expected {:?}, got {:?}",
+                self.compact_index_base_url, actual.compact_index_base_url
+            ));
+        }
+        if self.network_capacity_mb != actual.network_capacity_mb {
+            mismatches.push(format!(
+                "JETSTREAMER_NETWORK_CAPACITY_MB: expected {:?}, got {:?}",
+                self.network_capacity_mb, actual.network_capacity_mb
+            ));
+        }
+
+        if mismatches.is_empty() {
+            Ok(())
+        } else {
+            Err(Error::EnvMismatch(mismatches.join("; ")))
+        }
+    }
+}
+
+/// Set the jetstreamer-firehose env vars from `config`.
+///
+/// # Safety
+///
+/// Must be called **before** the Tokio runtime (or any other threads)
+/// are started. The canonical call-site is the top of `fn main()`,
+/// before `#[tokio::main]` or `Runtime::new()`.
+///
+/// ## Example
+///
+/// ```rust, ignore
+/// fn main() -> anyhow::Result<()> {
+///     // … parse CLI / config …
+///     unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
+///     tokio_main(config)
+/// }
+///
+/// #[tokio::main]
+/// async fn tokio_main(config: JetstreamSourceConfig) -> anyhow::Result<()> {
+///     // … build runtime, connect, etc. …
+/// }
+/// ```
+pub unsafe fn init_process_env(config: &JetstreamSourceConfig) {
+    let env_config = ProcessEnvConfig::from_config(config);
+    unsafe { env_config.apply() };
+}
+
 struct VixenStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
     // Cache matching filters to avoid iteration per item
@@ -73,24 +182,12 @@ impl VixenStreamHandler {
                 block_matches.push(filter_id.clone());
             }
 
-            //BUG: 2. Calculate Transaction Matches
-            // NOTE: Instruction parsers NEED transactions to extract instructions from!
-            // We should NOT skip them here, otherwise they won't receive any transactions.
-
-            let mut tx_match = false;
+            // 2. Calculate Transaction Matches
+            // Instruction parsers need transactions to extract instructions from,
+            // so any parser with a transaction filter must receive all transactions.
+            // The jetstreamer-firehose API does not support per-account filtering,
+            // so we include all transactions whenever a transaction filter is present.
             if prefilter.transaction.is_some() {
-                // Note: We cannot check account keys with current jetstreamer-firehose API
-                // so we include all transactions when transaction filters are configured
-                tx_match = true;
-            }
-            if let Some(tx_filter) = &prefilter.transaction
-                && (!tx_filter.accounts_include.is_empty()
-                    || !tx_filter.accounts_required.is_empty())
-            {
-                tx_match = true;
-            }
-
-            if tx_match {
                 transaction_matches.push(filter_id.clone());
             }
         }
@@ -346,22 +443,12 @@ impl SourceTrait for JetstreamSource {
         let config = self.config.clone();
         let filters = self.filters.clone();
 
-        // SAFETY: jetstreamer-firehose reads these env vars when `firehose()` is
-        // called (inside the spawned task below). Setting them here — before that
-        // call — ensures the values are visible. The tokio runtime is already
-        // multi-threaded at this point, so a true data race is possible if other
-        // code reads these vars concurrently; in practice nothing else in this
-        // process touches them.
-        unsafe {
-            std::env::set_var("JETSTREAMER_NETWORK", &config.network);
-            std::env::set_var(
-                "JETSTREAMER_COMPACT_INDEX_BASE_URL",
-                &config.compact_index_base_url,
-            );
-            std::env::set_var(
-                "JETSTREAMER_NETWORK_CAPACITY_MB",
-                config.network_capacity_mb.to_string(),
-            );
+        // jetstreamer-firehose reads configuration exclusively through env vars.
+        // The caller must have set them *before* the runtime started via
+        // `init_process_env()`. We only validate here — no mutation.
+        {
+            let expected = ProcessEnvConfig::from_config(&config);
+            expected.validate_matches(&ProcessEnvConfig::from_process())?;
         }
 
         let cancellation_token = CancellationToken::new();
@@ -495,13 +582,19 @@ pub enum Error {
 
     #[error("Jetstreamer firehose error: {0}")]
     Jetstreamer(String),
+
+    #[error("Process env does not match config (did you call init_process_env?): {0}")]
+    EnvMismatch(String),
 }
 
 impl From<Error> for VixenError {
     fn from(e: Error) -> Self {
         match e {
             Error::Io(io_err) => VixenError::Io(io_err),
-            other => VixenError::Io(std::io::Error::other(other.to_string())),
+            // VixenError only exposes an Io variant for generic errors.
+            // Wrap with `io::Error::other` but preserve the original error as
+            // the source (via `Box<dyn Error>`) so callers can still downcast.
+            other => VixenError::Io(std::io::Error::other(other)),
         }
     }
 }
@@ -588,61 +681,32 @@ mod convert {
     use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
 
     pub fn transaction(tx: VersionedTransaction) -> proto::Transaction {
-        proto::Transaction {
-            signatures: tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect(),
-            message: Some(match tx.message {
-                VersionedMessage::Legacy(msg) => proto::Message {
-                    header: Some(proto::MessageHeader {
-                        num_required_signatures: msg.header.num_required_signatures as u32,
-                        num_readonly_signed_accounts: msg.header.num_readonly_signed_accounts
-                            as u32,
-                        num_readonly_unsigned_accounts: msg.header.num_readonly_unsigned_accounts
-                            as u32,
-                    }),
-                    account_keys: msg
-                        .account_keys
-                        .iter()
-                        .map(|k| k.as_ref().to_vec())
-                        .collect(),
-                    recent_blockhash: msg.recent_blockhash.as_ref().to_vec(),
-                    instructions: msg
-                        .instructions
-                        .into_iter()
-                        .map(|ix| proto::CompiledInstruction {
-                            program_id_index: ix.program_id_index as u32,
-                            accounts: ix.accounts,
-                            data: ix.data,
-                        })
-                        .collect(),
-                    versioned: false,
-                    address_table_lookups: vec![],
-                },
-                VersionedMessage::V0(msg) => proto::Message {
-                    header: Some(proto::MessageHeader {
-                        num_required_signatures: msg.header.num_required_signatures as u32,
-                        num_readonly_signed_accounts: msg.header.num_readonly_signed_accounts
-                            as u32,
-                        num_readonly_unsigned_accounts: msg.header.num_readonly_unsigned_accounts
-                            as u32,
-                    }),
-                    account_keys: msg
-                        .account_keys
-                        .iter()
-                        .map(|k| k.as_ref().to_vec())
-                        .collect(),
-                    recent_blockhash: msg.recent_blockhash.as_ref().to_vec(),
-                    instructions: msg
-                        .instructions
-                        .into_iter()
-                        .map(|ix| proto::CompiledInstruction {
-                            program_id_index: ix.program_id_index as u32,
-                            accounts: ix.accounts,
-                            data: ix.data,
-                        })
-                        .collect(),
-                    versioned: true,
-                    address_table_lookups: msg
-                        .address_table_lookups
+        let signatures = tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect();
+
+        let message = {
+            let (
+                header,
+                account_keys,
+                recent_blockhash,
+                instructions,
+                versioned,
+                address_table_lookups,
+            ) = match tx.message {
+                VersionedMessage::Legacy(msg) => (
+                    msg.header,
+                    msg.account_keys,
+                    msg.recent_blockhash,
+                    msg.instructions,
+                    false,
+                    vec![],
+                ),
+                VersionedMessage::V0(msg) => (
+                    msg.header,
+                    msg.account_keys,
+                    msg.recent_blockhash,
+                    msg.instructions,
+                    true,
+                    msg.address_table_lookups
                         .into_iter()
                         .map(|l| proto::MessageAddressTableLookup {
                             account_key: l.account_key.as_ref().to_vec(),
@@ -650,8 +714,33 @@ mod convert {
                             readonly_indexes: l.readonly_indexes,
                         })
                         .collect(),
-                },
-            }),
+                ),
+            };
+
+            proto::Message {
+                header: Some(proto::MessageHeader {
+                    num_required_signatures: header.num_required_signatures as u32,
+                    num_readonly_signed_accounts: header.num_readonly_signed_accounts as u32,
+                    num_readonly_unsigned_accounts: header.num_readonly_unsigned_accounts as u32,
+                }),
+                account_keys: account_keys.iter().map(|k| k.as_ref().to_vec()).collect(),
+                recent_blockhash: recent_blockhash.as_ref().to_vec(),
+                instructions: instructions
+                    .into_iter()
+                    .map(|ix| proto::CompiledInstruction {
+                        program_id_index: ix.program_id_index as u32,
+                        accounts: ix.accounts,
+                        data: ix.data,
+                    })
+                    .collect(),
+                versioned,
+                address_table_lookups,
+            }
+        };
+
+        proto::Transaction {
+            signatures,
+            message: Some(message),
         }
     }
 
@@ -669,55 +758,55 @@ mod convert {
             post_balances: meta.post_balances,
             inner_instructions: meta
                 .inner_instructions
-                .map(|ixs| {
-                    ixs.into_iter()
-                        .map(|ix| proto::InnerInstructions {
-                            index: ix.index as u32,
-                            instructions: ix
-                                .instructions
-                                .into_iter()
-                                .map(|i| proto::InnerInstruction {
-                                    program_id_index: i.instruction.program_id_index as u32,
-                                    accounts: i.instruction.accounts,
-                                    data: i.instruction.data,
-                                    stack_height: i.stack_height,
-                                })
-                                .collect(),
+                .into_iter()
+                .flatten()
+                .map(|ix| proto::InnerInstructions {
+                    index: ix.index as u32,
+                    instructions: ix
+                        .instructions
+                        .into_iter()
+                        .map(|i| proto::InnerInstruction {
+                            program_id_index: i.instruction.program_id_index as u32,
+                            accounts: i.instruction.accounts,
+                            data: i.instruction.data,
+                            stack_height: i.stack_height,
                         })
-                        .collect()
+                        .collect(),
                 })
-                .unwrap_or_default(),
+                .collect(),
             inner_instructions_none,
             log_messages: meta.log_messages.unwrap_or_default(),
             log_messages_none,
             pre_token_balances: meta
                 .pre_token_balances
-                .map(|bs| bs.into_iter().map(convert_token_balance).collect())
-                .unwrap_or_default(),
+                .into_iter()
+                .flatten()
+                .map(convert_token_balance)
+                .collect(),
             post_token_balances: meta
                 .post_token_balances
-                .map(|bs| bs.into_iter().map(convert_token_balance).collect())
-                .unwrap_or_default(),
+                .into_iter()
+                .flatten()
+                .map(convert_token_balance)
+                .collect(),
             rewards: meta
                 .rewards
-                .map(|rs| {
-                    rs.into_iter()
-                        .map(|r| proto::Reward {
-                            pubkey: r.pubkey,
-                            lamports: r.lamports,
-                            post_balance: r.post_balance,
-                            reward_type: match r.reward_type {
-                                Some(RewardType::Fee) => proto::RewardType::Fee as i32,
-                                Some(RewardType::Rent) => proto::RewardType::Rent as i32,
-                                Some(RewardType::Staking) => proto::RewardType::Staking as i32,
-                                Some(RewardType::Voting) => proto::RewardType::Voting as i32,
-                                _ => proto::RewardType::Unspecified as i32,
-                            },
-                            commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
-                        })
-                        .collect()
+                .into_iter()
+                .flatten()
+                .map(|r| proto::Reward {
+                    pubkey: r.pubkey,
+                    lamports: r.lamports,
+                    post_balance: r.post_balance,
+                    reward_type: match r.reward_type {
+                        Some(RewardType::Fee) => proto::RewardType::Fee as i32,
+                        Some(RewardType::Rent) => proto::RewardType::Rent as i32,
+                        Some(RewardType::Staking) => proto::RewardType::Staking as i32,
+                        Some(RewardType::Voting) => proto::RewardType::Voting as i32,
+                        _ => proto::RewardType::Unspecified as i32,
+                    },
+                    commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
                 })
-                .unwrap_or_default(),
+                .collect(),
             loaded_writable_addresses: meta
                 .loaded_addresses
                 .writable

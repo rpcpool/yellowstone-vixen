@@ -154,16 +154,15 @@ struct Opts {
     archive_url: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Initialize tracing
+/// Entry point: set env vars while the process is still single-threaded,
+/// then hand off to the async runtime.
+fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
     let opts = Opts::parse();
 
-    // Build slot range config from CLI args
     let range = SlotRangeConfig {
         slot_start: opts.slot_start,
         slot_end: opts.slot_end,
@@ -183,6 +182,14 @@ async fn main() -> Result<()> {
         network_capacity_mb: 100000,
     };
 
+    // SAFETY: Called from main() before the Tokio runtime is created.
+    // This binary must not spawn any other threads before this point.
+    unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
+
+    tokio::runtime::Runtime::new()?.block_on(run(config))
+}
+
+async fn run(config: JetstreamSourceConfig) -> Result<()> {
     info!("Starting Jetstream replay with SPL Token parsing");
     info!(archive_url = %config.archive_url, "Configuration");
     info!(
