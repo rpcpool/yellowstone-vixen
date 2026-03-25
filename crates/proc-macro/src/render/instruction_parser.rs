@@ -542,11 +542,16 @@ pub fn instruction_parser(
                         return Err(ParseError::Filtered);
                     }
 
-                    // Skip CPI event self-invocations (anchor event tag).
+                    // Anchor programs emit events as self-CPI instructions whose data
+                    // starts with the event tag. These are not real instructions and
+                    // would fail discriminator matching, so filter them out.
+                    {
+
                     const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
 
                     if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
                         return Err(ParseError::Filtered);
+                    }
                     }
 
                     resolve_instruction_default(
