@@ -28,7 +28,7 @@ env:
 # Key includes rust-toolchain.toml so the cache invalidates on compiler upgrades.
 
 jobs:
-  lint:
+  fmt:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
