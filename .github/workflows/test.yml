@@ -76,13 +76,14 @@ jobs:
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
 
-      - name: Run clippy
-        run: cargo clippy --all-targets --tests -- -Dwarnings
-
       - name: Run tests
         run: cargo test --workspace --lib --tests
 
-      # Excluded from workspace to prevent `program-events` feature from
-      # bleeding into proc-macro-test via feature unification.
+      # Run separately to avoid feature unification issues with `program-events` feature in proc-macro-events
       - name: Run proc-macro-events tests
         run: cargo test --tests --manifest-path tests/proc-macro-events/Cargo.toml
+
+      # clippy invalidates cargo test artifacts (different metadata), so
+      # --no-deps avoids recompiling dependencies — only our crates are re-linted.
+      - name: Run clippy
+        run: cargo clippy --all-targets --tests --no-deps -- -Dwarnings
