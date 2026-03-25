@@ -496,7 +496,6 @@ mod tests {
             CompiledInstruction, Message, Transaction, TransactionStatusMeta,
         },
     };
-
     use super::{Handler, HandlerResult, LifecycleEvent, Pipeline, PipelineErrors};
     use crate::{handler::DynPipeline, instruction::InstructionPipeline};
 
@@ -762,7 +761,7 @@ mod tests {
         async fn parse(
             &self,
             _value: &Self::Input,
-        ) -> Result<Self::Output, vixen_core::ParseError> {
+        ) -> Result<Self::Output, ParseError> {
             Ok(Unit)
         }
     }
