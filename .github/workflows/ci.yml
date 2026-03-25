@@ -102,13 +102,13 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/registry/index/
             ~/.cargo/git/db/
-            target/debug/build/
-            target/debug/.fingerprint/
-            target/debug/deps/
-          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+            tests/proc-macro-events/target/debug/build/
+            tests/proc-macro-events/target/debug/.fingerprint/
+            tests/proc-macro-events/target/debug/deps/
+          key: cargo-events-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('tests/proc-macro-events/Cargo.lock') }}
           restore-keys: |
-            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
-            cargo-build-
+            cargo-events-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-events-
 
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
