@@ -475,12 +475,19 @@ where I::Item: AsRef<str> + Send + 'm
 mod tests {
     use std::borrow::Cow;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Mutex;
 
-    use vixen_core::instruction::InstructionShared;
+    use vixen_core::instruction::{InstructionShared, InstructionUpdate};
     use vixen_core::{ParseError, Parser, Prefilter, TransactionUpdate};
+    use yellowstone_grpc_proto::prelude::MessageHeader;
+    use yellowstone_grpc_proto::solana::storage::confirmed_block::{
+        CompiledInstruction, Message, Transaction, TransactionStatusMeta,
+    };
+    use yellowstone_grpc_proto::geyser::SubscribeUpdateTransactionInfo;
 
     use super::{Handler, HandlerResult, LifecycleEvent, Pipeline, PipelineErrors};
     use crate::handler::DynPipeline;
+    use crate::instruction::InstructionPipeline;
 
     // -- helpers ----------------------------------------------------------
 
@@ -686,5 +693,189 @@ mod tests {
         }
 
         assert_eq!(handler.count(), 4, "expected one call per lifecycle event");
+    }
+
+    // -- instruction-level helpers ----------------------------------------
+
+    /// Build a minimal `TransactionUpdate` with one instruction whose
+    /// `program_id_index` points at a single 32-byte account key.
+    fn make_txn_with_one_instruction() -> TransactionUpdate {
+        let account_key = vec![0u8; 32];
+
+        TransactionUpdate {
+            transaction: Some(SubscribeUpdateTransactionInfo {
+                signature: vec![0u8; 64],
+                is_vote: false,
+                index: 0,
+                transaction: Some(Transaction {
+                    signatures: vec![],
+                    message: Some(Message {
+                        header: Some(MessageHeader {
+                            num_required_signatures: 1,
+                            num_readonly_signed_accounts: 0,
+                            num_readonly_unsigned_accounts: 0,
+                        }),
+                        account_keys: vec![account_key],
+                        recent_blockhash: vec![0u8; 32],
+                        instructions: vec![CompiledInstruction {
+                            program_id_index: 0,
+                            accounts: vec![],
+                            data: vec![],
+                        }],
+                        versioned: false,
+                        address_table_lookups: vec![],
+                    }),
+                }),
+                meta: Some(TransactionStatusMeta {
+                    err: None,
+                    fee: 0,
+                    pre_balances: vec![0],
+                    post_balances: vec![0],
+                    inner_instructions: vec![],
+                    inner_instructions_none: false,
+                    log_messages: vec![],
+                    log_messages_none: false,
+                    pre_token_balances: vec![],
+                    post_token_balances: vec![],
+                    rewards: vec![],
+                    loaded_writable_addresses: vec![],
+                    loaded_readonly_addresses: vec![],
+                    return_data: None,
+                    return_data_none: true,
+                    compute_units_consumed: Some(0),
+                    cost_units: None,
+                }),
+            }),
+            slot: 1,
+        }
+    }
+
+    /// Parser for `InstructionUpdate` that always succeeds.
+    #[derive(Debug)]
+    struct IxParser;
+
+    impl Parser for IxParser {
+        type Input = InstructionUpdate;
+        type Output = Unit;
+
+        fn id(&self) -> Cow<'static, str> { "IxParser".into() }
+
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+        async fn parse(
+            &self,
+            _value: &Self::Input,
+        ) -> Result<Self::Output, vixen_core::ParseError> {
+            Ok(Unit)
+        }
+    }
+
+    /// Owned equivalent of `LifecycleEvent` for collecting in tests.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum OwnedLifecycleEvent {
+        TxStart,
+        TxEnd,
+        CpiEnter { caller_cpi_path: Vec<u32> },
+        CpiReturn { caller_cpi_path: Vec<u32> },
+    }
+
+    impl OwnedLifecycleEvent {
+        fn from_ref(event: &LifecycleEvent<'_>) -> Self {
+            match event {
+                LifecycleEvent::TxStart => Self::TxStart,
+                LifecycleEvent::TxEnd => Self::TxEnd,
+                LifecycleEvent::CpiEnter { caller_cpi_path } => Self::CpiEnter {
+                    caller_cpi_path: caller_cpi_path.as_slice().to_vec(),
+                },
+                LifecycleEvent::CpiReturn { caller_cpi_path } => Self::CpiReturn {
+                    caller_cpi_path: caller_cpi_path.as_slice().to_vec(),
+                },
+            }
+        }
+    }
+
+    /// Handler for `InstructionUpdate` that always fails on `handle` but
+    /// records every lifecycle event it receives.
+    #[derive(Debug)]
+    struct FailHandleRecordLifecycleIx {
+        events: Mutex<Vec<OwnedLifecycleEvent>>,
+    }
+
+    impl FailHandleRecordLifecycleIx {
+        fn new() -> Self {
+            Self {
+                events: Mutex::new(Vec::new()),
+            }
+        }
+
+        fn events(&self) -> Vec<OwnedLifecycleEvent> { self.events.lock().unwrap().clone() }
+    }
+
+    impl Handler<Unit, InstructionUpdate> for FailHandleRecordLifecycleIx {
+        async fn handle(
+            &self,
+            _value: &Unit,
+            _raw: &InstructionUpdate,
+        ) -> HandlerResult<()> {
+            Err("handle error".into())
+        }
+
+        async fn handle_lifecycle(
+            &self,
+            _txn: &TransactionUpdate,
+            _instruction_shared: &InstructionShared,
+            event: &LifecycleEvent<'_>,
+        ) -> HandlerResult<()> {
+            self.events.lock().unwrap().push(OwnedLifecycleEvent::from_ref(event));
+            Ok(())
+        }
+    }
+
+    /// Allow shared ownership so the handler can be both inside the pipeline
+    /// (which requires `'static`) and inspected from the test.
+    impl<T: Handler<Unit, InstructionUpdate> + Send + Sync> Handler<Unit, InstructionUpdate>
+        for std::sync::Arc<T>
+    {
+        async fn handle(
+            &self,
+            value: &Unit,
+            raw: &InstructionUpdate,
+        ) -> HandlerResult<()> {
+            T::handle(self, value, raw).await
+        }
+
+        async fn handle_lifecycle(
+            &self,
+            txn: &TransactionUpdate,
+            instruction_shared: &InstructionShared,
+            event: &LifecycleEvent<'_>,
+        ) -> HandlerResult<()> {
+            T::handle_lifecycle(self, txn, instruction_shared, event).await
+        }
+    }
+
+    // -- tests ------------------------------------------------------------
+
+    #[tokio::test]
+    async fn instruction_pipeline_lifecycle_called_before_handle_error() {
+        use std::sync::Arc;
+
+        let handler = Arc::new(FailHandleRecordLifecycleIx::new());
+
+        let inner_pipeline: super::BoxPipeline<'static, InstructionUpdate> =
+            Box::new(Pipeline::new(IxParser, [Arc::clone(&handler)]));
+
+        let pipeline = InstructionPipeline::new(vec![inner_pipeline])
+            .expect("non-empty pipeline list");
+
+        let txn = make_txn_with_one_instruction();
+        let _result = pipeline.handle(&txn).await;
+
+        // TxStart and TxEnd lifecycle calls bracket the handle invocation.
+        // Even though handle() returns an error, both must have been delivered.
+        assert_eq!(
+            handler.events(),
+            vec![OwnedLifecycleEvent::TxStart, OwnedLifecycleEvent::TxEnd],
+        );
     }
 }
