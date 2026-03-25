@@ -83,7 +83,7 @@ jobs:
       - name: Run proc-macro-events tests
         run: cargo test --tests --manifest-path tests/proc-macro-events/Cargo.toml
 
-      # clippy invalidates cargo test artifacts (different metadata), so
+      # Clippy invalidates cargo test artifacts (different metadata), so
       # --no-deps avoids recompiling dependencies — only our crates are re-linted.
       - name: Run clippy
         run: cargo clippy --all-targets --tests --no-deps -- -Dwarnings
