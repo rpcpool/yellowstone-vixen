@@ -158,9 +158,7 @@ where
         txn: &'h TransactionUpdate,
         instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
-    ) -> std::pin::Pin<
-        Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>,
-    > {
+    ) -> std::pin::Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         Box::pin(FilterPipeline::handle_lifecycle(
             self,
             txn,

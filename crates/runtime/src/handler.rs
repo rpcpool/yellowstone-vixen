@@ -325,7 +325,12 @@ where
         instruction_shared: &'h InstructionShared,
         event: &'h LifecycleEvent<'h>,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
-        Box::pin(Pipeline::handle_lifecycle(self, txn, instruction_shared, event))
+        Box::pin(Pipeline::handle_lifecycle(
+            self,
+            txn,
+            instruction_shared,
+            event,
+        ))
     }
 }
 
@@ -422,7 +427,6 @@ impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
     }
 }
 
-
 #[derive(Debug)]
 pub(crate) struct Pipelines<'m, H, I>(&'m PipelineSet<H>, I);
 
@@ -467,27 +471,34 @@ where I::Item: AsRef<str> + Send + 'm
                 })
                 .in_current_span()
         }))
-            .map(move |v| v.into_iter().collect())
+        .map(move |v| v.into_iter().collect())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::Mutex;
-
-    use vixen_core::instruction::{InstructionShared, InstructionUpdate};
-    use vixen_core::{ParseError, Parser, Prefilter, TransactionUpdate};
-    use yellowstone_grpc_proto::prelude::MessageHeader;
-    use yellowstone_grpc_proto::solana::storage::confirmed_block::{
-        CompiledInstruction, Message, Transaction, TransactionStatusMeta,
+    use std::{
+        borrow::Cow,
+        sync::{
+            atomic::{AtomicUsize, Ordering},
+            Mutex,
+        },
     };
-    use yellowstone_grpc_proto::geyser::SubscribeUpdateTransactionInfo;
+
+    use vixen_core::{
+        instruction::{InstructionShared, InstructionUpdate},
+        ParseError, Parser, Prefilter, TransactionUpdate,
+    };
+    use yellowstone_grpc_proto::{
+        geyser::SubscribeUpdateTransactionInfo,
+        prelude::MessageHeader,
+        solana::storage::confirmed_block::{
+            CompiledInstruction, Message, Transaction, TransactionStatusMeta,
+        },
+    };
 
     use super::{Handler, HandlerResult, LifecycleEvent, Pipeline, PipelineErrors};
-    use crate::handler::DynPipeline;
-    use crate::instruction::InstructionPipeline;
+    use crate::{handler::DynPipeline, instruction::InstructionPipeline};
 
     // -- helpers ----------------------------------------------------------
 
@@ -507,12 +518,7 @@ mod tests {
 
         fn prefilter(&self) -> Prefilter { Prefilter::default() }
 
-        async fn parse(
-            &self,
-            _value: &Self::Input,
-        ) -> Result<Self::Output, ParseError> {
-            Ok(Unit)
-        }
+        async fn parse(&self, _value: &Self::Input) -> Result<Self::Output, ParseError> { Ok(Unit) }
     }
 
     /// Handler whose `handle_lifecycle` always returns an error.
@@ -520,11 +526,7 @@ mod tests {
     struct FailLifecycle;
 
     impl Handler<Unit, TransactionUpdate> for FailLifecycle {
-        async fn handle(
-            &self,
-            _value: &Unit,
-            _raw: &TransactionUpdate,
-        ) -> HandlerResult<()> {
+        async fn handle(&self, _value: &Unit, _raw: &TransactionUpdate) -> HandlerResult<()> {
             Ok(())
         }
 
@@ -542,11 +544,7 @@ mod tests {
     struct OkHandler;
 
     impl Handler<Unit, TransactionUpdate> for OkHandler {
-        async fn handle(
-            &self,
-            _value: &Unit,
-            _raw: &TransactionUpdate,
-        ) -> HandlerResult<()> {
+        async fn handle(&self, _value: &Unit, _raw: &TransactionUpdate) -> HandlerResult<()> {
             Ok(())
         }
     }
@@ -567,11 +565,7 @@ mod tests {
     }
 
     impl Handler<Unit, TransactionUpdate> for CountingHandler {
-        async fn handle(
-            &self,
-            _value: &Unit,
-            _raw: &TransactionUpdate,
-        ) -> HandlerResult<()> {
+        async fn handle(&self, _value: &Unit, _raw: &TransactionUpdate) -> HandlerResult<()> {
             Ok(())
         }
 
@@ -625,7 +619,10 @@ mod tests {
             .handle_lifecycle(&txn, &shared, &LifecycleEvent::TxStart)
             .await;
 
-        assert!(result.is_err(), "DynPipeline should propagate lifecycle errors");
+        assert!(
+            result.is_err(),
+            "DynPipeline should propagate lifecycle errors"
+        );
     }
 
     #[tokio::test]
@@ -812,11 +809,7 @@ mod tests {
     }
 
     impl Handler<Unit, InstructionUpdate> for FailHandleRecordLifecycleIx {
-        async fn handle(
-            &self,
-            _value: &Unit,
-            _raw: &InstructionUpdate,
-        ) -> HandlerResult<()> {
+        async fn handle(&self, _value: &Unit, _raw: &InstructionUpdate) -> HandlerResult<()> {
             Err("handle error".into())
         }
 
@@ -826,7 +819,10 @@ mod tests {
             _instruction_shared: &InstructionShared,
             event: &LifecycleEvent<'_>,
         ) -> HandlerResult<()> {
-            self.events.lock().unwrap().push(OwnedLifecycleEvent::from_ref(event));
+            self.events
+                .lock()
+                .unwrap()
+                .push(OwnedLifecycleEvent::from_ref(event));
             Ok(())
         }
     }
@@ -836,11 +832,7 @@ mod tests {
     impl<T: Handler<Unit, InstructionUpdate> + Send + Sync> Handler<Unit, InstructionUpdate>
         for std::sync::Arc<T>
     {
-        async fn handle(
-            &self,
-            value: &Unit,
-            raw: &InstructionUpdate,
-        ) -> HandlerResult<()> {
+        async fn handle(&self, value: &Unit, raw: &InstructionUpdate) -> HandlerResult<()> {
             T::handle(self, value, raw).await
         }
 
@@ -865,17 +857,17 @@ mod tests {
         let inner_pipeline: super::BoxPipeline<'static, InstructionUpdate> =
             Box::new(Pipeline::new(IxParser, [Arc::clone(&handler)]));
 
-        let pipeline = InstructionPipeline::new(vec![inner_pipeline])
-            .expect("non-empty pipeline list");
+        let pipeline =
+            InstructionPipeline::new(vec![inner_pipeline]).expect("non-empty pipeline list");
 
         let txn = make_txn_with_one_instruction();
         let _result = pipeline.handle(&txn).await;
 
         // TxStart and TxEnd lifecycle calls bracket the handle invocation.
         // Even though handle() returns an error, both must have been delivered.
-        assert_eq!(
-            handler.events(),
-            vec![OwnedLifecycleEvent::TxStart, OwnedLifecycleEvent::TxEnd],
-        );
+        assert_eq!(handler.events(), vec![
+            OwnedLifecycleEvent::TxStart,
+            OwnedLifecycleEvent::TxEnd
+        ],);
     }
 }
