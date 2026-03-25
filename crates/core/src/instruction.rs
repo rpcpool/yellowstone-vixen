@@ -447,18 +447,12 @@ impl InstructionUpdate {
 
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
-    pub fn visit_all(&self) -> impl Iterator<Item = &Self> {
-        VisitAll::new(self).filter_map(|n| match n {
-            TreeStep::PhysicalNode(ix) => Some(ix),
-            TreeStep::EnterCpiCallFromNode { .. } | TreeStep::ReturnFromCpiCallsToNode { .. } => {
-                None
-            },
-        })
-    }
+    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
 
     /// Iterate over all inner instructions stored in this instruction and also emit pseudo nodes representing return from CPI calls to parent nodes.
     #[inline]
-    pub fn visit_tree(&self) -> VisitAll<'_> { VisitAll::new(self) }
+    #[must_use] 
+    pub fn visit_tree(&self) -> VisitTree<'_> { VisitTree(VisitAllState::Init(self)) }
 }
 
 impl InstructionUpdate {
@@ -477,7 +471,29 @@ impl InstructionUpdate {
 /// Yields the root node first, then recursively visits all children.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
-pub struct VisitAll<'a>(VisitAllState<'a>);
+pub struct VisitAll<'a>(VisitTree<'a>);
+
+/// A depth-first iterator over a tree returning pseudo nodes.
+#[derive(Debug)]
+pub struct VisitTree<'a>(VisitAllState<'a>);
+
+impl<'a> VisitAll<'a> {
+    #[inline]
+    fn new(root: &'a InstructionUpdate) -> Self { Self(VisitTree::<'a>(VisitAllState::Init(root))) }
+}
+
+impl<'a> Iterator for VisitAll<'a> {
+    type Item = &'a InstructionUpdate;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().and_then(|step| match step {
+            TreeStep::PhysicalNode(ix) => Some(ix),
+            TreeStep::EnterCpiCallFromNode { .. } | TreeStep::ReturnFromCpiCallsToNode { .. } => {
+                None
+            },
+        })
+    }
+}
 
 #[derive(Debug)]
 enum VisitAllState<'a> {
@@ -493,7 +509,7 @@ enum VisitAllState<'a> {
 }
 
 #[derive(Debug)]
-/// Items emitted from `VisitAll` tree traversal visitor.
+/// Items emitted from `VisitAllInner` tree traversal visitor.
 pub enum TreeStep<'a> {
     /// instruction node of tree
     PhysicalNode(&'a InstructionUpdate),
@@ -509,12 +525,7 @@ pub enum TreeStep<'a> {
     },
 }
 
-impl<'a> VisitAll<'a> {
-    #[inline]
-    fn new(root: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(root)) }
-}
-
-impl<'a> Iterator for VisitAll<'a> {
+impl<'a> Iterator for VisitTree<'a> {
     type Item = TreeStep<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {

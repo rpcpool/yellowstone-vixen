@@ -485,9 +485,12 @@ mod tests {
             Mutex,
         },
     };
-    use prost::bytes::{Buf, BufMut};
-    use prost::DecodeError;
-    use prost::encoding::{DecodeContext, WireType};
+
+    use prost::{
+        bytes::{Buf, BufMut},
+        encoding::{DecodeContext, WireType},
+        DecodeError,
+    };
     use vixen_core::{
         instruction::{InstructionShared, InstructionUpdate},
         ParseError, Parser, Prefilter, TransactionUpdate,
@@ -499,6 +502,7 @@ mod tests {
             CompiledInstruction, Message, Transaction, TransactionStatusMeta,
         },
     };
+
     use super::{Handler, HandlerResult, LifecycleEvent, Pipeline, PipelineErrors};
     use crate::{handler::DynPipeline, instruction::InstructionPipeline};
 
@@ -510,26 +514,26 @@ mod tests {
 
     impl prost::Message for Unit {
         fn encode_raw(&self, _buf: &mut impl BufMut)
+        where Self: Sized {
+            unimplemented!("make compiler happy")
+        }
+
+        fn merge_field(
+            &mut self,
+            _tag: u32,
+            _wire_type: WireType,
+            _buf: &mut impl Buf,
+            _ctx: DecodeContext,
+        ) -> Result<(), DecodeError>
         where
-            Self: Sized
+            Self: Sized,
         {
             unimplemented!("make compiler happy")
         }
 
-        fn merge_field(&mut self, _tag: u32, _wire_type: WireType, _buf: &mut impl Buf, _ctx: DecodeContext) -> Result<(), DecodeError>
-        where
-            Self: Sized
-        {
-            unimplemented!("make compiler happy")
-        }
+        fn encoded_len(&self) -> usize { unimplemented!("make compiler happy") }
 
-        fn encoded_len(&self) -> usize {
-            unimplemented!("make compiler happy")
-        }
-
-        fn clear(&mut self) {
-            unimplemented!("make compiler happy")
-        }
+        fn clear(&mut self) { unimplemented!("make compiler happy") }
     }
 
     /// A parser that always succeeds and returns `Unit`.
@@ -785,12 +789,7 @@ mod tests {
 
         fn prefilter(&self) -> Prefilter { Prefilter::default() }
 
-        async fn parse(
-            &self,
-            _value: &Self::Input,
-        ) -> Result<Self::Output, ParseError> {
-            Ok(Unit)
-        }
+        async fn parse(&self, _value: &Self::Input) -> Result<Self::Output, ParseError> { Ok(Unit) }
     }
 
     /// Owned equivalent of `LifecycleEvent` for collecting in tests.
