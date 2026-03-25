@@ -1,0 +1,153 @@
+---
+name: CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Run on every PR, on merges to main, and manually via the Actions UI.
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+# Cache layout (restored by test, clippy, and test-events jobs):
+#   ~/.cargo/registry  — downloaded crate sources (avoids re-downloading)
+#   ~/.cargo/git       — git-based dependencies
+#   target/debug/build — C/C++ build outputs (librdkafka cmake, ~2min to rebuild)
+#   target/debug/.fingerprint — cargo's dep-tracking metadata
+#   target/debug/deps  — compiled dependency .rlib files
+#
+# We skip target/debug/incremental (large, not useful across commits)
+# and final binaries (rebuilt from cached deps in seconds).
+#
+# Key includes rust-toolchain.toml so the cache invalidates on compiler upgrades.
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly-2026-02-25
+          components: rustfmt
+
+      - name: cargo tree
+        run: |
+          cargo tree
+          git checkout Cargo.lock
+          cargo tree --frozen --offline
+
+      - name: Run fmt
+        run: cargo +nightly-2026-02-25 fmt --all -- --check
+
+      - name: cargo deny check advisories
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories
+
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Cache cargo registry and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/cache/
+            ~/.cargo/registry/index/
+            ~/.cargo/git/db/
+            target/debug/build/
+            target/debug/.fingerprint/
+            target/debug/deps/
+          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-build-
+
+      # Project toolchain + clippy are auto-installed from rust-toolchain.toml
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
+
+      - name: Run tests
+        run: cargo test --workspace --lib --tests
+
+  test-events:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Cache cargo registry and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/cache/
+            ~/.cargo/registry/index/
+            ~/.cargo/git/db/
+            target/debug/build/
+            target/debug/.fingerprint/
+            target/debug/deps/
+          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-build-
+
+      # Project toolchain + clippy are auto-installed from rust-toolchain.toml
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
+
+      # Separate workspace to avoid feature unification issues with `program-events` feature
+      - name: Run proc-macro-events tests
+        run: cargo test --tests --manifest-path tests/proc-macro-events/Cargo.toml
+
+  clippy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Cache cargo registry and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/cache/
+            ~/.cargo/registry/index/
+            ~/.cargo/git/db/
+            target/debug/build/
+            target/debug/.fingerprint/
+            target/debug/deps/
+          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-build-
+
+      # Project toolchain + clippy are auto-installed from rust-toolchain.toml
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --tests --no-deps -- -Dwarnings
