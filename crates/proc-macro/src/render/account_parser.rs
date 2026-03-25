@@ -342,6 +342,10 @@ pub fn account_parser(
                         ParseError::from("Unable to unwrap account ref".to_owned())
                     })?;
 
+                if inner.owner != PROGRAM_ID {
+                    return Err(ParseError::Filtered);
+                }
+
                 #account_struct_ident::try_unpack_inner(&inner.data, Some(&inner.pubkey))
             }
         }
