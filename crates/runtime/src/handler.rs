@@ -477,6 +477,7 @@ where I::Item: AsRef<str> + Send + 'm
 
 #[cfg(test)]
 mod tests {
+
     use std::{
         borrow::Cow,
         sync::{
@@ -484,7 +485,9 @@ mod tests {
             Mutex,
         },
     };
-
+    use prost::bytes::{Buf, BufMut};
+    use prost::DecodeError;
+    use prost::encoding::{DecodeContext, WireType};
     use vixen_core::{
         instruction::{InstructionShared, InstructionUpdate},
         ParseError, Parser, Prefilter, TransactionUpdate,
@@ -504,6 +507,30 @@ mod tests {
     /// A trivial parsed output type.
     #[derive(Debug)]
     struct Unit;
+
+    impl prost::Message for Unit {
+        fn encode_raw(&self, _buf: &mut impl BufMut)
+        where
+            Self: Sized
+        {
+            unimplemented!("make compiler happy")
+        }
+
+        fn merge_field(&mut self, _tag: u32, _wire_type: WireType, _buf: &mut impl Buf, _ctx: DecodeContext) -> Result<(), DecodeError>
+        where
+            Self: Sized
+        {
+            unimplemented!("make compiler happy")
+        }
+
+        fn encoded_len(&self) -> usize {
+            unimplemented!("make compiler happy")
+        }
+
+        fn clear(&mut self) {
+            unimplemented!("make compiler happy")
+        }
+    }
 
     /// A parser that always succeeds and returns `Unit`.
     #[derive(Debug)]

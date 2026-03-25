@@ -13838,6 +13838,7 @@ dependencies = [
  "futures-util",
  "opentelemetry 0.24.0",
  "prometheus",
+ "prost 0.14.1",
  "serde",
  "smallvec",
  "thiserror 1.0.69",
