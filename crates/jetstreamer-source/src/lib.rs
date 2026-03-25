@@ -433,9 +433,7 @@ pub struct JetstreamSource {
 impl SourceTrait for JetstreamSource {
     type Config = JetstreamSourceConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self {
-        Self { config, filters }
-    }
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
     async fn connect(
         &self,

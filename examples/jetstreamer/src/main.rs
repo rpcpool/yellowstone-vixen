@@ -13,9 +13,7 @@ use yellowstone_vixen_spl_token_parser::{
     instruction::Instruction, InstructionParser, TokenProgram,
 };
 
-fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String {
-    pubkey.to_string()
-}
+fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
 
 fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::Pubkey>) -> String {
     match pubkey {
@@ -184,7 +182,8 @@ fn main() -> Result<()> {
         network_capacity_mb: 100000,
     };
 
-    // SAFETY: No other threads exist yet — the Tokio runtime hasn't started.
+    // SAFETY: Called from main() before the Tokio runtime is created.
+    // This binary must not spawn any other threads before this point.
     unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
 
     tokio::runtime::Runtime::new()?.block_on(run(config))
