@@ -591,13 +591,8 @@ pub fn instruction_parser(
         ) -> ParseResult<#wrapper_ident> {
             #(#match_arms)*
 
-            let disc: String = data.iter().take(8)
-                .map(|b| format!("{b:02x}"))
-                .collect::<Vec<_>>()
-                .join(" ");
-
             Err(ParseError::DiscriminatorNotFound(format!(
-                "instruction discriminator not found [{disc}] at path {path:?}"
+                "instruction discriminator not found at path {path:?}"
             )))
         }
 
