@@ -107,12 +107,17 @@ pub fn build_fields_ir(
                 });
             },
 
+            //
             // Nested array (e.g. Vec<Vec<Route>>) => materialize a wrapper message
             // for the inner array since LabelIr can only represent one level of Vec.
             //
             // E.g. `routes: Vec<Vec<Route>>` becomes:
+            //
+            // ```protobuf
             //   message RoutesInner { repeated Route items = 1; }
             //   repeated RoutesInner routes = N;
+            // ```
+            //
             codama_nodes::TypeNode::Array(outer_array)
                 if matches!(&*outer_array.item, codama_nodes::TypeNode::Array(_)) =>
             {
