@@ -49,7 +49,7 @@ pub fn event_parser(
         })
         .collect();
 
-    let anchor_event_tag_u64 = super::ANCHOR_EVENT_IX_TAG;
+    let event_ix_tag = super::ANCHOR_EVENT_IX_TAG;
 
     let resolve_events_from_logs = quote! {
         ///
@@ -65,7 +65,7 @@ pub fn event_parser(
             logs: &[String],
         ) -> Vec<#wrapper_ident> {
             const PREFIX: &str = "Program data: ";
-            const EVENT_IX_TAG: [u8; 8] = (#anchor_event_tag_u64).to_le_bytes();
+            const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
 
             logs.iter()
                 .filter_map(|line| {
