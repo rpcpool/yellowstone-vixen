@@ -1,0 +1,870 @@
+---
+source: tests/proc-macro/tests/okx_dex.rs
+assertion_line: 12
+expression: "dex_solana::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package dex_solana;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message DexSplTokenSwap {
+}
+    
+message DexStableSwap {
+}
+    
+message DexWhirlpool {
+}
+    
+message DexMeteoraDynamicpool {
+}
+    
+message DexRaydiumSwap {
+}
+    
+message DexRaydiumStableSwap {
+}
+    
+message DexRaydiumClmmSwap {
+}
+    
+message DexAldrinExchangeV1 {
+}
+    
+message DexAldrinExchangeV2 {
+}
+    
+message DexLifinityV1 {
+}
+    
+message DexLifinityV2 {
+}
+    
+message DexRaydiumClmmSwapV2 {
+}
+    
+message DexFluxBeam {
+}
+    
+message DexMeteoraDlmm {
+}
+    
+message DexRaydiumCpmmSwap {
+}
+    
+message DexOpenBookV2 {
+}
+    
+message DexWhirlpoolV2 {
+}
+    
+message DexPhoenix {
+}
+    
+message DexObricV2 {
+}
+    
+message DexSanctumAddLiq {
+}
+    
+message DexSanctumRemoveLiq {
+}
+    
+message DexSanctumNonWsolSwap {
+}
+    
+message DexSanctumWsolSwap {
+}
+    
+message DexPumpfunBuy {
+}
+    
+message DexPumpfunSell {
+}
+    
+message DexStabbleSwap {
+}
+    
+message DexSanctumRouter {
+}
+    
+message DexMeteoraVaultDeposit {
+}
+    
+message DexMeteoraVaultWithdraw {
+}
+    
+message DexSaros {
+}
+    
+message DexMeteoraLst {
+}
+    
+message DexSolfi {
+}
+    
+message DexQualiaSwap {
+}
+    
+message DexZerofi {
+}
+    
+message DexPumpfunammBuy {
+}
+    
+message DexPumpfunammSell {
+}
+    
+message DexVirtuals {
+}
+    
+message DexVertigoBuy {
+}
+    
+message DexVertigoSell {
+}
+    
+message DexPerpetualsAddLiq {
+}
+    
+message DexPerpetualsRemoveLiq {
+}
+    
+message DexPerpetualsSwap {
+}
+    
+message DexRaydiumLaunchpad {
+}
+    
+message DexLetsBonkFun {
+}
+    
+message DexWoofi {
+}
+    
+message DexMeteoraDbc {
+}
+    
+message DexMeteoraDlmmSwap2 {
+}
+    
+message DexMeteoraDAMMV2 {
+}
+    
+message DexGavel {
+}
+    
+message DexBoopfunBuy {
+}
+    
+message DexBoopfunSell {
+}
+    
+message DexMeteoraDbc2 {
+}
+    
+message DexGooseFX {
+}
+    
+message DexDooar {
+}
+    
+message DexNumeraire {
+}
+    
+message DexSaberDecimalWrapperDeposit {
+}
+    
+message DexSaberDecimalWrapperWithdraw {
+}
+    
+message DexSarosDlmm {
+}
+    
+message DexOneDexSwap {
+}
+    
+message DexManifest {
+}
+    
+message DexByrealClmm {
+}
+    
+message DexPancakeSwapV3Swap {
+}
+    
+message DexPancakeSwapV3SwapV2 {
+}
+    
+message DexTessera {
+}
+    
+message DexSolRfq {
+  uint64 rfq_id = 1;
+  uint64 expected_maker_amount = 2;
+  uint64 expected_taker_amount = 3;
+  uint64 maker_send_amount = 4;
+  uint64 taker_send_amount = 5;
+  uint64 expiry = 6;
+  bool maker_use_native_sol = 7;
+  bool taker_use_native_sol = 8;
+}
+    
+message DexPumpfunBuy2 {
+}
+    
+message DexPumpfunammBuy2 {
+}
+    
+message DexHumidifi {
+}
+    
+message DexHeavenBuy {
+}
+    
+message DexHeavenSell {
+}
+    
+message DexSolfiV2 {
+}
+    
+message DexPumpfunBuy3 {
+}
+    
+message DexPumpfunSell3 {
+}
+    
+message DexPumpfunammBuy3 {
+}
+    
+message DexPumpfunammSell3 {
+}
+    
+message DexGoonfi {
+}
+    
+message DexMoonitBuy {
+}
+    
+message DexMoonitSell {
+}
+    
+message DexRaydiumSwapV2 {
+}
+    
+message DexWhalestreet {
+}
+    
+message DexSugarMoneyBuy {
+  uint32 bonding_curve_bump = 1;
+  uint32 bonding_curve_sol_associated_account_bump = 2;
+}
+    
+message DexSugarMoneySell {
+  uint32 bonding_curve_bump = 1;
+  uint32 bonding_curve_sol_associated_account_bump = 2;
+}
+    
+message DexMeteoraDAMMV2Swap2 {
+}
+    
+message DexAlphaQ {
+}
+    
+message DexFutarchyAmm {
+}
+    
+message DexPumpfunSell2 {
+}
+    
+message DexHumidifiSwap2 {
+  uint64 swap_id = 1;
+}
+    
+message DexScorch {
+  bytes id = 1;
+}
+    
+message DexJupiterLendDeposit {
+}
+    
+message DexJupiterLendRedeem {
+}
+    
+message DexTaurusFi {
+}
+    
+message DexBisonFi {
+}
+    
+message DexGoonfiV2 {
+}
+    
+message DexQuantum {
+}
+    
+message DexBoopfunBuy2 {
+}
+    
+message DexBoopfunSell2 {
+}
+    
+message DexByrealClmm2 {
+}
+    
+message DexDooar2 {
+}
+    
+message DexHeavenBuy2 {
+}
+    
+message DexHeavenSell2 {
+}
+    
+message DexMoonitBuy2 {
+}
+    
+message DexMoonitSell2 {
+}
+    
+message DexSaberDecimalWrapperDeposit2 {
+}
+    
+message DexSaberDecimalWrapperWithdraw2 {
+}
+    
+message DexByrealPropAmm {
+}
+    
+message DexSanctumPrefundSwapViaStake {
+  uint64 swap_id = 1;
+}
+    
+message DexAbyssAmm {
+}
+    
+message DexAquifer {
+}
+    
+message DexWhalestreetV2 {
+  uint64 auth_amount_in = 1;
+  uint64 auth = 2;
+}
+    
+message DexSolfiV2WithSig {
+  uint64 unix_timestamp = 1;
+  uint64 msg_amount_in = 2;
+  uint64 expect_amount_out = 3;
+  uint32 slippage = 4;
+  uint64 user_request_slot = 5;
+  bytes signature = 6;
+  uint32 recovery_id = 7;
+}
+    
+message PlatformFeeWrapUnwrapArgs {
+  uint64 order_id = 1;
+  uint64 amount_in = 2;
+  uint32 commission_info = 3;
+  uint32 platform_fee_rate = 4;
+  bool tob = 5;
+}
+    
+message Route {
+  repeated Dex dexes = 1;
+  bytes weights = 2;
+}
+    
+message SwapArgsRoutesInner {
+  repeated Route items = 1;
+}
+    
+message SwapArgs {
+  uint64 amount_in = 1;
+  uint64 expect_amount_out = 2;
+  uint64 min_return = 3;
+  repeated uint64 amounts = 4;
+  repeated SwapArgsRoutesInner routes = 5;
+}
+    
+message ClaimAccounts {
+  PublicKey signer = 1;
+  PublicKey receiver = 2;
+  PublicKey source_token_account = 3;
+  PublicKey destination_token_account = 4;
+  PublicKey sa_authority = 5;
+  PublicKey token_mint = 6;
+  PublicKey token_program = 7;
+  PublicKey system_program = 8;
+  PublicKey associated_token_program = 9;
+  repeated PublicKey remaining_accounts = 10;
+}
+    
+message ClaimArgs {
+}
+    
+message Claim {
+  ClaimAccounts accounts = 1;
+  ClaimArgs args = 2;
+}
+    
+message ClaimCashbackPumpfunAccounts {
+  PublicKey signer = 1;
+  PublicKey sa_authority = 2;
+  PublicKey user_volume_accumulator = 3;
+  PublicKey receiver = 4;
+  PublicKey event_authority = 5;
+  PublicKey system_program = 6;
+  PublicKey pumpfun_program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message ClaimCashbackPumpfunArgs {
+}
+    
+message ClaimCashbackPumpfun {
+  ClaimCashbackPumpfunAccounts accounts = 1;
+  ClaimCashbackPumpfunArgs args = 2;
+}
+    
+message ClaimCashbackPumpswapAccounts {
+  PublicKey signer = 1;
+  PublicKey sa_authority = 2;
+  PublicKey user_volume_accumulator = 3;
+  PublicKey wsol_mint = 4;
+  PublicKey spl_token_program = 5;
+  PublicKey uva_wsol_ata = 6;
+  PublicKey sa_wsol_ata = 7;
+  PublicKey receiver_wsol_ata = 8;
+  PublicKey system_program = 9;
+  PublicKey event_authority = 10;
+  PublicKey pumpswap_program = 11;
+  repeated PublicKey remaining_accounts = 12;
+}
+    
+message ClaimCashbackPumpswapArgs {
+}
+    
+message ClaimCashbackPumpswap {
+  ClaimCashbackPumpswapAccounts accounts = 1;
+  ClaimCashbackPumpswapArgs args = 2;
+}
+    
+message CreateTokenAccountAccounts {
+  PublicKey payer = 1;
+  PublicKey owner = 2;
+  PublicKey token_account = 3;
+  PublicKey token_mint = 4;
+  PublicKey token_program = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message CreateTokenAccountArgs {
+  uint32 bump = 1;
+}
+    
+message CreateTokenAccount {
+  CreateTokenAccountAccounts accounts = 1;
+  CreateTokenAccountArgs args = 2;
+}
+    
+message CreateTokenAccountWithSeedAccounts {
+  PublicKey payer = 1;
+  PublicKey owner = 2;
+  PublicKey token_account = 3;
+  PublicKey token_mint = 4;
+  PublicKey token_program = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message CreateTokenAccountWithSeedArgs {
+  uint32 bump = 1;
+  uint32 seed = 2;
+}
+    
+message CreateTokenAccountWithSeed {
+  CreateTokenAccountWithSeedAccounts accounts = 1;
+  CreateTokenAccountWithSeedArgs args = 2;
+}
+    
+message ProxySwapAccounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  PublicKey sa_authority = 6;
+  PublicKey source_token_sa = 7;
+  PublicKey destination_token_sa = 8;
+  PublicKey source_token_program = 9;
+  PublicKey destination_token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey system_program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message ProxySwapArgs {
+  SwapArgs data = 1;
+  uint64 order_id = 2;
+}
+    
+message ProxySwap {
+  ProxySwapAccounts accounts = 1;
+  ProxySwapArgs args = 2;
+}
+    
+message SwapAccounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message Swap {
+  SwapAccounts accounts = 1;
+  SwapArgs args = 2;
+}
+    
+message SwapTobV3Accounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  PublicKey commission_account = 6;
+  PublicKey platform_fee_account = 7;
+  PublicKey sa_authority = 8;
+  PublicKey source_token_sa = 9;
+  PublicKey destination_token_sa = 10;
+  PublicKey source_token_program = 11;
+  PublicKey destination_token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message SwapTobV3Args {
+  SwapArgs args = 1;
+  uint32 commission_info = 2;
+  uint32 trim_rate = 3;
+  uint32 platform_fee_rate = 4;
+  uint64 order_id = 5;
+}
+    
+message SwapTobV3 {
+  SwapTobV3Accounts accounts = 1;
+  SwapTobV3Args args = 2;
+}
+    
+message SwapTobV3EnhancedAccounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  PublicKey commission_account = 6;
+  PublicKey platform_fee_account = 7;
+  PublicKey sa_authority = 8;
+  PublicKey source_token_sa = 9;
+  PublicKey destination_token_sa = 10;
+  PublicKey source_token_program = 11;
+  PublicKey destination_token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message SwapTobV3EnhancedArgs {
+  SwapArgs args = 1;
+  uint32 commission_info = 2;
+  uint32 trim_rate = 3;
+  uint32 charge_rate = 4;
+  uint32 platform_fee_rate = 5;
+  uint64 order_id = 6;
+}
+    
+message SwapTobV3Enhanced {
+  SwapTobV3EnhancedAccounts accounts = 1;
+  SwapTobV3EnhancedArgs args = 2;
+}
+    
+message SwapTobV3WithReceiverAccounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  PublicKey commission_account = 6;
+  PublicKey platform_fee_account = 7;
+  PublicKey sa_authority = 8;
+  PublicKey source_token_sa = 9;
+  PublicKey destination_token_sa = 10;
+  PublicKey source_token_program = 11;
+  PublicKey destination_token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  PublicKey sol_receiver = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message SwapTobV3WithReceiverArgs {
+  SwapArgs args = 1;
+  uint32 commission_info = 2;
+  uint32 trim_rate = 3;
+  uint32 platform_fee_rate = 4;
+  uint64 order_id = 5;
+}
+    
+message SwapTobV3WithReceiver {
+  SwapTobV3WithReceiverAccounts accounts = 1;
+  SwapTobV3WithReceiverArgs args = 2;
+}
+    
+message SwapV3Accounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  PublicKey commission_account = 6;
+  PublicKey platform_fee_account = 7;
+  PublicKey sa_authority = 8;
+  PublicKey source_token_sa = 9;
+  PublicKey destination_token_sa = 10;
+  PublicKey source_token_program = 11;
+  PublicKey destination_token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message SwapV3Args {
+  SwapArgs args = 1;
+  uint32 commission_info = 2;
+  uint32 platform_fee_rate = 3;
+  uint64 order_id = 4;
+}
+    
+message SwapV3 {
+  SwapV3Accounts accounts = 1;
+  SwapV3Args args = 2;
+}
+    
+message SwapV3WithCpiEventAccounts {
+  PublicKey payer = 1;
+  PublicKey source_token_account = 2;
+  PublicKey destination_token_account = 3;
+  PublicKey source_mint = 4;
+  PublicKey destination_mint = 5;
+  PublicKey commission_account = 6;
+  PublicKey platform_fee_account = 7;
+  PublicKey sa_authority = 8;
+  PublicKey source_token_sa = 9;
+  PublicKey destination_token_sa = 10;
+  PublicKey source_token_program = 11;
+  PublicKey destination_token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  PublicKey event_authority = 15;
+  PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
+}
+    
+message SwapV3WithCpiEventArgs {
+  SwapArgs args = 1;
+  uint32 commission_info = 2;
+  uint32 platform_fee_rate = 3;
+  uint64 order_id = 4;
+}
+    
+message SwapV3WithCpiEvent {
+  SwapV3WithCpiEventAccounts accounts = 1;
+  SwapV3WithCpiEventArgs args = 2;
+}
+    
+message WrapUnwrapV3Accounts {
+  PublicKey payer = 1;
+  PublicKey payer_wsol_account = 2;
+  PublicKey wsol_mint = 3;
+  PublicKey temp_wsol_account = 4;
+  PublicKey commission_account = 5;
+  PublicKey platform_fee_account = 6;
+  PublicKey authority_pda = 7;
+  PublicKey wsol_sa = 8;
+  PublicKey token_program = 9;
+  PublicKey system_program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message WrapUnwrapV3Args {
+  PlatformFeeWrapUnwrapArgs args = 1;
+}
+    
+message WrapUnwrapV3 {
+  WrapUnwrapV3Accounts accounts = 1;
+  WrapUnwrapV3Args args = 2;
+}
+    
+message WrapUnwrapV3WithReceiverAccounts {
+  PublicKey payer = 1;
+  PublicKey payer_wsol_account = 2;
+  PublicKey wsol_mint = 3;
+  PublicKey temp_wsol_account = 4;
+  PublicKey commission_account = 5;
+  PublicKey platform_fee_account = 6;
+  PublicKey authority_pda = 7;
+  PublicKey wsol_sa = 8;
+  PublicKey token_program = 9;
+  PublicKey system_program = 10;
+  PublicKey receiver = 11;
+  repeated PublicKey remaining_accounts = 12;
+}
+    
+message WrapUnwrapV3WithReceiverArgs {
+  PlatformFeeWrapUnwrapArgs args = 1;
+}
+    
+message WrapUnwrapV3WithReceiver {
+  WrapUnwrapV3WithReceiverAccounts accounts = 1;
+  WrapUnwrapV3WithReceiverArgs args = 2;
+}
+    
+message Dex {
+  oneof kind {
+    DexSplTokenSwap spl_token_swap = 1;
+    DexStableSwap stable_swap = 2;
+    DexWhirlpool whirlpool = 3;
+    DexMeteoraDynamicpool meteora_dynamicpool = 4;
+    DexRaydiumSwap raydium_swap = 5;
+    DexRaydiumStableSwap raydium_stable_swap = 6;
+    DexRaydiumClmmSwap raydium_clmm_swap = 7;
+    DexAldrinExchangeV1 aldrin_exchange_v1 = 8;
+    DexAldrinExchangeV2 aldrin_exchange_v2 = 9;
+    DexLifinityV1 lifinity_v1 = 10;
+    DexLifinityV2 lifinity_v2 = 11;
+    DexRaydiumClmmSwapV2 raydium_clmm_swap_v2 = 12;
+    DexFluxBeam flux_beam = 13;
+    DexMeteoraDlmm meteora_dlmm = 14;
+    DexRaydiumCpmmSwap raydium_cpmm_swap = 15;
+    DexOpenBookV2 open_book_v2 = 16;
+    DexWhirlpoolV2 whirlpool_v2 = 17;
+    DexPhoenix phoenix = 18;
+    DexObricV2 obric_v2 = 19;
+    DexSanctumAddLiq sanctum_add_liq = 20;
+    DexSanctumRemoveLiq sanctum_remove_liq = 21;
+    DexSanctumNonWsolSwap sanctum_non_wsol_swap = 22;
+    DexSanctumWsolSwap sanctum_wsol_swap = 23;
+    DexPumpfunBuy pumpfun_buy = 24;
+    DexPumpfunSell pumpfun_sell = 25;
+    DexStabbleSwap stabble_swap = 26;
+    DexSanctumRouter sanctum_router = 27;
+    DexMeteoraVaultDeposit meteora_vault_deposit = 28;
+    DexMeteoraVaultWithdraw meteora_vault_withdraw = 29;
+    DexSaros saros = 30;
+    DexMeteoraLst meteora_lst = 31;
+    DexSolfi solfi = 32;
+    DexQualiaSwap qualia_swap = 33;
+    DexZerofi zerofi = 34;
+    DexPumpfunammBuy pumpfunamm_buy = 35;
+    DexPumpfunammSell pumpfunamm_sell = 36;
+    DexVirtuals virtuals = 37;
+    DexVertigoBuy vertigo_buy = 38;
+    DexVertigoSell vertigo_sell = 39;
+    DexPerpetualsAddLiq perpetuals_add_liq = 40;
+    DexPerpetualsRemoveLiq perpetuals_remove_liq = 41;
+    DexPerpetualsSwap perpetuals_swap = 42;
+    DexRaydiumLaunchpad raydium_launchpad = 43;
+    DexLetsBonkFun lets_bonk_fun = 44;
+    DexWoofi woofi = 45;
+    DexMeteoraDbc meteora_dbc = 46;
+    DexMeteoraDlmmSwap2 meteora_dlmm_swap2 = 47;
+    DexMeteoraDAMMV2 meteora_dammv2 = 48;
+    DexGavel gavel = 49;
+    DexBoopfunBuy boopfun_buy = 50;
+    DexBoopfunSell boopfun_sell = 51;
+    DexMeteoraDbc2 meteora_dbc2 = 52;
+    DexGooseFX goose_fx = 53;
+    DexDooar dooar = 54;
+    DexNumeraire numeraire = 55;
+    DexSaberDecimalWrapperDeposit saber_decimal_wrapper_deposit = 56;
+    DexSaberDecimalWrapperWithdraw saber_decimal_wrapper_withdraw = 57;
+    DexSarosDlmm saros_dlmm = 58;
+    DexOneDexSwap one_dex_swap = 59;
+    DexManifest manifest = 60;
+    DexByrealClmm byreal_clmm = 61;
+    DexPancakeSwapV3Swap pancake_swap_v3_swap = 62;
+    DexPancakeSwapV3SwapV2 pancake_swap_v3_swap_v2 = 63;
+    DexTessera tessera = 64;
+    DexSolRfq sol_rfq = 65;
+    DexPumpfunBuy2 pumpfun_buy2 = 66;
+    DexPumpfunammBuy2 pumpfunamm_buy2 = 67;
+    DexHumidifi humidifi = 68;
+    DexHeavenBuy heaven_buy = 69;
+    DexHeavenSell heaven_sell = 70;
+    DexSolfiV2 solfi_v2 = 71;
+    DexPumpfunBuy3 pumpfun_buy3 = 72;
+    DexPumpfunSell3 pumpfun_sell3 = 73;
+    DexPumpfunammBuy3 pumpfunamm_buy3 = 74;
+    DexPumpfunammSell3 pumpfunamm_sell3 = 75;
+    DexGoonfi goonfi = 76;
+    DexMoonitBuy moonit_buy = 77;
+    DexMoonitSell moonit_sell = 78;
+    DexRaydiumSwapV2 raydium_swap_v2 = 79;
+    DexWhalestreet whalestreet = 80;
+    DexSugarMoneyBuy sugar_money_buy = 81;
+    DexSugarMoneySell sugar_money_sell = 82;
+    DexMeteoraDAMMV2Swap2 meteora_dammv2_swap2 = 83;
+    DexAlphaQ alpha_q = 84;
+    DexFutarchyAmm futarchy_amm = 85;
+    DexPumpfunSell2 pumpfun_sell2 = 86;
+    DexHumidifiSwap2 humidifi_swap2 = 87;
+    DexScorch scorch = 88;
+    DexJupiterLendDeposit jupiter_lend_deposit = 89;
+    DexJupiterLendRedeem jupiter_lend_redeem = 90;
+    DexTaurusFi taurus_fi = 91;
+    DexBisonFi bison_fi = 92;
+    DexGoonfiV2 goonfi_v2 = 93;
+    DexQuantum quantum = 94;
+    DexBoopfunBuy2 boopfun_buy2 = 95;
+    DexBoopfunSell2 boopfun_sell2 = 96;
+    DexByrealClmm2 byreal_clmm2 = 97;
+    DexDooar2 dooar2 = 98;
+    DexHeavenBuy2 heaven_buy2 = 99;
+    DexHeavenSell2 heaven_sell2 = 100;
+    DexMoonitBuy2 moonit_buy2 = 101;
+    DexMoonitSell2 moonit_sell2 = 102;
+    DexSaberDecimalWrapperDeposit2 saber_decimal_wrapper_deposit2 = 103;
+    DexSaberDecimalWrapperWithdraw2 saber_decimal_wrapper_withdraw2 = 104;
+    DexByrealPropAmm byreal_prop_amm = 105;
+    DexSanctumPrefundSwapViaStake sanctum_prefund_swap_via_stake = 106;
+    DexAbyssAmm abyss_amm = 107;
+    DexAquifer aquifer = 108;
+    DexWhalestreetV2 whalestreet_v2 = 109;
+    DexSolfiV2WithSig solfi_v2_with_sig = 110;
+  }
+}
+message Instructions {
+  oneof instruction {
+    Claim claim = 1;
+    ClaimCashbackPumpfun claim_cashback_pumpfun = 2;
+    ClaimCashbackPumpswap claim_cashback_pumpswap = 3;
+    CreateTokenAccount create_token_account = 4;
+    CreateTokenAccountWithSeed create_token_account_with_seed = 5;
+    ProxySwap proxy_swap = 6;
+    Swap swap = 7;
+    SwapTobV3 swap_tob_v3 = 8;
+    SwapTobV3Enhanced swap_tob_v3_enhanced = 9;
+    SwapTobV3WithReceiver swap_tob_v3_with_receiver = 10;
+    SwapV3 swap_v3 = 11;
+    SwapV3WithCpiEvent swap_v3_with_cpi_event = 12;
+    WrapUnwrapV3 wrap_unwrap_v3 = 13;
+    WrapUnwrapV3WithReceiver wrap_unwrap_v3_with_receiver = 14;
+  }
+}

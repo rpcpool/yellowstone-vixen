@@ -17,6 +17,11 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|oneof_ir| oneof_ir.parent_message.as_str())
         .collect();
 
+    // Names that exist as both a top-level defined type and an instruction/event type.
+    // Inside submodules, a struct with a colliding name can't reference itself (no boxing),
+    // so any `Message("SwapArgs")` field inside `SwapArgs` must mean the top-level type.
+    let collisions = schema_ir.colliding_names();
+
     // Collect instruction-kind type names (these go inside the instruction module)
     let instruction_type_names: HashSet<&str> = schema_ir
         .types
@@ -63,6 +68,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     oneof,
                     &ix_types,
                     &instruction_type_names,
+                    &collisions,
                     &oneof.parent_message,
                     "instruction",
                     "Instruction",
@@ -81,6 +87,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     oneof,
                     &ev_types,
                     &event_type_names,
+                    &collisions,
                     "Events",
                     "event",
                     "Event",
@@ -138,6 +145,7 @@ fn render_dispatch(
     oneof_ir: &OneofIr,
     payload_types: &[&TypeIr],
     local_names: &HashSet<&str>,
+    collisions: &std::collections::HashSet<String>,
     rust_wrapper_name: &str,
     mod_name: &str,
     enum_name: &str,
@@ -147,9 +155,32 @@ fn render_dispatch(
     let oneof_ident = format_ident!("{}", enum_name);
     let field_ident = format_ident!("{}", oneof_ir.field_name);
 
+    // Wrapper types (e.g. `Swap`) have fields that always reference local instruction
+    // types (`SwapAccounts`, `SwapArgs`). Non-wrapper types (like `SwapArgs` itself)
+    // may reference top-level defined types. When a name collides (instruction type
+    // and defined type share the same name), non-wrapper types need collision-adjusted
+    // `local_names` so their fields resolve to `super::`.
+    let wrapper_names: HashSet<&str> = oneof_ir
+        .variants
+        .iter()
+        .map(|v| v.message_type.as_str())
+        .collect();
+
+    let collision_adjusted_locals: HashSet<&str> = local_names
+        .iter()
+        .copied()
+        .filter(|n| !collisions.contains(*n))
+        .collect();
+
     let module_types: Vec<TokenStream> = payload_types
         .iter()
-        .map(|t| render_struct_type(t, Some(local_names)))
+        .map(|t| {
+            if wrapper_names.contains(t.name.as_str()) {
+                render_struct_type(t, Some(local_names))
+            } else {
+                render_struct_type(t, Some(&collision_adjusted_locals))
+            }
+        })
         .collect();
 
     // Struct variants: `Swap { accounts: SwapAccounts, args: SwapArgs }`

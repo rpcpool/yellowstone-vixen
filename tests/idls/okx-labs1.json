@@ -1,0 +1,4480 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.5.1",
+  "program": {
+    "kind": "programNode",
+    "name": "dexSolana",
+    "publicKey": "6m2CDdhRgxpH4WjvdzxAYbGxwdGUz5MziiL5jek2kBma",
+    "version": "0.1.0",
+    "origin": "anchor",
+    "docs": [],
+    "accounts": [],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "claim",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "signer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "CjoV5B96reuCfPh2rRK11G1QptG97jZdyZArTn3EN1Mj",
+              "identifier": "signer"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "receiver",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "HV1KXxWFaSeriyFvXyx48FqG9BoFbfinB8njCJonqP7K",
+              "identifier": "saAuthority"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "3ec6d6c1d59f6cd2",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "claimCashbackPumpfun",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "signer",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "CjoV5B96reuCfPh2rRK11G1QptG97jZdyZArTn3EN1Mj",
+              "identifier": "signer"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "PumpFun transfers claimed SOL directly to this account (account[0] in the CPI)."
+            ],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "HV1KXxWFaSeriyFvXyx48FqG9BoFbfinB8njCJonqP7K",
+              "identifier": "saAuthority"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "userVolumeAccumulator",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "Holds native SOL accumulated as cashback; emptied by PumpFun during claim."
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "receiver",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "after PumpFun deposits it there."
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "eventAuthority",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1",
+              "identifier": "eventAuthority"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "pumpfunProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+              "identifier": "pumpfunProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "5301f57dc9cfd1f9",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "claimCashbackPumpswap",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "signer",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "CjoV5B96reuCfPh2rRK11G1QptG97jZdyZArTn3EN1Mj",
+              "identifier": "signer"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "HV1KXxWFaSeriyFvXyx48FqG9BoFbfinB8njCJonqP7K",
+              "identifier": "saAuthority"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "userVolumeAccumulator",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "wsolMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "So11111111111111111111111111111111111111112",
+              "identifier": "wsolMint"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "splTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "identifier": "splTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "uvaWsolAta",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saWsolAta",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "PumpSwap requires account[5] to be a token account owned by authority_pda",
+              "(same owner as user_volume_accumulator). WSOL is deposited here by PumpSwap,",
+              "then forwarded to receiver_wsol_ata via a second SPL transfer."
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "receiverWsolAta",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "eventAuthority",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "GS4CU59F31iL7aR2Q8zVS8DRrcRnXX1yjQ66TqNVQnaR",
+              "identifier": "eventAuthority"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "pumpswapProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+              "identifier": "pumpswapProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "fdf2b0add94e6419",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "createTokenAccount",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "owner",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaNode",
+                "name": "tokenAccount",
+                "docs": [],
+                "seeds": [
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "tokenMint",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  },
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "owner",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  }
+                ]
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "tokenMint",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "tokenMint"
+                  }
+                },
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "owner",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "owner"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "So11111111111111111111111111111111111111112",
+              "identifier": "tokenMint"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "identifier": "tokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "93f17b64f484ae76",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "bump",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "createTokenAccountWithSeed",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "owner",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaNode",
+                "name": "tokenAccount",
+                "docs": [],
+                "seeds": [
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "tokenMint",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  },
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "owner",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  },
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "seed",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "tokenMint",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "tokenMint"
+                  }
+                },
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "owner",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "owner"
+                  }
+                },
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "seed",
+                  "value": {
+                    "kind": "argumentValueNode",
+                    "name": "seed"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "So11111111111111111111111111111111111111112",
+              "identifier": "tokenMint"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "identifier": "tokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "7dbfef8c420809e4",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "bump",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "seed",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "proxySwap",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaNode",
+                "name": "saAuthority",
+                "docs": [],
+                "seeds": [
+                  {
+                    "kind": "constantPdaSeedNode",
+                    "type": {
+                      "kind": "bytesTypeNode"
+                    },
+                    "value": {
+                      "kind": "bytesValueNode",
+                      "data": "xV4XvzDW",
+                      "encoding": "base58"
+                    }
+                  }
+                ]
+              },
+              "seeds": []
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "132c829448382cee",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "data",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swap",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": false,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "f8c69e91e17587c8",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "data",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swapTobV3",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "0ebf2cf68ee1e09d",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionInfo",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "trimRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swapTobV3Enhanced",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "ec479b44c6620e76",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionInfo",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "trimRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "chargeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swapTobV3WithReceiver",
+        "docs": [
+          "Swap ToB with optional specified receiver",
+          "- For normal token swaps: sol_receiver should be None",
+          "- For swap to SOL with custom receiver: sol_receiver should be Some and acc_close_flag must be true"
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "solReceiver",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [
+              "Optional SOL receiver account",
+              "- None: normal swap or SOL stays with payer",
+              "- Some: SOL receiver when converting wSOL -> SOL"
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "3f72f6833302f71d",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionInfo",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "trimRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swapV3",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "f0e02621b01ff1af",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionInfo",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swapV3WithCpiEvent",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "saAuthority",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "sourceTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "destinationTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "associatedTokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+              "identifier": "associatedTokenProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "eventAuthority",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaNode",
+                "name": "eventAuthority",
+                "docs": [],
+                "seeds": [
+                  {
+                    "kind": "constantPdaSeedNode",
+                    "type": {
+                      "kind": "bytesTypeNode"
+                    },
+                    "value": {
+                      "kind": "bytesValueNode",
+                      "data": "tyvCZETMWX6hYsUwTchxRWG",
+                      "encoding": "base58"
+                    }
+                  }
+                ]
+              },
+              "seeds": []
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "program",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "b8684f9c6bb6788a",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "swapArgs"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionInfo",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "wrapUnwrapV3",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "payerWsolAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "wsolMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "So11111111111111111111111111111111111111112",
+              "identifier": "wsolMint"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tempWsolAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaNode",
+                "name": "tempWsolAccount",
+                "docs": [],
+                "seeds": [
+                  {
+                    "kind": "constantPdaSeedNode",
+                    "type": {
+                      "kind": "bytesTypeNode"
+                    },
+                    "value": {
+                      "kind": "bytesValueNode",
+                      "data": "2Uw1Nc3EhTXeb",
+                      "encoding": "base58"
+                    }
+                  },
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "payer",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  }
+                ]
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "payer",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "payer"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authorityPda",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [
+              "Used for signing fee transfers from authority_pda (SOL) or wsol_sa (WSOL)"
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "wsolSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [
+              "This is the authority_pda's associated token account for WSOL"
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "identifier": "splToken"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "b4b2bf3646080de0",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "platformFeeWrapUnwrapArgs"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "wrapUnwrapV3WithReceiver",
+        "docs": [
+          "Wrap/Unwrap with optional specified receiver",
+          "- Wrap (SOL -> WSOL): receiver is WSOL token account (ATA)",
+          "- Unwrap (WSOL -> SOL): receiver is system account (EOA)",
+          "Transfer amount:",
+          "- From fee: amount_in",
+          "- To fee: amount_in - fees"
+        ],
+        "optionalAccountStrategy": "programId",
+        "accounts": [
+          {
+            "kind": "instructionAccountNode",
+            "name": "payer",
+            "isWritable": true,
+            "isSigner": true,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "payerValueNode"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "payerWsolAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "wsolMint",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "So11111111111111111111111111111111111111112",
+              "identifier": "wsolMint"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tempWsolAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [],
+            "defaultValue": {
+              "kind": "pdaValueNode",
+              "pda": {
+                "kind": "pdaNode",
+                "name": "tempWsolAccount",
+                "docs": [],
+                "seeds": [
+                  {
+                    "kind": "constantPdaSeedNode",
+                    "type": {
+                      "kind": "bytesTypeNode"
+                    },
+                    "value": {
+                      "kind": "bytesValueNode",
+                      "data": "2Uw1Nc3EhTXeb",
+                      "encoding": "base58"
+                    }
+                  },
+                  {
+                    "kind": "variablePdaSeedNode",
+                    "name": "payer",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  }
+                ]
+              },
+              "seeds": [
+                {
+                  "kind": "pdaSeedValueNode",
+                  "name": "payer",
+                  "value": {
+                    "kind": "accountValueNode",
+                    "name": "payer"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "commissionAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "platformFeeAccount",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": []
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "authorityPda",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [
+              "Used for signing fee transfers from authority_pda (SOL) or wsol_sa (WSOL)"
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "wsolSa",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": true,
+            "docs": [
+              "This is the authority_pda's associated token account for WSOL"
+            ]
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "tokenProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "identifier": "splToken"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "systemProgram",
+            "isWritable": false,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [],
+            "defaultValue": {
+              "kind": "publicKeyValueNode",
+              "publicKey": "11111111111111111111111111111111",
+              "identifier": "systemProgram"
+            }
+          },
+          {
+            "kind": "instructionAccountNode",
+            "name": "receiver",
+            "isWritable": true,
+            "isSigner": false,
+            "isOptional": false,
+            "docs": [
+              "- Wrap: WSOL token account (ATA) to receive WSOL",
+              "- Unwrap: System account (EOA) to receive SOL"
+            ]
+          }
+        ],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "46d3bea52f28d55f",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "args",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "platformFeeWrapUnwrapArgs"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      }
+    ],
+    "definedTypes": [
+      {
+        "kind": "definedTypeNode",
+        "name": "dex",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "splTokenSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "stableSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "whirlpool"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDynamicpool"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumStableSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumClmmSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "aldrinExchangeV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "aldrinExchangeV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "lifinityV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "lifinityV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumClmmSwapV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "fluxBeam"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDlmm"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumCpmmSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "openBookV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "whirlpoolV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "phoenix"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "obricV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sanctumAddLiq"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sanctumRemoveLiq"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sanctumNonWsolSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sanctumWsolSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunBuy"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunSell"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "stabbleSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sanctumRouter"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraVaultDeposit"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraVaultWithdraw"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "saros"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraLst"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "solfi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "qualiaSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "zerofi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunammBuy"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunammSell"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "virtuals"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "vertigoBuy"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "vertigoSell"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "perpetualsAddLiq"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "perpetualsRemoveLiq"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "perpetualsSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumLaunchpad"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "letsBonkFun"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "woofi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDbc"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDlmmSwap2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDAMMV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "gavel"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "boopfunBuy"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "boopfunSell"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDbc2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "gooseFX"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "dooar"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "numeraire"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "saberDecimalWrapperDeposit"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "saberDecimalWrapperWithdraw"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sarosDlmm"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "oneDexSwap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "manifest"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "byrealClmm"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pancakeSwapV3Swap"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pancakeSwapV3SwapV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "tessera"
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "solRfq",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "rfqId",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "expectedMakerAmount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "expectedTakerAmount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "makerSendAmount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "takerSendAmount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "expiry",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "makerUseNativeSol",
+                    "docs": [],
+                    "type": {
+                      "kind": "booleanTypeNode",
+                      "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "takerUseNativeSol",
+                    "docs": [],
+                    "type": {
+                      "kind": "booleanTypeNode",
+                      "size": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunBuy2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunammBuy2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "humidifi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "heavenBuy"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "heavenSell"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "solfiV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunBuy3"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunSell3"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunammBuy3"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunammSell3"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "goonfi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "moonitBuy"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "moonitSell"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "raydiumSwapV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "whalestreet"
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "sugarMoneyBuy",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "bondingCurveBump",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "bondingCurveSolAssociatedAccountBump",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "sugarMoneySell",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "bondingCurveBump",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "bondingCurveSolAssociatedAccountBump",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "meteoraDAMMV2Swap2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "alphaQ"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "futarchyAmm"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "pumpfunSell2"
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "humidifiSwap2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "swapId",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "scorch",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "id",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u128",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "jupiterLendDeposit"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "jupiterLendRedeem"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "taurusFi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "bisonFi"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "goonfiV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "quantum"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "boopfunBuy2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "boopfunSell2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "byrealClmm2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "dooar2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "heavenBuy2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "heavenSell2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "moonitBuy2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "moonitSell2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "saberDecimalWrapperDeposit2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "saberDecimalWrapperWithdraw2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "byrealPropAmm"
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "sanctumPrefundSwapViaStake",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "swapId",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "abyssAmm"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "aquifer"
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "whalestreetV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authAmountIn",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "auth",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "solfiV2WithSig",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "unixTimestamp",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "msgAmountIn",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "expectAmountOut",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "slippage",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u16",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "userRequestSlot",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "signature",
+                    "docs": [],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 64,
+                      "type": {
+                        "kind": "bytesTypeNode"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "recoveryId",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "platformFeeWrapUnwrapArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "orderId",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amountIn",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "commissionInfo",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u32",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "platformFeeRate",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tob",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "route",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "dexes",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "dex"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "weights",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "bytesTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "swapArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amountIn",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "expectAmountOut",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "minReturn",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amounts",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "routes",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "definedTypeLinkNode",
+                    "name": "route"
+                  },
+                  "count": {
+                    "kind": "prefixedCountNode",
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  }
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "pdas": [],
+    "errors": [
+      {
+        "kind": "errorNode",
+        "name": "tooManyHops",
+        "code": 6000,
+        "message": "Too many hops",
+        "docs": [
+          "TooManyHops: Too many hops"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "minReturnNotReached",
+        "code": 6001,
+        "message": "Min return not reached",
+        "docs": [
+          "MinReturnNotReached: Min return not reached"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "amountInMustBeGreaterThanZero",
+        "code": 6002,
+        "message": "amount_in must be greater than 0",
+        "docs": [
+          "AmountInMustBeGreaterThanZero: amount_in must be greater than 0"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidExpectAmountOut",
+        "code": 6003,
+        "message": "invalid expect amount out",
+        "docs": [
+          "InvalidExpectAmountOut: invalid expect amount out"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "amountsAndRoutesMustHaveTheSameLength",
+        "code": 6004,
+        "message": "amounts and routes must have the same length",
+        "docs": [
+          "AmountsAndRoutesMustHaveTheSameLength: amounts and routes must have the same length"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "totalAmountsMustBeEqualToAmountIn",
+        "code": 6005,
+        "message": "total_amounts must be equal to amount_in",
+        "docs": [
+          "TotalAmountsMustBeEqualToAmountIn: total_amounts must be equal to amount_in"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "dexesAndWeightsMustHaveTheSameLength",
+        "code": 6006,
+        "message": "dexes and weights must have the same length",
+        "docs": [
+          "DexesAndWeightsMustHaveTheSameLength: dexes and weights must have the same length"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "weightsMustSumTo100",
+        "code": 6007,
+        "message": "weights must sum to 100",
+        "docs": [
+          "WeightsMustSumTo100: weights must sum to 100"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSourceTokenAccount",
+        "code": 6008,
+        "message": "Invalid source token account",
+        "docs": [
+          "InvalidSourceTokenAccount: Invalid source token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDestinationTokenAccount",
+        "code": 6009,
+        "message": "Invalid destination token account",
+        "docs": [
+          "InvalidDestinationTokenAccount: Invalid destination token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenAccount",
+        "code": 6010,
+        "message": "Invalid token account",
+        "docs": [
+          "InvalidTokenAccount: Invalid token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCommissionRate",
+        "code": 6011,
+        "message": "Invalid commission rate",
+        "docs": [
+          "InvalidCommissionRate: Invalid commission rate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTrimRate",
+        "code": 6012,
+        "message": "Invalid trim rate",
+        "docs": [
+          "InvalidTrimRate: Invalid trim rate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidChargeRate",
+        "code": 6013,
+        "message": "Invalid charge rate",
+        "docs": [
+          "InvalidChargeRate: Invalid charge rate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCommissionTokenAccount",
+        "code": 6014,
+        "message": "Invalid commission token account",
+        "docs": [
+          "InvalidCommissionTokenAccount: Invalid commission token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCommissionTemporaryTokenAccount",
+        "code": 6015,
+        "message": "Invalid commission temporary token account",
+        "docs": [
+          "InvalidCommissionTemporaryTokenAccount: Invalid commission temporary token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAccountsLength",
+        "code": 6016,
+        "message": "Invalid accounts length",
+        "docs": [
+          "InvalidAccountsLength: Invalid accounts length"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidHopAccounts",
+        "code": 6017,
+        "message": "Invalid hop accounts",
+        "docs": [
+          "InvalidHopAccounts: Invalid hop accounts"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidHopFromAccount",
+        "code": 6018,
+        "message": "Invalid hop from account",
+        "docs": [
+          "InvalidHopFromAccount: Invalid hop from account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "swapAuthorityIsNotSigner",
+        "code": 6019,
+        "message": "Swap authority is not signer",
+        "docs": [
+          "SwapAuthorityIsNotSigner: Swap authority is not signer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAuthorityPda",
+        "code": 6020,
+        "message": "Invalid authority pda",
+        "docs": [
+          "InvalidAuthorityPda: Invalid authority pda"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSwapAuthority",
+        "code": 6021,
+        "message": "Invalid swap authority",
+        "docs": [
+          "InvalidSwapAuthority: Invalid swap authority"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidProgramId",
+        "code": 6022,
+        "message": "Invalid program id",
+        "docs": [
+          "InvalidProgramId: Invalid program id"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidPool",
+        "code": 6023,
+        "message": "Invalid pool",
+        "docs": [
+          "InvalidPool: Invalid pool"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenMint",
+        "code": 6024,
+        "message": "Invalid token mint",
+        "docs": [
+          "InvalidTokenMint: Invalid token mint"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "calculationError",
+        "code": 6025,
+        "message": "Calculation error",
+        "docs": [
+          "CalculationError: Calculation error"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSanctumLstStateListData",
+        "code": 6026,
+        "message": "Invalid sanctum lst state list data",
+        "docs": [
+          "InvalidSanctumLstStateListData: Invalid sanctum lst state list data"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSanctumLstStateListIndex",
+        "code": 6027,
+        "message": "Invalid sanctum lst state list index",
+        "docs": [
+          "InvalidSanctumLstStateListIndex: Invalid sanctum lst state list index"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSanctumSwapAccounts",
+        "code": 6028,
+        "message": "Invalid sanctum swap accounts",
+        "docs": [
+          "InvalidSanctumSwapAccounts: Invalid sanctum swap accounts"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSwapAuthorityAccounts",
+        "code": 6029,
+        "message": "Invalid swap authority account",
+        "docs": [
+          "InvalidSwapAuthorityAccounts: Invalid swap authority account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBridgeSeed",
+        "code": 6030,
+        "message": "Bridge Seed Error",
+        "docs": [
+          "InvalidBridgeSeed: Bridge Seed Error"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBundleInput",
+        "code": 6031,
+        "message": "Invalid accounts and instruction length",
+        "docs": [
+          "InvalidBundleInput: Invalid accounts and instruction length"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingSaAccount",
+        "code": 6032,
+        "message": "SA is required",
+        "docs": [
+          "MissingSaAccount: SA is required"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidPlatformFeeRate",
+        "code": 6033,
+        "message": "Invalid platform fee rate",
+        "docs": [
+          "InvalidPlatformFeeRate: Invalid platform fee rate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "amountOutMustBeGreaterThanZero",
+        "code": 6034,
+        "message": "Amount out must be greater than 0",
+        "docs": [
+          "AmountOutMustBeGreaterThanZero: Amount out must be greater than 0"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDampingTerm",
+        "code": 6035,
+        "message": "Invalid DampingTerm",
+        "docs": [
+          "InvalidDampingTerm: Invalid DampingTerm"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMint",
+        "code": 6036,
+        "message": "Invalid mint",
+        "docs": [
+          "InvalidMint: Invalid mint"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidPlatformFeeAmount",
+        "code": 6037,
+        "message": "Invalid platform fee amount",
+        "docs": [
+          "InvalidPlatformFeeAmount: Invalid platform fee amount"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidFeeTokenAccount",
+        "code": 6038,
+        "message": "Invalid fee token account",
+        "docs": [
+          "InvalidFeeTokenAccount: Invalid fee token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSaAuthority",
+        "code": 6039,
+        "message": "Invalid sa authority",
+        "docs": [
+          "InvalidSaAuthority: Invalid sa authority"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "commissionAccountIsNone",
+        "code": 6040,
+        "message": "Commission account is none",
+        "docs": [
+          "CommissionAccountIsNone: Commission account is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "platformFeeAccountIsNone",
+        "code": 6041,
+        "message": "Platform fee account is none",
+        "docs": [
+          "PlatformFeeAccountIsNone: Platform fee account is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "trimAccountIsNone",
+        "code": 6042,
+        "message": "Trim account is none",
+        "docs": [
+          "TrimAccountIsNone: Trim account is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "chargeAccountIsNone",
+        "code": 6043,
+        "message": "Charge account is none",
+        "docs": [
+          "ChargeAccountIsNone: Charge account is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidFeeAccount",
+        "code": 6044,
+        "message": "Invalid fee account",
+        "docs": [
+          "InvalidFeeAccount: Invalid fee account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSourceTokenSa",
+        "code": 6045,
+        "message": "Invalid source token sa",
+        "docs": [
+          "InvalidSourceTokenSa: Invalid source token sa"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "saAuthorityIsNone",
+        "code": 6046,
+        "message": "Sa authority is none",
+        "docs": [
+          "SaAuthorityIsNone: Sa authority is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "sourceTokenSaIsNone",
+        "code": 6047,
+        "message": "Source token sa is none",
+        "docs": [
+          "SourceTokenSaIsNone: Source token sa is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "sourceTokenProgramIsNone",
+        "code": 6048,
+        "message": "Source token program is none",
+        "docs": [
+          "SourceTokenProgramIsNone: Source token program is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "destinationTokenSaIsNone",
+        "code": 6049,
+        "message": "Destination token sa is none",
+        "docs": [
+          "DestinationTokenSaIsNone: Destination token sa is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "destinationTokenProgramIsNone",
+        "code": 6050,
+        "message": "Destination token program is none",
+        "docs": [
+          "DestinationTokenProgramIsNone: Destination token program is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "resultMustBeGreaterThanZero",
+        "code": 6051,
+        "message": "Calculation result must be greater than zero",
+        "docs": [
+          "ResultMustBeGreaterThanZero: Calculation result must be greater than zero"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAccountData",
+        "code": 6052,
+        "message": "Invalid account data",
+        "docs": [
+          "InvalidAccountData: Invalid account data"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidRfqParameters",
+        "code": 6053,
+        "message": "Invalid RFQ parameters",
+        "docs": [
+          "InvalidRfqParameters: Invalid RFQ parameters"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tobAuthorityPdaRequired",
+        "code": 6054,
+        "message": "TOB mode requires authority PDA",
+        "docs": [
+          "TobAuthorityPdaRequired: TOB mode requires authority PDA"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tobWsolSaRequired",
+        "code": 6055,
+        "message": "TOB mode with WSOL fees requires wsol_sa account",
+        "docs": [
+          "TobWsolSaRequired: TOB mode with WSOL fees requires wsol_sa account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidWsolSa",
+        "code": 6056,
+        "message": "Invalid WSOL SA account",
+        "docs": [
+          "InvalidWsolSa: Invalid WSOL SA account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTrimAccount",
+        "code": 6057,
+        "message": "Invalid trim account",
+        "docs": [
+          "InvalidTrimAccount: Invalid trim account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidChargeAccount",
+        "code": 6058,
+        "message": "Invalid charge account",
+        "docs": [
+          "InvalidChargeAccount: Invalid charge account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCommissionAccount",
+        "code": 6059,
+        "message": "Invalid commission account",
+        "docs": [
+          "InvalidCommissionAccount: Invalid commission account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidPlatformFeeAccount",
+        "code": 6060,
+        "message": "Invalid platform fee account",
+        "docs": [
+          "InvalidPlatformFeeAccount: Invalid platform fee account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidActualAmountIn",
+        "code": 6061,
+        "message": "Invalid actual amount in",
+        "docs": [
+          "InvalidActualAmountIn: Invalid actual amount in"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unexpectedSaTokenAccount",
+        "code": 6062,
+        "message": "Unexpected SA token account in CPI",
+        "docs": [
+          "UnexpectedSaTokenAccount: Unexpected SA token account in CPI"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSourceTokenSaMint",
+        "code": 6063,
+        "message": "Invalid source token sa mint",
+        "docs": [
+          "InvalidSourceTokenSaMint: Invalid source token sa mint"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDestinationTokenSaMint",
+        "code": 6064,
+        "message": "Invalid destination token sa mint",
+        "docs": [
+          "InvalidDestinationTokenSaMint: Invalid destination token sa mint"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "adapterAbort",
+        "code": 6065,
+        "message": "Adapter abort",
+        "docs": [
+          "AdapterAbort: Adapter abort"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "insufficientFunds",
+        "code": 6066,
+        "message": "Insufficient funds",
+        "docs": [
+          "InsufficientFunds: Insufficient funds"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDiffLamports",
+        "code": 6067,
+        "message": "Invalid diff lamports",
+        "docs": [
+          "InvalidDiffLamports: Invalid diff lamports"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenProgram",
+        "code": 6068,
+        "message": "Invalid token program",
+        "docs": [
+          "InvalidTokenProgram: Invalid token program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSigner",
+        "code": 6069,
+        "message": "Invalid signer",
+        "docs": [
+          "InvalidSigner: Invalid signer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAssociatedTokenProgram",
+        "code": 6070,
+        "message": "Invalid associated token program",
+        "docs": [
+          "InvalidAssociatedTokenProgram: Invalid associated token program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "solReceiverMustBeSystemAccount",
+        "code": 6071,
+        "message": "SOL receiver must be a system account",
+        "docs": [
+          "SolReceiverMustBeSystemAccount: SOL receiver must be a system account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "insufficientBalance",
+        "code": 6072,
+        "message": "Insufficient balance for transfer",
+        "docs": [
+          "InsufficientBalance: Insufficient balance for transfer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "solReceiverRequiresAccCloseFlag",
+        "code": 6073,
+        "message": "SOL receiver requires acc_close_flag to be true",
+        "docs": [
+          "SolReceiverRequiresAccCloseFlag: SOL receiver requires acc_close_flag to be true"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "destinationMustBeWsolForSolReceiver",
+        "code": 6074,
+        "message": "Destination must be wSOL when sol_receiver is specified",
+        "docs": [
+          "DestinationMustBeWsolForSolReceiver: Destination must be wSOL when sol_receiver is specified"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidGoonfiParameters",
+        "code": 6075,
+        "message": "Invalid Goonfi parameters",
+        "docs": [
+          "InvalidGoonfiParameters: Invalid Goonfi parameters"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTrimAmount",
+        "code": 6076,
+        "message": "Invalid trim amount",
+        "docs": [
+          "InvalidTrimAmount: Invalid trim amount"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "receiverMustBeTokenAccount",
+        "code": 6077,
+        "message": "Receiver must be a token account for wrap operation",
+        "docs": [
+          "ReceiverMustBeTokenAccount: Receiver must be a token account for wrap operation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "receiverMustBeWsolAccount",
+        "code": 6078,
+        "message": "Receiver must be a WSOL token account for wrap operation",
+        "docs": [
+          "ReceiverMustBeWsolAccount: Receiver must be a WSOL token account for wrap operation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenProgramIsNone",
+        "code": 6079,
+        "message": "Token program is none",
+        "docs": [
+          "TokenProgramIsNone: Token program is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "associatedTokenProgramIsNone",
+        "code": 6080,
+        "message": "Associated token program is none",
+        "docs": [
+          "AssociatedTokenProgramIsNone: Associated token program is none"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "systemProgramIsNone",
+        "code": 6081,
+        "message": "System program is none",
+        "docs": [
+          "SystemProgramIsNone: System program is none"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "kind": "instructionNode",
+        "name": "swapEvent",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "40c6cde8260871e2",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "dex",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "dex"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "amountIn",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "amountOut",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 8
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "swapWithFeesCpiEvent",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "bd61430c25d1f71d",
+              "encoding": "base16"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "orderId",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "sourceMint",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "destinationMint",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "sourceTokenAccountOwner",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "destinationTokenAccountOwner",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "amountIn",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "sourceTokenChange",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "destinationTokenChange",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionDirection",
+            "docs": [],
+            "type": {
+              "kind": "booleanTypeNode",
+              "size": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u32",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionAmount",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "commissionAccount",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u16",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeAmount",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "platformFeeAccount",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "trimRate",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "trimAmount",
+            "docs": [],
+            "type": {
+              "kind": "numberTypeNode",
+              "format": "u64",
+              "endian": "le"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "trimAccount",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 8
+          }
+        ]
+      }
+    ]
+  },
+  "additionalPrograms": []
+}
