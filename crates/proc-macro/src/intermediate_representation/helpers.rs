@@ -107,6 +107,53 @@ pub fn build_fields_ir(
                 });
             },
 
+            //
+            // Nested array (e.g. Vec<Vec<Route>>) => materialize a wrapper message
+            // for the inner array since LabelIr can only represent one level of Vec.
+            //
+            // E.g. `routes: Vec<Vec<Route>>` becomes:
+            //
+            // ```protobuf
+            //   message RoutesInner { repeated Route items = 1; }
+            //   repeated RoutesInner routes = N;
+            // ```
+            //
+            codama_nodes::TypeNode::Array(outer_array)
+                if matches!(&*outer_array.item, codama_nodes::TypeNode::Array(_)) =>
+            {
+                let wrapper_name = format!(
+                    "{}{}Inner",
+                    parent_name,
+                    crate::utils::to_pascal_case(&field_name)
+                );
+
+                let (inner_label, inner_type) = map_type_with_label(&outer_array.item);
+                let inner_type = ir.resolve_field_type(inner_type);
+
+                ir.push_unique_type(TypeIr {
+                    name: wrapper_name.clone(),
+                    fields: vec![FieldIr {
+                        name: "items".to_string(),
+                        tag: 1,
+                        label: inner_label,
+                        field_type: inner_type,
+                    }],
+                    kind: tuple_msg_kind.clone(),
+                });
+
+                let outer_label = match &outer_array.count {
+                    codama_nodes::CountNode::Fixed(fixed) => LabelIr::FixedArray(fixed.value),
+                    _ => LabelIr::Repeated,
+                };
+
+                out.push(FieldIr {
+                    name: field_name,
+                    tag,
+                    label: outer_label,
+                    field_type: FieldTypeIr::Message(wrapper_name),
+                });
+            },
+
             other => {
                 let (label, field_type) = map_type_with_label(other);
                 let field_type = ir.resolve_field_type(field_type);

@@ -146,4 +146,30 @@ impl SchemaIr {
 
         ft
     }
+
+    /// Collect the set of top-level (defined type / helper / account) names
+    /// that collide with instruction or event types.
+    ///
+    /// When an instruction named "swap" generates `SwapArgs` but a defined
+    /// type `swapArgs` also maps to `SwapArgs`, the collision set contains
+    /// `"SwapArgs"`. The renderer uses this to always emit `super::SwapArgs`
+    /// for such names inside submodules.
+    ///
+    pub fn colliding_names(&self) -> std::collections::HashSet<String> {
+        use std::collections::HashSet;
+
+        let top_level: HashSet<&str> = self
+            .types
+            .iter()
+            .filter(|t| !matches!(t.kind, TypeKindIr::Instruction | TypeKindIr::Event))
+            .map(|t| t.name.as_str())
+            .collect();
+
+        self.types
+            .iter()
+            .filter(|t| matches!(t.kind, TypeKindIr::Instruction | TypeKindIr::Event))
+            .filter(|t| top_level.contains(t.name.as_str()))
+            .map(|t| t.name.clone())
+            .collect()
+    }
 }
