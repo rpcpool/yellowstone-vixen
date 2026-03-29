@@ -1,5 +1,5 @@
 [package]
 name = "bpf-loader-parser-test"
-version.workspace = true
-edition.workspace = true
+version = "0.0.0"
+edition = "2024"
 publish = false

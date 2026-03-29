@@ -1,7 +1,7 @@
 [package]
 name = "proc-macro-events-test"
-version.workspace = true
-edition.workspace = true
+version = "0.0.0"
+edition = "2024"
 publish = false
 
 # This crate is excluded from the main workspace to avoid feature unification.

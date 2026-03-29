@@ -1187,7 +1187,7 @@ dependencies = [
 
 [[package]]
 name = "bpf-loader-parser-test"
-version = "0.6.1"
+version = "0.0.0"
 
 [[package]]
 name = "brotli"
@@ -5245,7 +5245,7 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-test"
-version = "0.6.1"
+version = "0.0.0"
 dependencies = [
  "yellowstone-vixen-block-meta-parser",
  "yellowstone-vixen-spl-token-extensions-parser",
@@ -13007,7 +13007,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vixen-test-utils"
-version = "0.6.1"
+version = "0.0.0"
 dependencies = [
  "tempfile",
  "yellowstone-vixen-core",
