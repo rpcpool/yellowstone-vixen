@@ -1,7 +1,8 @@
 [package]
 name = "proc-macro-events-test"
-version = "0.7.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+publish = false
 
 # This crate is excluded from the main workspace to avoid feature unification.
 # When built inside the workspace, `program-events` would bleed into
@@ -13,15 +14,24 @@ edition = "2024"
 # See tests/proc-macro/Cargo.toml for an explanation of why parser crates
 # must appear here as [dependencies] with `features = ["proto"]`.
 [dependencies]
-yellowstone-vixen-spl-token-parser = { path = "../../crates/spl-token-parser", features = ["proto"] }
+yellowstone-vixen-spl-token-parser = { path = "../../crates/spl-token-parser", features = [
+    "proto",
+] }
 yellowstone-vixen-spl-token-extensions-parser = { path = "../../crates/spl-token-extensions-parser", features = [
     "proto",
 ] }
-yellowstone-vixen-block-meta-parser = { path = "../../crates/block-meta-parser", features = ["proto"] }
-yellowstone-vixen-stake-pool-parser = { path = "../../crates/stake-pool-parser", features = ["proto"] }
+yellowstone-vixen-block-meta-parser = { path = "../../crates/block-meta-parser", features = [
+    "proto",
+] }
+yellowstone-vixen-stake-pool-parser = { path = "../../crates/stake-pool-parser", features = [
+    "proto",
+] }
 
 [dev-dependencies]
-yellowstone-vixen-proc-macro = { path = "../../crates/proc-macro", features = ["proto", "program-events"] }
+yellowstone-vixen-proc-macro = { path = "../../crates/proc-macro", features = [
+    "proto",
+    "program-events",
+] }
 yellowstone-vixen-mock = { path = "../../crates/mock" }
 vixen-test-utils = { path = "../common" }
 

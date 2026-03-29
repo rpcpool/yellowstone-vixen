@@ -2,6 +2,7 @@
 name = "vixen-test-utils"
 version.workspace = true
 edition.workspace = true
+publish = false
 
 [dependencies]
 yellowstone-vixen-core = { workspace = true }

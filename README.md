@@ -212,4 +212,4 @@ This applies to every `cargo` invocation inside this workspace. The file is giti
 
 ## Maintainers
 
-This project is developed by [ABK Labs](https://abklabs.com/) and [Triton One](https://triton.one/).
+This project is developed by [Jupiter](https://jup.ag/), [ABK Labs](https://abklabs.com/), and [Triton One](https://triton.one/).

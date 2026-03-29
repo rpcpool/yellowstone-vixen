@@ -2,6 +2,7 @@
 name = "proc-macro-test"
 version.workspace = true
 edition.workspace = true
+publish = false
 
 # Workspace feature-unification workaround
 #
@@ -32,22 +33,3 @@ yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
 ] }
 yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
-
-[dev-dependencies]
-yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
-yellowstone-vixen-mock = { workspace = true }
-vixen-test-utils = { path = "../common" }
-
-# required by macro expansion
-yellowstone-vixen-parser = { workspace = true }
-yellowstone-vixen-core = { workspace = true, features = ["proto"] }
-yellowstone-vixen = { workspace = true }
-
-prost = { workspace = true }
-borsh = { workspace = true }
-
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-
-regex = { workspace = true }
-
-insta = "1.46.3"

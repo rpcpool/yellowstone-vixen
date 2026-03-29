@@ -10,7 +10,9 @@ readme = "./../../README.md"
 
 
 [dependencies]
-yellowstone-block-machine = { workspace = true }
+yellowstone-block-machine = { workspace = true, features = [
+  "dragonsmouth-thin",
+] }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 yellowstone-vixen = { workspace = true }

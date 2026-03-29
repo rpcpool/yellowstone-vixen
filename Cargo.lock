@@ -1187,14 +1187,7 @@ dependencies = [
 
 [[package]]
 name = "bpf-loader-parser-test"
-version = "0.7.0"
-dependencies = [
- "regex",
- "tokio",
- "yellowstone-vixen-bpf-loader-parser",
- "yellowstone-vixen-core",
- "yellowstone-vixen-mock",
-]
+version = "0.6.1"
 
 [[package]]
 name = "brotli"
@@ -1599,7 +1592,7 @@ version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "faf9468729b8cbcea668e36183cb69d317348c2e08e994829fb56ebfdfbaac34"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2041,7 +2034,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d162beedaa69905488a8da94f5ac3edb4dd4788b732fadb7bd120b2625c1976"
 dependencies = [
  "data-encoding",
- "syn 1.0.109",
+ "syn 2.0.111",
 ]
 
 [[package]]
@@ -2512,7 +2505,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3668,18 +3661,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "insta"
-version = "1.46.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e82db8c87c7f1ccecb34ce0c24399b8a73081427f3c7c50a5d597925356115e4"
-dependencies = [
- "console 0.15.11",
- "once_cell",
- "similar",
- "tempfile",
-]
-
-[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4539,7 +4520,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5264,20 +5245,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-test"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
- "borsh 1.6.0",
- "insta",
- "prost 0.14.1",
- "regex",
- "tokio",
- "vixen-test-utils",
- "yellowstone-vixen",
  "yellowstone-vixen-block-meta-parser",
- "yellowstone-vixen-core",
- "yellowstone-vixen-mock",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-spl-token-extensions-parser",
  "yellowstone-vixen-spl-token-parser",
  "yellowstone-vixen-stake-pool-parser",
@@ -5671,7 +5641,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.1",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6205,7 +6175,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.11.0",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6285,7 +6255,7 @@ dependencies = [
  "security-framework 3.5.1",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -12104,7 +12074,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.2",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -13037,7 +13007,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vixen-test-utils"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "tempfile",
  "yellowstone-vixen-core",
@@ -13259,7 +13229,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -13736,8 +13706,9 @@ checksum = "fdd20c5420375476fbd4394763288da7eb0cc0b8c11deed431a91562af7335d3"
 
 [[package]]
 name = "yellowstone-block-machine"
-version = "0.2.0"
-source = "git+https://github.com/rpcpool/yellowstone-block-machine?rev=51b5c294d920bbf37ea6e8dbaddcbe0d2f4cd948#51b5c294d920bbf37ea6e8dbaddcbe0d2f4cd948"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "012e23ea9f5f9186d2531fd9d3bfd38c02275118c67211e4603cf55c8e9876a5"
 dependencies = [
  "bs58",
  "bytesize 2.3.1",
@@ -13754,15 +13725,14 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "tracing-subscriber",
- "yellowstone-grpc-client",
  "yellowstone-grpc-proto",
 ]
 
 [[package]]
 name = "yellowstone-fumarole-client"
-version = "0.3.1-rc1+solana.3"
+version = "0.4.0+solana.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab8ef64974a338630aa3006fbb915b23499ffcbe9b6c4e05dfed27ebb1814f93"
+checksum = "0d7e9bcb6a37fccd419a751475833da7f933c2765c012b5cb435693b448a796d"
 dependencies = [
  "async-trait",
  "bytesize 2.3.1",
@@ -13776,6 +13746,7 @@ dependencies = [
  "protoc-bin-vendored",
  "rand 0.9.2",
  "rustc-hash 2.1.1",
+ "semver",
  "serde",
  "serde_json",
  "serde_with",
@@ -13796,50 +13767,39 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-grpc-client"
-version = "11.0.0"
+version = "12.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4024d13119c2b12e02829ed8e38dc676200cc0b0f5384bda94af7e47097a2ac"
+checksum = "32b250b0ed11fb0fb11b80e89599e6f5a77640bce3dafe26ffb8022cdfc6c49e"
 dependencies = [
  "bytes",
  "futures 0.3.31",
+ "hyper-util",
  "thiserror 2.0.17",
+ "tokio",
  "tonic 0.14.2",
  "tonic-health",
+ "tower 0.4.13",
  "yellowstone-grpc-proto",
 ]
 
 [[package]]
 name = "yellowstone-grpc-proto"
-version = "11.0.0"
+version = "12.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc56c7739daf7410bf6ef04ce71ce9b9a22483ef73b78a873815f87e9a8d1d2f"
+checksum = "ab52445da59c3e710dd2128e3e49598cfa45c8ba7f30feb608cafbd404e5e8cf"
 dependencies = [
  "anyhow",
- "bincode",
- "bytes",
  "prost 0.14.1",
  "prost-types 0.14.1",
  "protoc-bin-vendored",
- "solana-account 3.2.0",
- "solana-account-decoder",
- "solana-clock 3.0.0",
- "solana-hash 4.0.1",
- "solana-message 3.0.1",
- "solana-pubkey 4.0.0",
- "solana-signature 3.1.0",
- "solana-transaction",
- "solana-transaction-context",
- "solana-transaction-error 3.0.0",
- "solana-transaction-status",
  "tonic 0.14.2",
- "tonic-build 0.14.2",
  "tonic-prost",
  "tonic-prost-build",
 ]
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -13860,7 +13820,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-coordinator"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "bs58",
@@ -13884,7 +13844,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-meta-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -13897,7 +13857,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-bpf-loader-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "bincode",
  "prost 0.14.1",
@@ -13913,7 +13873,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14038,7 +13998,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jetstream-source"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "bincode",
@@ -14068,7 +14028,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-kafka-sink"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "futures 0.3.31",
  "mockito",
@@ -14087,7 +14047,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "futures 0.3.31",
  "regex",
@@ -14103,7 +14063,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -14118,7 +14078,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proc-macro"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -14135,7 +14095,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proto"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -14148,7 +14108,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-slot-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "tokio",
  "yellowstone-vixen-core",
@@ -14157,7 +14117,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14175,7 +14135,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "agave-snapshots",
  "async-trait",
@@ -14202,7 +14162,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14228,7 +14188,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "bs58",
  "bytemuck",
@@ -14251,7 +14211,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14270,7 +14230,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stream"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14294,7 +14254,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "bytesize 2.3.1",
@@ -14313,7 +14273,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
