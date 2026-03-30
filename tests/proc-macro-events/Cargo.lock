@@ -362,7 +362,7 @@ dependencies = [
  "pin-project-lite",
  "serde_core",
  "sync_wrapper",
- "tower",
+ "tower 0.5.3",
  "tower-layer",
  "tower-service",
 ]
@@ -2868,7 +2868,7 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-events-test"
-version = "0.7.0"
+version = "0.0.0"
 dependencies = [
  "base64 0.22.1",
  "borsh 1.6.1",
@@ -3350,7 +3350,7 @@ dependencies = [
  "sync_wrapper",
  "tokio",
  "tokio-rustls",
- "tower",
+ "tower 0.5.3",
  "tower-http",
  "tower-service",
  "url",
@@ -7652,7 +7652,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tokio-stream",
- "tower",
+ "tower 0.5.3",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -7730,6 +7730,21 @@ dependencies = [
 
 [[package]]
 name = "tower"
+version = "0.4.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "pin-project",
+ "pin-project-lite",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "tower"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebe5ef63511595f1344e2d5cfa636d973292adc0eec1f0ad45fae9f0851ab1d4"
@@ -7765,7 +7780,7 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-util",
- "tower",
+ "tower 0.5.3",
  "tower-layer",
  "tower-service",
 ]
@@ -7949,7 +7964,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vixen-test-utils"
-version = "0.7.0"
+version = "0.0.0"
 dependencies = [
  "tempfile",
  "yellowstone-vixen-core",
@@ -8575,37 +8590,39 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-grpc-client"
-version = "11.0.0"
+version = "12.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4024d13119c2b12e02829ed8e38dc676200cc0b0f5384bda94af7e47097a2ac"
+checksum = "32b250b0ed11fb0fb11b80e89599e6f5a77640bce3dafe26ffb8022cdfc6c49e"
 dependencies = [
  "bytes",
  "futures",
+ "hyper-util",
  "thiserror 2.0.18",
+ "tokio",
  "tonic",
  "tonic-health",
+ "tower 0.4.13",
  "yellowstone-grpc-proto",
 ]
 
 [[package]]
 name = "yellowstone-grpc-proto"
-version = "11.0.0"
+version = "12.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc56c7739daf7410bf6ef04ce71ce9b9a22483ef73b78a873815f87e9a8d1d2f"
+checksum = "ab52445da59c3e710dd2128e3e49598cfa45c8ba7f30feb608cafbd404e5e8cf"
 dependencies = [
  "anyhow",
  "prost",
  "prost-types",
  "protoc-bin-vendored",
  "tonic",
- "tonic-build",
  "tonic-prost",
  "tonic-prost-build",
 ]
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "async-trait",
  "clap",
@@ -8624,7 +8641,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-meta-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "prost",
  "prost-types",
@@ -8635,7 +8652,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "borsh 1.6.1",
  "bs58",
@@ -8650,7 +8667,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "futures",
  "regex",
@@ -8666,7 +8683,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -8679,7 +8696,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proc-macro"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -8695,7 +8712,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proto"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "prost",
  "protobuf-src",
@@ -8704,7 +8721,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "borsh 1.6.1",
  "bs58",
@@ -8728,7 +8745,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "bs58",
  "prost",
@@ -8745,7 +8762,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.7.0"
+version = "0.6.1"
 dependencies = [
  "borsh 1.6.1",
  "bs58",
