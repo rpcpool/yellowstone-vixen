@@ -1188,6 +1188,13 @@ dependencies = [
 [[package]]
 name = "bpf-loader-parser-test"
 version = "0.0.0"
+dependencies = [
+ "regex",
+ "tokio",
+ "yellowstone-vixen-bpf-loader-parser",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+]
 
 [[package]]
 name = "brotli"
@@ -3661,6 +3668,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "insta"
+version = "1.47.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99322078b2c076829a1db959d49da554fabc4342257fc0ba5a070a1eb3a01cd8"
+dependencies = [
+ "console 0.16.1",
+ "once_cell",
+ "similar",
+ "tempfile",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5247,7 +5266,18 @@ dependencies = [
 name = "proc-macro-test"
 version = "0.0.0"
 dependencies = [
+ "borsh 1.6.0",
+ "insta",
+ "prost 0.14.1",
+ "regex",
+ "tokio",
+ "vixen-test-utils",
+ "yellowstone-vixen",
  "yellowstone-vixen-block-meta-parser",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-spl-token-extensions-parser",
  "yellowstone-vixen-spl-token-parser",
  "yellowstone-vixen-stake-pool-parser",
