@@ -210,7 +210,7 @@ impl Buffer {
                         Stop(StopCode),
                     }
 
-                    loop {
+                    let (result, drain_executor) = loop {
                         let event = tokio::select! {
                             u = stream.recv() => Event::Update(u),
                             c = &mut stop_rx => Event::Stop(c),
@@ -225,18 +225,26 @@ impl Buffer {
                                         message = %e.message(),
                                         "Yellowstone grpc stream error"
                                     );
-                                    return Err(crate::Error::YellowstoneStatus(e));
+                                    break (Err(crate::Error::YellowstoneStatus(e)), false);
                                 },
                             },
                             Event::Update(None) => {
-                                tracing::warn!("Server stopped sending updates");
-                                break Ok(StopCode::default());
+                                tracing::info!("Update stream closed");
+                                break (Ok(StopCode::default()), true);
                             },
-                            Event::Stop(c) => break Ok(c),
+                            Event::Stop(c) => break (Ok(c), false),
                         };
 
                         Self::dispatch(&exec, update);
+                    };
+
+                    if drain_executor {
+                        exec.join_async().await;
+                    } else {
+                        exec.abort_async().await;
                     }
+
+                    result
                 })
             },
         )

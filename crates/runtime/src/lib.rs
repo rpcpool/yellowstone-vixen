@@ -224,7 +224,7 @@ impl<S: SourceTrait> Runtime<S> {
     /// │   (finite src)  (unexpected)        (gRPC)        (other)           │
     /// │        │              │               │              │              │
     /// │        ▼              ▼               ▼              ▼              │
-    /// │      Ok(())      ServerHangup     ServerHangup     Other            │
+    /// │   drain -> Ok    ServerHangup     ServerHangup     Other            │
     /// │                                                                     │
     /// │    ┌──────────────────────────────────────────────────────────┐     │
     /// │    │ ReceiverDropped: defensive only - normally unreachable   │     │
@@ -308,7 +308,7 @@ impl<S: SourceTrait> Runtime<S> {
             status = status_rx => StopType::SourceExit(status),
         };
 
-        let should_stop_buffer = !matches!(stop_ty, StopType::Buffer(..));
+        let mut should_stop_buffer = !matches!(stop_ty, StopType::Buffer(..));
 
         match stop_ty {
             StopType::Signal(Ok(Some(s))) => {
@@ -328,8 +328,9 @@ impl<S: SourceTrait> Runtime<S> {
                     Ok(())
                 },
                 SourceExitStatus::Completed => {
-                    tracing::info!("Source completed successfully");
-                    Ok(())
+                    tracing::info!("Source completed successfully; draining runtime buffer");
+                    should_stop_buffer = false;
+                    buffer.wait_for_stop().await
                 },
                 SourceExitStatus::StreamEnded => {
                     tracing::warn!("Source stopped: stream ended unexpectedly");
