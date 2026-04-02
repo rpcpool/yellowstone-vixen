@@ -308,11 +308,10 @@ impl<S: SourceTrait> Runtime<S> {
             status = status_rx => StopType::SourceExit(status),
         };
 
-        let mut should_stop_buffer = !matches!(stop_ty, StopType::Buffer(..));
-
         match stop_ty {
             StopType::Signal(Ok(Some(s))) => {
                 tracing::warn!("{s:?} received, shutting down...");
+                Self::stop_buffer(buffer).await;
                 Ok(())
             },
             StopType::Signal(Ok(None)) => Err(std::io::Error::new(
@@ -325,11 +324,11 @@ impl<S: SourceTrait> Runtime<S> {
             StopType::SourceExit(Ok(status)) => match status {
                 SourceExitStatus::ReceiverDropped => {
                     tracing::info!("Source stopped: receiver dropped (shutdown)");
+                    Self::stop_buffer(buffer).await;
                     Ok(())
                 },
                 SourceExitStatus::Completed => {
                     tracing::info!("Source completed successfully; draining runtime buffer");
-                    should_stop_buffer = false;
                     buffer.wait_for_stop().await
                 },
                 SourceExitStatus::StreamEnded => {
@@ -350,10 +349,6 @@ impl<S: SourceTrait> Runtime<S> {
                 Err(Error::ClientHangup)
             },
         }?;
-
-        if should_stop_buffer {
-            Self::stop_buffer(buffer).await;
-        }
 
         Ok(())
     }
