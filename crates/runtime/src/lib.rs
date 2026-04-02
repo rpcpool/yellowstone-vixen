@@ -311,7 +311,7 @@ impl<S: SourceTrait> Runtime<S> {
         match stop_ty {
             StopType::Signal(Ok(Some(s))) => {
                 tracing::warn!("{s:?} received, shutting down...");
-                Self::stop_buffer(buffer).await;
+                Self::force_stop_buffer(buffer).await;
                 Ok(())
             },
             StopType::Signal(Ok(None)) => Err(std::io::Error::new(
@@ -324,7 +324,7 @@ impl<S: SourceTrait> Runtime<S> {
             StopType::SourceExit(Ok(status)) => match status {
                 SourceExitStatus::ReceiverDropped => {
                     tracing::info!("Source stopped: receiver dropped (shutdown)");
-                    Self::stop_buffer(buffer).await;
+                    Self::force_stop_buffer(buffer).await;
                     Ok(())
                 },
                 SourceExitStatus::Completed => {
@@ -353,7 +353,7 @@ impl<S: SourceTrait> Runtime<S> {
         Ok(())
     }
 
-    async fn stop_buffer(buffer: buffer::Buffer) {
+    async fn force_stop_buffer(buffer: buffer::Buffer) {
         match buffer.join().await {
             Err(e) => tracing::warn!(err = %Chain(&e), "Error stopping runtime buffer"),
             Ok(c) => c.as_unit(),
