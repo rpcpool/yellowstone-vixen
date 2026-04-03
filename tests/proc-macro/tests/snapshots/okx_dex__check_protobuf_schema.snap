@@ -1,6 +1,5 @@
 ---
 source: tests/proc-macro/tests/okx_dex.rs
-assertion_line: 12
 expression: "dex_solana::PROTOBUF_SCHEMA"
 ---
 syntax = "proto3";
@@ -393,13 +392,13 @@ message SwapArgs {
 message ClaimAccounts {
   PublicKey signer = 1;
   PublicKey receiver = 2;
-  PublicKey source_token_account = 3;
-  PublicKey destination_token_account = 4;
+  optional PublicKey source_token_account = 3;
+  optional PublicKey destination_token_account = 4;
   PublicKey sa_authority = 5;
-  PublicKey token_mint = 6;
-  PublicKey token_program = 7;
+  optional PublicKey token_mint = 6;
+  optional PublicKey token_program = 7;
   PublicKey system_program = 8;
-  PublicKey associated_token_program = 9;
+  optional PublicKey associated_token_program = 9;
   repeated PublicKey remaining_accounts = 10;
 }
     
@@ -498,13 +497,13 @@ message ProxySwapAccounts {
   PublicKey destination_token_account = 3;
   PublicKey source_mint = 4;
   PublicKey destination_mint = 5;
-  PublicKey sa_authority = 6;
-  PublicKey source_token_sa = 7;
-  PublicKey destination_token_sa = 8;
-  PublicKey source_token_program = 9;
-  PublicKey destination_token_program = 10;
-  PublicKey associated_token_program = 11;
-  PublicKey system_program = 12;
+  optional PublicKey sa_authority = 6;
+  optional PublicKey source_token_sa = 7;
+  optional PublicKey destination_token_sa = 8;
+  optional PublicKey source_token_program = 9;
+  optional PublicKey destination_token_program = 10;
+  optional PublicKey associated_token_program = 11;
+  optional PublicKey system_program = 12;
   repeated PublicKey remaining_accounts = 13;
 }
     
@@ -538,15 +537,15 @@ message SwapTobV3Accounts {
   PublicKey destination_token_account = 3;
   PublicKey source_mint = 4;
   PublicKey destination_mint = 5;
-  PublicKey commission_account = 6;
-  PublicKey platform_fee_account = 7;
-  PublicKey sa_authority = 8;
-  PublicKey source_token_sa = 9;
-  PublicKey destination_token_sa = 10;
-  PublicKey source_token_program = 11;
-  PublicKey destination_token_program = 12;
-  PublicKey associated_token_program = 13;
-  PublicKey system_program = 14;
+  optional PublicKey commission_account = 6;
+  optional PublicKey platform_fee_account = 7;
+  optional PublicKey sa_authority = 8;
+  optional PublicKey source_token_sa = 9;
+  optional PublicKey destination_token_sa = 10;
+  optional PublicKey source_token_program = 11;
+  optional PublicKey destination_token_program = 12;
+  optional PublicKey associated_token_program = 13;
+  optional PublicKey system_program = 14;
   repeated PublicKey remaining_accounts = 15;
 }
     
@@ -569,15 +568,15 @@ message SwapTobV3EnhancedAccounts {
   PublicKey destination_token_account = 3;
   PublicKey source_mint = 4;
   PublicKey destination_mint = 5;
-  PublicKey commission_account = 6;
-  PublicKey platform_fee_account = 7;
-  PublicKey sa_authority = 8;
-  PublicKey source_token_sa = 9;
-  PublicKey destination_token_sa = 10;
-  PublicKey source_token_program = 11;
-  PublicKey destination_token_program = 12;
-  PublicKey associated_token_program = 13;
-  PublicKey system_program = 14;
+  optional PublicKey commission_account = 6;
+  optional PublicKey platform_fee_account = 7;
+  optional PublicKey sa_authority = 8;
+  optional PublicKey source_token_sa = 9;
+  optional PublicKey destination_token_sa = 10;
+  optional PublicKey source_token_program = 11;
+  optional PublicKey destination_token_program = 12;
+  optional PublicKey associated_token_program = 13;
+  optional PublicKey system_program = 14;
   repeated PublicKey remaining_accounts = 15;
 }
     
@@ -601,16 +600,16 @@ message SwapTobV3WithReceiverAccounts {
   PublicKey destination_token_account = 3;
   PublicKey source_mint = 4;
   PublicKey destination_mint = 5;
-  PublicKey commission_account = 6;
-  PublicKey platform_fee_account = 7;
-  PublicKey sa_authority = 8;
-  PublicKey source_token_sa = 9;
-  PublicKey destination_token_sa = 10;
-  PublicKey source_token_program = 11;
-  PublicKey destination_token_program = 12;
-  PublicKey associated_token_program = 13;
-  PublicKey system_program = 14;
-  PublicKey sol_receiver = 15;
+  optional PublicKey commission_account = 6;
+  optional PublicKey platform_fee_account = 7;
+  optional PublicKey sa_authority = 8;
+  optional PublicKey source_token_sa = 9;
+  optional PublicKey destination_token_sa = 10;
+  optional PublicKey source_token_program = 11;
+  optional PublicKey destination_token_program = 12;
+  optional PublicKey associated_token_program = 13;
+  optional PublicKey system_program = 14;
+  optional PublicKey sol_receiver = 15;
   repeated PublicKey remaining_accounts = 16;
 }
     
@@ -633,15 +632,15 @@ message SwapV3Accounts {
   PublicKey destination_token_account = 3;
   PublicKey source_mint = 4;
   PublicKey destination_mint = 5;
-  PublicKey commission_account = 6;
-  PublicKey platform_fee_account = 7;
-  PublicKey sa_authority = 8;
-  PublicKey source_token_sa = 9;
-  PublicKey destination_token_sa = 10;
-  PublicKey source_token_program = 11;
-  PublicKey destination_token_program = 12;
-  PublicKey associated_token_program = 13;
-  PublicKey system_program = 14;
+  optional PublicKey commission_account = 6;
+  optional PublicKey platform_fee_account = 7;
+  optional PublicKey sa_authority = 8;
+  optional PublicKey source_token_sa = 9;
+  optional PublicKey destination_token_sa = 10;
+  optional PublicKey source_token_program = 11;
+  optional PublicKey destination_token_program = 12;
+  optional PublicKey associated_token_program = 13;
+  optional PublicKey system_program = 14;
   repeated PublicKey remaining_accounts = 15;
 }
     
@@ -663,15 +662,15 @@ message SwapV3WithCpiEventAccounts {
   PublicKey destination_token_account = 3;
   PublicKey source_mint = 4;
   PublicKey destination_mint = 5;
-  PublicKey commission_account = 6;
-  PublicKey platform_fee_account = 7;
-  PublicKey sa_authority = 8;
-  PublicKey source_token_sa = 9;
-  PublicKey destination_token_sa = 10;
-  PublicKey source_token_program = 11;
-  PublicKey destination_token_program = 12;
-  PublicKey associated_token_program = 13;
-  PublicKey system_program = 14;
+  optional PublicKey commission_account = 6;
+  optional PublicKey platform_fee_account = 7;
+  optional PublicKey sa_authority = 8;
+  optional PublicKey source_token_sa = 9;
+  optional PublicKey destination_token_sa = 10;
+  optional PublicKey source_token_program = 11;
+  optional PublicKey destination_token_program = 12;
+  optional PublicKey associated_token_program = 13;
+  optional PublicKey system_program = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
   repeated PublicKey remaining_accounts = 17;
@@ -693,11 +692,11 @@ message WrapUnwrapV3Accounts {
   PublicKey payer = 1;
   PublicKey payer_wsol_account = 2;
   PublicKey wsol_mint = 3;
-  PublicKey temp_wsol_account = 4;
-  PublicKey commission_account = 5;
-  PublicKey platform_fee_account = 6;
-  PublicKey authority_pda = 7;
-  PublicKey wsol_sa = 8;
+  optional PublicKey temp_wsol_account = 4;
+  optional PublicKey commission_account = 5;
+  optional PublicKey platform_fee_account = 6;
+  optional PublicKey authority_pda = 7;
+  optional PublicKey wsol_sa = 8;
   PublicKey token_program = 9;
   PublicKey system_program = 10;
   repeated PublicKey remaining_accounts = 11;
@@ -716,11 +715,11 @@ message WrapUnwrapV3WithReceiverAccounts {
   PublicKey payer = 1;
   PublicKey payer_wsol_account = 2;
   PublicKey wsol_mint = 3;
-  PublicKey temp_wsol_account = 4;
-  PublicKey commission_account = 5;
-  PublicKey platform_fee_account = 6;
-  PublicKey authority_pda = 7;
-  PublicKey wsol_sa = 8;
+  optional PublicKey temp_wsol_account = 4;
+  optional PublicKey commission_account = 5;
+  optional PublicKey platform_fee_account = 6;
+  optional PublicKey authority_pda = 7;
+  optional PublicKey wsol_sa = 8;
   PublicKey token_program = 9;
   PublicKey system_program = 10;
   PublicKey receiver = 11;

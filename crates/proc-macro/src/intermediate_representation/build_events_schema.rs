@@ -1,4 +1,4 @@
-use codama_nodes::InstructionNode;
+use codama_nodes::EventNode;
 
 use crate::intermediate_representation::{
     helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofVariantIr, ScalarIr,
@@ -20,7 +20,7 @@ use crate::intermediate_representation::{
 ///
 /// This mirrors the `Instructions` dispatch for instructions.
 ///
-pub fn build_events_schema(events: &[InstructionNode], ir: &mut SchemaIr) {
+pub fn build_events_schema(events: &[EventNode], ir: &mut SchemaIr) {
     for ev in events {
         build_event_messages(ev, ir);
     }
@@ -28,7 +28,7 @@ pub fn build_events_schema(events: &[InstructionNode], ir: &mut SchemaIr) {
     build_event_dispatch_oneof(events, ir);
 }
 
-fn build_event_messages(ev: &InstructionNode, ir: &mut SchemaIr) {
+fn build_event_messages(ev: &EventNode, ir: &mut SchemaIr) {
     let ev_name = crate::utils::to_pascal_case(&ev.name);
 
     let accounts_name = format!("{ev_name}Accounts");
@@ -49,7 +49,8 @@ fn build_event_messages(ev: &InstructionNode, ir: &mut SchemaIr) {
         kind: TypeKindIr::Event,
     });
 
-    let arg_fields = build_fields_ir(&args_name, &ev.arguments, ir, TypeKindIr::Helper);
+    let struct_node = crate::intermediate_representation::helpers::unwrap_nested_struct(&ev.data);
+    let arg_fields = build_fields_ir(&args_name, &struct_node.fields, ir, TypeKindIr::Helper);
 
     ir.types.push(TypeIr {
         name: args_name.clone(),
@@ -77,7 +78,7 @@ fn build_event_messages(ev: &InstructionNode, ir: &mut SchemaIr) {
     });
 }
 
-fn build_event_dispatch_oneof(events: &[InstructionNode], ir: &mut SchemaIr) {
+fn build_event_dispatch_oneof(events: &[EventNode], ir: &mut SchemaIr) {
     let parent_name = "ProgramEvents".to_string();
 
     let variants: Vec<OneofVariantIr> = events

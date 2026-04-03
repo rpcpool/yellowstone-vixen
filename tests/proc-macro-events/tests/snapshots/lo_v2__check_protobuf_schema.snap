@@ -1,5 +1,5 @@
 ---
-source: tests/proc-macro-events/tests/lo_v2.rs
+source: tests/lo_v2.rs
 expression: "limit_order2::PROTOBUF_SCHEMA"
 ---
 syntax = "proto3";
@@ -66,7 +66,7 @@ message CancelOrderAccounts {
   PublicKey maker = 2;
   PublicKey order = 3;
   PublicKey input_mint_reserve = 4;
-  PublicKey maker_input_mint_account = 5;
+  optional PublicKey maker_input_mint_account = 5;
   PublicKey input_mint = 6;
   PublicKey input_token_program = 7;
   PublicKey event_authority = 8;
@@ -88,7 +88,7 @@ message FillOrderAccounts {
   PublicKey order = 3;
   PublicKey taker_input_mint_account = 4;
   PublicKey taker_output_mint_account = 5;
-  PublicKey maker_output_mint_account = 6;
+  optional PublicKey maker_output_mint_account = 6;
   PublicKey fee_account = 7;
   PublicKey order_input_mint_account = 8;
   PublicKey input_mint = 9;
@@ -117,8 +117,8 @@ message FlashFillOrderAccounts {
   PublicKey maker = 2;
   PublicKey order = 3;
   PublicKey input_mint_reserve = 4;
-  PublicKey maker_output_mint_account = 5;
-  PublicKey taker_output_mint_account = 6;
+  optional PublicKey maker_output_mint_account = 5;
+  optional PublicKey taker_output_mint_account = 6;
   PublicKey fee_account = 7;
   PublicKey input_token_program = 8;
   PublicKey output_mint = 9;
@@ -145,7 +145,7 @@ message InitializeOrderAccounts {
   PublicKey input_mint_reserve = 4;
   PublicKey maker_input_mint_account = 5;
   PublicKey fee = 6;
-  PublicKey referral = 7;
+  optional PublicKey referral = 7;
   PublicKey input_mint = 8;
   PublicKey output_mint = 9;
   PublicKey input_token_program = 10;

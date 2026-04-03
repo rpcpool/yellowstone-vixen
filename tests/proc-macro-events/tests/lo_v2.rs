@@ -3,7 +3,7 @@ use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("../idls/lo_v2.json");
+include_vixen_parser!("../idls/limit_order_v2.json");
 
 #[test]
 fn check_protobuf_schema() {
@@ -12,12 +12,10 @@ fn check_protobuf_schema() {
 }
 
 ///
-/// Parse a fill-order transaction using `program_event_parser()`.
+/// Parse a fill-order transaction.
 ///
 /// The fixture contains a `FillOrder` instruction with a binary `swapData`
-/// bytes field (routed through Jupiter). The CPI self-invocation event is
-/// in a separate fixture entry and gets filtered out — only the outer
-/// instruction is returned.
+/// bytes field (routed through Jupiter) and a CPI self-invocation `TradeEvent`.
 ///
 #[tokio::test]
 async fn parse_fill_order_transaction() {
@@ -39,7 +37,7 @@ async fn parse_fill_order_transaction() {
                     order: p("Dme3Cn7UZ7gRt2LjkRXNPenXYrk65fxUs1eVqw6teUPw"),
                     taker_input_mint_account: p("6WMgSeD8qx2DDqVDXWjxtG5mTPQ2jmgwNqpVxvURHAus"),
                     taker_output_mint_account: p("9ydcYkLagRQeA1QiXndauAwA3kDpr85beLesmfNcUcSw"),
-                    maker_output_mint_account: p("j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X"),
+                    maker_output_mint_account: None,
                     fee_account: p("BTMWnyZf9ypca3mckpoiQqZcGHbKwRbDhVXqGDhDTs4N"),
                     order_input_mint_account: p("B1ESrH2j5i4TWVDYQojaqHUAMS7ZzQ9b94ZwDEynF3ik"),
                     input_mint: p("J8PSdNP3QewKq2Z1JJJFDMaqF7KcaiJhR7gbr5KZpump"),
@@ -92,13 +90,27 @@ async fn parse_fill_order_transaction() {
                 args: limit_order2::instruction::FillOrderArgs {
                     input_amount: 111_914_692_932,
                     swap_data: vec![
-                        229, 23, 203, 151, 122, 227, 173, 42, 1, 0, 0, 0, 100, 100, 0, 1, 68,
-                        177, 162, 14, 26, 0, 0, 0, 210, 167, 213, 175, 0, 0, 0, 0, 50, 0, 0,
+                        229, 23, 203, 151, 122, 227, 173, 42, 1, 0, 0, 0, 100, 100, 0, 1, 68, 177,
+                        162, 14, 26, 0, 0, 0, 210, 167, 213, 175, 0, 0, 0, 0, 50, 0, 0,
                     ],
                 },
             },
         }),
-        program_events: vec![],
+        program_events: vec![limit_order2::Events {
+            event: limit_order2::event::Event::TradeEvent {
+                accounts: limit_order2::event::TradeEventAccounts {
+                    remaining_accounts: vec![],
+                },
+                args: limit_order2::event::TradeEventArgs {
+                    order_key: p("Dme3Cn7UZ7gRt2LjkRXNPenXYrk65fxUs1eVqw6teUPw"),
+                    taker: p("j1oxqtEHFn7rUkdABJLmtVtz5fFmHFs4tCG3fWJnkHX"),
+                    remaining_making_amount: 0,
+                    remaining_taking_amount: 0,
+                    making_amount: 111_914_692_932,
+                    taking_amount: 2_950_014_930,
+                },
+            },
+        }],
     }];
 
     let expected_refs: Vec<_> = expected.iter().collect();
