@@ -27,90 +27,61 @@ fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec
     }
 }
 
-/// Resolved field discriminator data, abstracting over InstructionNode and EventNode field types.
+/// Resolved field discriminator: the type + decoded value from a named field.
 pub(crate) struct ResolvedFieldDiscriminator {
-    pub r#type: TypeNode,
-    pub bytes: Option<Vec<u8>>,
-    pub number: Option<u64>,
+    r#type: TypeNode,
+    bytes: Option<Vec<u8>>,
 }
 
-/// Trait for nodes that carry discriminators and data fields (instructions or events).
-pub(crate) trait Discriminated {
-    fn discriminators(&self) -> &[DiscriminatorNode];
+/// Resolve a field discriminator from an `InstructionNode`'s arguments.
+pub(crate) fn resolve_ix_field(
+    ix: &codama_nodes::InstructionNode,
+    name: &CamelCaseString,
+) -> Option<ResolvedFieldDiscriminator> {
+    let field = ix.arguments.iter().find(|f| &f.name == name)?;
 
-    /// Look up a field by name and extract its type + discriminator value.
-    fn resolve_field_discriminator(
-        &self,
-        name: &CamelCaseString,
-    ) -> Option<ResolvedFieldDiscriminator>;
-}
-
-fn resolve_bytes_value(value: &codama_nodes::BytesValueNode) -> Option<Vec<u8>> {
-    Some(decode_discriminator_field_bytes(value))
-}
-
-fn resolve_number_value(value: &codama_nodes::NumberValueNode) -> Option<u64> {
-    let Number::UnsignedInteger(v) = value.number else {
-        return None;
+    let bytes = match field.default_value.as_ref()? {
+        codama_nodes::InstructionInputValueNode::Bytes(b) => {
+            Some(decode_discriminator_field_bytes(b))
+        },
+        _ => None,
     };
 
-    Some(v)
+    Some(ResolvedFieldDiscriminator {
+        r#type: field.r#type.clone(),
+        bytes,
+    })
 }
 
-impl Discriminated for codama_nodes::InstructionNode {
-    fn discriminators(&self) -> &[DiscriminatorNode] { &self.discriminators }
+/// Resolve a field discriminator from an `EventNode`'s struct fields.
+pub(crate) fn resolve_event_field(
+    ev: &codama_nodes::EventNode,
+    name: &CamelCaseString,
+) -> Option<ResolvedFieldDiscriminator> {
+    let struct_node =
+        crate::intermediate_representation::helpers::unwrap_nested_struct(&ev.data);
 
-    fn resolve_field_discriminator(
-        &self,
-        name: &CamelCaseString,
-    ) -> Option<ResolvedFieldDiscriminator> {
-        let field = self.arguments.iter().find(|f| &f.name == name)?;
+    let field = struct_node.fields.iter().find(|f| &f.name == name)?;
 
-        let (bytes, number) = match field.default_value.as_ref()? {
-            codama_nodes::InstructionInputValueNode::Bytes(b) => (resolve_bytes_value(b), None),
-            codama_nodes::InstructionInputValueNode::Number(n) => (None, resolve_number_value(n)),
-            _ => return None,
-        };
+    let bytes = match field.default_value.as_ref()? {
+        ValueNode::Bytes(b) => Some(decode_discriminator_field_bytes(b)),
+        _ => None,
+    };
 
-        Some(ResolvedFieldDiscriminator {
-            r#type: field.r#type.clone(),
-            bytes,
-            number,
-        })
-    }
+    Some(ResolvedFieldDiscriminator {
+        r#type: field.r#type.clone(),
+        bytes,
+    })
 }
 
-impl Discriminated for codama_nodes::EventNode {
-    fn discriminators(&self) -> &[DiscriminatorNode] { &self.discriminators }
-
-    fn resolve_field_discriminator(
-        &self,
-        name: &CamelCaseString,
-    ) -> Option<ResolvedFieldDiscriminator> {
-        let struct_node =
-            crate::intermediate_representation::helpers::unwrap_nested_struct(&self.data);
-
-        let field = struct_node.fields.iter().find(|f| &f.name == name)?;
-
-        let (bytes, number) = match field.default_value.as_ref()? {
-            ValueNode::Bytes(b) => (resolve_bytes_value(b), None),
-            ValueNode::Number(n) => (None, resolve_number_value(n)),
-            _ => return None,
-        };
-
-        Some(ResolvedFieldDiscriminator {
-            r#type: field.r#type.clone(),
-            bytes,
-            number,
-        })
-    }
-}
-
-/// Extract a comparable discriminator key from a node for collision detection.
+/// Extract a comparable discriminator key for collision detection.
+///
+/// `resolve_field` is called only when the discriminator is `DiscriminatorNode::Field`.
 pub(crate) fn extract_discriminator_key(
-    node: &impl Discriminated,
+    discriminators: &[DiscriminatorNode],
+    resolve_field: impl Fn(&CamelCaseString) -> Option<ResolvedFieldDiscriminator>,
 ) -> Option<DiscriminatorKey> {
-    let discriminator = node.discriminators().first()?;
+    let discriminator = discriminators.first()?;
 
     match discriminator {
         DiscriminatorNode::Constant(cn) => match cn.constant.value.as_ref() {
@@ -137,11 +108,10 @@ pub(crate) fn extract_discriminator_key(
             _ => None,
         },
         DiscriminatorNode::Field(fn_) => {
-            let resolved = node.resolve_field_discriminator(&fn_.name)?;
+            let resolved = resolve_field(&fn_.name)?;
 
-            match (&resolved.r#type, &resolved.bytes, resolved.number) {
-                // Anchor-style: fixed-size bytes discriminator (e.g. 8-byte sighash)
-                (TypeNode::FixedSize(_), Some(bytes), _) => Some(DiscriminatorKey::Field {
+            match (&resolved.r#type, &resolved.bytes) {
+                (TypeNode::FixedSize(_), Some(bytes)) => Some(DiscriminatorKey::Field {
                     offset: fn_.offset,
                     bytes: bytes.clone(),
                 }),
@@ -162,18 +132,20 @@ pub(crate) struct DiscriminatorInfo {
     pub(crate) check: TokenStream,
 }
 
-/// Extract discriminator info from a node (instruction or event).
+/// Extract discriminator info (check + args deserialization) from a discriminator list.
 ///
 /// `mod_ident` is the module where the args type lives (`instruction` or `event`).
+/// `resolve_field` is called only when the discriminator is `DiscriminatorNode::Field`.
 ///
 /// Returns None if the discriminator can't be processed (unsupported format).
 pub(crate) fn extract_discriminator_info(
-    node: &impl Discriminated,
+    discriminators: &[DiscriminatorNode],
     args_ident: &syn::Ident,
     has_args: bool,
     mod_ident: &syn::Ident,
+    resolve_field: impl Fn(&CamelCaseString) -> Option<ResolvedFieldDiscriminator>,
 ) -> Option<DiscriminatorInfo> {
-    let discriminator = node.discriminators().first()?;
+    let discriminator = discriminators.first()?;
 
     match discriminator {
         // Constant discriminator at offset
@@ -181,7 +153,7 @@ pub(crate) fn extract_discriminator_info(
             let offset = cn.offset;
 
             match cn.constant.value.as_ref() {
-                // 1-byte number discriminator (e.g. Shank-style u8 index)
+                // 1-byte number discriminator
                 ValueNode::Number(nn) => {
                     let Number::UnsignedInteger(value) = nn.number else {
                         return None;
@@ -250,11 +222,10 @@ pub(crate) fn extract_discriminator_info(
         // Discriminator in a named field at offset
         DiscriminatorNode::Field(fn_) => {
             let offset = fn_.offset;
-            let resolved = node.resolve_field_discriminator(&fn_.name)?;
+            let resolved = resolve_field(&fn_.name)?;
 
-            match (&resolved.r#type, &resolved.bytes, resolved.number) {
-                // Anchor-style: fixed-size bytes discriminator (e.g. 8-byte sighash)
-                (TypeNode::FixedSize(fixed_size_node), Some(discriminator_bytes), _) => {
+            match (&resolved.r#type, &resolved.bytes) {
+                (TypeNode::FixedSize(fixed_size_node), Some(discriminator_bytes)) => {
                     let size = fixed_size_node.size;
                     let end = offset + size;
 
@@ -345,7 +316,13 @@ fn single_instruction_helper_fn(
 
     let has_args = !instruction.arguments.is_empty();
 
-    let info = extract_discriminator_info(instruction, &args_ident, has_args, &ix_mod)?;
+    let info = extract_discriminator_info(
+        &instruction.discriminators,
+        &args_ident,
+        has_args,
+        &ix_mod,
+        |name| resolve_ix_field(instruction, name),
+    )?;
 
     let accounts_fields = instruction
         .accounts
@@ -423,7 +400,13 @@ fn single_instruction_match_arm(
 
     let has_args = !instruction.arguments.is_empty();
 
-    let info = extract_discriminator_info(instruction, &args_ident, has_args, &ix_mod)?;
+    let info = extract_discriminator_info(
+        &instruction.discriminators,
+        &args_ident,
+        has_args,
+        &ix_mod,
+        |name| resolve_ix_field(instruction, name),
+    )?;
 
     let check = info.check;
 
@@ -454,8 +437,14 @@ pub(crate) fn collision_group_match_arm(
 
     let has_args = !first.arguments.is_empty();
 
-    let info = extract_discriminator_info(first, &args_ident, has_args, &ix_mod)
-        .expect("collision group should have valid discriminator");
+    let info = extract_discriminator_info(
+        &first.discriminators,
+        &args_ident,
+        has_args,
+        &ix_mod,
+        |name| resolve_ix_field(first, name),
+    )
+    .expect("collision group should have valid discriminator");
 
     let check = info.check;
 
@@ -536,7 +525,9 @@ pub fn instruction_parser(
     let mut groups: Vec<(DiscriminatorKey, Vec<&codama_nodes::InstructionNode>)> = Vec::new();
 
     for ix in instructions {
-        if let Some(key) = extract_discriminator_key(ix) {
+        if let Some(key) =
+            extract_discriminator_key(&ix.discriminators, |name| resolve_ix_field(ix, name))
+        {
             if let Some(group) = groups.iter_mut().find(|(k, _)| k == &key) {
                 group.1.push(ix);
             } else {
