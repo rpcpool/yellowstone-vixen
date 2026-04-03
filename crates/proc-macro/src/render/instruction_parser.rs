@@ -27,14 +27,12 @@ fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec
     }
 }
 
-/// Resolved field discriminator: the type + decoded value from a named field.
-pub(crate) struct ResolvedFieldDiscriminator {
+struct ResolvedFieldDiscriminator {
     r#type: TypeNode,
     bytes: Option<Vec<u8>>,
 }
 
-/// Resolve a field discriminator from an `InstructionNode`'s arguments.
-pub(crate) fn resolve_ix_field(
+fn resolve_ix_field(
     ix: &codama_nodes::InstructionNode,
     name: &CamelCaseString,
 ) -> Option<ResolvedFieldDiscriminator> {
@@ -53,8 +51,7 @@ pub(crate) fn resolve_ix_field(
     })
 }
 
-/// Resolve a field discriminator from an `EventNode`'s struct fields.
-pub(crate) fn resolve_event_field(
+fn resolve_event_field(
     ev: &codama_nodes::EventNode,
     name: &CamelCaseString,
 ) -> Option<ResolvedFieldDiscriminator> {
@@ -73,10 +70,49 @@ pub(crate) fn resolve_event_field(
     })
 }
 
-/// Extract a comparable discriminator key for collision detection.
-///
-/// `resolve_field` is called only when the discriminator is `DiscriminatorNode::Field`.
-pub(crate) fn extract_discriminator_key(
+/// Extract a discriminator key for an instruction (collision detection).
+pub(crate) fn extract_ix_discriminator_key(
+    ix: &codama_nodes::InstructionNode,
+) -> Option<DiscriminatorKey> {
+    extract_discriminator_key(&ix.discriminators, |name| resolve_ix_field(ix, name))
+}
+
+/// Extract a discriminator key for an event (collision detection).
+pub(crate) fn extract_event_discriminator_key(
+    ev: &codama_nodes::EventNode,
+) -> Option<DiscriminatorKey> {
+    extract_discriminator_key(&ev.discriminators, |name| resolve_event_field(ev, name))
+}
+
+/// Extract discriminator info for an instruction (match arm + args deserialization).
+pub(crate) fn extract_ix_discriminator_info(
+    ix: &codama_nodes::InstructionNode,
+    args_ident: &syn::Ident,
+    has_args: bool,
+    mod_ident: &syn::Ident,
+) -> Option<DiscriminatorInfo> {
+    extract_discriminator_info(&ix.discriminators, args_ident, has_args, mod_ident, |name| {
+        resolve_ix_field(ix, name)
+    })
+}
+
+/// Extract discriminator info for an event (match arm + args deserialization).
+pub(crate) fn extract_event_discriminator_info(
+    ev: &codama_nodes::EventNode,
+    args_ident: &syn::Ident,
+    has_args: bool,
+    mod_ident: &syn::Ident,
+) -> Option<DiscriminatorInfo> {
+    extract_discriminator_info(
+        &ev.discriminators,
+        args_ident,
+        has_args,
+        mod_ident,
+        |name| resolve_event_field(ev, name),
+    )
+}
+
+fn extract_discriminator_key(
     discriminators: &[DiscriminatorNode],
     resolve_field: impl Fn(&CamelCaseString) -> Option<ResolvedFieldDiscriminator>,
 ) -> Option<DiscriminatorKey> {
@@ -131,13 +167,7 @@ pub(crate) struct DiscriminatorInfo {
     pub(crate) check: TokenStream,
 }
 
-/// Extract discriminator info (check + args deserialization) from a discriminator list.
-///
-/// `mod_ident` is the module where the args type lives (`instruction` or `event`).
-/// `resolve_field` is called only when the discriminator is `DiscriminatorNode::Field`.
-///
-/// Returns None if the discriminator can't be processed (unsupported format).
-pub(crate) fn extract_discriminator_info(
+fn extract_discriminator_info(
     discriminators: &[DiscriminatorNode],
     args_ident: &syn::Ident,
     has_args: bool,
@@ -315,13 +345,7 @@ fn single_instruction_helper_fn(
 
     let has_args = !instruction.arguments.is_empty();
 
-    let info = extract_discriminator_info(
-        &instruction.discriminators,
-        &args_ident,
-        has_args,
-        &ix_mod,
-        |name| resolve_ix_field(instruction, name),
-    )?;
+    let info = extract_ix_discriminator_info(instruction, &args_ident, has_args, &ix_mod)?;
 
     let accounts_fields = instruction
         .accounts
@@ -399,13 +423,7 @@ fn single_instruction_match_arm(
 
     let has_args = !instruction.arguments.is_empty();
 
-    let info = extract_discriminator_info(
-        &instruction.discriminators,
-        &args_ident,
-        has_args,
-        &ix_mod,
-        |name| resolve_ix_field(instruction, name),
-    )?;
+    let info = extract_ix_discriminator_info(instruction, &args_ident, has_args, &ix_mod)?;
 
     let check = info.check;
 
@@ -436,14 +454,8 @@ pub(crate) fn collision_group_match_arm(
 
     let has_args = !first.arguments.is_empty();
 
-    let info = extract_discriminator_info(
-        &first.discriminators,
-        &args_ident,
-        has_args,
-        &ix_mod,
-        |name| resolve_ix_field(first, name),
-    )
-    .expect("collision group should have valid discriminator");
+    let info = extract_ix_discriminator_info(first, &args_ident, has_args, &ix_mod)
+        .expect("collision group should have valid discriminator");
 
     let check = info.check;
 
@@ -524,9 +536,7 @@ pub fn instruction_parser(
     let mut groups: Vec<(DiscriminatorKey, Vec<&codama_nodes::InstructionNode>)> = Vec::new();
 
     for ix in instructions {
-        if let Some(key) =
-            extract_discriminator_key(&ix.discriminators, |name| resolve_ix_field(ix, name))
-        {
+        if let Some(key) = extract_ix_discriminator_key(ix) {
             if let Some(group) = groups.iter_mut().find(|(k, _)| k == &key) {
                 group.1.push(ix);
             } else {

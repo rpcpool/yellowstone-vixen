@@ -29,11 +29,7 @@ pub fn event_parser(
     )> = Vec::new();
 
     for ev in events {
-        if let Some(key) =
-            super::instruction_parser::extract_discriminator_key(&ev.discriminators, |name| {
-                super::instruction_parser::resolve_event_field(ev, name)
-            })
-        {
+        if let Some(key) = super::instruction_parser::extract_event_discriminator_key(ev) {
             if let Some(group) = groups.iter_mut().find(|(k, _)| k == &key) {
                 group.1.push(ev);
             } else {
@@ -213,13 +209,8 @@ fn single_event_helper_fn(
 
     let has_args = !struct_node.fields.is_empty();
 
-    let info = super::instruction_parser::extract_discriminator_info(
-        &event.discriminators,
-        &args_ident,
-        has_args,
-        ev_mod,
-        |name| super::instruction_parser::resolve_event_field(event, name),
-    )?;
+    let info =
+        super::instruction_parser::extract_event_discriminator_info(event, &args_ident, has_args, ev_mod)?;
 
     // Events have no accounts — only remaining_accounts (always empty vec)
     let accounts_value = quote! {
@@ -260,13 +251,8 @@ fn single_event_match_arm(
 
     let has_args = !struct_node.fields.is_empty();
 
-    let info = super::instruction_parser::extract_discriminator_info(
-        &event.discriminators,
-        &args_ident,
-        has_args,
-        ev_mod,
-        |name| super::instruction_parser::resolve_event_field(event, name),
-    )?;
+    let info =
+        super::instruction_parser::extract_event_discriminator_info(event, &args_ident, has_args, ev_mod)?;
 
     let check = info.check;
 
