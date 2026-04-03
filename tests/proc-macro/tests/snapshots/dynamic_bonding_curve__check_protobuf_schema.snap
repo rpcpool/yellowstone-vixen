@@ -793,9 +793,9 @@ message MigrationDammV2Accounts {
   PublicKey first_position_nft_mint = 6;
   PublicKey first_position_nft_account = 7;
   PublicKey first_position = 8;
-  PublicKey second_position_nft_mint = 9;
-  PublicKey second_position_nft_account = 10;
-  PublicKey second_position = 11;
+  optional PublicKey second_position_nft_mint = 9;
+  optional PublicKey second_position_nft_account = 10;
+  optional PublicKey second_position = 11;
   PublicKey damm_pool_authority = 12;
   PublicKey amm_program = 13;
   PublicKey base_mint = 14;
@@ -894,7 +894,7 @@ message SwapAccounts {
   PublicKey payer = 10;
   PublicKey token_base_program = 11;
   PublicKey token_quote_program = 12;
-  PublicKey referral_token_account = 13;
+  optional PublicKey referral_token_account = 13;
   PublicKey event_authority = 14;
   PublicKey program = 15;
   repeated PublicKey remaining_accounts = 16;
@@ -922,7 +922,7 @@ message Swap2Accounts {
   PublicKey payer = 10;
   PublicKey token_base_program = 11;
   PublicKey token_quote_program = 12;
-  PublicKey referral_token_account = 13;
+  optional PublicKey referral_token_account = 13;
   PublicKey event_authority = 14;
   PublicKey program = 15;
   repeated PublicKey remaining_accounts = 16;

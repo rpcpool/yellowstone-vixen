@@ -18,8 +18,11 @@ pub fn build_defined_types(defined_types: &[DefinedTypeNode], ir: &mut SchemaIr)
             TypeNode::Enum(enum_type) => build_defined_type_enum(&name, enum_type, ir),
 
             other => {
-                // alias / scalar defined type: we don't store it
-                let _ = other;
+                // Scalar type alias (e.g. `type UnixTimestamp = i64`).
+                // Register it so that `definedTypeLinkNode` references resolve
+                // to the underlying scalar instead of emitting a bare type name.
+                let (_, field_type) = map_type_with_label(other);
+                ir.type_aliases.insert(name, field_type);
             },
         }
     }

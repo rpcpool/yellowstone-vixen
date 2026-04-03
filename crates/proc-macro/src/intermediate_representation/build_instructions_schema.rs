@@ -126,7 +126,11 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
         .map(|(i, acct)| FieldIr {
             name: crate::utils::to_snake_case(&acct.name),
             tag: (i + 1) as u32,
-            label: LabelIr::Singular,
+            label: if acct.is_optional {
+                LabelIr::Optional
+            } else {
+                LabelIr::Singular
+            },
             field_type: FieldTypeIr::Scalar(ScalarIr::PublicKey),
         })
         .collect();

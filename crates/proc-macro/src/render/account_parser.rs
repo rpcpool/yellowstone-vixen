@@ -107,9 +107,11 @@ pub fn account_parser(
 
                 let account_name = account_ident.to_string();
 
+                let value_u8 = value as u8;
+
                 quote! {
                     if let Some(discriminator) = data.get(#offset) {
-                        if discriminator == #value {
+                        if *discriminator == #value_u8 {
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {

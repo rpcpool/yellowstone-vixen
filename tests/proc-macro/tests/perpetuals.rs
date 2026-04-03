@@ -307,7 +307,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         assert_eq!(
             close_accounts,
             &perpetuals::instruction::ClosePositionRequest2Accounts {
-                keeper: p("H3dDE6K6uqBp5kBKctH6w8hzpV5eAmxUiqvcdHxuE9i4"),
+                keeper: Some(p("H3dDE6K6uqBp5kBKctH6w8hzpV5eAmxUiqvcdHxuE9i4")),
                 owner: p("AHjZmPJ3swFKz6nVhoeV3Y2zB94rd2QFbAoEPvNo6DXX"),
                 owner_ata: p("BPRnMmfxF7QYepU9ypvBMA4eXwbHGST79bUgKvoZ6Jsk"),
                 pool: p("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),

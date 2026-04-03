@@ -13,10 +13,10 @@ message PublicKey {
 message FillAccounts {
   PublicKey taker = 1;
   PublicKey maker = 2;
-  PublicKey taker_input_mint_token_account = 3;
-  PublicKey maker_input_mint_token_account = 4;
-  PublicKey taker_output_mint_token_account = 5;
-  PublicKey maker_output_mint_token_account = 6;
+  optional PublicKey taker_input_mint_token_account = 3;
+  optional PublicKey maker_input_mint_token_account = 4;
+  optional PublicKey taker_output_mint_token_account = 5;
+  optional PublicKey maker_output_mint_token_account = 6;
   PublicKey input_mint = 7;
   PublicKey input_token_program = 8;
   PublicKey output_mint = 9;

@@ -52,23 +52,33 @@ pub(crate) fn extract_discriminator_key(
         },
         DiscriminatorNode::Field(node) => {
             let field = instruction.arguments.iter().find(|f| f.name == node.name)?;
-
-            let TypeNode::FixedSize(_) = &field.r#type else {
-                return None;
-            };
-
             let default_value = field.default_value.as_ref()?;
 
-            let InstructionInputValueNode::Bytes(bytes) = default_value else {
-                return None;
-            };
+            match (&field.r#type, default_value) {
+                // Anchor-style: fixed-size bytes discriminator (e.g. 8-byte sighash)
+                (TypeNode::FixedSize(_), InstructionInputValueNode::Bytes(bytes)) => {
+                    let discriminator_bytes = decode_discriminator_field_bytes(bytes);
 
-            let discriminator_bytes = decode_discriminator_field_bytes(bytes);
+                    Some(DiscriminatorKey::Field {
+                        offset: node.offset,
+                        bytes: discriminator_bytes,
+                    })
+                },
 
-            Some(DiscriminatorKey::Field {
-                offset: node.offset,
-                bytes: discriminator_bytes,
-            })
+                // Shank-style: single number discriminator (e.g. u8 index)
+                (TypeNode::Number(_), InstructionInputValueNode::Number(nn)) => {
+                    let Number::UnsignedInteger(value) = nn.number else {
+                        return None;
+                    };
+
+                    Some(DiscriminatorKey::Constant {
+                        offset: node.offset,
+                        value,
+                    })
+                },
+
+                _ => None,
+            }
         },
         DiscriminatorNode::Size(node) => Some(DiscriminatorKey::Size { size: node.size }),
     }
@@ -132,49 +142,79 @@ pub(crate) fn extract_discriminator_info(
             Some(DiscriminatorInfo { args_expr, check })
         },
 
-        // Anchor-style discriminator in a field (usually 8 bytes) at offset
+        // Field-based discriminator (Anchor 8-byte sighash or Shank u8 index)
         DiscriminatorNode::Field(node) => {
             let offset = node.offset;
 
             let field = instruction.arguments.iter().find(|f| f.name == node.name)?;
-
-            let TypeNode::FixedSize(fixed_size_node) = &field.r#type else {
-                return None;
-            };
-
-            let size = fixed_size_node.size;
-            let end = offset + size;
-
             let default_value = field.default_value.as_ref()?;
 
-            let InstructionInputValueNode::Bytes(bytes) = default_value else {
-                return None;
-            };
+            match (&field.r#type, default_value) {
+                // Anchor-style: fixed-size bytes discriminator
+                (TypeNode::FixedSize(fixed_size_node), InstructionInputValueNode::Bytes(bytes)) => {
+                    let size = fixed_size_node.size;
+                    let end = offset + size;
 
-            let discriminator_bytes = decode_discriminator_field_bytes(bytes);
+                    let discriminator_bytes = decode_discriminator_field_bytes(bytes);
 
-            let args_expr = if has_args {
-                Some(quote! {
-                    {
-                        let mut slice: &[u8] = data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?;
+                    let args_expr = if has_args {
+                        Some(quote! {
+                            {
+                                let mut slice: &[u8] = data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?;
 
-                        <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
-                            .map_err(|e| ParseError::Other(e.into()))?
-                    }
-                })
-            } else {
-                None
-            };
+                                <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                    .map_err(|e| ParseError::Other(e.into()))?
+                            }
+                        })
+                    } else {
+                        None
+                    };
 
-            let check = quote! {
-                if let Some(slice) = data.get(#offset..#end) {
-                    slice == &[#(#discriminator_bytes),*]
-                } else {
-                    false
-                }
-            };
+                    let check = quote! {
+                        if let Some(slice) = data.get(#offset..#end) {
+                            slice == &[#(#discriminator_bytes),*]
+                        } else {
+                            false
+                        }
+                    };
 
-            Some(DiscriminatorInfo { args_expr, check })
+                    Some(DiscriminatorInfo { args_expr, check })
+                },
+
+                // Shank-style: single number discriminator (e.g. u8 index)
+                (TypeNode::Number(_), InstructionInputValueNode::Number(nn)) => {
+                    let Number::UnsignedInteger(value) = nn.number else {
+                        return None;
+                    };
+
+                    let args_start = offset + 1;
+
+                    let args_expr = if has_args {
+                        Some(quote! {
+                            {
+                                let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
+
+                                <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                    .map_err(|e| ParseError::Other(e.into()))?
+                            }
+                        })
+                    } else {
+                        None
+                    };
+
+                    let check = quote! {
+                        if let Some(d) = data.get(#offset) {
+                            *d == (#value as u8)
+                        } else {
+                            false
+                        }
+                    };
+
+                    Some(DiscriminatorInfo { args_expr, check })
+                },
+
+                _ => None,
+            }
         },
 
         // Discriminator by total size only
@@ -243,9 +283,22 @@ fn single_instruction_helper_fn(
         .enumerate()
         .map(|(idx, account)| {
             let field_name = format_ident!("{}", crate::utils::to_snake_case(&account.name));
-            let error_msg = format!("Account does not exist at index {idx}");
 
-            quote! { #field_name: ::yellowstone_vixen_core::Pubkey::try_from(accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.as_slice())? }
+            if account.is_optional {
+                quote! {
+                    #field_name: accounts.get(#idx).and_then(|a| {
+                        if a == &::yellowstone_vixen_core::Pubkey::new(PROGRAM_ID) {
+                            None
+                        } else {
+                            Some(*a)
+                        }
+                    })
+                }
+            } else {
+                let error_msg = format!("Account does not exist at index {idx}");
+
+                quote! { #field_name: *accounts.get(#idx).ok_or(ParseError::from(#error_msg))? }
+            }
         });
 
     let num_defined_accounts = instruction.accounts.len();
@@ -546,12 +599,11 @@ pub fn instruction_parser(
                     // starts with the event tag. These are not real instructions and
                     // would fail discriminator matching, so filter them out.
                     {
+                        const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
 
-                    const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
-
-                    if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
-                        return Err(ParseError::Filtered);
-                    }
+                        if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
+                            return Err(ParseError::Filtered);
+                        }
                     }
 
                     resolve_instruction_default(
