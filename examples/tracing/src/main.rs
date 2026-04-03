@@ -38,7 +38,7 @@ impl<V: std::fmt::Debug + Sync, R: Sync> Handler<V, R> for Logger {
 fn main() {
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
-        .expect("Fialed to install rustls crypto provider");
+        .expect("Failed to install rustls crypto provider");
 
     let span_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()

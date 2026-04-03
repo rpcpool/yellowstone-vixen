@@ -35,7 +35,7 @@ impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Lo
 async fn main() {
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
-        .expect("Fialed to install rustls crypto provider");
+        .expect("Failed to install rustls crypto provider");
 
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
