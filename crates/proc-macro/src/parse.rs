@@ -23,13 +23,10 @@ impl std::fmt::Display for IdlError {
 /// If that fails (e.g. old IDLs with `kind: "instructionNode"` events), the
 /// events field is ignored and an empty vec is returned — the IDL still loads
 /// for instruction/account parsing.
-pub fn load_codama_idl<P: AsRef<Path>>(
-    path: P,
-) -> Result<(RootNode, Vec<EventNode>), IdlError> {
+pub fn load_codama_idl<P: AsRef<Path>>(path: P) -> Result<(RootNode, Vec<EventNode>), IdlError> {
     let data = fs::read_to_string(&path).map_err(IdlError::ReadFile)?;
 
-    let mut value: serde_json::Value =
-        serde_json::from_str(&data).map_err(IdlError::ParseFile)?;
+    let mut value: serde_json::Value = serde_json::from_str(&data).map_err(IdlError::ParseFile)?;
 
     // Some codama generators emit error codes as strings ("6000") instead of
     // integers (6000). Coerce them before deserialization so `ErrorNode.code`
@@ -63,10 +60,10 @@ fn fix_string_error_codes(value: &mut serde_json::Value) {
     let Some(errors) = errors else { return };
 
     for error in errors {
-        if let Some(code) = error.get_mut("code") {
-            if let Some(s) = code.as_str().and_then(|s| s.parse::<u64>().ok()) {
-                *code = serde_json::Value::Number(s.into());
-            }
+        if let Some(code) = error.get_mut("code")
+            && let Some(s) = code.as_str().and_then(|s| s.parse::<u64>().ok())
+        {
+            *code = serde_json::Value::Number(s.into());
         }
     }
 }
