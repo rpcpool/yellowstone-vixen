@@ -109,7 +109,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
             for ix in ix_update.visit_all() {
                 let (result, had_error) = self
                     .parsers
-                    .parse_instruction(slot, &ix.shared.signature, &ix.path, ix)
+                    .parse_instruction(slot, tx_index, &ix.shared.signature, &ix.path, ix)
                     .await;
 
                 if let Some(record) = result {

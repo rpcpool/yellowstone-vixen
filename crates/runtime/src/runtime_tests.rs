@@ -1,13 +1,21 @@
-use std::time::Duration;
+use std::{
+    borrow::Cow,
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 use async_trait::async_trait;
 use tokio::sync::{mpsc::Sender, oneshot};
-use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic};
+use yellowstone_grpc_proto::{
+    geyser::{subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateSlot},
+    tonic,
+};
+use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, SlotUpdate};
 
 use crate::{
     config::{BufferConfig, NullConfig, VixenConfig},
     sources::{SourceExitStatus, SourceTrait},
-    Error, Runtime,
+    Error, Handler, Pipeline, Runtime,
 };
 
 // ========== Test helpers ==========
@@ -51,6 +59,22 @@ fn make_ping_update() -> SubscribeUpdate {
                 yellowstone_grpc_proto::geyser::SubscribeUpdatePing {},
             ),
         ),
+        created_at: None,
+    }
+}
+
+const TEST_SLOT_FILTER: &str = "test::SlowSlotParser";
+static SLOW_SLOT_HANDLED: AtomicUsize = AtomicUsize::new(0);
+
+fn make_slot_update(slot: u64) -> SubscribeUpdate {
+    SubscribeUpdate {
+        filters: vec![TEST_SLOT_FILTER.to_string()],
+        update_oneof: Some(UpdateOneof::Slot(SubscribeUpdateSlot {
+            slot,
+            parent: Some(slot.saturating_sub(1)),
+            status: SlotStatus::SlotProcessed as i32,
+            dead_error: None,
+        })),
         created_at: None,
     }
 }
@@ -299,6 +323,66 @@ impl SourceTrait for MockStreamEndWithUpdatesSource {
     }
 }
 
+#[derive(Debug)]
+struct MockCompletedWithUpdatesSource {
+    updates_to_send: u64,
+}
+
+#[async_trait]
+impl SourceTrait for MockCompletedWithUpdatesSource {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self { updates_to_send: 3 } }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+
+        for slot in 0..self.updates_to_send {
+            if tx.send(Ok(make_slot_update(slot))).await.is_err() {
+                signal_receiver_dropped(status_tx);
+                return Ok(());
+            }
+        }
+
+        signal_completed(status_tx);
+        drop(tx);
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct SlowSlotParser;
+
+impl Parser for SlowSlotParser {
+    type Input = SlotUpdate;
+    type Output = SlotUpdate;
+
+    fn id(&self) -> Cow<'static, str> { TEST_SLOT_FILTER.into() }
+
+    fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+    async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> { Ok(value.clone()) }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct SlowSlotHandler;
+
+impl Handler<SlotUpdate, SlotUpdate> for SlowSlotHandler {
+    async fn handle(
+        &self,
+        _value: &SlotUpdate,
+        _raw_event: &SlotUpdate,
+    ) -> crate::HandlerResult<()> {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        SLOW_SLOT_HANDLED.fetch_add(1, Ordering::Relaxed);
+        Ok(())
+    }
+}
+
 // ========== Integration tests ==========
 
 #[tokio::test]
@@ -348,6 +432,23 @@ async fn test_stream_end_after_updates_returns_error() {
         .unwrap();
 
     assert_server_hangup(runtime.try_run_async().await);
+}
+
+#[tokio::test]
+async fn test_completed_source_drains_buffered_updates_before_returning() {
+    SLOW_SLOT_HANDLED.store(0, Ordering::Relaxed);
+
+    let runtime = Runtime::<MockCompletedWithUpdatesSource>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [SlowSlotHandler]))
+        .try_build(default_test_config())
+        .unwrap();
+
+    assert!(runtime.try_run_async().await.is_ok());
+    assert_eq!(
+        SLOW_SLOT_HANDLED.load(Ordering::Relaxed),
+        3,
+        "runtime must wait for buffered slot handlers after finite source completion"
+    );
 }
 
 // ========== Unit tests for SourceExitStatus ==========
