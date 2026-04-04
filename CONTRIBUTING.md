@@ -21,7 +21,7 @@ To contribute to this project, you'll need to have Rust installed on your machin
 
    ```sh
    git clone https://github.com/rpcpool/yellowstone-vixen.git
-   cd yourproject
+   cd yellowstone-vixen
    ```
 
 2. **Install Rust and Set the Toolchain**
