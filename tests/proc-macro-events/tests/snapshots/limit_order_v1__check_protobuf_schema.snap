@@ -1,5 +1,5 @@
 ---
-source: tests/lo_v1.rs
+source: tests/limit_order_v1.rs
 expression: "limit_order::PROTOBUF_SCHEMA"
 ---
 syntax = "proto3";
