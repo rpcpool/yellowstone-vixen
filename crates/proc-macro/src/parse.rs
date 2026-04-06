@@ -18,11 +18,6 @@ impl std::fmt::Display for IdlError {
 }
 
 /// Load a codama IDL file, returning the root node and any events.
-///
-/// Events are tried first from `program.events` as `EventNode`s (codama v0.8+).
-/// If that fails (e.g. old IDLs with `kind: "instructionNode"` events), the
-/// events field is ignored and an empty vec is returned — the IDL still loads
-/// for instruction/account parsing.
 pub fn load_codama_idl<P: AsRef<Path>>(path: P) -> Result<(RootNode, Vec<EventNode>), IdlError> {
     let data = fs::read_to_string(&path).map_err(IdlError::ReadFile)?;
 
@@ -33,21 +28,10 @@ pub fn load_codama_idl<P: AsRef<Path>>(path: P) -> Result<(RootNode, Vec<EventNo
     // (which expects `usize`) doesn't fail.
     fix_string_error_codes(&mut value);
 
-    // Try parsing directly — works when events use `kind: "eventNode"` or are absent.
-    if let Ok(root) = serde_json::from_value::<RootNode>(value.clone()) {
-        let events = root.program.events.clone();
-        return Ok((root, events));
-    }
-
-    // Fallback: strip the events field and parse without it.
-    // This handles IDLs with old-format events (`kind: "instructionNode"`).
-    if let Some(program) = value.get_mut("program") {
-        program.as_object_mut().map(|obj| obj.remove("events"));
-    }
-
     let root = serde_json::from_value::<RootNode>(value).map_err(IdlError::ParseFile)?;
+    let events = root.program.events.clone();
 
-    Ok((root, Vec::new()))
+    Ok((root, events))
 }
 
 /// Coerce `"code": "6000"` → `"code": 6000` in `program.errors[]`.
