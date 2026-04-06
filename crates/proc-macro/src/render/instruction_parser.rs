@@ -91,9 +91,13 @@ pub(crate) fn extract_ix_discriminator_info(
     has_args: bool,
     mod_ident: &syn::Ident,
 ) -> Option<DiscriminatorInfo> {
-    extract_discriminator_info(&ix.discriminators, args_ident, has_args, mod_ident, |name| {
-        resolve_ix_field(ix, name)
-    })
+    extract_discriminator_info(
+        &ix.discriminators,
+        args_ident,
+        has_args,
+        mod_ident,
+        |name| resolve_ix_field(ix, name),
+    )
 }
 
 /// Extract discriminator info for an event (match arm + args deserialization).

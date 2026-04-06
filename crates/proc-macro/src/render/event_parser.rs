@@ -209,8 +209,12 @@ fn single_event_helper_fn(
 
     let has_args = !struct_node.fields.is_empty();
 
-    let info =
-        super::instruction_parser::extract_event_discriminator_info(event, &args_ident, has_args, ev_mod)?;
+    let info = super::instruction_parser::extract_event_discriminator_info(
+        event,
+        &args_ident,
+        has_args,
+        ev_mod,
+    )?;
 
     // Events have no accounts — only remaining_accounts (always empty vec)
     let accounts_value = quote! {
@@ -251,8 +255,12 @@ fn single_event_match_arm(
 
     let has_args = !struct_node.fields.is_empty();
 
-    let info =
-        super::instruction_parser::extract_event_discriminator_info(event, &args_ident, has_args, ev_mod)?;
+    let info = super::instruction_parser::extract_event_discriminator_info(
+        event,
+        &args_ident,
+        has_args,
+        ev_mod,
+    )?;
 
     let check = info.check;
 
