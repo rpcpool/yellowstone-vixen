@@ -204,8 +204,7 @@ fn single_event_helper_fn(
     let args_ident = format_ident!("{}Args", ev_name_pascal);
     let fn_ident = format_ident!("parse_event_{}", ev_name_snake);
 
-    let struct_node =
-        crate::intermediate_representation::helpers::unwrap_event_struct(&event.data);
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&event.data);
 
     let has_args = !struct_node.fields.is_empty();
 
@@ -250,8 +249,7 @@ fn single_event_match_arm(
     let fn_ident = format_ident!("parse_event_{}", ev_name_snake);
     let args_ident = format_ident!("{}Args", crate::utils::to_pascal_case(&event.name));
 
-    let struct_node =
-        crate::intermediate_representation::helpers::unwrap_event_struct(&event.data);
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&event.data);
 
     let has_args = !struct_node.fields.is_empty();
 
