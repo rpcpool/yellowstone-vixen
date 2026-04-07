@@ -55,7 +55,7 @@ fn resolve_event_field(
     ev: &codama_nodes::EventNode,
     name: &CamelCaseString,
 ) -> Option<ResolvedFieldDiscriminator> {
-    let struct_node = crate::intermediate_representation::helpers::unwrap_nested_struct(&ev.data);
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&ev.data);
 
     let field = struct_node.fields.iter().find(|f| &f.name == name)?;
 

@@ -937,62 +937,42 @@
         "name": "initialize",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inviteSigner",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "expiration",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "12e9320561bea7d1",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inviteSigner",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "expiration",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -1024,60 +1004,40 @@
         "name": "claim",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "claimer",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inviteSigner",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "claimer",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "856209ee85cfbf71",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inviteSigner",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -1109,44 +1069,24 @@
         "name": "clawback",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "ef901e45503b8e40",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -1178,54 +1118,34 @@
         "name": "expire",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "expiration",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "eaff264aa3e10394",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "expiration",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -1257,70 +1177,50 @@
         "name": "initializeToken",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inviteSigner",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "expiration",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "ae53958bb9e18980",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inviteSigner",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "expiration",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -1352,68 +1252,48 @@
         "name": "claimToken",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "claimer",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inviteSigner",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "claimer",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "c1833bd25b91c6ff",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inviteSigner",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -1445,52 +1325,32 @@
         "name": "clawbackToken",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "57a8c2995d4a65f0",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -1522,62 +1382,42 @@
         "name": "expireToken",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sender",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "expiration",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "sender",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "dab99720e3cfb662",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "expiration",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]

@@ -2276,60 +2276,40 @@
         "name": "collectedFee",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "userKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dcaKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "userKey",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "2a88d874b5d16db5",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "dcaKey",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -2361,96 +2341,76 @@
         "name": "filled",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "userKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dcaKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inputMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "outputMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "outAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "feeMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "fee",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "userKey",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "8604113fdd2db1ad",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "dcaKey",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inputMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outputMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "feeMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "fee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -2482,98 +2442,78 @@
         "name": "opened",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "userKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dcaKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inDeposited",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inputMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "outputMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "cycleFrequency",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inAmountPerCycle",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "createdAt",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "userKey",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "a6ac61094d4cbd6d",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "dcaKey",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inDeposited",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inputMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outputMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "cycleFrequency",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inAmountPerCycle",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "createdAt",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -2605,141 +2545,121 @@
         "name": "closed",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "userKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dcaKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inDeposited",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inputMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "outputMint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "cycleFrequency",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inAmountPerCycle",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "createdAt",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalInWithdrawn",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalOutWithdrawn",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "unfilledAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "userClosed",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "userKey",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "dcaKey",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inDeposited",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inputMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outputMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "cycleFrequency",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inAmountPerCycle",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "createdAt",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalInWithdrawn",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalOutWithdrawn",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "unfilledAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "userClosed",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "321f579b87dcc3ef",
-                "encoding": "base16"
               }
             }
           ]
@@ -2771,67 +2691,47 @@
         "name": "withdraw",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dcaKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "inAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "outAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "userWithdraw",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "dcaKey",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "inAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "userWithdraw",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "c0f1c9d946965af7",
-                "encoding": "base16"
               }
             }
           ]
@@ -2863,44 +2763,24 @@
         "name": "deposit",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dcaKey",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "dcaKey",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "3ecdf2aff4a98834",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]

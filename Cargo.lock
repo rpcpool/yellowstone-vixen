@@ -1537,7 +1537,7 @@ dependencies = [
 [[package]]
 name = "codama-errors"
 version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#c813a2decac166aaef1b0e9cc0622bcc4c0169df"
+source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
 dependencies = [
  "cargo_toml",
  "proc-macro2",
@@ -1549,7 +1549,7 @@ dependencies = [
 [[package]]
 name = "codama-nodes"
 version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#c813a2decac166aaef1b0e9cc0622bcc4c0169df"
+source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
 dependencies = [
  "codama-errors",
  "codama-nodes-derive",
@@ -1561,7 +1561,7 @@ dependencies = [
 [[package]]
 name = "codama-nodes-derive"
 version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#c813a2decac166aaef1b0e9cc0622bcc4c0169df"
+source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
 dependencies = [
  "codama-errors",
  "codama-syn-helpers",
@@ -1574,7 +1574,7 @@ dependencies = [
 [[package]]
 name = "codama-syn-helpers"
 version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#c813a2decac166aaef1b0e9cc0622bcc4c0169df"
+source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
 dependencies = [
  "codama-errors",
  "derive_more 1.0.0",
@@ -2037,7 +2037,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d162beedaa69905488a8da94f5ac3edb4dd4788b732fadb7bd120b2625c1976"
 dependencies = [
  "data-encoding",
- "syn 2.0.111",
+ "syn 1.0.109",
 ]
 
 [[package]]

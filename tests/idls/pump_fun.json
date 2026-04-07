@@ -3790,76 +3790,56 @@
         "name": "adminSetCreatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "adminSetCreatorAuthority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "oldCreator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "newCreator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "4045c0681d1e196b",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "adminSetCreatorAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "oldCreator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "newCreator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -3891,34 +3871,14 @@
         "name": "adminSetIdlAuthorityEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "idlAuthority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "idlAuthority",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "f53b46224bb96d5c",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -3950,94 +3910,74 @@
         "name": "adminUpdateTokenIncentivesEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "startTime",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "endTime",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "dayNumber",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "tokenSupplyPerDay",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "secondsInADay",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "startTime",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "93fa6c78f71d43de",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "endTime",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "dayNumber",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenSupplyPerDay",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "secondsInADay",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -4069,74 +4009,54 @@
         "name": "claimCashbackEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalClaimed",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalCashbackEarned",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "e2d6f62107f293e5",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalClaimed",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalCashbackEarned",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -4168,82 +4088,62 @@
         "name": "claimTokenIncentivesEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "amount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalClaimedTokens",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "currentSolVolume",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "4facf631cd5bcee8",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalClaimedTokens",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "currentSolVolume",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -4275,84 +4175,64 @@
         "name": "closeUserVolumeAccumulatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalUnclaimedTokens",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalClaimedTokens",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "currentSolVolume",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "lastUpdateTimestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "929fbdac925838f4",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalUnclaimedTokens",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalClaimedTokens",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "currentSolVolume",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "lastUpdateTimestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -4384,54 +4264,34 @@
         "name": "collectCreatorFeeEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creatorFee",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "7a027f010ebf0caf",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creatorFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -4463,60 +4323,40 @@
         "name": "completeEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "5f72619cd42e9808",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -4548,98 +4388,78 @@
         "name": "completePumpAmmMigrationEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mintAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "solAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "poolMigrationFee",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "pool",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "bde95db95c94ea94",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mintAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "solAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "poolMigrationFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "pool",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -4671,193 +4491,173 @@
         "name": "createEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "name",
-                "docs": [],
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "name",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
                 "type": {
-                  "kind": "sizePrefixTypeNode",
-                  "type": {
-                    "kind": "stringTypeNode",
-                    "encoding": "utf8"
-                  },
-                  "prefix": {
-                    "kind": "numberTypeNode",
-                    "format": "u32",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "symbol",
-                "docs": [],
-                "type": {
-                  "kind": "sizePrefixTypeNode",
-                  "type": {
-                    "kind": "stringTypeNode",
-                    "encoding": "utf8"
-                  },
-                  "prefix": {
-                    "kind": "numberTypeNode",
-                    "format": "u32",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "uri",
-                "docs": [],
-                "type": {
-                  "kind": "sizePrefixTypeNode",
-                  "type": {
-                    "kind": "stringTypeNode",
-                    "encoding": "utf8"
-                  },
-                  "prefix": {
-                    "kind": "numberTypeNode",
-                    "format": "u32",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
                   "kind": "numberTypeNode",
-                  "format": "i64",
+                  "format": "u32",
                   "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "virtualTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "virtualSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "realTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "tokenTotalSupply",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "tokenProgram",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "isMayhemMode",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "isCashbackEnabled",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
                 }
               }
-            ]
-          },
-          "prefix": [
+            },
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "symbol",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
+                "kind": "sizePrefixTypeNode",
                 "type": {
-                  "kind": "bytesTypeNode"
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "1b72a94ddeeb6376",
-                "encoding": "base16"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uri",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "virtualTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "virtualSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "realTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenTotalSupply",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenProgram",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isMayhemMode",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isCashbackEnabled",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
               }
             }
           ]
@@ -4889,98 +4689,78 @@
         "name": "distributeCreatorFeesEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sharingConfig",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "admin",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "shareholders",
-                "docs": [],
-                "type": {
-                  "kind": "arrayTypeNode",
-                  "item": {
-                    "kind": "definedTypeLinkNode",
-                    "name": "shareholder"
-                  },
-                  "count": {
-                    "kind": "prefixedCountNode",
-                    "prefix": {
-                      "kind": "numberTypeNode",
-                      "format": "u32",
-                      "endian": "le"
-                    }
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sharingConfig",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "admin",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "shareholders",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "shareholder"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
                   }
                 }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "distributed",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
               }
-            ]
-          },
-          "prefix": [
+            },
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "distributed",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "a537817004b3ca28",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -5012,72 +4792,52 @@
         "name": "extendAccountEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "account",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "currentSize",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "newSize",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "account",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "6161d7905d92167c",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "currentSize",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "newSize",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -5109,52 +4869,32 @@
         "name": "initUserVolumeAccumulatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "payer",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "payer",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "86240d48e86582d8",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -5186,76 +4926,56 @@
         "name": "migrateBondingCurveCreatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "sharingConfig",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "oldCreator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "newCreator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "9ba768dcd56cf303",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sharingConfig",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "oldCreator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "newCreator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -5287,59 +5007,39 @@
         "name": "minimumDistributableFeeEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "minimumRequired",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "distributableFees",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "canDistribute",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "minimumRequired",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "distributableFees",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "canDistribute",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "a8d884efebb63134",
-                "encoding": "base16"
               }
             }
           ]
@@ -5371,59 +5071,39 @@
         "name": "reservedFeeRecipientsEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "reservedFeeRecipient",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "reservedFeeRecipients",
-                "docs": [],
-                "type": {
-                  "kind": "arrayTypeNode",
-                  "item": {
-                    "kind": "publicKeyTypeNode"
-                  },
-                  "count": {
-                    "kind": "fixedCountNode",
-                    "value": 7
-                  }
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reservedFeeRecipient",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reservedFeeRecipients",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 7
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "2bbcfa12dd4bbb5f",
-                "encoding": "base16"
               }
             }
           ]
@@ -5455,60 +5135,40 @@
         "name": "setCreatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "ed347b25f5fb48d2",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -5540,68 +5200,48 @@
         "name": "setMetaplexCreatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "bondingCurve",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "metadata",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "8ecb06207f69bfa2",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bondingCurve",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "metadata",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -5633,168 +5273,148 @@
         "name": "setParamsEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "initialVirtualTokenReserves",
-                "docs": [],
-                "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "initialVirtualTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "initialVirtualSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "initialRealTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "finalRealSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenTotalSupply",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "feeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "withdrawAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "enableMigrate",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
                   "kind": "numberTypeNode",
-                  "format": "u64",
+                  "format": "u8",
                   "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "initialVirtualSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "initialRealTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "finalRealSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "tokenTotalSupply",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "feeBasisPoints",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "withdrawAuthority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "enableMigrate",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "poolMigrationFee",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creatorFeeBasisPoints",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "feeRecipients",
-                "docs": [],
-                "type": {
-                  "kind": "arrayTypeNode",
-                  "item": {
-                    "kind": "publicKeyTypeNode"
-                  },
-                  "count": {
-                    "kind": "fixedCountNode",
-                    "value": 8
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "setCreatorAuthority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "adminSetCreatorAuthority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
                 }
               }
-            ]
-          },
-          "prefix": [
+            },
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "poolMigrationFee",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creatorFeeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "feeRecipients",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 8
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "dfc39ff63e308f83",
-                "encoding": "base16"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "setCreatorAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "adminSetCreatorAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
               }
             }
           ]
@@ -5826,64 +5446,44 @@
         "name": "syncUserVolumeAccumulatorEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalClaimedTokensBefore",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalClaimedTokensAfter",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "c57aa77c74515bff",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalClaimedTokensBefore",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalClaimedTokensAfter",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -5915,284 +5515,264 @@
         "name": "tradeEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "solAmount",
-                "docs": [],
-                "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "solAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isBuy",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
                   "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "tokenAmount",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "isBuy",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "user",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "virtualSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "virtualTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "realSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "realTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "feeRecipient",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "feeBasisPoints",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "fee",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creator",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creatorFeeBasisPoints",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "creatorFee",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "trackVolume",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalUnclaimedTokens",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "totalClaimedTokens",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "currentSolVolume",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "lastUpdateTimestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "ixName",
-                "docs": [],
-                "type": {
-                  "kind": "sizePrefixTypeNode",
-                  "type": {
-                    "kind": "stringTypeNode",
-                    "encoding": "utf8"
-                  },
-                  "prefix": {
-                    "kind": "numberTypeNode",
-                    "format": "u32",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mayhemMode",
-                "docs": [],
-                "type": {
-                  "kind": "booleanTypeNode",
-                  "size": {
-                    "kind": "numberTypeNode",
-                    "format": "u8",
-                    "endian": "le"
-                  }
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "cashbackFeeBasisPoints",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "cashback",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
+                  "format": "u8",
                   "endian": "le"
                 }
               }
-            ]
-          },
-          "prefix": [
+            },
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "user",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "virtualSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "virtualTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "realSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "realTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "feeRecipient",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "feeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "fee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creator",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creatorFeeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creatorFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "trackVolume",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
                 }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "bddb7fd34ee661ee",
-                "encoding": "base16"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalUnclaimedTokens",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalClaimedTokens",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "currentSolVolume",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "lastUpdateTimestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "ixName",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mayhemMode",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "cashbackFeeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "cashback",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]
@@ -6224,60 +5804,40 @@
         "name": "updateGlobalAuthorityEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "global",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "authority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "newAuthority",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "global",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "b6c3892a23cecff7",
-                "encoding": "base16"
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "authority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "newAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
               }
             }
           ]
@@ -6309,104 +5869,84 @@
         "name": "updateMayhemVirtualParamsEvent",
         "docs": [],
         "data": {
-          "kind": "hiddenPrefixTypeNode",
-          "type": {
-            "kind": "structTypeNode",
-            "fields": [
-              {
-                "kind": "structFieldTypeNode",
-                "name": "timestamp",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "i64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "mint",
-                "docs": [],
-                "type": {
-                  "kind": "publicKeyTypeNode"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "virtualTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "virtualSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "newVirtualTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "newVirtualSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "realTokenReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              },
-              {
-                "kind": "structFieldTypeNode",
-                "name": "realSolReserves",
-                "docs": [],
-                "type": {
-                  "kind": "numberTypeNode",
-                  "format": "u64",
-                  "endian": "le"
-                }
-              }
-            ]
-          },
-          "prefix": [
+          "kind": "structTypeNode",
+          "fields": [
             {
-              "kind": "constantValueNode",
+              "kind": "structFieldTypeNode",
+              "name": "timestamp",
+              "docs": [],
               "type": {
-                "kind": "fixedSizeTypeNode",
-                "size": 8,
-                "type": {
-                  "kind": "bytesTypeNode"
-                }
-              },
-              "value": {
-                "kind": "bytesValueNode",
-                "data": "757be4b6a1a8dcd6",
-                "encoding": "base16"
+                "kind": "numberTypeNode",
+                "format": "i64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "virtualTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "virtualSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "newVirtualTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "newVirtualSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "realTokenReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "realSolReserves",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
               }
             }
           ]

@@ -49,7 +49,7 @@ fn build_event_messages(ev: &EventNode, ir: &mut SchemaIr) {
         kind: TypeKindIr::Event,
     });
 
-    let struct_node = crate::intermediate_representation::helpers::unwrap_nested_struct(&ev.data);
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&ev.data);
     let arg_fields = build_fields_ir(&args_name, &struct_node.fields, ir, TypeKindIr::Helper);
 
     ir.types.push(TypeIr {
