@@ -185,6 +185,26 @@ message SwapParameters2 {
   uint32 swap_mode = 3;
 }
     
+message SwapResult {
+  uint64 actual_input_amount = 1;
+  uint64 output_amount = 2;
+  bytes next_sqrt_price = 3;
+  uint64 trading_fee = 4;
+  uint64 protocol_fee = 5;
+  uint64 referral_fee = 6;
+}
+    
+message SwapResult2 {
+  uint64 included_fee_input_amount = 1;
+  uint64 excluded_fee_input_amount = 2;
+  uint64 amount_left = 3;
+  uint64 output_amount = 4;
+  bytes next_sqrt_price = 5;
+  uint64 trading_fee = 6;
+  uint64 protocol_fee = 7;
+  uint64 referral_fee = 8;
+}
+    
 message TokenSupplyParams {
   uint64 pre_migration_token_supply = 1;
   uint64 post_migration_token_supply = 2;

@@ -1,7 +1,5 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
-use codama_nodes::{
-    CamelCaseString, DiscriminatorNode, InstructionInputValueNode, Number, TypeNode, ValueNode,
-};
+use codama_nodes::{CamelCaseString, DiscriminatorNode, Number, TypeNode, ValueNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -29,47 +27,150 @@ fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec
     }
 }
 
-/// Extract a comparable discriminator key from an instruction for collision detection.
-pub(crate) fn extract_discriminator_key(
-    instruction: &codama_nodes::InstructionNode,
-) -> Option<DiscriminatorKey> {
-    let discriminator = instruction.discriminators.first()?;
+struct ResolvedFieldDiscriminator {
+    r#type: TypeNode,
+    bytes: Option<Vec<u8>>,
+}
 
-    match discriminator {
-        DiscriminatorNode::Constant(node) => {
-            let ValueNode::Number(nn) = node.constant.value.as_ref() else {
-                return None;
-            };
+fn resolve_ix_field(
+    ix: &codama_nodes::InstructionNode,
+    name: &CamelCaseString,
+) -> Option<ResolvedFieldDiscriminator> {
+    let field = ix.arguments.iter().find(|f| &f.name == name)?;
 
+    let bytes = match field.default_value.as_ref()? {
+        codama_nodes::InstructionInputValueNode::Bytes(b) => {
+            Some(decode_discriminator_field_bytes(b))
+        },
+        codama_nodes::InstructionInputValueNode::Number(nn) => {
             let Number::UnsignedInteger(value) = nn.number else {
                 return None;
             };
 
-            Some(DiscriminatorKey::Constant {
-                offset: node.offset,
-                value,
-            })
+            Some(vec![value as u8])
+        },
+        _ => None,
+    };
+
+    Some(ResolvedFieldDiscriminator {
+        r#type: field.r#type.clone(),
+        bytes,
+    })
+}
+
+fn resolve_event_field(
+    ev: &codama_nodes::EventNode,
+    name: &CamelCaseString,
+) -> Option<ResolvedFieldDiscriminator> {
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&ev.data);
+
+    let field = struct_node.fields.iter().find(|f| &f.name == name)?;
+
+    let bytes = match field.default_value.as_ref()? {
+        ValueNode::Bytes(b) => Some(decode_discriminator_field_bytes(b)),
+        _ => None,
+    };
+
+    Some(ResolvedFieldDiscriminator {
+        r#type: field.r#type.clone(),
+        bytes,
+    })
+}
+
+/// Extract a discriminator key for an instruction (collision detection).
+pub(crate) fn extract_ix_discriminator_key(
+    ix: &codama_nodes::InstructionNode,
+) -> Option<DiscriminatorKey> {
+    extract_discriminator_key(&ix.discriminators, |name| resolve_ix_field(ix, name))
+}
+
+/// Extract a discriminator key for an event (collision detection).
+pub(crate) fn extract_event_discriminator_key(
+    ev: &codama_nodes::EventNode,
+) -> Option<DiscriminatorKey> {
+    extract_discriminator_key(&ev.discriminators, |name| resolve_event_field(ev, name))
+}
+
+/// Extract discriminator info for an instruction (match arm + args deserialization).
+pub(crate) fn extract_ix_discriminator_info(
+    ix: &codama_nodes::InstructionNode,
+    args_ident: &syn::Ident,
+    has_args: bool,
+    mod_ident: &syn::Ident,
+) -> Option<DiscriminatorInfo> {
+    extract_discriminator_info(
+        &ix.discriminators,
+        args_ident,
+        has_args,
+        mod_ident,
+        |name| resolve_ix_field(ix, name),
+    )
+}
+
+/// Extract discriminator info for an event (match arm + args deserialization).
+pub(crate) fn extract_event_discriminator_info(
+    ev: &codama_nodes::EventNode,
+    args_ident: &syn::Ident,
+    has_args: bool,
+    mod_ident: &syn::Ident,
+) -> Option<DiscriminatorInfo> {
+    extract_discriminator_info(
+        &ev.discriminators,
+        args_ident,
+        has_args,
+        mod_ident,
+        |name| resolve_event_field(ev, name),
+    )
+}
+
+fn extract_discriminator_key(
+    discriminators: &[DiscriminatorNode],
+    resolve_field: impl Fn(&CamelCaseString) -> Option<ResolvedFieldDiscriminator>,
+) -> Option<DiscriminatorKey> {
+    let discriminator = discriminators.first()?;
+
+    match discriminator {
+        DiscriminatorNode::Constant(cn) => match cn.constant.value.as_ref() {
+            ValueNode::Number(nn) => {
+                let Number::UnsignedInteger(value) = nn.number else {
+                    return None;
+                };
+
+                Some(DiscriminatorKey::Constant {
+                    offset: cn.offset,
+                    value,
+                })
+            },
+
+            ValueNode::Bytes(bv) => {
+                let bytes = decode_discriminator_field_bytes(bv);
+
+                Some(DiscriminatorKey::Field {
+                    offset: cn.offset,
+                    bytes,
+                })
+            },
+
+            _ => None,
         },
         DiscriminatorNode::Field(node) => {
-            let field = instruction.arguments.iter().find(|f| f.name == node.name)?;
-            let default_value = field.default_value.as_ref()?;
+            let resolved = resolve_field(&node.name)?;
 
-            match (&field.r#type, default_value) {
+            match &resolved.r#type {
                 // Anchor-style: fixed-size bytes discriminator (e.g. 8-byte sighash)
-                (TypeNode::FixedSize(_), InstructionInputValueNode::Bytes(bytes)) => {
-                    let discriminator_bytes = decode_discriminator_field_bytes(bytes);
+                TypeNode::FixedSize(_) => {
+                    let bytes = resolved.bytes?;
 
                     Some(DiscriminatorKey::Field {
                         offset: node.offset,
-                        bytes: discriminator_bytes,
+                        bytes,
                     })
                 },
 
                 // Shank-style: single number discriminator (e.g. u8 index)
-                (TypeNode::Number(_), InstructionInputValueNode::Number(nn)) => {
-                    let Number::UnsignedInteger(value) = nn.number else {
-                        return None;
-                    };
+                TypeNode::Number(_) => {
+                    let bytes = resolved.bytes?;
+                    let value = bytes.first().copied()? as u64;
 
                     Some(DiscriminatorKey::Constant {
                         offset: node.offset,
@@ -80,7 +181,7 @@ pub(crate) fn extract_discriminator_key(
                 _ => None,
             }
         },
-        DiscriminatorNode::Size(node) => Some(DiscriminatorKey::Size { size: node.size }),
+        DiscriminatorNode::Size(sn) => Some(DiscriminatorKey::Size { size: sn.size }),
     }
 }
 
@@ -93,76 +194,106 @@ pub(crate) struct DiscriminatorInfo {
     pub(crate) check: TokenStream,
 }
 
-/// Extract discriminator info from an instruction node.
-///
-/// Returns None if the discriminator can't be processed (unsupported format).
-pub(crate) fn extract_discriminator_info(
-    instruction: &codama_nodes::InstructionNode,
+fn extract_discriminator_info(
+    discriminators: &[DiscriminatorNode],
     args_ident: &syn::Ident,
     has_args: bool,
+    mod_ident: &syn::Ident,
+    resolve_field: impl Fn(&CamelCaseString) -> Option<ResolvedFieldDiscriminator>,
 ) -> Option<DiscriminatorInfo> {
-    let discriminator = instruction.discriminators.first()?;
+    let discriminator = discriminators.first()?;
 
     match discriminator {
-        // 1-byte discriminator at offset (usually offset=0)
-        DiscriminatorNode::Constant(node) => {
-            let offset = node.offset;
+        // Constant discriminator at offset
+        DiscriminatorNode::Constant(cn) => {
+            let offset = cn.offset;
 
-            let ValueNode::Number(nn) = node.constant.value.as_ref() else {
-                return None;
-            };
+            match cn.constant.value.as_ref() {
+                // 1-byte number discriminator
+                ValueNode::Number(nn) => {
+                    let Number::UnsignedInteger(value) = nn.number else {
+                        return None;
+                    };
 
-            let Number::UnsignedInteger(value) = nn.number else {
-                return None;
-            };
+                    let args_start = offset + 1;
 
-            let args_start = offset + 1;
+                    let args_expr = if has_args {
+                        Some(quote! {
+                            {
+                                let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
 
-            let args_expr = if has_args {
-                Some(quote! {
-                    {
-                        let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
+                                <#mod_ident::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                    .map_err(|e| ParseError::Other(e.into()))?
+                            }
+                        })
+                    } else {
+                        None
+                    };
 
-                        <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
-                            .map_err(|e| ParseError::Other(e.into()))?
-                    }
-                })
-            } else {
-                None
-            };
+                    let check = quote! {
+                        if let Some(d) = data.get(#offset) {
+                            *d == (#value as u8)
+                        } else {
+                            false
+                        }
+                    };
 
-            let check = quote! {
-                if let Some(d) = data.get(#offset) {
-                    *d == (#value as u8)
-                } else {
-                    false
-                }
-            };
+                    Some(DiscriminatorInfo { args_expr, check })
+                },
 
-            Some(DiscriminatorInfo { args_expr, check })
-        },
-
-        // Field-based discriminator (Anchor 8-byte sighash or Shank u8 index)
-        DiscriminatorNode::Field(node) => {
-            let offset = node.offset;
-
-            let field = instruction.arguments.iter().find(|f| f.name == node.name)?;
-            let default_value = field.default_value.as_ref()?;
-
-            match (&field.r#type, default_value) {
-                // Anchor-style: fixed-size bytes discriminator
-                (TypeNode::FixedSize(fixed_size_node), InstructionInputValueNode::Bytes(bytes)) => {
-                    let size = fixed_size_node.size;
+                // Multi-byte constant discriminator (e.g. anchor event sighash)
+                ValueNode::Bytes(bv) => {
+                    let discriminator_bytes = decode_discriminator_field_bytes(bv);
+                    let size = discriminator_bytes.len();
                     let end = offset + size;
-
-                    let discriminator_bytes = decode_discriminator_field_bytes(bytes);
 
                     let args_expr = if has_args {
                         Some(quote! {
                             {
                                 let mut slice: &[u8] = data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?;
 
-                                <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                <#mod_ident::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                    .map_err(|e| ParseError::Other(e.into()))?
+                            }
+                        })
+                    } else {
+                        None
+                    };
+
+                    let check = quote! {
+                        if let Some(slice) = data.get(#offset..#end) {
+                            slice == &[#(#discriminator_bytes),*]
+                        } else {
+                            false
+                        }
+                    };
+
+                    Some(DiscriminatorInfo { args_expr, check })
+                },
+
+                _ => None,
+            }
+        },
+
+        // Field-based discriminator (Anchor 8-byte sighash or Shank u8 index)
+        DiscriminatorNode::Field(node) => {
+            let offset = node.offset;
+            let resolved = resolve_field(&node.name)?;
+
+            match &resolved.r#type {
+                // Anchor-style: fixed-size bytes discriminator
+                TypeNode::FixedSize(fixed_size_node) => {
+                    let size = fixed_size_node.size;
+                    let end = offset + size;
+
+                    let discriminator_bytes = resolved.bytes?;
+
+                    let args_expr = if has_args {
+                        Some(quote! {
+                            {
+                                let mut slice: &[u8] = data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?;
+
+                                <#mod_ident::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                                     .map_err(|e| ParseError::Other(e.into()))?
                             }
                         })
@@ -182,10 +313,9 @@ pub(crate) fn extract_discriminator_info(
                 },
 
                 // Shank-style: single number discriminator (e.g. u8 index)
-                (TypeNode::Number(_), InstructionInputValueNode::Number(nn)) => {
-                    let Number::UnsignedInteger(value) = nn.number else {
-                        return None;
-                    };
+                TypeNode::Number(_) => {
+                    let bytes = resolved.bytes?;
+                    let value = bytes.first().copied()? as u64;
 
                     let args_start = offset + 1;
 
@@ -194,7 +324,7 @@ pub(crate) fn extract_discriminator_info(
                             {
                                 let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
 
-                                <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                <#mod_ident::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                                     .map_err(|e| ParseError::Other(e.into()))?
                             }
                         })
@@ -218,15 +348,15 @@ pub(crate) fn extract_discriminator_info(
         },
 
         // Discriminator by total size only
-        DiscriminatorNode::Size(node) => {
-            let size = node.size;
+        DiscriminatorNode::Size(sn) => {
+            let size = sn.size;
 
             let args_expr = if has_args {
                 Some(quote! {
                     {
                         let mut slice: &[u8] = data;
 
-                        <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                        <#mod_ident::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                             .map_err(|e| ParseError::Other(e.into()))?
                     }
                 })
@@ -272,10 +402,11 @@ fn single_instruction_helper_fn(
     let accounts_ident = format_ident!("{}Accounts", ix_name_pascal);
     let args_ident = format_ident!("{}Args", ix_name_pascal);
     let fn_ident = format_ident!("parse_{}", ix_name_snake);
+    let ix_mod = format_ident!("instruction");
 
     let has_args = !instruction.arguments.is_empty();
 
-    let info = extract_discriminator_info(instruction, &args_ident, has_args)?;
+    let info = extract_ix_discriminator_info(instruction, &args_ident, has_args, &ix_mod)?;
 
     let accounts_fields = instruction
         .accounts
@@ -315,9 +446,7 @@ fn single_instruction_helper_fn(
             remaining_accounts: accounts
                 .get(#num_defined_accounts..)
                 .unwrap_or_default()
-                .iter()
-                .map(|a| ::yellowstone_vixen_core::Pubkey::try_from(a.as_slice()))
-                .collect::<::core::result::Result<Vec<_>, _>>()?,
+                .to_vec(),
         }
     };
 
@@ -364,10 +493,11 @@ fn single_instruction_match_arm(
     let ix_name_snake = crate::utils::to_snake_case(&instruction.name);
     let fn_ident = format_ident!("parse_{}", ix_name_snake);
     let args_ident = format_ident!("{}Args", crate::utils::to_pascal_case(&instruction.name));
+    let ix_mod = format_ident!("instruction");
 
     let has_args = !instruction.arguments.is_empty();
 
-    let info = extract_discriminator_info(instruction, &args_ident, has_args)?;
+    let info = extract_ix_discriminator_info(instruction, &args_ident, has_args, &ix_mod)?;
 
     let check = info.check;
 
@@ -394,10 +524,11 @@ pub(crate) fn collision_group_match_arm(
     let first = instructions[0];
 
     let args_ident = format_ident!("{}Args", crate::utils::to_pascal_case(&first.name));
+    let ix_mod = format_ident!("instruction");
 
     let has_args = !first.arguments.is_empty();
 
-    let info = extract_discriminator_info(first, &args_ident, has_args)
+    let info = extract_ix_discriminator_info(first, &args_ident, has_args, &ix_mod)
         .expect("collision group should have valid discriminator");
 
     let check = info.check;
@@ -479,7 +610,7 @@ pub fn instruction_parser(
     let mut groups: Vec<(DiscriminatorKey, Vec<&codama_nodes::InstructionNode>)> = Vec::new();
 
     for ix in instructions {
-        if let Some(key) = extract_discriminator_key(ix) {
+        if let Some(key) = extract_ix_discriminator_key(ix) {
             if let Some(group) = groups.iter_mut().find(|(k, _)| k == &key) {
                 group.1.push(ix);
             } else {
@@ -556,7 +687,9 @@ pub fn instruction_parser(
                             && inner.data[..8] == EVENT_IX_TAG
                             && *inner.program == PROGRAM_ID
                         {
-                            if let Ok(ev) = resolve_event_default(&inner.accounts, &inner.data) {
+                            // Strip the EVENT_IX_TAG prefix — the event discriminator
+                            // follows immediately after it.
+                            if let Ok(ev) = resolve_event_default(&inner.accounts, &inner.data[8..]) {
                                 program_events.push(ev);
                             }
                         }

@@ -3,7 +3,7 @@ use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("../idls/okx-labs1.json");
+include_vixen_parser!("../idls/okx_labs1.json");
 
 #[test]
 fn check_protobuf_schema() {

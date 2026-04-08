@@ -332,3 +332,19 @@ pub fn unwrap_nested_struct(
         other => panic!("Unsupported AccountNode.data wrapper: {:?}", other),
     }
 }
+
+/// Unwrap a Codama TypeNode to the underlying StructTypeNode for events.
+///
+/// Event data is a TypeNode that may be wrapped in a HiddenPrefix (for the discriminator bytes).
+pub fn unwrap_event_struct(node: &codama_nodes::TypeNode) -> &codama_nodes::StructTypeNode {
+    use codama_nodes::TypeNode as T;
+
+    match node {
+        T::Struct(s) => s,
+        T::HiddenPrefix(w) => unwrap_event_struct(&w.r#type),
+        T::HiddenSuffix(w) => unwrap_event_struct(&w.r#type),
+        T::FixedSize(w) => unwrap_event_struct(&w.r#type),
+        T::SizePrefix(w) => unwrap_event_struct(&w.r#type),
+        other => panic!("Unsupported EventNode.data wrapper: {:?}", other),
+    }
+}

@@ -64,7 +64,7 @@ impl From<AccountInfo> for SubscribeUpdateAccount {
                 txn_signature: None,
                 write_version: 0,
                 pubkey: value.pubkey.to_bytes().to_vec(),
-                data: value.data.into(),
+                data: value.data,
                 executable: value.executable,
                 lamports: value.lamports,
                 owner: value.owner.to_bytes().to_vec(),
@@ -96,7 +96,7 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 
         Ok(Self {
             pubkey,
-            data: account_info.data.to_vec(),
+            data: account_info.data.clone(),
             executable: account_info.executable,
             lamports: account_info.lamports,
             owner,

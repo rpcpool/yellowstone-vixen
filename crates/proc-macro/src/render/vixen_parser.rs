@@ -1,8 +1,8 @@
-use codama_nodes::RootNode;
+use codama_nodes::{EventNode, RootNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-pub fn vixen_parser(idl: &RootNode, events: &[codama_nodes::InstructionNode]) -> TokenStream {
+pub fn vixen_parser(idl: &RootNode, events: &[EventNode]) -> TokenStream {
     let program_mod_ident = format_ident!("{}", crate::utils::to_snake_case(&idl.program.name));
 
     let program_pubkey = crate::render::program_pubkey(&idl.program.public_key);
