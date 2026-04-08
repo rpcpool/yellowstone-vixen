@@ -1,0 +1,1256 @@
+---
+source: tests/proc-macro/tests/spl_governance.rs
+expression: "spl_governance::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package spl_governance;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message GovernanceAccountTypeUninitialized {
+}
+    
+message GovernanceAccountTypeRealmV1 {
+}
+    
+message GovernanceAccountTypeTokenOwnerRecordV1 {
+}
+    
+message GovernanceAccountTypeGovernanceV1 {
+}
+    
+message GovernanceAccountTypeProgramGovernanceV1 {
+}
+    
+message GovernanceAccountTypeProposalV1 {
+}
+    
+message GovernanceAccountTypeSignatoryRecordV1 {
+}
+    
+message GovernanceAccountTypeVoteRecordV1 {
+}
+    
+message GovernanceAccountTypeProposalInstructionV1 {
+}
+    
+message GovernanceAccountTypeMintGovernanceV1 {
+}
+    
+message GovernanceAccountTypeTokenGovernanceV1 {
+}
+    
+message GovernanceAccountTypeRealmConfig {
+}
+    
+message GovernanceAccountTypeVoteRecordV2 {
+}
+    
+message GovernanceAccountTypeProposalTransactionV2 {
+}
+    
+message GovernanceAccountTypeProposalV2 {
+}
+    
+message GovernanceAccountTypeProgramMetadata {
+}
+    
+message GovernanceAccountTypeRealmV2 {
+}
+    
+message GovernanceAccountTypeTokenOwnerRecordV2 {
+}
+    
+message GovernanceAccountTypeGovernanceV2 {
+}
+    
+message GovernanceAccountTypeProgramGovernanceV2 {
+}
+    
+message GovernanceAccountTypeMintGovernanceV2 {
+}
+    
+message GovernanceAccountTypeTokenGovernanceV2 {
+}
+    
+message GovernanceAccountTypeSignatoryRecordV2 {
+}
+    
+message GovernanceAccountTypeProposalDeposit {
+}
+    
+message GovernanceAccountTypeRequiredSignatory {
+}
+    
+message GovernanceConfig {
+  VoteThreshold community_vote_threshold = 1;
+  uint64 min_community_weight_to_create_proposal = 2;
+  uint32 transactions_hold_up_time = 3;
+  uint32 voting_base_time = 4;
+  VoteTipping community_vote_tipping = 5;
+  VoteThreshold council_vote_threshold = 6;
+  VoteThreshold council_veto_vote_threshold = 7;
+  uint64 min_council_weight_to_create_proposal = 8;
+  VoteTipping council_vote_tipping = 9;
+  VoteThreshold community_veto_vote_threshold = 10;
+  uint32 voting_cool_off_time = 11;
+  uint32 deposit_exempt_proposal_count = 12;
+}
+    
+message VoteThresholdYesVotePercentage {
+  uint32 item_0 = 1;
+}
+    
+message VoteThresholdQuorumPercentage {
+  uint32 item_0 = 1;
+}
+    
+message VoteThresholdDisabled {
+}
+    
+message VoteTippingStrict {
+}
+    
+message VoteTippingEarly {
+}
+    
+message VoteTippingDisabled {
+}
+    
+message RealmConfigArgs {
+  bool use_council_mint = 1;
+  uint64 min_community_weight_to_create_governance = 2;
+  MintMaxVoterWeightSource community_mint_max_voter_weight_source = 3;
+  GoverningTokenConfigArgs community_token_config_args = 4;
+  GoverningTokenConfigArgs council_token_config_args = 5;
+}
+    
+message RealmConfig {
+  uint32 legacy1 = 1;
+  uint32 legacy2 = 2;
+  bytes reserved = 3;
+  uint64 min_community_weight_to_create_governance = 4;
+  MintMaxVoterWeightSource community_mint_max_voter_weight_source = 5;
+  optional PublicKey council_mint = 6;
+}
+    
+message GoverningTokenConfigArgs {
+  bool use_voter_weight_addin = 1;
+  bool use_max_voter_weight_addin = 2;
+  GoverningTokenType token_type = 3;
+}
+    
+message GoverningTokenConfig {
+  optional PublicKey voter_weight_addin = 1;
+  optional PublicKey max_voter_weight_addin = 2;
+  GoverningTokenType token_type = 3;
+  bytes reserved = 4;
+  repeated PublicKey lock_authorities = 5;
+}
+    
+message GoverningTokenTypeLiquid {
+}
+    
+message GoverningTokenTypeMembership {
+}
+    
+message GoverningTokenTypeDormant {
+}
+    
+message MintMaxVoterWeightSourceSupplyFraction {
+  uint64 item_0 = 1;
+}
+    
+message MintMaxVoterWeightSourceAbsolute {
+  uint64 item_0 = 1;
+}
+    
+message SetRealmAuthorityActionSetUnchecked {
+}
+    
+message SetRealmAuthorityActionSetChecked {
+}
+    
+message SetRealmAuthorityActionRemove {
+}
+    
+message SetRealmConfigItemArgsTokenOwnerRecordLockAuthority {
+  SetConfigItemActionType action = 1;
+  PublicKey governing_token_mint = 2;
+  PublicKey authority = 3;
+}
+    
+message SetConfigItemActionTypeAdd {
+}
+    
+message SetConfigItemActionTypeRemove {
+}
+    
+message VoteTypeSingleChoice {
+}
+    
+message VoteTypeMultiChoice {
+  MultiChoiceType choice_type = 1;
+  uint32 min_voter_options = 2;
+  uint32 max_voter_options = 3;
+  uint32 max_winning_options = 4;
+}
+    
+message MultiChoiceTypeFullWeight {
+}
+    
+message MultiChoiceTypeWeighted {
+}
+    
+message ProposalStateDraft {
+}
+    
+message ProposalStateSigningOff {
+}
+    
+message ProposalStateVoting {
+}
+    
+message ProposalStateSucceeded {
+}
+    
+message ProposalStateExecuting {
+}
+    
+message ProposalStateCompleted {
+}
+    
+message ProposalStateCancelled {
+}
+    
+message ProposalStateDefeated {
+}
+    
+message ProposalStateExecutingWithErrors {
+}
+    
+message ProposalStateVetoed {
+}
+    
+message ProposalOption {
+  string label = 1;
+  uint64 vote_weight = 2;
+  OptionVoteResult vote_result = 3;
+  uint32 transactions_executed_count = 4;
+  uint32 transactions_count = 5;
+  uint32 transactions_next_index = 6;
+}
+    
+message OptionVoteResultNone {
+}
+    
+message OptionVoteResultSucceeded {
+}
+    
+message OptionVoteResultDefeated {
+}
+    
+message InstructionExecutionFlagsNone {
+}
+    
+message InstructionExecutionFlagsOrdered {
+}
+    
+message InstructionExecutionFlagsUseTransaction {
+}
+    
+message TransactionExecutionStatusNone {
+}
+    
+message TransactionExecutionStatusSuccess {
+}
+    
+message TransactionExecutionStatusError {
+}
+    
+message InstructionData {
+  PublicKey program_id = 1;
+  repeated AccountMetaData accounts = 2;
+  bytes data = 3;
+}
+    
+message AccountMetaData {
+  PublicKey pubkey = 1;
+  bool is_signer = 2;
+  bool is_writable = 3;
+}
+    
+message VoteChoice {
+  uint32 rank = 1;
+  uint32 weight_percentage = 2;
+}
+    
+message VoteApprove {
+  repeated VoteChoice item_0 = 1;
+}
+    
+message VoteDeny {
+}
+    
+message VoteAbstain {
+}
+    
+message VoteVeto {
+}
+    
+message VoteKindElectorate {
+}
+    
+message VoteKindVeto {
+}
+    
+message TokenOwnerRecordLock {
+  uint32 lock_id = 1;
+  PublicKey authority = 2;
+  optional int64 expiry = 3;
+}
+    
+message Reserved110 {
+  bytes reserved64 = 1;
+  bytes reserved32 = 2;
+  bytes reserved14 = 3;
+}
+    
+message Reserved119 {
+  bytes reserved64 = 1;
+  bytes reserved32 = 2;
+  bytes reserved23 = 3;
+}
+    
+message RealmV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey community_mint = 2;
+  RealmConfig config = 3;
+  bytes reserved = 4;
+  uint32 legacy1 = 5;
+  optional PublicKey authority = 6;
+  string name = 7;
+  bytes reserved_v2 = 8;
+}
+    
+message RealmConfigAccount {
+  GovernanceAccountType account_type = 1;
+  PublicKey realm = 2;
+  GoverningTokenConfig community_token_config = 3;
+  GoverningTokenConfig council_token_config = 4;
+  Reserved110 reserved = 5;
+}
+    
+message GovernanceV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey realm = 2;
+  PublicKey governance_seed = 3;
+  uint32 reserved1 = 4;
+  GovernanceConfig config = 5;
+  Reserved119 reserved_v2 = 6;
+  uint32 required_signatories_count = 7;
+  uint64 active_proposal_count = 8;
+}
+    
+message ProposalV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey governance = 2;
+  PublicKey governing_token_mint = 3;
+  ProposalState state = 4;
+  PublicKey token_owner_record = 5;
+  uint32 signatories_count = 6;
+  uint32 signatories_signed_off_count = 7;
+  VoteType vote_type = 8;
+  repeated ProposalOption options = 9;
+  optional uint64 deny_vote_weight = 10;
+  uint32 reserved1 = 11;
+  optional uint64 abstain_vote_weight = 12;
+  optional int64 start_voting_at = 13;
+  int64 draft_at = 14;
+  optional int64 signing_off_at = 15;
+  optional int64 voting_at = 16;
+  optional uint64 voting_at_slot = 17;
+  optional int64 voting_completed_at = 18;
+  optional int64 executing_at = 19;
+  optional int64 closed_at = 20;
+  InstructionExecutionFlags execution_flags = 21;
+  optional uint64 max_vote_weight = 22;
+  optional uint32 max_voting_time = 23;
+  optional VoteThreshold vote_threshold = 24;
+  bytes reserved = 25;
+  string name = 26;
+  string description_link = 27;
+  uint64 veto_vote_weight = 28;
+}
+    
+message ProposalTransactionV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey proposal = 2;
+  uint32 option_index = 3;
+  uint32 transaction_index = 4;
+  uint32 legacy = 5;
+  repeated InstructionData instructions = 6;
+  optional int64 executed_at = 7;
+  TransactionExecutionStatus execution_status = 8;
+  bytes reserved_v2 = 9;
+}
+    
+message SignatoryRecordV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey proposal = 2;
+  PublicKey signatory = 3;
+  bool signed_off = 4;
+  bytes reserved_v2 = 5;
+}
+    
+message VoteRecordV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey proposal = 2;
+  PublicKey governing_token_owner = 3;
+  bool is_relinquished = 4;
+  uint64 voter_weight = 5;
+  Vote vote = 6;
+  bytes reserved_v2 = 7;
+}
+    
+message TokenOwnerRecordV2 {
+  GovernanceAccountType account_type = 1;
+  PublicKey realm = 2;
+  PublicKey governing_token_mint = 3;
+  PublicKey governing_token_owner = 4;
+  uint64 governing_token_deposit_amount = 5;
+  uint64 unrelinquished_votes_count = 6;
+  uint32 outstanding_proposal_count = 7;
+  uint32 version = 8;
+  bytes reserved = 9;
+  optional PublicKey governance_delegate = 10;
+  bytes reserved_v2 = 11;
+  repeated TokenOwnerRecordLock locks = 12;
+}
+    
+message ProgramMetadata {
+  GovernanceAccountType account_type = 1;
+  uint64 updated_at = 2;
+  string version = 3;
+  bytes reserved = 4;
+}
+    
+message ProposalDeposit {
+  GovernanceAccountType account_type = 1;
+  PublicKey proposal = 2;
+  PublicKey deposit_payer = 3;
+  bytes reserved = 4;
+}
+    
+message RequiredSignatory {
+  GovernanceAccountType account_type = 1;
+  uint32 account_version = 2;
+  PublicKey governance = 3;
+  PublicKey signatory = 4;
+}
+    
+message NativeTreasury {
+}
+    
+message CreateRealmAccounts {
+  PublicKey realm = 1;
+  PublicKey realm_authority = 2;
+  PublicKey community_token_mint = 3;
+  PublicKey community_token_holding = 4;
+  PublicKey payer = 5;
+  PublicKey system_program = 6;
+  PublicKey spl_token_program = 7;
+  PublicKey rent = 8;
+  optional PublicKey council_token_mint = 9;
+  optional PublicKey council_token_holding = 10;
+  PublicKey realm_config = 11;
+  optional PublicKey community_voter_weight_addin_program = 12;
+  optional PublicKey community_max_voter_weight_addin_program = 13;
+  optional PublicKey council_voter_weight_addin_program = 14;
+  optional PublicKey council_max_voter_weight_addin_program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message CreateRealmArgs {
+  string name = 1;
+  RealmConfigArgs config_args = 2;
+}
+    
+message CreateRealm {
+  CreateRealmAccounts accounts = 1;
+  CreateRealmArgs args = 2;
+}
+    
+message DepositGoverningTokensAccounts {
+  PublicKey realm = 1;
+  PublicKey governing_token_holding = 2;
+  PublicKey governing_token_source = 3;
+  PublicKey governing_token_owner = 4;
+  PublicKey governing_token_source_authority = 5;
+  PublicKey token_owner_record = 6;
+  PublicKey payer = 7;
+  PublicKey system_program = 8;
+  PublicKey spl_token_program = 9;
+  PublicKey realm_config = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message DepositGoverningTokensArgs {
+  uint64 amount = 1;
+}
+    
+message DepositGoverningTokens {
+  DepositGoverningTokensAccounts accounts = 1;
+  DepositGoverningTokensArgs args = 2;
+}
+    
+message WithdrawGoverningTokensAccounts {
+  PublicKey realm = 1;
+  PublicKey governing_token_holding = 2;
+  PublicKey governing_token_destination = 3;
+  PublicKey governing_token_owner = 4;
+  PublicKey token_owner_record = 5;
+  PublicKey spl_token_program = 6;
+  PublicKey realm_config = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message WithdrawGoverningTokensArgs {
+}
+    
+message WithdrawGoverningTokens {
+  WithdrawGoverningTokensAccounts accounts = 1;
+  WithdrawGoverningTokensArgs args = 2;
+}
+    
+message SetGovernanceDelegateAccounts {
+  PublicKey governance_authority = 1;
+  PublicKey token_owner_record = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message SetGovernanceDelegateArgs {
+  optional PublicKey new_governance_delegate = 1;
+}
+    
+message SetGovernanceDelegate {
+  SetGovernanceDelegateAccounts accounts = 1;
+  SetGovernanceDelegateArgs args = 2;
+}
+    
+message CreateGovernanceAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  PublicKey governance_seed = 3;
+  PublicKey token_owner_record = 4;
+  PublicKey payer = 5;
+  PublicKey system_program = 6;
+  PublicKey create_authority = 7;
+  PublicKey realm_config = 8;
+  optional PublicKey voter_weight_record = 9;
+  repeated PublicKey remaining_accounts = 10;
+}
+    
+message CreateGovernanceArgs {
+  GovernanceConfig config = 1;
+}
+    
+message CreateGovernance {
+  CreateGovernanceAccounts accounts = 1;
+  CreateGovernanceArgs args = 2;
+}
+    
+message Legacy4Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message Legacy4Args {
+}
+    
+message Legacy4 {
+  Legacy4Accounts accounts = 1;
+  Legacy4Args args = 2;
+}
+    
+message CreateProposalAccounts {
+  PublicKey realm = 1;
+  PublicKey proposal = 2;
+  PublicKey governance = 3;
+  PublicKey proposal_owner_record = 4;
+  PublicKey governing_token_mint = 5;
+  PublicKey governance_authority = 6;
+  PublicKey payer = 7;
+  PublicKey system_program = 8;
+  PublicKey realm_config = 9;
+  optional PublicKey voter_weight_record = 10;
+  optional PublicKey proposal_deposit = 11;
+  repeated PublicKey remaining_accounts = 12;
+}
+    
+message CreateProposalArgs {
+  string name = 1;
+  string description_link = 2;
+  VoteType vote_type = 3;
+  repeated string options = 4;
+  bool use_deny_option = 5;
+  PublicKey proposal_seed = 6;
+}
+    
+message CreateProposal {
+  CreateProposalAccounts accounts = 1;
+  CreateProposalArgs args = 2;
+}
+    
+message AddSignatoryAccounts {
+  PublicKey governance = 1;
+  PublicKey proposal = 2;
+  PublicKey signatory_record = 3;
+  PublicKey payer = 4;
+  PublicKey system_program = 5;
+  optional PublicKey token_owner_record_or_required_signatory = 6;
+  optional PublicKey governance_authority = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message AddSignatoryArgs {
+  PublicKey signatory = 1;
+}
+    
+message AddSignatory {
+  AddSignatoryAccounts accounts = 1;
+  AddSignatoryArgs args = 2;
+}
+    
+message Legacy1Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message Legacy1Args {
+}
+    
+message Legacy1 {
+  Legacy1Accounts accounts = 1;
+  Legacy1Args args = 2;
+}
+    
+message InsertTransactionAccounts {
+  PublicKey governance = 1;
+  PublicKey proposal = 2;
+  PublicKey token_owner_record = 3;
+  PublicKey governance_authority = 4;
+  PublicKey proposal_transaction = 5;
+  PublicKey payer = 6;
+  PublicKey system_program = 7;
+  PublicKey rent = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message InsertTransactionArgs {
+  uint32 option_index = 1;
+  uint32 index = 2;
+  uint32 legacy = 3;
+  repeated InstructionData instructions = 4;
+}
+    
+message InsertTransaction {
+  InsertTransactionAccounts accounts = 1;
+  InsertTransactionArgs args = 2;
+}
+    
+message RemoveTransactionAccounts {
+  PublicKey proposal = 1;
+  PublicKey token_owner_record = 2;
+  PublicKey governance_authority = 3;
+  PublicKey proposal_transaction = 4;
+  PublicKey beneficiary = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message RemoveTransactionArgs {
+}
+    
+message RemoveTransaction {
+  RemoveTransactionAccounts accounts = 1;
+  RemoveTransactionArgs args = 2;
+}
+    
+message CancelProposalAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  PublicKey proposal = 3;
+  PublicKey proposal_owner_record = 4;
+  PublicKey governance_authority = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message CancelProposalArgs {
+}
+    
+message CancelProposal {
+  CancelProposalAccounts accounts = 1;
+  CancelProposalArgs args = 2;
+}
+    
+message SignOffProposalAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  PublicKey proposal = 3;
+  PublicKey signatory = 4;
+  PublicKey proposal_owner_record_or_signatory_record = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message SignOffProposalArgs {
+}
+    
+message SignOffProposal {
+  SignOffProposalAccounts accounts = 1;
+  SignOffProposalArgs args = 2;
+}
+    
+message CastVoteAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  PublicKey proposal = 3;
+  PublicKey proposal_owner_record = 4;
+  PublicKey voter_token_owner_record = 5;
+  PublicKey governance_authority = 6;
+  PublicKey vote_record = 7;
+  PublicKey vote_governing_token_mint = 8;
+  PublicKey payer = 9;
+  PublicKey system_program = 10;
+  PublicKey realm_config = 11;
+  optional PublicKey voter_weight_record = 12;
+  optional PublicKey max_voter_weight_record = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message CastVoteArgs {
+  Vote vote = 1;
+}
+    
+message CastVote {
+  CastVoteAccounts accounts = 1;
+  CastVoteArgs args = 2;
+}
+    
+message FinalizeVoteAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  PublicKey proposal = 3;
+  PublicKey proposal_owner_record = 4;
+  PublicKey governing_token_mint = 5;
+  PublicKey realm_config = 6;
+  optional PublicKey max_voter_weight_record = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message FinalizeVoteArgs {
+}
+    
+message FinalizeVote {
+  FinalizeVoteAccounts accounts = 1;
+  FinalizeVoteArgs args = 2;
+}
+    
+message RelinquishVoteAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  PublicKey proposal = 3;
+  PublicKey token_owner_record = 4;
+  PublicKey vote_record = 5;
+  PublicKey vote_governing_token_mint = 6;
+  optional PublicKey governance_authority = 7;
+  optional PublicKey beneficiary = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message RelinquishVoteArgs {
+}
+    
+message RelinquishVote {
+  RelinquishVoteAccounts accounts = 1;
+  RelinquishVoteArgs args = 2;
+}
+    
+message ExecuteTransactionAccounts {
+  PublicKey governance = 1;
+  PublicKey proposal = 2;
+  PublicKey proposal_transaction = 3;
+  PublicKey instruction_program = 4;
+  optional PublicKey remaining_accounts = 5;
+}
+    
+message ExecuteTransactionArgs {
+}
+    
+message ExecuteTransaction {
+  ExecuteTransactionAccounts accounts = 1;
+  ExecuteTransactionArgs args = 2;
+}
+    
+message Legacy2Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message Legacy2Args {
+}
+    
+message Legacy2 {
+  Legacy2Accounts accounts = 1;
+  Legacy2Args args = 2;
+}
+    
+message Legacy3Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message Legacy3Args {
+}
+    
+message Legacy3 {
+  Legacy3Accounts accounts = 1;
+  Legacy3Args args = 2;
+}
+    
+message SetGovernanceConfigAccounts {
+  PublicKey realm = 1;
+  PublicKey governance = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message SetGovernanceConfigArgs {
+  GovernanceConfig config = 1;
+}
+    
+message SetGovernanceConfig {
+  SetGovernanceConfigAccounts accounts = 1;
+  SetGovernanceConfigArgs args = 2;
+}
+    
+message Legacy5Accounts {
+  repeated PublicKey remaining_accounts = 1;
+}
+    
+message Legacy5Args {
+}
+    
+message Legacy5 {
+  Legacy5Accounts accounts = 1;
+  Legacy5Args args = 2;
+}
+    
+message SetRealmAuthorityAccounts {
+  PublicKey realm = 1;
+  PublicKey realm_authority = 2;
+  optional PublicKey new_realm_authority = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message SetRealmAuthorityArgs {
+  SetRealmAuthorityAction action = 1;
+}
+    
+message SetRealmAuthority {
+  SetRealmAuthorityAccounts accounts = 1;
+  SetRealmAuthorityArgs args = 2;
+}
+    
+message SetRealmConfigAccounts {
+  PublicKey realm = 1;
+  PublicKey realm_authority = 2;
+  optional PublicKey council_token_mint = 3;
+  optional PublicKey council_token_holding = 4;
+  PublicKey system_program = 5;
+  PublicKey realm_config = 6;
+  optional PublicKey community_voter_weight_addin_program = 7;
+  optional PublicKey community_max_voter_weight_addin_program = 8;
+  optional PublicKey council_voter_weight_addin_program = 9;
+  optional PublicKey council_max_voter_weight_addin_program = 10;
+  optional PublicKey payer = 11;
+  repeated PublicKey remaining_accounts = 12;
+}
+    
+message SetRealmConfigArgs {
+  RealmConfigArgs config_args = 1;
+}
+    
+message SetRealmConfig {
+  SetRealmConfigAccounts accounts = 1;
+  SetRealmConfigArgs args = 2;
+}
+    
+message CreateTokenOwnerRecordAccounts {
+  PublicKey realm = 1;
+  PublicKey governing_token_owner = 2;
+  PublicKey token_owner_record = 3;
+  PublicKey governing_token_mint = 4;
+  PublicKey payer = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message CreateTokenOwnerRecordArgs {
+}
+    
+message CreateTokenOwnerRecord {
+  CreateTokenOwnerRecordAccounts accounts = 1;
+  CreateTokenOwnerRecordArgs args = 2;
+}
+    
+message UpdateProgramMetadataAccounts {
+  PublicKey program_metadata = 1;
+  PublicKey payer = 2;
+  PublicKey system_program = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message UpdateProgramMetadataArgs {
+}
+    
+message UpdateProgramMetadata {
+  UpdateProgramMetadataAccounts accounts = 1;
+  UpdateProgramMetadataArgs args = 2;
+}
+    
+message CreateNativeTreasuryAccounts {
+  PublicKey governance = 1;
+  PublicKey native_treasury = 2;
+  PublicKey payer = 3;
+  PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message CreateNativeTreasuryArgs {
+}
+    
+message CreateNativeTreasury {
+  CreateNativeTreasuryAccounts accounts = 1;
+  CreateNativeTreasuryArgs args = 2;
+}
+    
+message RevokeGoverningTokensAccounts {
+  PublicKey realm = 1;
+  PublicKey governing_token_holding = 2;
+  PublicKey token_owner_record = 3;
+  PublicKey governing_token_mint = 4;
+  PublicKey revoke_authority = 5;
+  PublicKey realm_config = 6;
+  PublicKey spl_token_program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message RevokeGoverningTokensArgs {
+  uint64 amount = 1;
+}
+    
+message RevokeGoverningTokens {
+  RevokeGoverningTokensAccounts accounts = 1;
+  RevokeGoverningTokensArgs args = 2;
+}
+    
+message RefundProposalDepositAccounts {
+  PublicKey proposal = 1;
+  PublicKey proposal_deposit = 2;
+  PublicKey proposal_deposit_payer = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message RefundProposalDepositArgs {
+}
+    
+message RefundProposalDeposit {
+  RefundProposalDepositAccounts accounts = 1;
+  RefundProposalDepositArgs args = 2;
+}
+    
+message CompleteProposalAccounts {
+  PublicKey proposal = 1;
+  PublicKey token_owner_record = 2;
+  PublicKey complete_proposal_authority = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message CompleteProposalArgs {
+}
+    
+message CompleteProposal {
+  CompleteProposalAccounts accounts = 1;
+  CompleteProposalArgs args = 2;
+}
+    
+message AddRequiredSignatoryAccounts {
+  PublicKey governance = 1;
+  PublicKey required_signatory = 2;
+  PublicKey payer = 3;
+  PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message AddRequiredSignatoryArgs {
+  PublicKey signatory = 1;
+}
+    
+message AddRequiredSignatory {
+  AddRequiredSignatoryAccounts accounts = 1;
+  AddRequiredSignatoryArgs args = 2;
+}
+    
+message RemoveRequiredSignatoryAccounts {
+  PublicKey governance = 1;
+  PublicKey required_signatory = 2;
+  PublicKey beneficiary = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message RemoveRequiredSignatoryArgs {
+}
+    
+message RemoveRequiredSignatory {
+  RemoveRequiredSignatoryAccounts accounts = 1;
+  RemoveRequiredSignatoryArgs args = 2;
+}
+    
+message SetTokenOwnerRecordLockAccounts {
+  PublicKey realm = 1;
+  PublicKey realm_config = 2;
+  PublicKey token_owner_record = 3;
+  PublicKey token_owner_record_lock_authority = 4;
+  PublicKey payer = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message SetTokenOwnerRecordLockArgs {
+  uint32 lock_id = 1;
+  optional int64 expiry = 2;
+}
+    
+message SetTokenOwnerRecordLock {
+  SetTokenOwnerRecordLockAccounts accounts = 1;
+  SetTokenOwnerRecordLockArgs args = 2;
+}
+    
+message RelinquishTokenOwnerRecordLocksAccounts {
+  PublicKey realm = 1;
+  PublicKey realm_config = 2;
+  PublicKey token_owner_record = 3;
+  optional PublicKey token_owner_record_lock_authority = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message RelinquishTokenOwnerRecordLocksArgs {
+  optional uint32 lock_ids = 1;
+}
+    
+message RelinquishTokenOwnerRecordLocks {
+  RelinquishTokenOwnerRecordLocksAccounts accounts = 1;
+  RelinquishTokenOwnerRecordLocksArgs args = 2;
+}
+    
+message SetRealmConfigItemAccounts {
+  PublicKey realm = 1;
+  PublicKey realm_config = 2;
+  PublicKey realm_authority = 3;
+  PublicKey payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message SetRealmConfigItem {
+  SetRealmConfigItemAccounts accounts = 1;
+  SetRealmConfigItemArgs args = 2;
+}
+    
+message SplGovernanceAccount {
+  oneof account {
+    RealmV2 realm_v2 = 1;
+    RealmConfigAccount realm_config_account = 2;
+    GovernanceV2 governance_v2 = 3;
+    ProposalV2 proposal_v2 = 4;
+    ProposalTransactionV2 proposal_transaction_v2 = 5;
+    SignatoryRecordV2 signatory_record_v2 = 6;
+    VoteRecordV2 vote_record_v2 = 7;
+    TokenOwnerRecordV2 token_owner_record_v2 = 8;
+    ProgramMetadata program_metadata = 9;
+    ProposalDeposit proposal_deposit = 10;
+    RequiredSignatory required_signatory = 11;
+    NativeTreasury native_treasury = 12;
+  }
+}
+message GovernanceAccountType {
+  oneof kind {
+    GovernanceAccountTypeUninitialized uninitialized = 1;
+    GovernanceAccountTypeRealmV1 realm_v1 = 2;
+    GovernanceAccountTypeTokenOwnerRecordV1 token_owner_record_v1 = 3;
+    GovernanceAccountTypeGovernanceV1 governance_v1 = 4;
+    GovernanceAccountTypeProgramGovernanceV1 program_governance_v1 = 5;
+    GovernanceAccountTypeProposalV1 proposal_v1 = 6;
+    GovernanceAccountTypeSignatoryRecordV1 signatory_record_v1 = 7;
+    GovernanceAccountTypeVoteRecordV1 vote_record_v1 = 8;
+    GovernanceAccountTypeProposalInstructionV1 proposal_instruction_v1 = 9;
+    GovernanceAccountTypeMintGovernanceV1 mint_governance_v1 = 10;
+    GovernanceAccountTypeTokenGovernanceV1 token_governance_v1 = 11;
+    GovernanceAccountTypeRealmConfig realm_config = 12;
+    GovernanceAccountTypeVoteRecordV2 vote_record_v2 = 13;
+    GovernanceAccountTypeProposalTransactionV2 proposal_transaction_v2 = 14;
+    GovernanceAccountTypeProposalV2 proposal_v2 = 15;
+    GovernanceAccountTypeProgramMetadata program_metadata = 16;
+    GovernanceAccountTypeRealmV2 realm_v2 = 17;
+    GovernanceAccountTypeTokenOwnerRecordV2 token_owner_record_v2 = 18;
+    GovernanceAccountTypeGovernanceV2 governance_v2 = 19;
+    GovernanceAccountTypeProgramGovernanceV2 program_governance_v2 = 20;
+    GovernanceAccountTypeMintGovernanceV2 mint_governance_v2 = 21;
+    GovernanceAccountTypeTokenGovernanceV2 token_governance_v2 = 22;
+    GovernanceAccountTypeSignatoryRecordV2 signatory_record_v2 = 23;
+    GovernanceAccountTypeProposalDeposit proposal_deposit = 24;
+    GovernanceAccountTypeRequiredSignatory required_signatory = 25;
+  }
+}
+message VoteThreshold {
+  oneof kind {
+    VoteThresholdYesVotePercentage yes_vote_percentage = 1;
+    VoteThresholdQuorumPercentage quorum_percentage = 2;
+    VoteThresholdDisabled disabled = 3;
+  }
+}
+message VoteTipping {
+  oneof kind {
+    VoteTippingStrict strict = 1;
+    VoteTippingEarly early = 2;
+    VoteTippingDisabled disabled = 3;
+  }
+}
+message GoverningTokenType {
+  oneof kind {
+    GoverningTokenTypeLiquid liquid = 1;
+    GoverningTokenTypeMembership membership = 2;
+    GoverningTokenTypeDormant dormant = 3;
+  }
+}
+message MintMaxVoterWeightSource {
+  oneof kind {
+    MintMaxVoterWeightSourceSupplyFraction supply_fraction = 1;
+    MintMaxVoterWeightSourceAbsolute absolute = 2;
+  }
+}
+message SetRealmAuthorityAction {
+  oneof kind {
+    SetRealmAuthorityActionSetUnchecked set_unchecked = 1;
+    SetRealmAuthorityActionSetChecked set_checked = 2;
+    SetRealmAuthorityActionRemove remove = 3;
+  }
+}
+message SetRealmConfigItemArgs {
+  oneof kind {
+    SetRealmConfigItemArgsTokenOwnerRecordLockAuthority token_owner_record_lock_authority = 1;
+  }
+}
+message SetConfigItemActionType {
+  oneof kind {
+    SetConfigItemActionTypeAdd add = 1;
+    SetConfigItemActionTypeRemove remove = 2;
+  }
+}
+message VoteType {
+  oneof kind {
+    VoteTypeSingleChoice single_choice = 1;
+    VoteTypeMultiChoice multi_choice = 2;
+  }
+}
+message MultiChoiceType {
+  oneof kind {
+    MultiChoiceTypeFullWeight full_weight = 1;
+    MultiChoiceTypeWeighted weighted = 2;
+  }
+}
+message ProposalState {
+  oneof kind {
+    ProposalStateDraft draft = 1;
+    ProposalStateSigningOff signing_off = 2;
+    ProposalStateVoting voting = 3;
+    ProposalStateSucceeded succeeded = 4;
+    ProposalStateExecuting executing = 5;
+    ProposalStateCompleted completed = 6;
+    ProposalStateCancelled cancelled = 7;
+    ProposalStateDefeated defeated = 8;
+    ProposalStateExecutingWithErrors executing_with_errors = 9;
+    ProposalStateVetoed vetoed = 10;
+  }
+}
+message OptionVoteResult {
+  oneof kind {
+    OptionVoteResultNone none = 1;
+    OptionVoteResultSucceeded succeeded = 2;
+    OptionVoteResultDefeated defeated = 3;
+  }
+}
+message InstructionExecutionFlags {
+  oneof kind {
+    InstructionExecutionFlagsNone none = 1;
+    InstructionExecutionFlagsOrdered ordered = 2;
+    InstructionExecutionFlagsUseTransaction use_transaction = 3;
+  }
+}
+message TransactionExecutionStatus {
+  oneof kind {
+    TransactionExecutionStatusNone none = 1;
+    TransactionExecutionStatusSuccess success = 2;
+    TransactionExecutionStatusError error = 3;
+  }
+}
+message Vote {
+  oneof kind {
+    VoteApprove approve = 1;
+    VoteDeny deny = 2;
+    VoteAbstain abstain = 3;
+    VoteVeto veto = 4;
+  }
+}
+message VoteKind {
+  oneof kind {
+    VoteKindElectorate electorate = 1;
+    VoteKindVeto veto = 2;
+  }
+}
+message Instructions {
+  oneof instruction {
+    CreateRealm create_realm = 1;
+    DepositGoverningTokens deposit_governing_tokens = 2;
+    WithdrawGoverningTokens withdraw_governing_tokens = 3;
+    SetGovernanceDelegate set_governance_delegate = 4;
+    CreateGovernance create_governance = 5;
+    Legacy4 legacy4 = 6;
+    CreateProposal create_proposal = 7;
+    AddSignatory add_signatory = 8;
+    Legacy1 legacy1 = 9;
+    InsertTransaction insert_transaction = 10;
+    RemoveTransaction remove_transaction = 11;
+    CancelProposal cancel_proposal = 12;
+    SignOffProposal sign_off_proposal = 13;
+    CastVote cast_vote = 14;
+    FinalizeVote finalize_vote = 15;
+    RelinquishVote relinquish_vote = 16;
+    ExecuteTransaction execute_transaction = 17;
+    Legacy2 legacy2 = 18;
+    Legacy3 legacy3 = 19;
+    SetGovernanceConfig set_governance_config = 20;
+    Legacy5 legacy5 = 21;
+    SetRealmAuthority set_realm_authority = 22;
+    SetRealmConfig set_realm_config = 23;
+    CreateTokenOwnerRecord create_token_owner_record = 24;
+    UpdateProgramMetadata update_program_metadata = 25;
+    CreateNativeTreasury create_native_treasury = 26;
+    RevokeGoverningTokens revoke_governing_tokens = 27;
+    RefundProposalDeposit refund_proposal_deposit = 28;
+    CompleteProposal complete_proposal = 29;
+    AddRequiredSignatory add_required_signatory = 30;
+    RemoveRequiredSignatory remove_required_signatory = 31;
+    SetTokenOwnerRecordLock set_token_owner_record_lock = 32;
+    RelinquishTokenOwnerRecordLocks relinquish_token_owner_record_locks = 33;
+    SetRealmConfigItem set_realm_config_item = 34;
+  }
+}

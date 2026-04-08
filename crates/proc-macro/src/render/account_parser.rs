@@ -187,9 +187,17 @@ pub fn account_parser(
                 let end = offset + size;
                 let account_name = account_ident.to_string();
 
+                // Empty discriminator (size 0) matches any data — skip the
+                // byte comparison and match unconditionally on data length.
+                let disc_check = if discriminator.is_empty() {
+                    quote! { true }
+                } else {
+                    quote! { slice == &[#(#discriminator),*] }
+                };
+
                 quote! {
                     if let Some(slice) = data.get(#offset..#end) {
-                        if slice == &[#(#discriminator),*] {
+                        if #disc_check {
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {

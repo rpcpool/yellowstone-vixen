@@ -17,6 +17,23 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|oneof_ir| oneof_ir.parent_message.as_str())
         .collect();
 
+    // Oneof parents from dispatch oneofs only (InstructionDispatch / EventDispatch).
+    // Used to exclude dispatch wrapper types (e.g. "Instructions") from the payload
+    // type lists. We must NOT use the full `oneof_parents` set here because defined
+    // type enum names (e.g. "SetRealmConfigItemArgs") would accidentally exclude
+    // instruction/event payload types that share the same name.
+    let dispatch_oneof_parents: HashSet<&str> = schema_ir
+        .oneofs
+        .iter()
+        .filter(|o| {
+            matches!(
+                o.kind,
+                OneofKindIr::InstructionDispatch | OneofKindIr::EventDispatch
+            )
+        })
+        .map(|o| o.parent_message.as_str())
+        .collect();
+
     // Names that exist as both a top-level defined type and an instruction/event type.
     // Inside submodules, a struct with a colliding name can't reference itself (no boxing),
     // so any `Message("SwapArgs")` field inside `SwapArgs` must mean the top-level type.
@@ -61,7 +78,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .types
                     .iter()
                     .filter(|t| t.kind == TypeKindIr::Instruction)
-                    .filter(|t| !oneof_parents.contains(t.name.as_str()))
+                    .filter(|t| !dispatch_oneof_parents.contains(t.name.as_str()))
                     .collect();
 
                 out.extend(render_dispatch(
@@ -79,7 +96,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .types
                     .iter()
                     .filter(|t| t.kind == TypeKindIr::Event)
-                    .filter(|t| !oneof_parents.contains(t.name.as_str()))
+                    .filter(|t| !dispatch_oneof_parents.contains(t.name.as_str()))
                     .collect();
 
                 // Use "Events" as the Rust wrapper name (not "ProgramEvents" which is the proto name)

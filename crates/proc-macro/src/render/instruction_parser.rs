@@ -303,15 +303,28 @@ fn single_instruction_helper_fn(
 
     let num_defined_accounts = instruction.accounts.len();
 
-    let accounts_value = quote! {
-        instruction::#accounts_ident {
-            #(#accounts_fields,)*
+    let has_explicit_remaining = instruction
+        .accounts
+        .iter()
+        .any(|a| crate::utils::to_snake_case(&a.name) == "remaining_accounts");
+
+    let remaining_accounts_field = if has_explicit_remaining {
+        quote! {}
+    } else {
+        quote! {
             remaining_accounts: accounts
                 .get(#num_defined_accounts..)
                 .unwrap_or_default()
                 .iter()
                 .map(|a| ::yellowstone_vixen_core::Pubkey::try_from(a.as_slice()))
                 .collect::<::core::result::Result<Vec<_>, _>>()?,
+        }
+    };
+
+    let accounts_value = quote! {
+        instruction::#accounts_ident {
+            #(#accounts_fields,)*
+            #remaining_accounts_field
         }
     };
     let args_field = info.args_expr.map(|expr| {
