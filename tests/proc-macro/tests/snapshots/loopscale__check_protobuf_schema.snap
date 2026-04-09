@@ -1,0 +1,1723 @@
+---
+source: tests/proc-macro/tests/loopscale.rs
+assertion_line: 18
+expression: "loopscale::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package loopscale;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message AddCollateralTimeLockArgs {
+  CollateralTerms collateral_terms = 1;
+  UpdateAssetDataParams update_asset_data_params = 2;
+}
+    
+message AssetData {
+  PublicKey asset_identifier = 1;
+  PublicKey quote_mint = 2;
+  PublicKey oracle_account = 3;
+  uint32 oracle_type = 4;
+  bytes max_uncertainty = 5;
+  bytes max_age = 6;
+  uint32 decimals = 7;
+  bytes ltv = 8;
+  bytes liquidation_threshold = 9;
+  CollateralCaps collateral_caps = 10;
+}
+    
+message CapMonitor {
+  bytes start_time1hr = 1;
+  bytes start_time24hr = 2;
+  bytes principal1hr = 3;
+  bytes principal24hr = 4;
+}
+    
+message CollateralAllocationParam {
+  PublicKey asset_identifier = 1;
+  uint64 current_allocation_amount = 2;
+}
+    
+message CollateralCaps {
+  bytes max_allocation_pct = 1;
+  bytes current_allocation_amount = 2;
+}
+    
+message CollateralData {
+  PublicKey asset_mint = 1;
+  bytes amount = 2;
+  uint32 asset_type = 3;
+  PublicKey asset_identifier = 4;
+}
+    
+message CollateralTerms {
+  PublicKey asset_identifier = 1;
+  repeated uint64 terms = 2;
+}
+    
+message CollateralTermsIndices {
+  uint32 collateral_index = 1;
+  uint32 duration_index = 2;
+}
+    
+message CreateStrategyParams {
+  PublicKey lender = 1;
+  uint64 origination_cap = 2;
+  uint64 liquidity_buffer = 3;
+  uint64 interest_fee = 4;
+  uint64 origination_fee = 5;
+  uint64 principal_fee = 6;
+  bool originations_enabled = 7;
+  optional ExternalYieldSourceArgs external_yield_source_args = 8;
+}
+    
+message Duration {
+  bytes duration = 1;
+  uint32 duration_type = 2;
+}
+    
+message ExactInParams {
+  uint64 amount_in = 1;
+  uint64 min_amount_out = 2;
+}
+    
+message ExactOutParams {
+  uint64 amount_out = 1;
+  uint64 max_amount_in = 2;
+}
+    
+message ExpectedLoanValues {
+  uint64 expected_apy = 1;
+  repeated uint32 expected_lqt = 2;
+}
+    
+message ExternalYieldAccounts {
+  PublicKey external_yield_account = 1;
+  PublicKey external_yield_vault = 2;
+}
+    
+message ExternalYieldSourceArgs {
+  uint32 new_external_yield_source = 1;
+  PublicKey external_yield_vault = 2;
+}
+    
+message Ledger {
+  uint32 status = 1;
+  PublicKey strategy = 2;
+  PublicKey principal_mint = 3;
+  PublicKey market_information = 4;
+  bytes principal_due = 5;
+  bytes principal_repaid = 6;
+  bytes interest_outstanding = 7;
+  bytes last_interest_updated_time = 8;
+  Duration duration = 9;
+  bytes interest_per_second = 10;
+  bytes start_time = 11;
+  bytes end_time = 12;
+  bytes apy = 13;
+}
+    
+message LiquidityParams {
+  uint32 slippage_tolerance_bps = 1;
+}
+    
+message LpParamsExactIn {
+  ExactInParams item_0 = 1;
+}
+    
+message LpParamsExactOut {
+  ExactOutParams item_0 = 1;
+}
+    
+message ManageLiquidityParams {
+  uint32 collateral_index = 1;
+  bytes liquidity_amount = 2;
+  TransferTypeParams transfer_params = 3;
+  bytes asset_index_guidance = 4;
+}
+    
+message ManageRaydiumLiquidityParams {
+  uint32 collateral_index = 1;
+  bytes liquidity_amount = 2;
+  TokenAmountsParams manage_params = 3;
+  bytes asset_index_guidance = 4;
+}
+    
+message MultiCollateralTermsUpdateParams {
+  uint64 apy = 1;
+  repeated CollateralTermsIndices indices = 2;
+}
+    
+message ParsedPrincipalCaps {
+  uint64 max1hr = 1;
+  uint64 max24hr = 2;
+  uint64 max_outstanding = 3;
+}
+    
+message PrincipalCaps {
+  bytes max1hr = 1;
+  bytes max24hr = 2;
+  bytes max_outstanding = 3;
+}
+    
+message RewardInfo {
+  uint32 reward_state = 1;
+  uint64 open_time = 2;
+  uint64 end_time = 3;
+  uint64 last_update_time = 4;
+  bytes emissions_per_second_x64 = 5;
+  uint64 reward_total_emissioned = 6;
+  uint64 reward_claimed = 7;
+  PublicKey token_mint = 8;
+  PublicKey token_vault = 9;
+  PublicKey authority = 10;
+  bytes reward_growth_global_x64 = 11;
+}
+    
+message TimelockUpdateParamsAddCollateral {
+  AddCollateralTimeLockArgs item_0 = 1;
+}
+    
+message TimelockUpdateParamsUpdateLtv {
+  UpdateAssetDataParams item_0 = 1;
+}
+    
+message TimelockUpdateParamsRemoveCollateral {
+  CollateralTerms item_0 = 1;
+}
+    
+message TimelockUpdateParamsUpdateApy {
+  CollateralTerms item_0 = 1;
+}
+    
+message TimelockUpdateParamsUpdateStrategy {
+  UpdateStrategyParams item_0 = 1;
+}
+    
+message TimelockUpdateParamsUpdateVault {
+  uint64 item_0 = 1;
+}
+    
+message TimelockUpdateParamsUpdateCaps {
+  UpdateCapsParams item_0 = 1;
+}
+    
+message TimelockUpdateParamsUpdateCollateralAllocationPct {
+  UpdateAssetDataParams item_0 = 1;
+}
+    
+message TokenAmountsParams {
+  uint64 token_a_amount = 1;
+  uint64 token_b_amount = 2;
+}
+    
+message TransferPositionParams {
+  bytes liquidity_amount = 1;
+  uint32 collateral_index = 2;
+  TransferTypeParams transfer_params = 3;
+  int32 tick_lower_index = 4;
+  int32 tick_upper_index = 5;
+  bytes asset_index_guidance = 6;
+}
+    
+message TransferTypeParamsLiquidity {
+  LiquidityParams item_0 = 1;
+}
+    
+message TransferTypeParamsTokenAmounts {
+  TokenAmountsParams item_0 = 1;
+}
+    
+message UpdateAssetDataParams {
+  PublicKey asset_identifier = 1;
+  optional PublicKey quote_mint = 2;
+  optional PublicKey oracle_account = 3;
+  optional uint32 oracle_type = 4;
+  optional uint32 max_uncertainty = 5;
+  optional uint32 max_age = 6;
+  optional uint32 ltv = 7;
+  optional uint32 liquidation_threshold = 8;
+  optional uint64 max_collateral_allocation_pct = 9;
+  optional bool remove = 10;
+}
+    
+message UpdateCapsParams {
+  optional ParsedPrincipalCaps borrow_caps = 1;
+  optional ParsedPrincipalCaps withdraw_caps = 2;
+  optional ParsedPrincipalCaps supply_caps = 3;
+}
+    
+message UpdateStrategyParams {
+  optional bool originations_enabled = 1;
+  optional uint64 liquidity_buffer = 2;
+  optional uint64 interest_fee = 3;
+  optional uint64 origination_fee = 4;
+  optional uint64 principal_fee = 5;
+  optional uint64 origination_cap = 6;
+  optional PublicKey market_information = 7;
+  optional ExternalYieldSourceArgs external_yield_source_args = 8;
+}
+    
+message VaultRewardsSchedule {
+  PublicKey reward_mint = 1;
+  bytes total_weighted_stake_supply = 2;
+  bytes reward_start_time = 3;
+  bytes reward_end_time = 4;
+  bytes total_emissions_amount = 5;
+  bytes emissions_per_second = 6;
+  bytes reward_index = 7;
+  bytes last_reward_index_update_time = 8;
+  bytes emissions_claimed = 9;
+  bytes created_at = 10;
+  repeated bytes duration_stake_weights = 11;
+}
+    
+message WhirlpoolRewardInfo {
+  PublicKey mint = 1;
+  PublicKey vault = 2;
+  PublicKey authority = 3;
+  bytes emissions_per_second_x64 = 4;
+  bytes growth_global_x64 = 5;
+}
+    
+message RaydiumAmmV3StatesPersonalPositionPositionRewardInfo {
+  bytes growth_inside_last_x64 = 1;
+  uint64 reward_amount_owed = 2;
+}
+    
+message WhirlpoolStatePositionPositionRewardInfo {
+  bytes growth_inside_checkpoint = 1;
+  uint64 amount_owed = 2;
+}
+    
+message LoanWeightMatrixInner {
+  repeated bytes items = 1;
+}
+    
+message LoanLtvMatrixInner {
+  repeated bytes items = 1;
+}
+    
+message LoanLqtMatrixInner {
+  repeated bytes items = 1;
+}
+    
+message Loan {
+  uint32 version = 1;
+  uint32 bump = 2;
+  uint32 loan_status = 3;
+  PublicKey borrower = 4;
+  uint64 nonce = 5;
+  bytes start_time = 6;
+  repeated Ledger ledgers = 7;
+  repeated CollateralData collateral = 8;
+  repeated LoanWeightMatrixInner weight_matrix = 9;
+  repeated LoanLtvMatrixInner ltv_matrix = 10;
+  repeated LoanLqtMatrixInner lqt_matrix = 11;
+}
+    
+message MarketInformation {
+  PublicKey authority = 1;
+  PublicKey delegate = 2;
+  PublicKey principal_mint = 3;
+  repeated AssetData asset_data = 4;
+  PrincipalCaps borrow_caps = 5;
+  PrincipalCaps withdraw_caps = 6;
+  PrincipalCaps supply_caps = 7;
+  uint32 version = 8;
+}
+    
+message PersonalPositionState {
+  bytes bump = 1;
+  PublicKey nft_mint = 2;
+  PublicKey pool_id = 3;
+  int32 tick_lower_index = 4;
+  int32 tick_upper_index = 5;
+  bytes liquidity = 6;
+  bytes fee_growth_inside0_last_x64 = 7;
+  bytes fee_growth_inside1_last_x64 = 8;
+  uint64 token_fees_owed0 = 9;
+  uint64 token_fees_owed1 = 10;
+  repeated RaydiumAmmV3StatesPersonalPositionPositionRewardInfo reward_infos = 11;
+  uint64 recent_epoch = 12;
+  repeated uint64 padding = 13;
+}
+    
+message PoolState {
+  bytes bump = 1;
+  PublicKey amm_config = 2;
+  PublicKey owner = 3;
+  PublicKey token_mint0 = 4;
+  PublicKey token_mint1 = 5;
+  PublicKey token_vault0 = 6;
+  PublicKey token_vault1 = 7;
+  PublicKey observation_key = 8;
+  uint32 mint_decimals0 = 9;
+  uint32 mint_decimals1 = 10;
+  uint32 tick_spacing = 11;
+  bytes liquidity = 12;
+  bytes sqrt_price_x64 = 13;
+  int32 tick_current = 14;
+  uint32 padding3 = 15;
+  uint32 padding4 = 16;
+  bytes fee_growth_global0_x64 = 17;
+  bytes fee_growth_global1_x64 = 18;
+  uint64 protocol_fees_token0 = 19;
+  uint64 protocol_fees_token1 = 20;
+  bytes swap_in_amount_token0 = 21;
+  bytes swap_out_amount_token1 = 22;
+  bytes swap_in_amount_token1 = 23;
+  bytes swap_out_amount_token0 = 24;
+  uint32 status = 25;
+  bytes padding = 26;
+  repeated RewardInfo reward_infos = 27;
+  repeated uint64 tick_array_bitmap = 28;
+  uint64 total_fees_token0 = 29;
+  uint64 total_fees_claimed_token0 = 30;
+  uint64 total_fees_token1 = 31;
+  uint64 total_fees_claimed_token1 = 32;
+  uint64 fund_fees_token0 = 33;
+  uint64 fund_fees_token1 = 34;
+  uint64 open_time = 35;
+  uint64 recent_epoch = 36;
+  repeated uint64 padding1 = 37;
+  repeated uint64 padding2 = 38;
+}
+    
+message Position {
+  PublicKey whirlpool = 1;
+  PublicKey position_mint = 2;
+  bytes liquidity = 3;
+  int32 tick_lower_index = 4;
+  int32 tick_upper_index = 5;
+  bytes fee_growth_checkpoint_a = 6;
+  uint64 fee_owed_a = 7;
+  bytes fee_growth_checkpoint_b = 8;
+  uint64 fee_owed_b = 9;
+  repeated WhirlpoolStatePositionPositionRewardInfo reward_infos = 10;
+}
+    
+message ProtocolPositionState {
+  uint32 bump = 1;
+  PublicKey pool_id = 2;
+  int32 tick_lower_index = 3;
+  int32 tick_upper_index = 4;
+  bytes liquidity = 5;
+  bytes fee_growth_inside0_last_x64 = 6;
+  bytes fee_growth_inside1_last_x64 = 7;
+  uint64 token_fees_owed0 = 8;
+  uint64 token_fees_owed1 = 9;
+  repeated bytes reward_growth_inside = 10;
+  uint64 recent_epoch = 11;
+  repeated uint64 padding = 12;
+}
+    
+message StrategyCollateralMapInner {
+  repeated bytes items = 1;
+}
+    
+message Strategy {
+  uint32 version = 1;
+  PublicKey nonce = 2;
+  uint32 bump = 3;
+  PublicKey principal_mint = 4;
+  PublicKey lender = 5;
+  uint32 originations_enabled = 6;
+  uint32 external_yield_source = 7;
+  bytes interest_per_second = 8;
+  bytes last_accrued_timestamp = 9;
+  bytes liquidity_buffer = 10;
+  bytes token_balance = 11;
+  bytes interest_fee = 12;
+  bytes principal_fee = 13;
+  bytes origination_fee = 14;
+  bytes origination_cap = 15;
+  bytes external_yield_amount = 16;
+  bytes current_deployed_amount = 17;
+  bytes outstanding_interest_amount = 18;
+  bytes fee_claimable = 19;
+  bytes cumulative_principal_originated = 20;
+  bytes cumulative_interest_accrued = 21;
+  bytes cumulative_loan_count = 22;
+  bytes active_loan_count = 23;
+  PublicKey market_information = 24;
+  repeated StrategyCollateralMapInner collateral_map = 25;
+  ExternalYieldAccounts external_yield_accounts = 26;
+  CapMonitor supply_monitor = 27;
+  CapMonitor withdraw_monitor = 28;
+  CapMonitor borrow_monitor = 29;
+}
+    
+message Timelock {
+  PublicKey vault = 1;
+  int64 init_timestamp = 2;
+  int64 execution_delay = 3;
+  TimelockUpdateParams params = 4;
+}
+    
+message UserRewardsInfo {
+  PublicKey vault_address = 1;
+  uint32 bump = 2;
+  PublicKey stake_account_address = 3;
+  bytes stake_time = 4;
+  PublicKey user = 5;
+  bytes lp_amount = 6;
+  uint32 duration_index = 7;
+  repeated bytes last_reward_indexes = 8;
+  repeated bytes pending_rewards = 9;
+  repeated bytes last_reward_index_update_time = 10;
+}
+    
+message Vault {
+  PublicKey manager = 1;
+  PublicKey nonce = 2;
+  uint32 bump = 3;
+  bytes lp_supply = 4;
+  PublicKey lp_mint = 5;
+  PublicKey principal_mint = 6;
+  bytes cumulative_principal_deposited = 7;
+  uint32 deposits_enabled = 8;
+  bytes max_early_unstake_fee = 9;
+}
+    
+message VaultRewardsInfo {
+  PublicKey vault_address = 1;
+  uint32 bump = 2;
+  repeated VaultRewardsSchedule schedules = 3;
+}
+    
+message VaultStake {
+  PublicKey vault = 1;
+  PublicKey nonce = 2;
+  uint32 bump = 3;
+  PublicKey user = 4;
+  bytes amount = 5;
+  Duration duration = 6;
+  bytes start_time = 7;
+  bytes end_time = 8;
+  bytes unstake_time = 9;
+  bytes unstake_fee_applied = 10;
+}
+    
+message Whirlpool {
+  PublicKey whirlpools_config = 1;
+  bytes whirlpool_bump = 2;
+  uint32 tick_spacing = 3;
+  bytes fee_tier_index_seed = 4;
+  uint32 fee_rate = 5;
+  uint32 protocol_fee_rate = 6;
+  bytes liquidity = 7;
+  bytes sqrt_price = 8;
+  int32 tick_current_index = 9;
+  uint64 protocol_fee_owed_a = 10;
+  uint64 protocol_fee_owed_b = 11;
+  PublicKey token_mint_a = 12;
+  PublicKey token_vault_a = 13;
+  bytes fee_growth_global_a = 14;
+  PublicKey token_mint_b = 15;
+  PublicKey token_vault_b = 16;
+  bytes fee_growth_global_b = 17;
+  uint64 reward_last_updated_timestamp = 18;
+  repeated WhirlpoolRewardInfo reward_infos = 19;
+}
+    
+message BorrowPrincipalAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey strategy = 5;
+  PublicKey market_information = 6;
+  PublicKey principal_mint = 7;
+  PublicKey borrower_ta = 8;
+  PublicKey strategy_ta = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey token_program = 11;
+  PublicKey system_program = 12;
+  PublicKey event_authority = 13;
+  PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message BorrowPrincipalArgs {
+  uint64 amount = 1;
+  bytes asset_index_guidance = 2;
+  uint32 duration = 3;
+  ExpectedLoanValues expected_loan_values = 4;
+  bool skip_sol_unwrap = 5;
+}
+    
+message BorrowPrincipal {
+  BorrowPrincipalAccounts accounts = 1;
+  BorrowPrincipalArgs args = 2;
+}
+    
+message CancelTimelockAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey manager = 3;
+  PublicKey vault = 4;
+  PublicKey timelock = 5;
+  PublicKey system_program = 6;
+  PublicKey event_authority = 7;
+  PublicKey program = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message CancelTimelockArgs {
+}
+    
+message CancelTimelock {
+  CancelTimelockAccounts accounts = 1;
+  CancelTimelockArgs args = 2;
+}
+    
+message ClaimVaultFeeAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey manager = 3;
+  PublicKey vault = 4;
+  PublicKey strategy = 5;
+  PublicKey principal_mint = 6;
+  PublicKey market_information = 7;
+  PublicKey manager_principal_ta = 8;
+  PublicKey strategy_principal_ta = 9;
+  PublicKey token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey system_program = 12;
+  PublicKey event_authority = 13;
+  PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message ClaimVaultFeeArgs {
+  uint64 amount = 1;
+}
+    
+message ClaimVaultFee {
+  ClaimVaultFeeAccounts accounts = 1;
+  ClaimVaultFeeArgs args = 2;
+}
+    
+message ClaimVaultRewardsAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey user = 3;
+  PublicKey vault = 4;
+  PublicKey vault_rewards_info = 5;
+  PublicKey user_rewards_info = 6;
+  PublicKey stake_account = 7;
+  PublicKey associated_token_program = 8;
+  PublicKey system_program = 9;
+  PublicKey event_authority = 10;
+  PublicKey program = 11;
+  repeated PublicKey remaining_accounts = 12;
+}
+    
+message ClaimVaultRewardsArgs {
+  repeated PublicKey mints = 1;
+}
+    
+message ClaimVaultRewards {
+  ClaimVaultRewardsAccounts accounts = 1;
+  ClaimVaultRewardsArgs args = 2;
+}
+    
+message CloseLoanAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey system_program = 5;
+  PublicKey event_authority = 6;
+  PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message CloseLoanArgs {
+}
+    
+message CloseLoan {
+  CloseLoanAccounts accounts = 1;
+  CloseLoanArgs args = 2;
+}
+    
+message CloseStrategyAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey lender = 3;
+  PublicKey strategy = 4;
+  PublicKey principal_mint = 5;
+  PublicKey token_program = 6;
+  PublicKey associated_token_program = 7;
+  PublicKey system_program = 8;
+  PublicKey event_authority = 9;
+  PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message CloseStrategyArgs {
+}
+    
+message CloseStrategy {
+  CloseStrategyAccounts accounts = 1;
+  CloseStrategyArgs args = 2;
+}
+    
+message CreateLoanAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey system_program = 5;
+  PublicKey event_authority = 6;
+  PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message CreateLoanArgs {
+  uint64 nonce = 1;
+}
+    
+message CreateLoan {
+  CreateLoanAccounts accounts = 1;
+  CreateLoanArgs args = 2;
+}
+    
+message CreateMarketInformationAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey market_information = 2;
+  PublicKey system_program = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message CreateMarketInformationArgs {
+  PublicKey principal_mint = 1;
+  PublicKey authority = 2;
+}
+    
+message CreateMarketInformation {
+  CreateMarketInformationAccounts accounts = 1;
+  CreateMarketInformationArgs args = 2;
+}
+    
+message CreateRewardsScheduleAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey manager = 3;
+  PublicKey rewards_source = 4;
+  PublicKey vault = 5;
+  PublicKey vault_rewards_info = 6;
+  PublicKey vault_rewards_mint = 7;
+  PublicKey vault_rewards_ta = 8;
+  PublicKey rewards_source_ta = 9;
+  PublicKey token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey system_program = 12;
+  PublicKey event_authority = 13;
+  PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message CreateRewardsScheduleArgs {
+  bytes total_weighted_stake_supply = 1;
+  bytes reward_start_time = 2;
+  bytes reward_end_time = 3;
+  repeated bytes duration_stake_weights = 4;
+  uint64 amount_to_transfer = 5;
+}
+    
+message CreateRewardsSchedule {
+  CreateRewardsScheduleAccounts accounts = 1;
+  CreateRewardsScheduleArgs args = 2;
+}
+    
+message CreateStrategyAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey nonce = 3;
+  PublicKey strategy = 4;
+  PublicKey market_information = 5;
+  PublicKey principal_mint = 6;
+  PublicKey system_program = 7;
+  PublicKey event_authority = 8;
+  PublicKey program = 9;
+  repeated PublicKey remaining_accounts = 10;
+}
+    
+message CreateStrategyArgs {
+  CreateStrategyParams params = 1;
+}
+    
+message CreateStrategy {
+  CreateStrategyAccounts accounts = 1;
+  CreateStrategyArgs args = 2;
+}
+    
+message CreateTimelockAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey manager = 3;
+  PublicKey vault = 4;
+  PublicKey timelock = 5;
+  PublicKey vault_market_information = 6;
+  PublicKey external_market_information = 7;
+  PublicKey system_program = 8;
+  PublicKey event_authority = 9;
+  PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message CreateTimelockArgs {
+  TimelockUpdateParams params = 1;
+}
+    
+message CreateTimelock {
+  CreateTimelockAccounts accounts = 1;
+  CreateTimelockArgs args = 2;
+}
+    
+message CreateVaultAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey nonce = 3;
+  PublicKey principal_mint = 4;
+  PublicKey lp_mint = 5;
+  PublicKey vault = 6;
+  PublicKey strategy = 7;
+  PublicKey market_information = 8;
+  PublicKey token_program = 9;
+  PublicKey system_program = 10;
+  PublicKey event_authority = 11;
+  PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message CreateVaultArgs {
+  string token_name = 1;
+  string token_symbol = 2;
+  string token_uri = 3;
+  PublicKey manager = 4;
+  CreateStrategyParams create_strategy_params = 5;
+}
+    
+message CreateVault {
+  CreateVaultAccounts accounts = 1;
+  CreateVaultArgs args = 2;
+}
+    
+message DepositCollateralAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey borrower_collateral_ta = 5;
+  PublicKey loan_collateral_ta = 6;
+  PublicKey deposit_mint = 7;
+  PublicKey asset_identifier = 8;
+  PublicKey system_program = 9;
+  PublicKey token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey event_authority = 12;
+  PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message DepositCollateralArgs {
+  uint64 amount = 1;
+  uint32 asset_type = 2;
+  PublicKey asset_identifier = 3;
+  bytes asset_index_guidance = 4;
+}
+    
+message DepositCollateral {
+  DepositCollateralAccounts accounts = 1;
+  DepositCollateralArgs args = 2;
+}
+    
+message DepositStrategyAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey lender = 3;
+  PublicKey strategy = 4;
+  PublicKey principal_mint = 5;
+  PublicKey market_information = 6;
+  PublicKey lender_ta = 7;
+  PublicKey strategy_ta = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey system_program = 11;
+  PublicKey event_authority = 12;
+  PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message DepositStrategyArgs {
+  uint64 amount = 1;
+}
+    
+message DepositStrategy {
+  DepositStrategyAccounts accounts = 1;
+  DepositStrategyArgs args = 2;
+}
+    
+message DepositUserVaultAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey user = 3;
+  PublicKey vault = 4;
+  PublicKey strategy = 5;
+  PublicKey market_information = 6;
+  PublicKey lp_mint = 7;
+  PublicKey user_lp_ta = 8;
+  PublicKey user_principal_ta = 9;
+  PublicKey strategy_principal_ta = 10;
+  PublicKey principal_mint = 11;
+  PublicKey principal_token_program = 12;
+  PublicKey token2022_program = 13;
+  PublicKey associated_token_program = 14;
+  PublicKey system_program = 15;
+  PublicKey event_authority = 16;
+  PublicKey program = 17;
+  repeated PublicKey remaining_accounts = 18;
+}
+    
+message DepositUserVaultArgs {
+  LpParams params = 1;
+}
+    
+message DepositUserVault {
+  DepositUserVaultAccounts accounts = 1;
+  DepositUserVaultArgs args = 2;
+}
+    
+message ExecuteTimelockAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey vault = 3;
+  PublicKey timelock = 4;
+  PublicKey strategy = 5;
+  PublicKey market_information = 6;
+  PublicKey strategy_ta = 7;
+  PublicKey system_program = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey principal_mint = 11;
+  PublicKey event_authority = 12;
+  PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message ExecuteTimelockArgs {
+}
+    
+message ExecuteTimelock {
+  ExecuteTimelockAccounts accounts = 1;
+  ExecuteTimelockArgs args = 2;
+}
+    
+message LiquidateLedgerAccounts {
+  PublicKey payer = 1;
+  PublicKey liquidator = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey strategy = 5;
+  PublicKey market_information = 6;
+  PublicKey liquidator_ta = 7;
+  PublicKey strategy_ta = 8;
+  PublicKey principal_mint = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey token_program = 11;
+  PublicKey token2022_program = 12;
+  PublicKey system_program = 13;
+  PublicKey event_authority = 14;
+  PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message LiquidateLedgerArgs {
+  uint32 ledger_index = 1;
+  bool unwrap_sol = 2;
+  bytes asset_index_guidance = 3;
+}
+    
+message LiquidateLedger {
+  LiquidateLedgerAccounts accounts = 1;
+  LiquidateLedgerArgs args = 2;
+}
+    
+message LockLoanAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey instructions_sysvar = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message LockLoanArgs {
+  uint32 unlock_idx = 1;
+}
+    
+message LockLoan {
+  LockLoanAccounts accounts = 1;
+  LockLoanArgs args = 2;
+}
+    
+message ManageCollateralClaimOrcaFeeAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey whirlpool = 5;
+  PublicKey token_vault_a = 6;
+  PublicKey token_vault_b = 7;
+  PublicKey tick_array_lower = 8;
+  PublicKey tick_array_upper = 9;
+  PublicKey position = 10;
+  PublicKey position_token_account = 11;
+  PublicKey borrower_ta_a = 12;
+  PublicKey borrower_ta_b = 13;
+  PublicKey loan_ta_a = 14;
+  PublicKey loan_ta_b = 15;
+  PublicKey mint_a = 16;
+  PublicKey mint_b = 17;
+  PublicKey whirlpool_program = 18;
+  PublicKey token_program = 19;
+  PublicKey token2022_program = 20;
+  PublicKey associated_token_program = 21;
+  PublicKey system_program = 22;
+  PublicKey memo_program = 23;
+  PublicKey event_authority = 24;
+  PublicKey program = 25;
+  repeated PublicKey remaining_accounts = 26;
+}
+    
+message ManageCollateralClaimOrcaFeeArgs {
+  bool close_ta = 1;
+}
+    
+message ManageCollateralClaimOrcaFee {
+  ManageCollateralClaimOrcaFeeAccounts accounts = 1;
+  ManageCollateralClaimOrcaFeeArgs args = 2;
+}
+    
+message ManageCollateralDecreaseRaydiumLiquidityAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey pool = 5;
+  PublicKey protocol_position = 6;
+  PublicKey position = 7;
+  PublicKey position_token_account = 8;
+  PublicKey tick_array_lower = 9;
+  PublicKey tick_array_upper = 10;
+  PublicKey token_vault0 = 11;
+  PublicKey token_vault1 = 12;
+  PublicKey borrower_ta0 = 13;
+  PublicKey borrower_ta1 = 14;
+  PublicKey loan_ta0 = 15;
+  PublicKey loan_ta1 = 16;
+  PublicKey mint0 = 17;
+  PublicKey mint1 = 18;
+  PublicKey raydium_program = 19;
+  PublicKey token_program = 20;
+  PublicKey token2022_program = 21;
+  PublicKey associated_token_program = 22;
+  PublicKey system_program = 23;
+  PublicKey memo_program = 24;
+  PublicKey event_authority = 25;
+  PublicKey program = 26;
+  repeated PublicKey remaining_accounts = 27;
+}
+    
+message ManageCollateralDecreaseRaydiumLiquidityArgs {
+  ManageRaydiumLiquidityParams params = 1;
+}
+    
+message ManageCollateralDecreaseRaydiumLiquidity {
+  ManageCollateralDecreaseRaydiumLiquidityAccounts accounts = 1;
+  ManageCollateralDecreaseRaydiumLiquidityArgs args = 2;
+}
+    
+message ManageCollateralIncreaseOrcaLiquidityAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey whirlpool = 5;
+  PublicKey position = 6;
+  PublicKey position_token_account = 7;
+  PublicKey tick_array_lower = 8;
+  PublicKey tick_array_upper = 9;
+  PublicKey token_vault_a = 10;
+  PublicKey token_vault_b = 11;
+  PublicKey borrower_ta_a = 12;
+  PublicKey borrower_ta_b = 13;
+  PublicKey loan_ta_a = 14;
+  PublicKey loan_ta_b = 15;
+  PublicKey mint_a = 16;
+  PublicKey mint_b = 17;
+  PublicKey whirlpool_program = 18;
+  PublicKey token_program = 19;
+  PublicKey token2022_program = 20;
+  PublicKey associated_token_program = 21;
+  PublicKey system_program = 22;
+  PublicKey memo_program = 23;
+  PublicKey event_authority = 24;
+  PublicKey program = 25;
+  repeated PublicKey remaining_accounts = 26;
+}
+    
+message ManageCollateralIncreaseOrcaLiquidityArgs {
+  ManageLiquidityParams params = 1;
+}
+    
+message ManageCollateralIncreaseOrcaLiquidity {
+  ManageCollateralIncreaseOrcaLiquidityAccounts accounts = 1;
+  ManageCollateralIncreaseOrcaLiquidityArgs args = 2;
+}
+    
+message ManageCollateralIncreaseRaydiumLiquidityAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey pool = 5;
+  PublicKey protocol_position = 6;
+  PublicKey position = 7;
+  PublicKey position_token_account = 8;
+  PublicKey tick_array_lower = 9;
+  PublicKey tick_array_upper = 10;
+  PublicKey token_vault0 = 11;
+  PublicKey token_vault1 = 12;
+  PublicKey borrower_ta0 = 13;
+  PublicKey borrower_ta1 = 14;
+  PublicKey loan_ta0 = 15;
+  PublicKey loan_ta1 = 16;
+  PublicKey mint0 = 17;
+  PublicKey mint1 = 18;
+  PublicKey raydium_program = 19;
+  PublicKey token_program = 20;
+  PublicKey token2022_program = 21;
+  PublicKey associated_token_program = 22;
+  PublicKey system_program = 23;
+  PublicKey memo_program = 24;
+  PublicKey event_authority = 25;
+  PublicKey program = 26;
+  repeated PublicKey remaining_accounts = 27;
+}
+    
+message ManageCollateralIncreaseRaydiumLiquidityArgs {
+  ManageRaydiumLiquidityParams params = 1;
+}
+    
+message ManageCollateralIncreaseRaydiumLiquidity {
+  ManageCollateralIncreaseRaydiumLiquidityAccounts accounts = 1;
+  ManageCollateralIncreaseRaydiumLiquidityArgs args = 2;
+}
+    
+message ManageCollateralTransferOrcaPositionAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey whirlpool = 5;
+  PublicKey position = 6;
+  PublicKey position_token_account = 7;
+  PublicKey position_mint = 8;
+  PublicKey tick_array_lower = 9;
+  PublicKey tick_array_upper = 10;
+  PublicKey new_tick_array_lower = 11;
+  PublicKey new_tick_array_upper = 12;
+  PublicKey token_vault_a = 13;
+  PublicKey token_vault_b = 14;
+  PublicKey borrower_ta_a = 15;
+  PublicKey borrower_ta_b = 16;
+  PublicKey loan_ta_a = 17;
+  PublicKey loan_ta_b = 18;
+  PublicKey new_position = 19;
+  PublicKey new_position_mint = 20;
+  PublicKey new_position_token_account = 21;
+  PublicKey mint_a = 22;
+  PublicKey mint_b = 23;
+  PublicKey metadata_update_auth = 24;
+  PublicKey whirlpool_program = 25;
+  PublicKey token_program = 26;
+  PublicKey token2022_program = 27;
+  PublicKey associated_token_program = 28;
+  PublicKey system_program = 29;
+  PublicKey memo_program = 30;
+  PublicKey event_authority = 31;
+  PublicKey program = 32;
+  repeated PublicKey remaining_accounts = 33;
+}
+    
+message ManageCollateralTransferOrcaPositionArgs {
+  TransferPositionParams params = 1;
+}
+    
+message ManageCollateralTransferOrcaPosition {
+  ManageCollateralTransferOrcaPositionAccounts accounts = 1;
+  ManageCollateralTransferOrcaPositionArgs args = 2;
+}
+    
+message ManageCollateralTransferRaydiumPositionAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey pool = 5;
+  PublicKey protocol_position_old = 6;
+  PublicKey protocol_position_new = 7;
+  PublicKey position = 8;
+  PublicKey position_token_account = 9;
+  PublicKey position_mint = 10;
+  PublicKey tick_array_lower = 11;
+  PublicKey tick_array_upper = 12;
+  PublicKey new_tick_array_lower = 13;
+  PublicKey new_tick_array_upper = 14;
+  PublicKey token_vault0 = 15;
+  PublicKey token_vault1 = 16;
+  PublicKey borrower_ta0 = 17;
+  PublicKey borrower_ta1 = 18;
+  PublicKey loan_ta0 = 19;
+  PublicKey loan_ta1 = 20;
+  PublicKey new_position = 21;
+  PublicKey new_position_mint = 22;
+  PublicKey new_position_token_account = 23;
+  PublicKey mint0 = 24;
+  PublicKey mint1 = 25;
+  PublicKey raydium_program = 26;
+  PublicKey token_program = 27;
+  PublicKey token2022_program = 28;
+  PublicKey associated_token_program = 29;
+  PublicKey system_program = 30;
+  PublicKey rent = 31;
+  PublicKey memo_program = 32;
+  repeated PublicKey remaining_accounts = 33;
+}
+    
+message ManageCollateralTransferRaydiumPositionArgs {
+  TransferPositionParams params = 1;
+}
+    
+message ManageCollateralTransferRaydiumPosition {
+  ManageCollateralTransferRaydiumPositionAccounts accounts = 1;
+  ManageCollateralTransferRaydiumPositionArgs args = 2;
+}
+    
+message ManageCollateralWithdrawOrcaLiquidityAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey whirlpool = 5;
+  PublicKey position = 6;
+  PublicKey position_token_account = 7;
+  PublicKey tick_array_lower = 8;
+  PublicKey tick_array_upper = 9;
+  PublicKey token_vault_a = 10;
+  PublicKey token_vault_b = 11;
+  PublicKey borrower_ta_a = 12;
+  PublicKey borrower_ta_b = 13;
+  PublicKey loan_ta_a = 14;
+  PublicKey loan_ta_b = 15;
+  PublicKey mint_a = 16;
+  PublicKey mint_b = 17;
+  PublicKey whirlpool_program = 18;
+  PublicKey token_program = 19;
+  PublicKey token2022_program = 20;
+  PublicKey associated_token_program = 21;
+  PublicKey system_program = 22;
+  PublicKey memo_program = 23;
+  PublicKey event_authority = 24;
+  PublicKey program = 25;
+  repeated PublicKey remaining_accounts = 26;
+}
+    
+message ManageCollateralWithdrawOrcaLiquidityArgs {
+  ManageLiquidityParams params = 1;
+}
+    
+message ManageCollateralWithdrawOrcaLiquidity {
+  ManageCollateralWithdrawOrcaLiquidityAccounts accounts = 1;
+  ManageCollateralWithdrawOrcaLiquidityArgs args = 2;
+}
+    
+message MigrateMarketInfoAllocationAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey market_info = 2;
+  PublicKey event_authority = 3;
+  PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MigrateMarketInfoAllocationArgs {
+  repeated CollateralAllocationParam allocations = 1;
+}
+    
+message MigrateMarketInfoAllocation {
+  MigrateMarketInfoAllocationAccounts accounts = 1;
+  MigrateMarketInfoAllocationArgs args = 2;
+}
+    
+message RefinanceLedgerAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey loan = 3;
+  PublicKey old_strategy = 4;
+  PublicKey new_strategy = 5;
+  PublicKey old_strategy_ta = 6;
+  PublicKey new_strategy_ta = 7;
+  PublicKey old_strategy_market_information = 8;
+  PublicKey new_strategy_market_information = 9;
+  PublicKey principal_mint = 10;
+  PublicKey token_program = 11;
+  PublicKey associated_token_program = 12;
+  PublicKey system_program = 13;
+  PublicKey event_authority = 14;
+  PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message RefinanceLedgerArgs {
+  uint32 ledger_index = 1;
+  uint32 duration_index = 2;
+  bytes asset_index_guidance = 3;
+}
+    
+message RefinanceLedger {
+  RefinanceLedgerAccounts accounts = 1;
+  RefinanceLedgerArgs args = 2;
+}
+    
+message RepayPrincipalAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey strategy = 5;
+  PublicKey market_information = 6;
+  PublicKey principal_mint = 7;
+  PublicKey borrower_ta = 8;
+  PublicKey strategy_ta = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey token_program = 11;
+  PublicKey system_program = 12;
+  PublicKey event_authority = 13;
+  PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message RepayPrincipalArgs {
+  uint64 amount = 1;
+  uint32 ledger_index = 2;
+  bool repay_all = 3;
+}
+    
+message RepayPrincipal {
+  RepayPrincipalAccounts accounts = 1;
+  RepayPrincipalArgs args = 2;
+}
+    
+message SellLedgerAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey lender_auth = 3;
+  PublicKey loan = 4;
+  PublicKey new_strategy_ta = 5;
+  PublicKey lender_auth_ta = 6;
+  PublicKey old_strategy = 7;
+  PublicKey new_strategy = 8;
+  PublicKey old_strategy_market_information = 9;
+  PublicKey new_strategy_market_information = 10;
+  PublicKey principal_mint = 11;
+  PublicKey token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  optional PublicKey vault = 15;
+  optional PublicKey old_strategy_ta = 16;
+  PublicKey event_authority = 17;
+  PublicKey program = 18;
+  repeated PublicKey remaining_accounts = 19;
+}
+    
+message SellLedgerArgs {
+  uint32 ledger_index = 1;
+  uint64 expected_sale_price = 2;
+  bytes asset_index_guidance = 3;
+}
+    
+message SellLedger {
+  SellLedgerAccounts accounts = 1;
+  SellLedgerArgs args = 2;
+}
+    
+message StakeUserVaultLpAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey user = 3;
+  PublicKey nonce = 4;
+  PublicKey vault = 5;
+  PublicKey vault_stake = 6;
+  PublicKey lp_mint = 7;
+  PublicKey user_lp_ta = 8;
+  PublicKey vault_stake_lp_ta = 9;
+  PublicKey vault_rewards_info = 10;
+  PublicKey user_rewards_info = 11;
+  PublicKey token_program = 12;
+  PublicKey associated_token_program = 13;
+  PublicKey system_program = 14;
+  PublicKey event_authority = 15;
+  PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
+}
+    
+message StakeUserVaultLpArgs {
+  uint64 amount = 1;
+  uint64 principal_amount = 2;
+  optional bool stake_all = 3;
+  uint32 duration = 4;
+  uint32 duration_type = 5;
+  uint32 action_type = 6;
+}
+    
+message StakeUserVaultLp {
+  StakeUserVaultLpAccounts accounts = 1;
+  StakeUserVaultLpArgs args = 2;
+}
+    
+message UnlockLoanAccounts {
+  PublicKey borrower = 1;
+  PublicKey loan = 2;
+  PublicKey payer = 3;
+  PublicKey bs_auth = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message UnlockLoanArgs {
+  bytes asset_index_guidance = 1;
+}
+    
+message UnlockLoan {
+  UnlockLoanAccounts accounts = 1;
+  UnlockLoanArgs args = 2;
+}
+    
+message UnstakeUserVaultLpAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey user = 3;
+  PublicKey vault = 4;
+  PublicKey lp_mint = 5;
+  PublicKey vault_stake = 6;
+  PublicKey user_lp_ta = 7;
+  PublicKey vault_stake_lp_ta = 8;
+  PublicKey vault_rewards_info = 9;
+  PublicKey user_rewards_info = 10;
+  PublicKey token_program = 11;
+  PublicKey associated_token_program = 12;
+  PublicKey system_program = 13;
+  PublicKey event_authority = 14;
+  PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
+}
+    
+message UnstakeUserVaultLpArgs {
+  uint32 action_type = 1;
+  uint64 principal_amount = 2;
+}
+    
+message UnstakeUserVaultLp {
+  UnstakeUserVaultLpAccounts accounts = 1;
+  UnstakeUserVaultLpArgs args = 2;
+}
+    
+message UpdateMarketInformationAccounts {
+  PublicKey authority = 1;
+  PublicKey market_information = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message UpdateMarketInformationArgs {
+  optional UpdateAssetDataParams asset_update_params = 1;
+  optional UpdateCapsParams update_cap_params = 2;
+}
+    
+message UpdateMarketInformation {
+  UpdateMarketInformationAccounts accounts = 1;
+  UpdateMarketInformationArgs args = 2;
+}
+    
+message UpdateRewardsScheduleAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey manager = 3;
+  PublicKey rewards_source = 4;
+  PublicKey vault = 5;
+  PublicKey vault_rewards_info = 6;
+  PublicKey vault_rewards_mint = 7;
+  PublicKey vault_rewards_ta = 8;
+  PublicKey rewards_source_ta = 9;
+  PublicKey token_program = 10;
+  PublicKey associated_token_program = 11;
+  PublicKey system_program = 12;
+  PublicKey event_authority = 13;
+  PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
+}
+    
+message UpdateRewardsScheduleArgs {
+  uint64 amount_to_transfer = 1;
+  optional uint64 extend_end_time = 2;
+  uint32 schedule_index = 3;
+}
+    
+message UpdateRewardsSchedule {
+  UpdateRewardsScheduleAccounts accounts = 1;
+  UpdateRewardsScheduleArgs args = 2;
+}
+    
+message UpdateStrategyAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey lender = 3;
+  PublicKey strategy = 4;
+  PublicKey principal_mint = 5;
+  PublicKey strategy_ta = 6;
+  PublicKey system_program = 7;
+  PublicKey associated_token_program = 8;
+  PublicKey token_program = 9;
+  PublicKey event_authority = 10;
+  PublicKey program = 11;
+  repeated PublicKey remaining_accounts = 12;
+}
+    
+message UpdateStrategyArgs {
+  repeated MultiCollateralTermsUpdateParams collateral_terms = 1;
+  optional UpdateStrategyParams params = 2;
+}
+    
+message UpdateStrategy {
+  UpdateStrategyAccounts accounts = 1;
+  UpdateStrategyArgs args = 2;
+}
+    
+message UpdateVaultAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey manager = 2;
+  PublicKey payer = 3;
+  PublicKey vault = 4;
+  PublicKey market_information = 5;
+  PublicKey vault_rewards_info = 6;
+  PublicKey system_program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message UpdateVaultArgs {
+  bool deposits_enabled = 1;
+  bool init_vault_rewards_info = 2;
+}
+    
+message UpdateVault {
+  UpdateVaultAccounts accounts = 1;
+  UpdateVaultArgs args = 2;
+}
+    
+message UpdateWeightMatrixAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey borrower = 2;
+  PublicKey loan = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message UpdateWeightMatrixArgs {
+  uint32 collateral_index = 1;
+  repeated uint32 weight_matrix = 2;
+  ExpectedLoanValues expected_loan_values = 3;
+  bytes asset_index_guidance = 4;
+}
+    
+message UpdateWeightMatrix {
+  UpdateWeightMatrixAccounts accounts = 1;
+  UpdateWeightMatrixArgs args = 2;
+}
+    
+message WithdrawCollateralAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey borrower = 3;
+  PublicKey loan = 4;
+  PublicKey borrower_ta = 5;
+  PublicKey loan_ta = 6;
+  PublicKey system_program = 7;
+  PublicKey asset_mint = 8;
+  PublicKey token_program = 9;
+  PublicKey associated_token_program = 10;
+  PublicKey event_authority = 11;
+  PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
+}
+    
+message WithdrawCollateralArgs {
+  uint64 amount = 1;
+  uint32 collateral_index = 2;
+  bytes asset_index_guidance = 3;
+  ExpectedLoanValues expected_loan_values = 4;
+  bool close_if_eligible = 5;
+}
+    
+message WithdrawCollateral {
+  WithdrawCollateralAccounts accounts = 1;
+  WithdrawCollateralArgs args = 2;
+}
+    
+message WithdrawStrategyAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey lender = 3;
+  PublicKey strategy = 4;
+  PublicKey principal_mint = 5;
+  PublicKey market_information = 6;
+  PublicKey lender_ta = 7;
+  PublicKey strategy_ta = 8;
+  PublicKey associated_token_program = 9;
+  PublicKey token_program = 10;
+  PublicKey system_program = 11;
+  PublicKey event_authority = 12;
+  PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
+}
+    
+message WithdrawStrategyArgs {
+  uint64 amount = 1;
+  bool withdraw_all = 2;
+}
+    
+message WithdrawStrategy {
+  WithdrawStrategyAccounts accounts = 1;
+  WithdrawStrategyArgs args = 2;
+}
+    
+message WithdrawUserVaultAccounts {
+  PublicKey bs_auth = 1;
+  PublicKey payer = 2;
+  PublicKey user = 3;
+  PublicKey vault = 4;
+  PublicKey strategy = 5;
+  PublicKey market_information = 6;
+  PublicKey lp_mint = 7;
+  PublicKey user_lp_ta = 8;
+  PublicKey user_principal_ta = 9;
+  PublicKey strategy_principal_ta = 10;
+  PublicKey principal_mint = 11;
+  PublicKey principal_token_program = 12;
+  PublicKey token2022_program = 13;
+  PublicKey associated_token_program = 14;
+  PublicKey system_program = 15;
+  PublicKey event_authority = 16;
+  PublicKey program = 17;
+  repeated PublicKey remaining_accounts = 18;
+}
+    
+message WithdrawUserVaultArgs {
+  LpParams params = 1;
+}
+    
+message WithdrawUserVault {
+  WithdrawUserVaultAccounts accounts = 1;
+  WithdrawUserVaultArgs args = 2;
+}
+    
+message LoopscaleAccount {
+  oneof account {
+    Loan loan = 1;
+    MarketInformation market_information = 2;
+    PersonalPositionState personal_position_state = 3;
+    PoolState pool_state = 4;
+    Position position = 5;
+    ProtocolPositionState protocol_position_state = 6;
+    Strategy strategy = 7;
+    Timelock timelock = 8;
+    UserRewardsInfo user_rewards_info = 9;
+    Vault vault = 10;
+    VaultRewardsInfo vault_rewards_info = 11;
+    VaultStake vault_stake = 12;
+    Whirlpool whirlpool = 13;
+  }
+}
+message LpParams {
+  oneof kind {
+    LpParamsExactIn exact_in = 1;
+    LpParamsExactOut exact_out = 2;
+  }
+}
+message TimelockUpdateParams {
+  oneof kind {
+    TimelockUpdateParamsAddCollateral add_collateral = 1;
+    TimelockUpdateParamsUpdateLtv update_ltv = 2;
+    TimelockUpdateParamsRemoveCollateral remove_collateral = 3;
+    TimelockUpdateParamsUpdateApy update_apy = 4;
+    TimelockUpdateParamsUpdateStrategy update_strategy = 5;
+    TimelockUpdateParamsUpdateVault update_vault = 6;
+    TimelockUpdateParamsUpdateCaps update_caps = 7;
+    TimelockUpdateParamsUpdateCollateralAllocationPct update_collateral_allocation_pct = 8;
+  }
+}
+message TransferTypeParams {
+  oneof kind {
+    TransferTypeParamsLiquidity liquidity = 1;
+    TransferTypeParamsTokenAmounts token_amounts = 2;
+  }
+}
+message Instructions {
+  oneof instruction {
+    BorrowPrincipal borrow_principal = 1;
+    CancelTimelock cancel_timelock = 2;
+    ClaimVaultFee claim_vault_fee = 3;
+    ClaimVaultRewards claim_vault_rewards = 4;
+    CloseLoan close_loan = 5;
+    CloseStrategy close_strategy = 6;
+    CreateLoan create_loan = 7;
+    CreateMarketInformation create_market_information = 8;
+    CreateRewardsSchedule create_rewards_schedule = 9;
+    CreateStrategy create_strategy = 10;
+    CreateTimelock create_timelock = 11;
+    CreateVault create_vault = 12;
+    DepositCollateral deposit_collateral = 13;
+    DepositStrategy deposit_strategy = 14;
+    DepositUserVault deposit_user_vault = 15;
+    ExecuteTimelock execute_timelock = 16;
+    LiquidateLedger liquidate_ledger = 17;
+    LockLoan lock_loan = 18;
+    ManageCollateralClaimOrcaFee manage_collateral_claim_orca_fee = 19;
+    ManageCollateralDecreaseRaydiumLiquidity manage_collateral_decrease_raydium_liquidity = 20;
+    ManageCollateralIncreaseOrcaLiquidity manage_collateral_increase_orca_liquidity = 21;
+    ManageCollateralIncreaseRaydiumLiquidity manage_collateral_increase_raydium_liquidity = 22;
+    ManageCollateralTransferOrcaPosition manage_collateral_transfer_orca_position = 23;
+    ManageCollateralTransferRaydiumPosition manage_collateral_transfer_raydium_position = 24;
+    ManageCollateralWithdrawOrcaLiquidity manage_collateral_withdraw_orca_liquidity = 25;
+    MigrateMarketInfoAllocation migrate_market_info_allocation = 26;
+    RefinanceLedger refinance_ledger = 27;
+    RepayPrincipal repay_principal = 28;
+    SellLedger sell_ledger = 29;
+    StakeUserVaultLp stake_user_vault_lp = 30;
+    UnlockLoan unlock_loan = 31;
+    UnstakeUserVaultLp unstake_user_vault_lp = 32;
+    UpdateMarketInformation update_market_information = 33;
+    UpdateRewardsSchedule update_rewards_schedule = 34;
+    UpdateStrategy update_strategy = 35;
+    UpdateVault update_vault = 36;
+    UpdateWeightMatrix update_weight_matrix = 37;
+    WithdrawCollateral withdraw_collateral = 38;
+    WithdrawStrategy withdraw_strategy = 39;
+    WithdrawUserVault withdraw_user_vault = 40;
+  }
+}

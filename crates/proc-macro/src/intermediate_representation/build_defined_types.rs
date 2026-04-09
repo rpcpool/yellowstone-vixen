@@ -9,21 +9,29 @@ use crate::intermediate_representation::{
 ///
 /// In the IDL, `defined_types` are user-defined structs, enums, or tuples.
 pub fn build_defined_types(defined_types: &[DefinedTypeNode], ir: &mut SchemaIr) {
+    // First pass: register all type aliases (tuples and scalar aliases) so that
+    // forward references from struct fields resolve correctly regardless of order.
+    for defined_type in defined_types {
+        let name = crate::utils::to_pascal_case(&defined_type.name);
+
+        match &defined_type.r#type {
+            TypeNode::Tuple(tuple_type) => build_defined_type_tuple(&name, tuple_type, ir),
+            other if !matches!(other, TypeNode::Struct(_) | TypeNode::Enum(_)) => {
+                let (_, field_type) = map_type_with_label(other);
+                ir.type_aliases.insert(name, field_type);
+            },
+            _ => {},
+        }
+    }
+
+    // Second pass: process structs and enums, which may reference the aliases above.
     for defined_type in defined_types {
         let name = crate::utils::to_pascal_case(&defined_type.name);
 
         match &defined_type.r#type {
             TypeNode::Struct(struct_type) => build_defined_type_struct(&name, struct_type, ir),
-            TypeNode::Tuple(tuple_type) => build_defined_type_tuple(&name, tuple_type, ir),
             TypeNode::Enum(enum_type) => build_defined_type_enum(&name, enum_type, ir),
-
-            other => {
-                // Scalar type alias (e.g. `type UnixTimestamp = i64`).
-                // Register it so that `definedTypeLinkNode` references resolve
-                // to the underlying scalar instead of emitting a bare type name.
-                let (_, field_type) = map_type_with_label(other);
-                ir.type_aliases.insert(name, field_type);
-            },
+            _ => {},
         }
     }
 }
