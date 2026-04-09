@@ -192,6 +192,13 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
 /// to each individual `<InstructionName>` payload.
 ///
 fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut SchemaIr) {
+    // Nothing to dispatch — skip the oneof entirely. An empty InstructionDispatch
+    // would produce an uninhabited `Instruction` enum whose borsh match arms are
+    // non-exhaustive (E0004) and whose proto schema is invalid.
+    if instructions.is_empty() {
+        return;
+    }
+
     let parent_name = "Instructions".to_string();
 
     let variants: Vec<OneofVariantIr> = instructions

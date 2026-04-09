@@ -55,6 +55,17 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|t| t.name.as_str())
         .collect();
 
+    // Collect account-kind names so we can skip DefinedTypes that share the same name.
+    // This happens when an IDL declares both an account and a type with the same name
+    // (e.g. `MarginAccount`). The Account version is authoritative; emitting both would
+    // produce duplicate struct definitions.
+    let account_type_names: HashSet<&str> = schema_ir
+        .types
+        .iter()
+        .filter(|t| matches!(t.kind, TypeKindIr::Account { .. }))
+        .map(|t| t.name.as_str())
+        .collect();
+
     // Render non-instruction, non-event types at top level (exclude oneof parents, rendered separately).
     // Use kind-based filtering (not name-based) so that defined types whose names
     // collide with instruction/event wrapper types are still rendered at the top level.
@@ -64,6 +75,11 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         }
 
         if t.kind == TypeKindIr::Instruction || t.kind == TypeKindIr::Event {
+            continue;
+        }
+
+        // Skip DefinedTypes shadowed by an Account of the same name.
+        if t.kind == TypeKindIr::DefinedType && account_type_names.contains(t.name.as_str()) {
             continue;
         }
 
