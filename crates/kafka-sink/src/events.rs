@@ -20,6 +20,8 @@ pub struct RawAccountEvent {
     pub slot: u64,
     /// Account pubkey (base58).
     pub pubkey: String,
+    /// Geyser write version for deterministic ordering.
+    pub write_version: u64,
     /// Owner program ID (base58).
     pub owner: String,
     /// Raw account data (base58).
@@ -122,7 +124,7 @@ pub struct PreparedRecord {
     /// Fallback records use plain JSON payloads.
     pub payload: Vec<u8>,
     /// Unique key for deduplication.
-    /// Instructions: `{slot}:{signature}:{ix_index}`, Accounts: `{slot}:{pubkey}`.
+    /// Instructions: `{slot}:{signature}:{ix_index}`, Accounts: `{slot}:{pubkey}:{write_version}`.
     pub key: String,
     /// Kafka headers for metadata (readable without decoding payload).
     pub headers: Vec<RecordHeader>,

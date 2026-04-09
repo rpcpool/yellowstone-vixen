@@ -953,9 +953,9 @@ impl From<AccountCommitAt> for CommitScope {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_block_coordinator::InstructionSlot;
     #[cfg(feature = "experimental-account-parser")]
-    use yellowstone_vixen_block_coordinator::{AccountCommitAt, AccountSlot};
+    use yellowstone_vixen_block_coordinator::AccountSlot;
+    use yellowstone_vixen_block_coordinator::InstructionSlot;
 
     use super::*;
     use crate::events::{AccountSlotCommitEvent, MarkerType};

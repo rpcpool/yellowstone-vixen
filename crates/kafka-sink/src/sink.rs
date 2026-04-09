@@ -564,6 +564,7 @@ impl KafkaSink {
 
         let pubkey_str = bs58::encode(&inner.pubkey).into_string();
         let owner_str = bs58::encode(&inner.owner).into_string();
+        let write_version = inner.write_version;
 
         let mut had_error = false;
 
@@ -574,6 +575,7 @@ impl KafkaSink {
                         Some(self.prepare_decoded_account_record(
                             slot,
                             &pubkey_str,
+                            write_version,
                             &owner_str,
                             parsed,
                             parser.topic(),
@@ -592,6 +594,7 @@ impl KafkaSink {
                             Some(self.prepare_fallback_account_record(
                                 slot,
                                 &pubkey_str,
+                                write_version,
                                 &owner_str,
                                 &inner.data,
                                 fallback,
@@ -610,11 +613,12 @@ impl KafkaSink {
         &self,
         slot: u64,
         pubkey: &str,
+        write_version: u64,
         owner: &str,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let key = make_account_record_key(slot, pubkey);
+        let key = make_account_record_key(slot, pubkey, write_version);
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
         let headers = vec![
@@ -625,6 +629,10 @@ impl KafkaSink {
             RecordHeader {
                 key: "pubkey",
                 value: pubkey.to_string(),
+            },
+            RecordHeader {
+                key: "write_version",
+                value: write_version.to_string(),
             },
             RecordHeader {
                 key: "owner",
@@ -648,11 +656,12 @@ impl KafkaSink {
         &self,
         slot: u64,
         pubkey: &str,
+        write_version: u64,
         owner: &str,
         data: &[u8],
         fallback_topic: &str,
     ) -> PreparedRecord {
-        let key = make_account_record_key(slot, pubkey);
+        let key = make_account_record_key(slot, pubkey, write_version);
 
         let headers = vec![
             RecordHeader {
@@ -664,6 +673,10 @@ impl KafkaSink {
                 value: pubkey.to_string(),
             },
             RecordHeader {
+                key: "write_version",
+                value: write_version.to_string(),
+            },
+            RecordHeader {
                 key: "owner",
                 value: owner.to_string(),
             },
@@ -672,6 +685,7 @@ impl KafkaSink {
         let fallback_event = RawAccountEvent {
             slot,
             pubkey: pubkey.to_string(),
+            write_version,
             owner: owner.to_string(),
             data: bs58::encode(data).into_string(),
         };
@@ -1014,14 +1028,17 @@ mod tests {
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected fallback record");
+        let pubkey = yellowstone_vixen_core::bs58::encode([2_u8; 32]).into_string();
 
         assert_eq!(record.topic, "failed.test.accounts");
+        assert_eq!(record.key, format!("100:{pubkey}:11"));
         assert!(had_error);
 
         let event: RawAccountEvent =
             serde_json::from_slice(&record.payload).expect("fallback payload must be JSON");
 
         assert_eq!(event.slot, 100);
+        assert_eq!(event.write_version, 11);
         assert_eq!(
             event.owner,
             yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
@@ -1049,9 +1066,15 @@ mod tests {
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected decoded record");
+        let pubkey = yellowstone_vixen_core::bs58::encode([2_u8; 32]).into_string();
 
         assert_eq!(record.topic, "test.accounts");
+        assert_eq!(record.key, format!("100:{pubkey}:11"));
         assert!(!had_error);
         assert!(record.is_decoded);
+        assert!(record
+            .headers
+            .iter()
+            .any(|header| { header.key == "write_version" && header.value == "11" }));
     }
 }
