@@ -222,9 +222,11 @@ fn single_event_helper_fn(
         }
     };
 
-    let args_field = info.args_expr.map(|expr| {
-        quote! { args: #expr, }
-    });
+    let args_field = match info.args_expr {
+        Some(expr) => quote! { args: #expr, },
+        // Fieldless event: Event variant still declares `args`, initialize with empty struct.
+        None => quote! { args: event::#args_ident {}, },
+    };
 
     Some(quote! {
         pub fn #fn_ident(
