@@ -12,6 +12,7 @@ use quote::{format_ident, quote};
 pub fn event_parser(
     _program_name_camel: &CamelCaseString,
     events: &[codama_nodes::EventNode],
+    has_instructions: bool,
 ) -> TokenStream {
     let wrapper_ident = format_ident!("Events");
     let ev_mod = format_ident!("event");
@@ -87,7 +88,7 @@ pub fn event_parser(
         }
     };
 
-    let program_event_output = generate_program_event_output();
+    let program_event_output = generate_program_event_output(has_instructions);
 
     quote! {
         #(#helper_fns)*
@@ -112,14 +113,53 @@ pub fn event_parser(
 
 /// Generate the concrete `ProgramEventOutput` struct and optionally its
 /// `prost::Message` impl (behind `proto` feature).
-fn generate_program_event_output() -> TokenStream {
+fn generate_program_event_output(has_instructions: bool) -> TokenStream {
+    let instruction_field = if has_instructions {
+        quote! {
+            /// Parsed instruction (None if this was a CPI event or filtered).
+            pub instruction: Option<Instructions>,
+        }
+    } else {
+        quote! {}
+    };
+
     let proto_impl = if cfg!(feature = "proto") {
+        let encode_instruction = if has_instructions {
+            quote! {
+                if let Some(ref ix) = self.instruction {
+                    ::prost::encoding::message::encode(1, ix, buf);
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        let encoded_len_instruction = if has_instructions {
+            quote! {
+                if let Some(ref ix) = self.instruction {
+                    len += ::prost::encoding::message::encoded_len(1, ix);
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        let clear_instruction = if has_instructions {
+            quote! { self.instruction = None; }
+        } else {
+            quote! {}
+        };
+
+        let default_instruction = if has_instructions {
+            quote! { instruction: None, }
+        } else {
+            quote! {}
+        };
+
         quote! {
             impl ::prost::Message for ProgramEventOutput {
                 fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
-                    if let Some(ref ix) = self.instruction {
-                        ::prost::encoding::message::encode(1, ix, buf);
-                    }
+                    #encode_instruction
 
                     for event in &self.program_events {
                         ::prost::encoding::message::encode(2, event, buf);
@@ -144,9 +184,7 @@ fn generate_program_event_output() -> TokenStream {
                 fn encoded_len(&self) -> usize {
                     let mut len = 0;
 
-                    if let Some(ref ix) = self.instruction {
-                        len += ::prost::encoding::message::encoded_len(1, ix);
-                    }
+                    #encoded_len_instruction
 
                     for event in &self.program_events {
                         len += ::prost::encoding::message::encoded_len(2, event);
@@ -156,7 +194,7 @@ fn generate_program_event_output() -> TokenStream {
                 }
 
                 fn clear(&mut self) {
-                    self.instruction = None;
+                    #clear_instruction
                     self.program_events.clear();
                 }
             }
@@ -164,7 +202,7 @@ fn generate_program_event_output() -> TokenStream {
             impl Default for ProgramEventOutput {
                 fn default() -> Self {
                     Self {
-                        instruction: None,
+                        #default_instruction
                         program_events: Vec::new(),
                     }
                 }
@@ -181,8 +219,7 @@ fn generate_program_event_output() -> TokenStream {
         /// and `Events` types.
         #[derive(Debug, PartialEq)]
         pub struct ProgramEventOutput {
-            /// Parsed instruction (None if this was a CPI event or filtered).
-            pub instruction: Option<Instructions>,
+            #instruction_field
             /// Events parsed from logs and/or CPI self-invocations.
             pub program_events: Vec<Events>,
         }
