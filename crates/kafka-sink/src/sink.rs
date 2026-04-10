@@ -46,7 +46,7 @@ impl ParsedOutput {
 pub enum ParseOutcome {
     Parsed(ParsedOutput),
     Filtered,
-    Error,
+    Error(String),
 }
 
 // --- DynInstructionParser ---
@@ -92,7 +92,7 @@ where
                 Err(ParseError::Filtered) => ParseOutcome::Filtered,
                 Err(e) => {
                     tracing::warn!(?e, program = %self.program_name, "Error parsing instruction");
-                    ParseOutcome::Error
+                    ParseOutcome::Error(e.to_string())
                 },
             }
         })
@@ -152,7 +152,7 @@ where
                 Err(ParseError::Filtered) => ParseOutcome::Filtered,
                 Err(e) => {
                     tracing::warn!(?e, program = %self.program_name, "Error parsing account");
-                    ParseOutcome::Error
+                    ParseOutcome::Error(e.to_string())
                 },
             }
         })
@@ -401,12 +401,12 @@ impl KafkaSink {
                 ParseOutcome::Filtered => {
                     // Filtered means "not decoded" but not an error, so no fallback emission.
                 },
-                ParseOutcome::Error => {
+                ParseOutcome::Error(e) => {
                     had_error = true;
 
                     if let Some(fallback) = parser.fallback_topic() {
                         let record = self.prepare_fallback_instruction_record(
-                            slot, signature, path, ix, fallback,
+                            slot, signature, path, ix, fallback, &e,
                         );
 
                         return (Some(record), true);
@@ -497,6 +497,7 @@ impl KafkaSink {
         path: &Path,
         ix: &InstructionUpdate,
         fallback_topic: &str,
+        error: &str,
     ) -> PreparedRecord {
         let (key, mut headers) = Self::instruction_base_record(slot, signature, path);
 
@@ -505,6 +506,11 @@ impl KafkaSink {
         headers.push(RecordHeader {
             key: "program_id",
             value: program_id.clone(),
+        });
+
+        headers.push(RecordHeader {
+            key: "parse_error",
+            value: error.to_string(),
         });
 
         let fallback_event = RawInstructionEvent {
@@ -584,7 +590,7 @@ impl KafkaSink {
                 ParseOutcome::Filtered => {
                     // Filtered means "not decoded" but not an error, so no fallback emission.
                 },
-                ParseOutcome::Error => {
+                ParseOutcome::Error(e) => {
                     had_error = true;
 
                     if let Some(fallback) = parser.fallback_topic() {
@@ -595,6 +601,7 @@ impl KafkaSink {
                                 &owner_str,
                                 &inner.data,
                                 fallback,
+                                &e,
                             )),
                             true,
                         );
@@ -642,7 +649,7 @@ impl KafkaSink {
         }
     }
 
-    /// Prepare a fallback record for accounts that a parser filtered out.
+    /// Prepare a fallback record for accounts that failed to parse.
     /// Payload is plain JSON (`RawAccountEvent`), metadata in headers.
     fn prepare_fallback_account_record(
         &self,
@@ -651,6 +658,7 @@ impl KafkaSink {
         owner: &str,
         data: &[u8],
         fallback_topic: &str,
+        error: &str,
     ) -> PreparedRecord {
         let key = make_account_record_key(slot, pubkey);
 
@@ -666,6 +674,10 @@ impl KafkaSink {
             RecordHeader {
                 key: "owner",
                 value: owner.to_string(),
+            },
+            RecordHeader {
+                key: "parse_error",
+                value: error.to_string(),
             },
         ];
 
