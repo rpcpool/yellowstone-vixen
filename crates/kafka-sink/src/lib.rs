@@ -23,8 +23,8 @@ pub use kafka_sink::TransactionSlotSink;
 pub use kafka_sink::{AccountMsg, AccountPassthroughSink, AccountSlotSink};
 pub use parsers::{AccountSubscription, TransactionSubscription};
 pub use producer::{create_producer, initialize_transactional_producer};
-// Re-export rdkafka types for convenience
-pub use rdkafka::producer::FutureProducer;
+// Re-export rdkafka producer types for convenience
+pub use rdkafka::producer::{FutureProducer, FutureRecord};
 pub use schema_registry::{
     ensure_schemas_registered, wrap_payload_with_confluent_wire_format, RegisteredSchema,
     SchemaDefinition,

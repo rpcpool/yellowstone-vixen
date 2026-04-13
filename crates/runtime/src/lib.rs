@@ -224,7 +224,7 @@ impl<S: SourceTrait> Runtime<S> {
     /// │   (finite src)  (unexpected)        (gRPC)        (other)           │
     /// │        │              │               │              │              │
     /// │        ▼              ▼               ▼              ▼              │
-    /// │      Ok(())      ServerHangup     ServerHangup     Other            │
+    /// │   drain -> Ok    ServerHangup     ServerHangup     Other            │
     /// │                                                                     │
     /// │    ┌──────────────────────────────────────────────────────────┐     │
     /// │    │ ReceiverDropped: defensive only - normally unreachable   │     │
@@ -308,11 +308,10 @@ impl<S: SourceTrait> Runtime<S> {
             status = status_rx => StopType::SourceExit(status),
         };
 
-        let should_stop_buffer = !matches!(stop_ty, StopType::Buffer(..));
-
         match stop_ty {
             StopType::Signal(Ok(Some(s))) => {
                 tracing::warn!("{s:?} received, shutting down...");
+                Self::force_stop_buffer(buffer).await;
                 Ok(())
             },
             StopType::Signal(Ok(None)) => Err(std::io::Error::new(
@@ -325,11 +324,12 @@ impl<S: SourceTrait> Runtime<S> {
             StopType::SourceExit(Ok(status)) => match status {
                 SourceExitStatus::ReceiverDropped => {
                     tracing::info!("Source stopped: receiver dropped (shutdown)");
+                    Self::force_stop_buffer(buffer).await;
                     Ok(())
                 },
                 SourceExitStatus::Completed => {
-                    tracing::info!("Source completed successfully");
-                    Ok(())
+                    tracing::info!("Source completed successfully; draining runtime buffer");
+                    buffer.wait_for_stop().await
                 },
                 SourceExitStatus::StreamEnded => {
                     tracing::warn!("Source stopped: stream ended unexpectedly");
@@ -350,14 +350,10 @@ impl<S: SourceTrait> Runtime<S> {
             },
         }?;
 
-        if should_stop_buffer {
-            Self::stop_buffer(buffer).await;
-        }
-
         Ok(())
     }
 
-    async fn stop_buffer(buffer: buffer::Buffer) {
+    async fn force_stop_buffer(buffer: buffer::Buffer) {
         match buffer.join().await {
             Err(e) => tracing::warn!(err = %Chain(&e), "Error stopping runtime buffer"),
             Ok(c) => c.as_unit(),

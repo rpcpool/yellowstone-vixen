@@ -374,6 +374,7 @@ impl KafkaSink {
     pub async fn parse_instruction(
         &self,
         slot: u64,
+        tx_index: u64,
         signature: &[u8],
         path: &Path,
         ix: &InstructionUpdate,
@@ -390,6 +391,7 @@ impl KafkaSink {
                 ParseOutcome::Parsed(parsed) => {
                     let record = self.prepare_decoded_instruction_record(
                         slot,
+                        tx_index,
                         signature,
                         path,
                         parsed,
@@ -406,7 +408,7 @@ impl KafkaSink {
 
                     if let Some(fallback) = parser.fallback_topic() {
                         let record = self.prepare_fallback_instruction_record(
-                            slot, signature, path, ix, fallback, &e,
+                            slot, tx_index, signature, path, ix, fallback, &e,
                         );
 
                         return (Some(record), true);
@@ -420,6 +422,7 @@ impl KafkaSink {
     /// Build the base headers and key shared by all instruction record types.
     fn instruction_base_record(
         slot: u64,
+        tx_index: u64,
         signature: &[u8],
         path: &Path,
     ) -> (String, Vec<RecordHeader>) {
@@ -437,6 +440,10 @@ impl KafkaSink {
             RecordHeader {
                 key: "signature",
                 value: sig_str,
+            },
+            RecordHeader {
+                key: "tx_index",
+                value: tx_index.to_string(),
             },
             RecordHeader {
                 key: "ix_index",
@@ -469,12 +476,13 @@ impl KafkaSink {
     pub fn prepare_decoded_instruction_record(
         &self,
         slot: u64,
+        tx_index: u64,
         signature: &[u8],
         path: &Path,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let (key, headers) = Self::instruction_base_record(slot, signature, path);
+        let (key, headers) = Self::instruction_base_record(slot, tx_index, signature, path);
 
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
@@ -490,16 +498,18 @@ impl KafkaSink {
 
     /// Prepare a fallback record for unrecognized instructions.
     /// Payload is plain JSON (`RawInstructionEvent`), metadata in headers.
+    #[allow(clippy::too_many_arguments)]
     pub fn prepare_fallback_instruction_record(
         &self,
         slot: u64,
+        tx_index: u64,
         signature: &[u8],
         path: &Path,
         ix: &InstructionUpdate,
         fallback_topic: &str,
         error: &str,
     ) -> PreparedRecord {
-        let (key, mut headers) = Self::instruction_base_record(slot, signature, path);
+        let (key, mut headers) = Self::instruction_base_record(slot, tx_index, signature, path);
 
         let program_id = bs58::encode(ix.program).into_string();
 
@@ -659,6 +669,7 @@ impl KafkaSink {
 
     /// Prepare a fallback record for accounts that failed to parse.
     /// Payload is plain JSON (`RawAccountEvent`), metadata in headers.
+    #[allow(clippy::too_many_arguments)]
     fn prepare_fallback_account_record(
         &self,
         slot: u64,
@@ -893,7 +904,7 @@ mod tests {
         let ix = instruction_with_program([9; 32].into());
 
         let (record, had_error) =
-            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
+            futures::executor::block_on(sink.parse_instruction(100, 7, b"sig", &ix.path, &ix));
 
         assert!(
             record.is_none(),
@@ -923,7 +934,7 @@ mod tests {
         let ix = instruction_with_program([1; 32].into());
 
         let (record, had_error) =
-            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
+            futures::executor::block_on(sink.parse_instruction(100, 7, b"sig", &ix.path, &ix));
 
         assert!(record.is_none(), "filtered decode should not emit fallback");
         assert!(!had_error);
@@ -949,7 +960,7 @@ mod tests {
         let ix = instruction_with_program([1; 32].into());
 
         let (record, had_error) =
-            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
+            futures::executor::block_on(sink.parse_instruction(100, 7, b"sig", &ix.path, &ix));
 
         let record = record.expect("expected fallback record");
 
@@ -973,6 +984,14 @@ mod tests {
             event.data,
             yellowstone_vixen_core::bs58::encode([1_u8, 2, 3]).into_string()
         );
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "tx_index")
+                .map(|header| header.value.as_str()),
+            Some("7")
+        );
     }
 
     #[test]
@@ -995,13 +1014,21 @@ mod tests {
         let ix = instruction_with_program([1; 32].into());
 
         let (record, had_error) =
-            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
+            futures::executor::block_on(sink.parse_instruction(100, 7, b"sig", &ix.path, &ix));
 
         let record = record.expect("expected decoded record");
 
         assert_eq!(record.topic, "test.instructions");
         assert!(!had_error);
         assert!(record.is_decoded);
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "tx_index")
+                .map(|header| header.value.as_str()),
+            Some("7")
+        );
     }
 
     #[cfg(feature = "experimental-account-parser")]

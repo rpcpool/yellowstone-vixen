@@ -106,7 +106,7 @@ yellowstone-fumarole-client = "0.4.0+solana.3"
 yellowstone-grpc-client = { version = "12" }
 yellowstone-grpc-proto = { version = "12", default-features = false }
 rdkafka = { version = "0.36", features = ["cmake-build", "ssl", "zstd"] }
-reqwest = { version = "0.12", features = ["json", "blocking"] }
+reqwest = { version = "0.12", features = ["json", "blocking", "stream"] }
 
 yellowstone-vixen = { path = "crates/runtime", version = "0.6.1" }
 yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.6.1" }

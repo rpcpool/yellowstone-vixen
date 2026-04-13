@@ -180,6 +180,7 @@ fn main() -> Result<()> {
         network: "mainnet".to_string(),
         compact_index_base_url: "https://files.old-faithful.net".to_string(),
         network_capacity_mb: 100000,
+        possible_leader_skipped_tx: None,
     };
 
     // SAFETY: Called from main() before the Tokio runtime is created.

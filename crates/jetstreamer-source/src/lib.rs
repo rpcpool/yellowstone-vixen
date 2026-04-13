@@ -6,7 +6,7 @@ use std::sync::{
 use async_trait::async_trait;
 use futures_util::FutureExt;
 use jetstreamer_firehose::firehose::{firehose, BlockData, OnErrorFn, TransactionData};
-use tokio::sync::{mpsc::Sender, oneshot};
+use tokio::sync::{mpsc, mpsc::Sender, oneshot};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
@@ -20,6 +20,12 @@ use yellowstone_vixen::{
 use yellowstone_vixen_core::Filters;
 
 type SharedError = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+/// Dedicated side-channel event surfaced for skipped slots during backfill.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PossibleLeaderSkippedEvent {
+    pub slot: u64,
+}
 
 /// Env vars that `jetstreamer-firehose` reads at startup.
 ///
@@ -132,6 +138,7 @@ pub unsafe fn init_process_env(config: &JetstreamSourceConfig) {
 
 struct VixenStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
+    skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
     // Cache matching filters to avoid iteration per item
     block_matches: Vec<String>,
     transaction_matches: Vec<String>,
@@ -142,6 +149,7 @@ struct VixenStreamHandler {
 impl VixenStreamHandler {
     fn new(
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
+        skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
         filters: Filters,
     ) -> Self {
         let (block_matches, transaction_matches) = Self::precalculate_filters(&filters);
@@ -154,6 +162,7 @@ impl VixenStreamHandler {
 
         Self {
             tx,
+            skipped_slots_tx,
             block_matches,
             transaction_matches,
             blocks_processed: AtomicU64::new(0),
@@ -274,7 +283,22 @@ impl VixenStreamHandler {
                 })?;
             },
             BlockData::PossibleLeaderSkipped { slot } => {
-                debug!(slot, "Skipping possibly leader-skipped slot");
+                debug!(
+                    slot,
+                    "Surfacing possibly leader-skipped slot on side channel"
+                );
+
+                if let Some(skipped_slots_tx) = &self.skipped_slots_tx {
+                    skipped_slots_tx
+                        .send(PossibleLeaderSkippedEvent { slot })
+                        .await
+                        .map_err(|e| {
+                            let error_msg =
+                                format!("Failed to send possible leader-skipped slot: {}", e);
+                            error!("{}", error_msg);
+                            Box::new(Error::ChannelSend(error_msg)) as SharedError
+                        })?;
+                }
             },
         }
 
@@ -370,6 +394,11 @@ pub struct JetstreamSourceConfig {
     /// Network capacity in MB
     #[arg(long, env, default_value = "1000")]
     pub network_capacity_mb: usize,
+
+    /// Optional side channel for `PossibleLeaderSkipped` events.
+    #[serde(skip)]
+    #[arg(skip)]
+    pub possible_leader_skipped_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
 }
 
 /// Configuration for slot ranges or epochs
@@ -390,27 +419,33 @@ pub struct SlotRangeConfig {
 }
 
 impl SlotRangeConfig {
-    /// Convert configuration to slot range
-    /// Returns (start_slot, end_slot)
+    /// Convert configuration to a half-open slot range.
+    ///
+    /// Returns `(start_slot, end_slot_exclusive)` — the range processed is
+    /// `[start_slot, end_slot_exclusive)`, matching Rust's `start..end`
+    /// semantics used by `firehose()`.
+    ///
+    /// - **Epoch mode**: covers all slots in the epoch.
+    /// - **Explicit mode**: `slot_start` is inclusive, `slot_end` is
+    ///   **exclusive** (the first slot *not* processed).
     pub fn to_slot_range(&self) -> Result<(u64, u64), Error> {
         match (self.slot_start, self.slot_end, self.epoch) {
             (Some(start), Some(end), None) => {
-                if start > end {
+                if start >= end {
                     return Err(Error::InvalidConfig(
-                        "slot_start must be <= slot_end".into(),
+                        "slot_start must be < slot_end (slot_end is exclusive)".into(),
                     ));
                 }
                 Ok((start, end))
             },
             (None, None, Some(epoch)) => {
-                // Mainnet/testnet use 432,000 slots per epoch
                 const SLOTS_PER_EPOCH: u64 = 432_000;
                 let start = epoch * SLOTS_PER_EPOCH;
-                let end = (epoch + 1) * SLOTS_PER_EPOCH - 1;
+                let end = (epoch + 1) * SLOTS_PER_EPOCH;
                 info!(
                     epoch,
                     start_slot = start,
-                    end_slot = end,
+                    end_slot_exclusive = end,
                     "Resolved epoch to slot range"
                 );
                 Ok((start, end))
@@ -496,7 +531,11 @@ impl JetstreamSource {
             "Starting Jetstream historical replay"
         );
 
-        let handler = Arc::new(VixenStreamHandler::new(tx.clone(), filters.clone()));
+        let handler = Arc::new(VixenStreamHandler::new(
+            tx.clone(),
+            config.possible_leader_skipped_tx.clone(),
+            filters.clone(),
+        ));
 
         let handler_on_block = handler.clone();
         let on_block = Some(move |_thread_id: usize, block: BlockData| {
@@ -610,9 +649,9 @@ mod tests {
             slot_end: None,
             epoch: Some(800),
         };
-        let (start, end) = config.to_slot_range().unwrap();
+        let (start, end_exclusive) = config.to_slot_range().unwrap();
         assert_eq!(start, 345_600_000);
-        assert_eq!(end, 346_031_999);
+        assert_eq!(end_exclusive, 346_032_000); // end-exclusive: first slot of next epoch
     }
 
     #[test]
@@ -623,6 +662,19 @@ mod tests {
             epoch: None,
         };
         assert!(config.to_slot_range().is_err());
+    }
+
+    #[test]
+    fn test_slot_range_empty_range_rejected() {
+        let config = SlotRangeConfig {
+            slot_start: Some(100),
+            slot_end: Some(100),
+            epoch: None,
+        };
+        assert!(
+            config.to_slot_range().is_err(),
+            "start == end is an empty range"
+        );
     }
 
     #[test]
@@ -648,6 +700,7 @@ mod tests {
             network: "mainnet".to_string(),
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
+            possible_leader_skipped_tx: None,
         };
 
         let filters = Filters::new(std::collections::HashMap::new());
@@ -658,6 +711,29 @@ mod tests {
         assert_eq!(source.config.network, "mainnet");
     }
 
+    #[tokio::test]
+    async fn possible_leader_skipped_events_use_side_channel() {
+        let (updates_tx, mut updates_rx) = mpsc::channel(4);
+        let (skipped_tx, mut skipped_rx) = mpsc::channel(4);
+        let handler = VixenStreamHandler::new(
+            updates_tx,
+            Some(skipped_tx),
+            Filters::new(std::collections::HashMap::new()),
+        );
+
+        handler
+            .process_block(BlockData::PossibleLeaderSkipped { slot: 123 })
+            .await
+            .expect("side-channel send should succeed");
+
+        let skipped = skipped_rx.recv().await.expect("skipped event");
+        assert_eq!(skipped, PossibleLeaderSkippedEvent { slot: 123 });
+        assert!(
+            updates_rx.try_recv().is_err(),
+            "no fake block update should be emitted"
+        );
+    }
+
     #[test]
     fn test_multiple_epochs() {
         for epoch in [800, 801, 802] {
@@ -666,9 +742,9 @@ mod tests {
                 slot_end: None,
                 epoch: Some(epoch),
             };
-            let (start, end) = config.to_slot_range().unwrap();
+            let (start, end_exclusive) = config.to_slot_range().unwrap();
             assert_eq!(start, epoch * 432_000);
-            assert_eq!(end, (epoch + 1) * 432_000 - 1);
+            assert_eq!(end_exclusive, (epoch + 1) * 432_000); // end-exclusive
         }
     }
 }
