@@ -1,0 +1,267 @@
+---
+source: tests/proc-macro/tests/glow.rs
+assertion_line: 19
+expression: "margin::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package margin;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message AccountClosed {
+  PublicKey margin_account = 1;
+}
+    
+message AccountCreated {
+  PublicKey margin_account = 1;
+  PublicKey owner = 2;
+  PublicKey airspace = 3;
+  uint32 seed = 4;
+}
+    
+message AccountingInvokeBegin {
+  PublicKey margin_account = 1;
+}
+    
+message AccountingInvokeEnd {
+}
+    
+message AdapterConfigured {
+  PublicKey airspace = 1;
+  PublicKey adapter_program = 2;
+  bool is_adapter = 3;
+}
+    
+message AdapterInvokeBegin {
+  PublicKey margin_account = 1;
+}
+    
+message AdapterInvokeEnd {
+}
+    
+message BitSet {
+  uint32 bits = 1;
+}
+    
+message Invocation {
+  BitSet caller_heights = 1;
+}
+    
+message IxData {
+  uint32 num_accounts = 1;
+  bytes data = 2;
+}
+    
+message JupiterSwap {
+  PublicKey margin_account = 1;
+  PublicKey adapter_program = 2;
+}
+    
+message Liquidation {
+  bytes equity_loss = 1;
+  bytes max_equity_loss = 2;
+  bytes collateral_change = 3;
+  bytes max_available_collateral_limit = 4;
+  int64 start_time = 5;
+  uint32 is_collecting_fees = 6;
+  bytes padding = 7;
+  repeated LiquidationFee accrued_liquidation_fees = 8;
+}
+    
+message LiquidationBegun {
+  PublicKey margin_account = 1;
+  PublicKey liquidator = 2;
+  PublicKey liquidation = 3;
+  Liquidation liquidation_data = 4;
+  ValuationSummary valuation_summary = 5;
+}
+    
+message LiquidationEnded {
+  PublicKey margin_account = 1;
+  PublicKey authority = 2;
+  bool timed_out = 3;
+}
+    
+message LiquidationFee {
+  PublicKey mint = 1;
+  uint64 amount = 2;
+}
+    
+message LiquidatorInvokeBegin {
+  PublicKey margin_account = 1;
+  PublicKey liquidator = 2;
+}
+    
+message LiquidatorInvokeEnd {
+  Liquidation liquidation_data = 1;
+  ValuationSummary valuation_summary = 2;
+  uint64 accrued_liquidation_fee_amount = 3;
+  PublicKey liquidation_fee_mint = 4;
+}
+    
+message PermitConfigured {
+  PublicKey airspace = 1;
+  PublicKey owner = 2;
+  uint32 permissions = 3;
+}
+    
+message Positions {
+  bytes positions = 1;
+}
+    
+message TokenAdminMargin {
+  TokenPriceOracle oracle = 1;
+}
+    
+message TokenAdminAdapter {
+  PublicKey item_0 = 1;
+}
+    
+message TokenConfigUpdate {
+  PublicKey underlying_mint = 1;
+  PublicKey underlying_mint_token_program = 2;
+  TokenAdmin admin = 3;
+  TokenKind token_kind = 4;
+  uint32 value_modifier = 5;
+  uint64 max_staleness = 6;
+}
+    
+message TokenConfigured {
+  PublicKey airspace = 1;
+  optional TokenConfigUpdate update = 2;
+  PublicKey mint = 3;
+}
+    
+message TokenKindCollateral {
+}
+    
+message TokenKindClaim {
+}
+    
+message TokenKindAdapterCollateral {
+}
+    
+message TokenPriceOracleNoOracle {
+}
+    
+message TokenPriceOraclePythPull {
+  bytes feed_id = 1;
+}
+    
+message TokenPriceOraclePythPullRedemption {
+  bytes feed_id = 1;
+  PublicKey quote_mint = 2;
+}
+    
+message TransferPosition {
+  PublicKey source_margin_account = 1;
+  PublicKey target_margin_account = 2;
+  PublicKey source_token_account = 3;
+  PublicKey target_token_account = 4;
+  uint64 amount = 5;
+}
+    
+message ValuationSummary {
+  bytes equity = 1;
+  bytes liabilities = 2;
+  bytes required_collateral = 3;
+  bytes weighted_collateral = 4;
+  bytes effective_collateral = 5;
+  bytes available_collateral = 6;
+  bool past_due = 7;
+}
+    
+message VerifiedHealthy {
+  PublicKey margin_account = 1;
+}
+    
+message VerifiedUnhealthy {
+  PublicKey margin_account = 1;
+}
+    
+message AdapterConfig {
+  PublicKey airspace = 1;
+  PublicKey adapter_program = 2;
+}
+    
+message Airspace {
+  PublicKey authority = 1;
+  bool is_restricted = 2;
+}
+    
+message AirspacePermit {
+  PublicKey airspace = 1;
+  PublicKey owner = 2;
+  PublicKey issuer = 3;
+}
+    
+message LiquidationState {
+  PublicKey liquidator = 1;
+  PublicKey margin_account = 2;
+  Liquidation state = 3;
+}
+    
+message MarginAccount {
+  uint32 version = 1;
+  bytes bump_seed = 2;
+  bytes user_seed = 3;
+  Invocation invocation = 4;
+  bytes reserved0 = 5;
+  PublicKey owner = 6;
+  PublicKey airspace = 7;
+  PublicKey liquidator = 8;
+  Positions positions = 9;
+}
+    
+message Permit {
+  PublicKey airspace = 1;
+  PublicKey owner = 2;
+  uint32 permissions = 3;
+}
+    
+message TokenConfig {
+  PublicKey mint = 1;
+  PublicKey mint_token_program = 2;
+  PublicKey underlying_mint = 3;
+  PublicKey underlying_mint_token_program = 4;
+  PublicKey airspace = 5;
+  TokenKind token_kind = 6;
+  uint32 value_modifier = 7;
+  uint64 max_staleness = 8;
+  TokenAdmin admin = 9;
+}
+    
+message MarginAccountOutput {
+  oneof account {
+    AdapterConfig adapter_config = 1;
+    Airspace airspace = 2;
+    AirspacePermit airspace_permit = 3;
+    LiquidationState liquidation_state = 4;
+    MarginAccount margin_account = 5;
+    Permit permit = 6;
+    TokenConfig token_config = 7;
+  }
+}
+message TokenAdmin {
+  oneof kind {
+    TokenAdminMargin margin = 1;
+    TokenAdminAdapter adapter = 2;
+  }
+}
+message TokenKind {
+  oneof kind {
+    TokenKindCollateral collateral = 1;
+    TokenKindClaim claim = 2;
+    TokenKindAdapterCollateral adapter_collateral = 3;
+  }
+}
+message TokenPriceOracle {
+  oneof kind {
+    TokenPriceOracleNoOracle no_oracle = 1;
+    TokenPriceOraclePythPull pyth_pull = 2;
+    TokenPriceOraclePythPullRedemption pyth_pull_redemption = 3;
+  }
+}

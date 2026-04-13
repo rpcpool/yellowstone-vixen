@@ -4,6 +4,8 @@ pub fn make_instruction_record_key(slot: u64, signature: &str, ix_index: &str) -
     format!("{slot}:{signature}:{ix_index}")
 }
 
-/// Generate a unique Kafka key for account record compaction.
-/// Format: `{slot}:{pubkey}`
-pub fn make_account_record_key(slot: u64, pubkey: &str) -> String { format!("{slot}:{pubkey}") }
+/// Generate a unique Kafka key for account record deduplication.
+/// Format: `{slot}:{pubkey}:{write_version}`
+pub fn make_account_record_key(slot: u64, pubkey: &str, write_version: u64) -> String {
+    format!("{slot}:{pubkey}:{write_version}")
+}

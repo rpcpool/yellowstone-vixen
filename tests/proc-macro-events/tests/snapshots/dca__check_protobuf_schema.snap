@@ -135,8 +135,8 @@ message WithdrawAccounts {
   PublicKey input_mint = 3;
   PublicKey output_mint = 4;
   PublicKey dca_ata = 5;
-  PublicKey user_in_ata = 6;
-  PublicKey user_out_ata = 7;
+  optional PublicKey user_in_ata = 6;
+  optional PublicKey user_out_ata = 7;
   PublicKey system_program = 8;
   PublicKey token_program = 9;
   PublicKey associated_token_program = 10;
@@ -302,8 +302,8 @@ message TransferAccounts {
   PublicKey user = 3;
   PublicKey output_mint = 4;
   PublicKey dca_out_ata = 5;
-  PublicKey user_out_ata = 6;
-  PublicKey intermediate_account = 7;
+  optional PublicKey user_out_ata = 6;
+  optional PublicKey intermediate_account = 7;
   PublicKey system_program = 8;
   PublicKey token_program = 9;
   PublicKey associated_token_program = 10;
@@ -328,9 +328,9 @@ message EndAndCloseAccounts {
   PublicKey in_ata = 5;
   PublicKey out_ata = 6;
   PublicKey user = 7;
-  PublicKey user_out_ata = 8;
-  PublicKey init_user_out_ata = 9;
-  PublicKey intermediate_account = 10;
+  optional PublicKey user_out_ata = 8;
+  optional PublicKey init_user_out_ata = 9;
+  optional PublicKey intermediate_account = 10;
   PublicKey system_program = 11;
   PublicKey token_program = 12;
   PublicKey associated_token_program = 13;

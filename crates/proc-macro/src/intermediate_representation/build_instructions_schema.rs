@@ -126,17 +126,27 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
         .map(|(i, acct)| FieldIr {
             name: crate::utils::to_snake_case(&acct.name),
             tag: (i + 1) as u32,
-            label: LabelIr::Singular,
+            label: if acct.is_optional {
+                LabelIr::Optional
+            } else {
+                LabelIr::Singular
+            },
             field_type: FieldTypeIr::Scalar(ScalarIr::PublicKey),
         })
         .collect();
 
-    account_fields.push(FieldIr {
-        name: "remaining_accounts".to_string(),
-        tag: (account_fields.len() + 1) as u32,
-        label: LabelIr::Repeated,
-        field_type: FieldTypeIr::Scalar(ScalarIr::PublicKey),
-    });
+    // Only add `remaining_accounts` if the IDL doesn't already define one.
+    if !account_fields
+        .iter()
+        .any(|f| f.name == "remaining_accounts")
+    {
+        account_fields.push(FieldIr {
+            name: "remaining_accounts".to_string(),
+            tag: (account_fields.len() + 1) as u32,
+            label: LabelIr::Repeated,
+            field_type: FieldTypeIr::Scalar(ScalarIr::PublicKey),
+        });
+    }
 
     // Use `types.push()` instead of `push_unique_type()` because instruction
     // wrapper names (after dropping the `Instruction` suffix) can collide with
@@ -182,6 +192,13 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
 /// to each individual `<InstructionName>` payload.
 ///
 fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut SchemaIr) {
+    // Nothing to dispatch — skip the oneof entirely. An empty InstructionDispatch
+    // would produce an uninhabited `Instruction` enum whose borsh match arms are
+    // non-exhaustive (E0004) and whose proto schema is invalid.
+    if instructions.is_empty() {
+        return;
+    }
+
     let parent_name = "Instructions".to_string();
 
     let variants: Vec<OneofVariantIr> = instructions

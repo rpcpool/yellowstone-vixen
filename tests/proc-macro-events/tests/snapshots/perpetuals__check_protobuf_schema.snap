@@ -1,5 +1,5 @@
 ---
-source: tests/proc-macro-events/tests/perpetuals.rs
+source: tests/perpetuals.rs
 expression: "perpetuals::PROTOBUF_SCHEMA"
 ---
 syntax = "proto3";
@@ -957,7 +957,7 @@ message CreateIncreasePositionMarketRequestAccounts {
   PublicKey custody = 8;
   PublicKey collateral_custody = 9;
   PublicKey input_mint = 10;
-  PublicKey referral = 11;
+  optional PublicKey referral = 11;
   PublicKey token_program = 12;
   PublicKey associated_token_program = 13;
   PublicKey system_program = 14;
@@ -993,7 +993,7 @@ message CreateDecreasePositionRequest2Accounts {
   PublicKey custody_pythnet_price_account = 10;
   PublicKey collateral_custody = 11;
   PublicKey desired_mint = 12;
-  PublicKey referral = 13;
+  optional PublicKey referral = 13;
   PublicKey token_program = 14;
   PublicKey associated_token_program = 15;
   PublicKey system_program = 16;
@@ -1030,7 +1030,7 @@ message CreateDecreasePositionMarketRequestAccounts {
   PublicKey custody = 8;
   PublicKey collateral_custody = 9;
   PublicKey desired_mint = 10;
-  PublicKey referral = 11;
+  optional PublicKey referral = 11;
   PublicKey token_program = 12;
   PublicKey associated_token_program = 13;
   PublicKey system_program = 14;
@@ -1076,7 +1076,7 @@ message UpdateDecreasePositionRequest2 {
 }
     
 message ClosePositionRequest2Accounts {
-  PublicKey keeper = 1;
+  optional PublicKey keeper = 1;
   PublicKey owner = 2;
   PublicKey owner_ata = 3;
   PublicKey pool = 4;
@@ -1101,7 +1101,7 @@ message ClosePositionRequest2 {
 }
     
 message ClosePositionRequest3Accounts {
-  PublicKey keeper = 1;
+  optional PublicKey keeper = 1;
   PublicKey owner = 2;
   PublicKey owner_ata = 3;
   PublicKey pool = 4;
@@ -1409,7 +1409,7 @@ message InstantCreateTpslAccounts {
   PublicKey custody_pythnet_price_account = 12;
   PublicKey collateral_custody = 13;
   PublicKey desired_mint = 14;
-  PublicKey referral = 15;
+  optional PublicKey referral = 15;
   PublicKey token_program = 16;
   PublicKey associated_token_program = 17;
   PublicKey system_program = 18;
@@ -1448,7 +1448,7 @@ message InstantCreateLimitOrderAccounts {
   PublicKey custody_pythnet_price_account = 12;
   PublicKey collateral_custody = 13;
   PublicKey input_mint = 14;
-  PublicKey referral = 15;
+  optional PublicKey referral = 15;
   PublicKey token_program = 16;
   PublicKey associated_token_program = 17;
   PublicKey system_program = 18;
@@ -1487,8 +1487,8 @@ message InstantIncreasePositionAccounts {
   PublicKey collateral_custody_doves_price_account = 12;
   PublicKey collateral_custody_pythnet_price_account = 13;
   PublicKey collateral_custody_token_account = 14;
-  PublicKey token_ledger = 15;
-  PublicKey referral = 16;
+  optional PublicKey token_ledger = 15;
+  optional PublicKey referral = 16;
   PublicKey token_program = 17;
   PublicKey system_program = 18;
   PublicKey event_authority = 19;
@@ -1526,7 +1526,7 @@ message InstantDecreasePositionAccounts {
   PublicKey collateral_custody_pythnet_price_account = 14;
   PublicKey collateral_custody_token_account = 15;
   PublicKey desired_mint = 16;
-  PublicKey referral = 17;
+  optional PublicKey referral = 17;
   PublicKey token_program = 18;
   PublicKey associated_token_program = 19;
   PublicKey system_program = 20;
@@ -1563,7 +1563,7 @@ message InstantDecreasePosition2Accounts {
   PublicKey collateral_custody_doves_price_account = 12;
   PublicKey collateral_custody_token_account = 13;
   PublicKey desired_mint = 14;
-  PublicKey referral = 15;
+  optional PublicKey referral = 15;
   PublicKey position_request = 16;
   PublicKey position_request_ata = 17;
   PublicKey token_program = 18;

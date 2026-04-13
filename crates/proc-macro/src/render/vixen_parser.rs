@@ -1,8 +1,8 @@
-use codama_nodes::RootNode;
+use codama_nodes::{EventNode, RootNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-pub fn vixen_parser(idl: &RootNode, events: &[codama_nodes::InstructionNode]) -> TokenStream {
+pub fn vixen_parser(idl: &RootNode, events: &[EventNode]) -> TokenStream {
     let program_mod_ident = format_ident!("{}", crate::utils::to_snake_case(&idl.program.name));
 
     let program_pubkey = crate::render::program_pubkey(&idl.program.public_key);
@@ -14,12 +14,16 @@ pub fn vixen_parser(idl: &RootNode, events: &[codama_nodes::InstructionNode]) ->
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
     let has_events = cfg!(feature = "program-events") && !events.is_empty();
+    let has_instructions = !idl.program.instructions.is_empty();
 
-    let instruction_parser =
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events);
+    let instruction_parser = if has_instructions {
+        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events)
+    } else {
+        quote! {}
+    };
 
     let event_parser = if has_events {
-        crate::render::event_parser(&idl.program.name, events)
+        crate::render::event_parser(&idl.program.name, events, has_instructions)
     } else {
         quote! {}
     };

@@ -11,24 +11,26 @@ use quote::{format_ident, quote};
 ///
 pub fn event_parser(
     _program_name_camel: &CamelCaseString,
-    events: &[codama_nodes::InstructionNode],
+    events: &[codama_nodes::EventNode],
+    has_instructions: bool,
 ) -> TokenStream {
     let wrapper_ident = format_ident!("Events");
+    let ev_mod = format_ident!("event");
 
     // Per-event parse helper functions
     let helper_fns: Vec<TokenStream> = events
         .iter()
-        .filter_map(|ev| single_event_helper_fn(ev, &wrapper_ident))
+        .filter_map(|ev| single_event_helper_fn(ev, &wrapper_ident, &ev_mod))
         .collect();
 
     // Discriminator match arms
     let mut groups: Vec<(
         super::instruction_parser::DiscriminatorKey,
-        Vec<&codama_nodes::InstructionNode>,
+        Vec<&codama_nodes::EventNode>,
     )> = Vec::new();
 
     for ev in events {
-        if let Some(key) = super::instruction_parser::extract_discriminator_key(ev) {
+        if let Some(key) = super::instruction_parser::extract_event_discriminator_key(ev) {
             if let Some(group) = groups.iter_mut().find(|(k, _)| k == &key) {
                 group.1.push(ev);
             } else {
@@ -41,22 +43,27 @@ pub fn event_parser(
         .iter()
         .filter_map(|(_, evs)| {
             if evs.len() == 1 {
-                single_event_match_arm(evs[0])
+                single_event_match_arm(evs[0], &ev_mod)
             } else {
-                // Events shouldn't have discriminator collisions, but handle it gracefully
-                Some(super::instruction_parser::collision_group_match_arm(evs))
+                // Events shouldn't have discriminator collisions in practice.
+                // If they do, emit a compile-time error directing the user to investigate.
+                let names: Vec<_> = evs.iter().map(|e| e.name.to_string()).collect();
+                let msg = format!(
+                    "Event discriminator collision: [{}] share the same discriminator.",
+                    names.join(", ")
+                );
+
+                Some(quote! { compile_error!(#msg); })
             }
         })
         .collect();
-
-    let event_ix_tag = super::ANCHOR_EVENT_IX_TAG;
 
     let resolve_events_from_logs = quote! {
         ///
         /// Resolve events from `"Program data: "` transaction log lines.
         ///
-        /// For each matching line, base64-decodes the payload, prepends the
-        /// self-CPI event prefix, and runs it through the event discriminator matching.
+        /// For each matching line, base64-decodes the payload and runs it
+        /// through the event discriminator matching.
         ///
         /// Returns successfully parsed events; lines that don't match any
         /// discriminator are silently skipped.
@@ -65,7 +72,6 @@ pub fn event_parser(
             logs: &[String],
         ) -> Vec<#wrapper_ident> {
             const PREFIX: &str = "Program data: ";
-            const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
 
             logs.iter()
                 .filter_map(|line| {
@@ -76,18 +82,13 @@ pub fn event_parser(
                         encoded.trim(),
                     ).ok()?;
 
-                    let mut data = Vec::with_capacity(8 + decoded.len());
-
-                    data.extend_from_slice(&EVENT_IX_TAG);
-                    data.extend_from_slice(&decoded);
-
-                    resolve_event_default(&[], &data).ok()
+                    resolve_event_default(&[], &decoded).ok()
                 })
                 .collect()
         }
     };
 
-    let program_event_output = generate_program_event_output();
+    let program_event_output = generate_program_event_output(has_instructions);
 
     quote! {
         #(#helper_fns)*
@@ -112,14 +113,53 @@ pub fn event_parser(
 
 /// Generate the concrete `ProgramEventOutput` struct and optionally its
 /// `prost::Message` impl (behind `proto` feature).
-fn generate_program_event_output() -> TokenStream {
+fn generate_program_event_output(has_instructions: bool) -> TokenStream {
+    let instruction_field = if has_instructions {
+        quote! {
+            /// Parsed instruction (None if this was a CPI event or filtered).
+            pub instruction: Option<Instructions>,
+        }
+    } else {
+        quote! {}
+    };
+
     let proto_impl = if cfg!(feature = "proto") {
+        let encode_instruction = if has_instructions {
+            quote! {
+                if let Some(ref ix) = self.instruction {
+                    ::prost::encoding::message::encode(1, ix, buf);
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        let encoded_len_instruction = if has_instructions {
+            quote! {
+                if let Some(ref ix) = self.instruction {
+                    len += ::prost::encoding::message::encoded_len(1, ix);
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        let clear_instruction = if has_instructions {
+            quote! { self.instruction = None; }
+        } else {
+            quote! {}
+        };
+
+        let default_instruction = if has_instructions {
+            quote! { instruction: None, }
+        } else {
+            quote! {}
+        };
+
         quote! {
             impl ::prost::Message for ProgramEventOutput {
                 fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
-                    if let Some(ref ix) = self.instruction {
-                        ::prost::encoding::message::encode(1, ix, buf);
-                    }
+                    #encode_instruction
 
                     for event in &self.program_events {
                         ::prost::encoding::message::encode(2, event, buf);
@@ -144,9 +184,7 @@ fn generate_program_event_output() -> TokenStream {
                 fn encoded_len(&self) -> usize {
                     let mut len = 0;
 
-                    if let Some(ref ix) = self.instruction {
-                        len += ::prost::encoding::message::encoded_len(1, ix);
-                    }
+                    #encoded_len_instruction
 
                     for event in &self.program_events {
                         len += ::prost::encoding::message::encoded_len(2, event);
@@ -156,7 +194,7 @@ fn generate_program_event_output() -> TokenStream {
                 }
 
                 fn clear(&mut self) {
-                    self.instruction = None;
+                    #clear_instruction
                     self.program_events.clear();
                 }
             }
@@ -164,7 +202,7 @@ fn generate_program_event_output() -> TokenStream {
             impl Default for ProgramEventOutput {
                 fn default() -> Self {
                     Self {
-                        instruction: None,
+                        #default_instruction
                         program_events: Vec::new(),
                     }
                 }
@@ -181,8 +219,7 @@ fn generate_program_event_output() -> TokenStream {
         /// and `Events` types.
         #[derive(Debug, PartialEq)]
         pub struct ProgramEventOutput {
-            /// Parsed instruction (None if this was a CPI event or filtered).
-            pub instruction: Option<Instructions>,
+            #instruction_field
             /// Events parsed from logs and/or CPI self-invocations.
             pub program_events: Vec<Events>,
         }
@@ -192,8 +229,9 @@ fn generate_program_event_output() -> TokenStream {
 }
 
 fn single_event_helper_fn(
-    event: &codama_nodes::InstructionNode,
+    event: &codama_nodes::EventNode,
     wrapper_ident: &syn::Ident,
+    ev_mod: &syn::Ident,
 ) -> Option<TokenStream> {
     let ev_name_pascal = crate::utils::to_pascal_case(&event.name);
     let ev_name_snake = crate::utils::to_snake_case(&event.name);
@@ -203,9 +241,16 @@ fn single_event_helper_fn(
     let args_ident = format_ident!("{}Args", ev_name_pascal);
     let fn_ident = format_ident!("parse_event_{}", ev_name_snake);
 
-    let has_args = !event.arguments.is_empty();
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&event.data);
 
-    let info = super::instruction_parser::extract_discriminator_info(event, &args_ident, has_args)?;
+    let has_args = !struct_node.fields.is_empty();
+
+    let info = super::instruction_parser::extract_event_discriminator_info(
+        event,
+        &args_ident,
+        has_args,
+        ev_mod,
+    )?;
 
     // Events have no accounts — only remaining_accounts (always empty vec)
     let accounts_value = quote! {
@@ -214,11 +259,11 @@ fn single_event_helper_fn(
         }
     };
 
-    let args_field = info.args_expr.as_ref().map(|expr| {
-        // Remap the args expression to use `event::` module instead of `instruction::`
-        let remapped = remap_module_prefix(expr, "instruction", "event");
-        quote! { args: #remapped, }
-    });
+    let args_field = match info.args_expr {
+        Some(expr) => quote! { args: #expr, },
+        // Fieldless event: Event variant still declares `args`, initialize with empty struct.
+        None => quote! { args: event::#args_ident {}, },
+    };
 
     Some(quote! {
         pub fn #fn_ident(
@@ -235,14 +280,24 @@ fn single_event_helper_fn(
     })
 }
 
-fn single_event_match_arm(event: &codama_nodes::InstructionNode) -> Option<TokenStream> {
+fn single_event_match_arm(
+    event: &codama_nodes::EventNode,
+    ev_mod: &syn::Ident,
+) -> Option<TokenStream> {
     let ev_name_snake = crate::utils::to_snake_case(&event.name);
     let fn_ident = format_ident!("parse_event_{}", ev_name_snake);
     let args_ident = format_ident!("{}Args", crate::utils::to_pascal_case(&event.name));
 
-    let has_args = !event.arguments.is_empty();
+    let struct_node = crate::intermediate_representation::helpers::unwrap_event_struct(&event.data);
 
-    let info = super::instruction_parser::extract_discriminator_info(event, &args_ident, has_args)?;
+    let has_args = !struct_node.fields.is_empty();
+
+    let info = super::instruction_parser::extract_event_discriminator_info(
+        event,
+        &args_ident,
+        has_args,
+        ev_mod,
+    )?;
 
     let check = info.check;
 
@@ -253,13 +308,4 @@ fn single_event_match_arm(event: &codama_nodes::InstructionNode) -> Option<Token
             return #fn_ident(accounts, data);
         }
     })
-}
-
-/// Remap `instruction::` references to `event::` in a TokenStream.
-/// This is needed because `extract_discriminator_info` generates args deserialization
-/// code that references `instruction::ArgsType`, but for events we need `event::ArgsType`.
-fn remap_module_prefix(ts: &TokenStream, from: &str, to: &str) -> TokenStream {
-    let s = ts.to_string();
-    let remapped = s.replace(&format!("{from} ::"), &format!("{to} ::"));
-    remapped.parse().unwrap_or_else(|_| ts.clone())
 }

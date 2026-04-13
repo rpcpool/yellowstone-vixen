@@ -109,7 +109,18 @@ pub fn proto_schema_string(
     } else {
         let idx = message_count;
 
-        render_account_dispatch(&mut out, program_name, &account_types);
+        // Use the same wrapper-name collision logic as the Rust code generator:
+        // if `{program_name}Account` matches an account type name, fall back to
+        // `{program_name}AccountOutput` to avoid a duplicate proto message name.
+        let default_wrapper = format!("{program_name}Account");
+        // TypeIr names are already in PascalCase, so compare directly.
+        let wrapper_name = if account_types.iter().any(|t| t.name == default_wrapper) {
+            format!("{program_name}AccountOutput")
+        } else {
+            default_wrapper
+        };
+
+        render_account_dispatch(&mut out, &wrapper_name, &account_types);
 
         message_count += 1;
 
@@ -246,9 +257,7 @@ fn render_type(out: &mut String, msg: &TypeIr, proto_name: &str, rename: &HashMa
 /// }
 /// ```
 ///
-fn render_account_dispatch(out: &mut String, program_name: &str, account_types: &[&TypeIr]) {
-    let message_name = format!("{program_name}Account");
-
+fn render_account_dispatch(out: &mut String, message_name: &str, account_types: &[&TypeIr]) {
     writeln!(out, "message {} {{", message_name).unwrap();
     writeln!(out, "  oneof account {{").unwrap();
 
