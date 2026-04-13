@@ -42,6 +42,13 @@ fn resolve_ix_field(
         codama_nodes::InstructionInputValueNode::Bytes(b) => {
             Some(decode_discriminator_field_bytes(b))
         },
+        codama_nodes::InstructionInputValueNode::Number(nn) => {
+            let Number::UnsignedInteger(value) = nn.number else {
+                return None;
+            };
+
+            Some(vec![value as u8])
+        },
         _ => None,
     };
 
@@ -146,14 +153,30 @@ fn extract_discriminator_key(
 
             _ => None,
         },
-        DiscriminatorNode::Field(fn_) => {
-            let resolved = resolve_field(&fn_.name)?;
+        DiscriminatorNode::Field(node) => {
+            let resolved = resolve_field(&node.name)?;
 
-            match (&resolved.r#type, &resolved.bytes) {
-                (TypeNode::FixedSize(_), Some(bytes)) => Some(DiscriminatorKey::Field {
-                    offset: fn_.offset,
-                    bytes: bytes.clone(),
-                }),
+            match &resolved.r#type {
+                // Anchor-style: fixed-size bytes discriminator (e.g. 8-byte sighash)
+                TypeNode::FixedSize(_) => {
+                    let bytes = resolved.bytes?;
+
+                    Some(DiscriminatorKey::Field {
+                        offset: node.offset,
+                        bytes,
+                    })
+                },
+
+                // Shank-style: single number discriminator (e.g. u8 index)
+                TypeNode::Number(_) => {
+                    let bytes = resolved.bytes?;
+                    let value = bytes.first().copied()? as u64;
+
+                    Some(DiscriminatorKey::Constant {
+                        offset: node.offset,
+                        value,
+                    })
+                },
 
                 _ => None,
             }
@@ -252,15 +275,18 @@ fn extract_discriminator_info(
             }
         },
 
-        // Discriminator in a named field at offset
-        DiscriminatorNode::Field(fn_) => {
-            let offset = fn_.offset;
-            let resolved = resolve_field(&fn_.name)?;
+        // Field-based discriminator (Anchor 8-byte sighash or Shank u8 index)
+        DiscriminatorNode::Field(node) => {
+            let offset = node.offset;
+            let resolved = resolve_field(&node.name)?;
 
-            match (&resolved.r#type, &resolved.bytes) {
-                (TypeNode::FixedSize(fixed_size_node), Some(discriminator_bytes)) => {
+            match &resolved.r#type {
+                // Anchor-style: fixed-size bytes discriminator
+                TypeNode::FixedSize(fixed_size_node) => {
                     let size = fixed_size_node.size;
                     let end = offset + size;
+
+                    let discriminator_bytes = resolved.bytes?;
 
                     let args_expr = if has_args {
                         Some(quote! {
@@ -278,6 +304,37 @@ fn extract_discriminator_info(
                     let check = quote! {
                         if let Some(slice) = data.get(#offset..#end) {
                             slice == &[#(#discriminator_bytes),*]
+                        } else {
+                            false
+                        }
+                    };
+
+                    Some(DiscriminatorInfo { args_expr, check })
+                },
+
+                // Shank-style: single number discriminator (e.g. u8 index)
+                TypeNode::Number(_) => {
+                    let bytes = resolved.bytes?;
+                    let value = bytes.first().copied()? as u64;
+
+                    let args_start = offset + 1;
+
+                    let args_expr = if has_args {
+                        Some(quote! {
+                            {
+                                let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
+
+                                <#mod_ident::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                                    .map_err(|e| ParseError::Other(e.into()))?
+                            }
+                        })
+                    } else {
+                        None
+                    };
+
+                    let check = quote! {
+                        if let Some(d) = data.get(#offset) {
+                            *d == (#value as u8)
                         } else {
                             false
                         }
@@ -377,13 +434,26 @@ fn single_instruction_helper_fn(
 
     let num_defined_accounts = instruction.accounts.len();
 
-    let accounts_value = quote! {
-        instruction::#accounts_ident {
-            #(#accounts_fields,)*
+    let has_explicit_remaining = instruction
+        .accounts
+        .iter()
+        .any(|a| crate::utils::to_snake_case(&a.name) == "remaining_accounts");
+
+    let remaining_accounts_field = if has_explicit_remaining {
+        quote! {}
+    } else {
+        quote! {
             remaining_accounts: accounts
                 .get(#num_defined_accounts..)
                 .unwrap_or_default()
                 .to_vec(),
+        }
+    };
+
+    let accounts_value = quote! {
+        instruction::#accounts_ident {
+            #(#accounts_fields,)*
+            #remaining_accounts_field
         }
     };
     let args_field = info.args_expr.map(|expr| {
@@ -675,12 +745,11 @@ pub fn instruction_parser(
                     // starts with the event tag. These are not real instructions and
                     // would fail discriminator matching, so filter them out.
                     {
+                        const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
 
-                    const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
-
-                    if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
-                        return Err(ParseError::Filtered);
-                    }
+                        if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
+                            return Err(ParseError::Filtered);
+                        }
                     }
 
                     resolve_instruction_default(

@@ -17,6 +17,23 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|oneof_ir| oneof_ir.parent_message.as_str())
         .collect();
 
+    // Oneof parents from dispatch oneofs only (InstructionDispatch / EventDispatch).
+    // Used to exclude dispatch wrapper types (e.g. "Instructions") from the payload
+    // type lists. We must NOT use the full `oneof_parents` set here because defined
+    // type enum names (e.g. "SetRealmConfigItemArgs") would accidentally exclude
+    // instruction/event payload types that share the same name.
+    let dispatch_oneof_parents: HashSet<&str> = schema_ir
+        .oneofs
+        .iter()
+        .filter(|o| {
+            matches!(
+                o.kind,
+                OneofKindIr::InstructionDispatch | OneofKindIr::EventDispatch
+            )
+        })
+        .map(|o| o.parent_message.as_str())
+        .collect();
+
     // Names that exist as both a top-level defined type and an instruction/event type.
     // Inside submodules, a struct with a colliding name can't reference itself (no boxing),
     // so any `Message("SwapArgs")` field inside `SwapArgs` must mean the top-level type.
@@ -38,6 +55,17 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         .map(|t| t.name.as_str())
         .collect();
 
+    // Collect account-kind names so we can skip DefinedTypes that share the same name.
+    // This happens when an IDL declares both an account and a type with the same name
+    // (e.g. `MarginAccount`). The Account version is authoritative; emitting both would
+    // produce duplicate struct definitions.
+    let account_type_names: HashSet<&str> = schema_ir
+        .types
+        .iter()
+        .filter(|t| matches!(t.kind, TypeKindIr::Account { .. }))
+        .map(|t| t.name.as_str())
+        .collect();
+
     // Render non-instruction, non-event types at top level (exclude oneof parents, rendered separately).
     // Use kind-based filtering (not name-based) so that defined types whose names
     // collide with instruction/event wrapper types are still rendered at the top level.
@@ -47,6 +75,11 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         }
 
         if t.kind == TypeKindIr::Instruction || t.kind == TypeKindIr::Event {
+            continue;
+        }
+
+        // Skip DefinedTypes shadowed by an Account of the same name.
+        if t.kind == TypeKindIr::DefinedType && account_type_names.contains(t.name.as_str()) {
             continue;
         }
 
@@ -61,7 +94,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .types
                     .iter()
                     .filter(|t| t.kind == TypeKindIr::Instruction)
-                    .filter(|t| !oneof_parents.contains(t.name.as_str()))
+                    .filter(|t| !dispatch_oneof_parents.contains(t.name.as_str()))
                     .collect();
 
                 out.extend(render_dispatch(
@@ -79,7 +112,7 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
                     .types
                     .iter()
                     .filter(|t| t.kind == TypeKindIr::Event)
-                    .filter(|t| !oneof_parents.contains(t.name.as_str()))
+                    .filter(|t| !dispatch_oneof_parents.contains(t.name.as_str()))
                     .collect();
 
                 // Use "Events" as the Rust wrapper name (not "ProgramEvents" which is the proto name)

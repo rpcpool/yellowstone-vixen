@@ -14,12 +14,16 @@ pub fn vixen_parser(idl: &RootNode, events: &[EventNode]) -> TokenStream {
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
     let has_events = cfg!(feature = "program-events") && !events.is_empty();
+    let has_instructions = !idl.program.instructions.is_empty();
 
-    let instruction_parser =
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events);
+    let instruction_parser = if has_instructions {
+        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events)
+    } else {
+        quote! {}
+    };
 
     let event_parser = if has_events {
-        crate::render::event_parser(&idl.program.name, events)
+        crate::render::event_parser(&idl.program.name, events, has_instructions)
     } else {
         quote! {}
     };

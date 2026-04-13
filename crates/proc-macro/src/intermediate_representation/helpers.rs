@@ -308,6 +308,10 @@ fn map_type(t: &codama_nodes::TypeNode) -> FieldTypeIr {
         T::Option(o) => map_type(&o.item),
         T::Array(a) => map_type(&a.item),
 
+        // Maps have no direct proto equivalent with complex key/value types;
+        // serialize the entire map as a raw byte blob.
+        T::Map(_) => FieldTypeIr::Scalar(ScalarIr::Bytes),
+
         other => panic!("map_type not implemented for {:?}", other),
     }
 }

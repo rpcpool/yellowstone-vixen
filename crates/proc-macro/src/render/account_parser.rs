@@ -56,7 +56,19 @@ pub fn account_parser(
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
-    let account_struct_ident = format_ident!("{}Account", program_name);
+    // Detect collision: if any account is named `{program_name}Account` (e.g. program
+    // "margin" with account "marginAccount"), the wrapper would shadow the data struct.
+    // Fall back to `{program_name}AccountOutput` in that case.
+    let wrapper_name = format!("{}Account", program_name);
+    let wrapper_clashes = accounts
+        .iter()
+        .any(|a| crate::utils::to_pascal_case(&a.name) == wrapper_name);
+
+    let account_struct_ident = if wrapper_clashes {
+        format_ident!("{}AccountOutput", program_name)
+    } else {
+        format_ident!("{}Account", program_name)
+    };
 
     let account_mod_ident = format_ident!("account");
 
@@ -107,9 +119,11 @@ pub fn account_parser(
 
                 let account_name = account_ident.to_string();
 
+                let value_u8 = value as u8;
+
                 quote! {
                     if let Some(discriminator) = data.get(#offset) {
-                        if discriminator == #value {
+                        if *discriminator == #value_u8 {
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {
@@ -185,9 +199,17 @@ pub fn account_parser(
                 let end = offset + size;
                 let account_name = account_ident.to_string();
 
+                // Empty discriminator (size 0) matches any data — skip the
+                // byte comparison and match unconditionally on data length.
+                let disc_check = if discriminator.is_empty() {
+                    quote! { true }
+                } else {
+                    quote! { slice == &[#(#discriminator),*] }
+                };
+
                 quote! {
                     if let Some(slice) = data.get(#offset..#end) {
-                        if slice == &[#(#discriminator),*] {
+                        if #disc_check {
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {
