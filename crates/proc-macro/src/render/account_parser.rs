@@ -56,7 +56,19 @@ pub fn account_parser(
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
-    let account_struct_ident = format_ident!("{}Account", program_name);
+    // Detect collision: if any account is named `{program_name}Account` (e.g. program
+    // "margin" with account "marginAccount"), the wrapper would shadow the data struct.
+    // Fall back to `{program_name}AccountOutput` in that case.
+    let wrapper_name = format!("{}Account", program_name);
+    let wrapper_clashes = accounts
+        .iter()
+        .any(|a| crate::utils::to_pascal_case(&a.name) == wrapper_name);
+
+    let account_struct_ident = if wrapper_clashes {
+        format_ident!("{}AccountOutput", program_name)
+    } else {
+        format_ident!("{}Account", program_name)
+    };
 
     let account_mod_ident = format_ident!("account");
 
