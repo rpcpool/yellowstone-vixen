@@ -60,31 +60,70 @@ pub fn event_parser(
 
     let resolve_events_from_logs = quote! {
         ///
-        /// Resolve events from `"Program data: "` transaction log lines.
+        /// Resolve events from `"Program data: "` transaction log lines
+        /// emitted while this program is actively executing.
         ///
         /// For each matching line, base64-decodes the payload and runs it
         /// through the event discriminator matching.
         ///
         /// Returns successfully parsed events; lines that don't match any
-        /// discriminator are silently skipped.
+        /// discriminator are silently skipped. Nested CPI log lines from
+        /// other programs are ignored even if their event discriminators
+        /// collide with this program's events.
         ///
         pub fn resolve_events_from_logs(
             logs: &[String],
         ) -> Vec<#wrapper_ident> {
             const PREFIX: &str = "Program data: ";
+            const PROGRAM_PREFIX: &str = "Program ";
 
-            logs.iter()
-                .filter_map(|line| {
-                    let encoded = line.strip_prefix(PREFIX)?;
+            fn invoked_program(line: &str) -> Option<&str> {
+                let line = line.strip_prefix(PROGRAM_PREFIX)?;
+                let (program, _) = line.split_once(" invoke [")?;
+                Some(program)
+            }
 
-                    let decoded = yellowstone_vixen_parser::base64::Engine::decode(
-                        &yellowstone_vixen_parser::base64::engine::general_purpose::STANDARD,
-                        encoded.trim(),
-                    ).ok()?;
+            fn closes_invocation(line: &str) -> bool {
+                line.starts_with(PROGRAM_PREFIX)
+                    && (line.ends_with(" success") || line.contains(" failed:"))
+            }
 
-                    resolve_event_default(&[], &decoded).ok()
-                })
-                .collect()
+            let target_program = ::yellowstone_vixen_core::Pubkey::new(PROGRAM_ID).to_string();
+            let mut invocation_stack = Vec::<String>::new();
+            let mut events = Vec::new();
+
+            for line in logs {
+                if let Some(program) = invoked_program(line) {
+                    invocation_stack.push(program.to_owned());
+                    continue;
+                }
+
+                if closes_invocation(line) {
+                    invocation_stack.pop();
+                    continue;
+                }
+
+                let Some(encoded) = line.strip_prefix(PREFIX) else {
+                    continue;
+                };
+
+                if invocation_stack.last().map(String::as_str) != Some(target_program.as_str()) {
+                    continue;
+                }
+
+                let Some(decoded) = yellowstone_vixen_parser::base64::Engine::decode(
+                    &yellowstone_vixen_parser::base64::engine::general_purpose::STANDARD,
+                    encoded.trim(),
+                ).ok() else {
+                    continue;
+                };
+
+                if let Ok(event) = resolve_event_default(&[], &decoded) {
+                    events.push(event);
+                }
+            }
+
+            events
         }
     };
 

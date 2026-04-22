@@ -224,6 +224,27 @@ fn resolve_events_from_logs_with_real_event_data() {
     );
 }
 
+#[test]
+fn resolve_events_from_logs_ignores_nested_foreign_program_data() {
+    use base64::Engine;
+
+    let disc_and_payload = load_cpi_event_payload_from_fixture();
+    let encoded = base64::engine::general_purpose::STANDARD.encode(&disc_and_payload);
+    let logs = vec![
+        "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [1]".to_string(),
+        "Program JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4 invoke [2]".to_string(),
+        format!("Program data: {encoded}"),
+        "Program JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4 success".to_string(),
+        "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".to_string(),
+    ];
+
+    let events = perpetuals::resolve_events_from_logs(&logs);
+    assert!(
+        events.is_empty(),
+        "foreign nested program data lines must not be decoded as perpetuals events"
+    );
+}
+
 /// Verify that the fixture's real logs (which have no "Program data:" lines)
 /// produce no false-positive log events.
 #[test]
