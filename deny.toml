@@ -47,6 +47,15 @@ ignore = [
     # certificate revocation lists directly; current TLS usage is standard gRPC client
     # setup with native roots, so the affected CRL parsing path is not used here.
     "RUSTSEC-2026-0104",
+    # core2 is carried only by jetstreamer-firehose via cid/multihash. The crate is
+    # unmaintained and yanked, but there is no safe upgrade path available on the
+    # current dependency line; track until jetstreamer-firehose or its multiformats
+    # stack moves off core2.
+    "RUSTSEC-2026-0105",
+    # libsecp256k1 is transitively pinned by the current Solana/Agave 3.1.x runtime
+    # stack (and spl-stake-pool test path). Upstream recommends k256, but there is no
+    # safe local upgrade without a broader Solana dependency move.
+    "RUSTSEC-2025-0161",
 ]
 
 [licenses]
