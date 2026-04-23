@@ -380,6 +380,7 @@ impl KafkaSink {
         ix: &InstructionUpdate,
     ) -> (Option<PreparedRecord>, bool) {
         let mut had_error = false;
+        let fee_payer = Self::instruction_fee_payer(ix);
 
         for parser in &self.instruction_parsers {
             // Only dispatch to parsers for this instruction's program.
@@ -393,6 +394,7 @@ impl KafkaSink {
                         slot,
                         tx_index,
                         signature,
+                        fee_payer,
                         path,
                         parsed,
                         parser.topic(),
@@ -408,7 +410,7 @@ impl KafkaSink {
 
                     if let Some(fallback) = parser.fallback_topic() {
                         let record = self.prepare_fallback_instruction_record(
-                            slot, tx_index, signature, path, ix, fallback, &e,
+                            slot, tx_index, signature, fee_payer, path, ix, fallback, &e,
                         );
 
                         return (Some(record), true);
@@ -424,6 +426,7 @@ impl KafkaSink {
         slot: u64,
         tx_index: u64,
         signature: &[u8],
+        fee_payer: Option<&[u8]>,
         path: &Path,
     ) -> (String, Vec<RecordHeader>) {
         let sig_str = bs58::encode(signature).into_string();
@@ -450,6 +453,16 @@ impl KafkaSink {
                 value: path_str,
             },
         ];
+        let headers = if let Some(fee_payer) = fee_payer {
+            let mut headers = headers;
+            headers.push(RecordHeader {
+                key: "fee_payer",
+                value: bs58::encode(fee_payer).into_string(),
+            });
+            headers
+        } else {
+            headers
+        };
 
         (key, headers)
     }
@@ -478,11 +491,13 @@ impl KafkaSink {
         slot: u64,
         tx_index: u64,
         signature: &[u8],
+        fee_payer: Option<&[u8]>,
         path: &Path,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let (key, headers) = Self::instruction_base_record(slot, tx_index, signature, path);
+        let (key, headers) =
+            Self::instruction_base_record(slot, tx_index, signature, fee_payer, path);
 
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
@@ -504,12 +519,14 @@ impl KafkaSink {
         slot: u64,
         tx_index: u64,
         signature: &[u8],
+        fee_payer: Option<&[u8]>,
         path: &Path,
         ix: &InstructionUpdate,
         fallback_topic: &str,
         error: &str,
     ) -> PreparedRecord {
-        let (key, mut headers) = Self::instruction_base_record(slot, tx_index, signature, path);
+        let (key, mut headers) =
+            Self::instruction_base_record(slot, tx_index, signature, fee_payer, path);
 
         let program_id = bs58::encode(ix.program).into_string();
 
@@ -542,6 +559,10 @@ impl KafkaSink {
             is_decoded: false,
             kind: RecordKind::Instruction,
         }
+    }
+
+    fn instruction_fee_payer(ix: &InstructionUpdate) -> Option<&[u8]> {
+        ix.shared.accounts.static_keys.first().map(Vec::as_slice)
     }
 
     // --- Subscription constructors ---
@@ -739,7 +760,7 @@ mod tests {
 
     use prost::Message;
     use yellowstone_vixen_core::{
-        instruction::{InstructionShared, InstructionUpdate, Path},
+        instruction::{AccountKeys, InstructionShared, InstructionUpdate, Path},
         ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
     };
     #[cfg(feature = "experimental-account-parser")]
@@ -857,7 +878,14 @@ mod tests {
             program,
             accounts: vec![],
             data: vec![1, 2, 3],
-            shared: Arc::new(InstructionShared::default()),
+            shared: Arc::new(InstructionShared {
+                accounts: AccountKeys {
+                    static_keys: vec![vec![4_u8; 32]],
+                    dynamic_rw: vec![],
+                    dynamic_ro: vec![],
+                },
+                ..InstructionShared::default()
+            }),
             inner: vec![],
             path: Path::new_single(0),
             log_range: 0..0,
@@ -992,6 +1020,15 @@ mod tests {
                 .map(|header| header.value.as_str()),
             Some("7")
         );
+        let expected_fee_payer = yellowstone_vixen_core::bs58::encode([4_u8; 32]).into_string();
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "fee_payer")
+                .map(|header| header.value.as_str()),
+            Some(expected_fee_payer.as_str())
+        );
     }
 
     #[test]
@@ -1028,6 +1065,15 @@ mod tests {
                 .find(|header| header.key == "tx_index")
                 .map(|header| header.value.as_str()),
             Some("7")
+        );
+        let expected_fee_payer = yellowstone_vixen_core::bs58::encode([4_u8; 32]).into_string();
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "fee_payer")
+                .map(|header| header.value.as_str()),
+            Some(expected_fee_payer.as_str())
         );
     }
 
