@@ -316,6 +316,14 @@ pub struct KafkaSink {
     schema_ids: HashMap<String, RegisteredSchema>,
 }
 
+struct InstructionRecordContext<'a> {
+    slot: u64,
+    tx_index: u64,
+    signature: &'a [u8],
+    fee_payer: Option<&'a [u8]>,
+    path: &'a Path,
+}
+
 impl KafkaSink {
     pub fn topics(&self) -> Vec<&str> {
         collect_topics(&self.instruction_parsers, &self.account_parsers)
@@ -380,7 +388,13 @@ impl KafkaSink {
         ix: &InstructionUpdate,
     ) -> (Option<PreparedRecord>, bool) {
         let mut had_error = false;
-        let fee_payer = Self::instruction_fee_payer(ix);
+        let context = InstructionRecordContext {
+            slot,
+            tx_index,
+            signature,
+            fee_payer: Self::instruction_fee_payer(ix),
+            path,
+        };
 
         for parser in &self.instruction_parsers {
             // Only dispatch to parsers for this instruction's program.
@@ -390,15 +404,8 @@ impl KafkaSink {
 
             match parser.try_parse(ix).await {
                 ParseOutcome::Parsed(parsed) => {
-                    let record = self.prepare_decoded_instruction_record(
-                        slot,
-                        tx_index,
-                        signature,
-                        fee_payer,
-                        path,
-                        parsed,
-                        parser.topic(),
-                    );
+                    let record =
+                        self.prepare_decoded_instruction_record(&context, parsed, parser.topic());
 
                     return (Some(record), false);
                 },
@@ -409,9 +416,8 @@ impl KafkaSink {
                     had_error = true;
 
                     if let Some(fallback) = parser.fallback_topic() {
-                        let record = self.prepare_fallback_instruction_record(
-                            slot, tx_index, signature, fee_payer, path, ix, fallback, &e,
-                        );
+                        let record =
+                            self.prepare_fallback_instruction_record(&context, ix, fallback, &e);
 
                         return (Some(record), true);
                     }
@@ -423,22 +429,18 @@ impl KafkaSink {
 
     /// Build the base headers and key shared by all instruction record types.
     fn instruction_base_record(
-        slot: u64,
-        tx_index: u64,
-        signature: &[u8],
-        fee_payer: Option<&[u8]>,
-        path: &Path,
+        context: &InstructionRecordContext<'_>,
     ) -> (String, Vec<RecordHeader>) {
-        let sig_str = bs58::encode(signature).into_string();
+        let sig_str = bs58::encode(context.signature).into_string();
 
-        let path_str = format!("{path:?}");
+        let path_str = format!("{:?}", context.path);
 
-        let key = make_instruction_record_key(slot, &sig_str, &path_str);
+        let key = make_instruction_record_key(context.slot, &sig_str, &path_str);
 
         let headers = vec![
             RecordHeader {
                 key: "slot",
-                value: slot.to_string(),
+                value: context.slot.to_string(),
             },
             RecordHeader {
                 key: "signature",
@@ -446,14 +448,14 @@ impl KafkaSink {
             },
             RecordHeader {
                 key: "tx_index",
-                value: tx_index.to_string(),
+                value: context.tx_index.to_string(),
             },
             RecordHeader {
                 key: "ix_index",
                 value: path_str,
             },
         ];
-        let headers = if let Some(fee_payer) = fee_payer {
+        let headers = if let Some(fee_payer) = context.fee_payer {
             let mut headers = headers;
             headers.push(RecordHeader {
                 key: "fee_payer",
@@ -486,18 +488,13 @@ impl KafkaSink {
 
     /// Prepare a record for a successfully decoded instruction.
     /// Payload is protobuf-encoded with Confluent wire format, metadata goes in Kafka headers.
-    pub fn prepare_decoded_instruction_record(
+    fn prepare_decoded_instruction_record(
         &self,
-        slot: u64,
-        tx_index: u64,
-        signature: &[u8],
-        fee_payer: Option<&[u8]>,
-        path: &Path,
+        context: &InstructionRecordContext<'_>,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let (key, headers) =
-            Self::instruction_base_record(slot, tx_index, signature, fee_payer, path);
+        let (key, headers) = Self::instruction_base_record(context);
 
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
@@ -513,20 +510,14 @@ impl KafkaSink {
 
     /// Prepare a fallback record for unrecognized instructions.
     /// Payload is plain JSON (`RawInstructionEvent`), metadata in headers.
-    #[allow(clippy::too_many_arguments)]
-    pub fn prepare_fallback_instruction_record(
+    fn prepare_fallback_instruction_record(
         &self,
-        slot: u64,
-        tx_index: u64,
-        signature: &[u8],
-        fee_payer: Option<&[u8]>,
-        path: &Path,
+        context: &InstructionRecordContext<'_>,
         ix: &InstructionUpdate,
         fallback_topic: &str,
         error: &str,
     ) -> PreparedRecord {
-        let (key, mut headers) =
-            Self::instruction_base_record(slot, tx_index, signature, fee_payer, path);
+        let (key, mut headers) = Self::instruction_base_record(context);
 
         let program_id = bs58::encode(ix.program).into_string();
 
@@ -541,9 +532,9 @@ impl KafkaSink {
         });
 
         let fallback_event = RawInstructionEvent {
-            slot,
-            signature: bs58::encode(signature).into_string(),
-            ix_index: format!("{path:?}"),
+            slot: context.slot,
+            signature: bs58::encode(context.signature).into_string(),
+            ix_index: format!("{:?}", context.path),
             program_id: program_id.clone(),
             data: bs58::encode(&ix.data).into_string(),
         };
