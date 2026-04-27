@@ -3,7 +3,7 @@ use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("../idls/lo_v1.json");
+include_vixen_parser!("../idls/limit_order_v1.json");
 
 // ---------------------------------------------------------------------------
 // Proto schemas
@@ -75,7 +75,7 @@ async fn parse_flash_fill_transaction() {
                         taker_input_account: p("CGhH4cVn7zdkwGEWojhFcqfyt7zPLi3AVDuhWeHA3WiQ"),
                         fee_authority: p("H3vkQqNVWySTD4c1Y91wtoT5iwxKSVtVLfC2rD8SgwTN"),
                         program_fee_account: p("GXYDRDTopqAuJVi9F24t3uVDjQ41wQvYa6qdDcNQSCvm"),
-                        referral: p("jupoNjAxXgZ4rjzxzPMP4oxduvQsQtZzyknqvzYNrNu"),
+                        referral: None,
                         input_mint: p("So11111111111111111111111111111111111111112"),
                         input_mint_token_program: p("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
                         output_mint: p("WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk"),

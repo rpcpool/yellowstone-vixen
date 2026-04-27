@@ -1,0 +1,6124 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.5.1",
+  "program": {
+    "kind": "programNode",
+    "name": "tokenMetadata",
+    "publicKey": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "version": "1.14.0",
+    "origin": "shank",
+    "docs": [],
+    "accounts": [
+      {
+        "kind": "accountNode",
+        "name": "collectionAuthorityRecord",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "updateAuthority",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "metadataDelegateRecord",
+        "size": 98,
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "delegate",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "updateAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "holderDelegateRecord",
+        "size": 98,
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "delegate",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "updateAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "edition",
+        "size": 41,
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "parent",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "edition",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "editionMarker",
+        "size": 32,
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "ledger",
+              "docs": [],
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 31,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "editionMarkerV2",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "ledger",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "bytesTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "tokenOwnedEscrow",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "baseToken",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "authority",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "escrowAuthority"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "masterEditionV2",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "supply",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxSupply",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "masterEditionV1",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "supply",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxSupply",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "printingMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "oneTimePrintingAuthorizationMint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "metadata",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "updateAuthority",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "mint",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "data",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "data"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "primarySaleHappened",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isMutable",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "editionNonce",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenStandard",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "tokenStandard"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "collection",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "collection"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uses",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "uses"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "collectionDetails",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "collectionDetails"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "programmableConfig",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "programmableConfig"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "tokenRecord",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "state",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "tokenState"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "ruleSetRevision",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "delegate",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "delegateRole",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "tokenDelegateRole"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "lockedTransfer",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "reservationListV2",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "masterEdition",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "supplySnapshot",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reservations",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "reservation"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalReservationSpots",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "currentReservationSpots",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "reservationListV1",
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "masterEdition",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "supplySnapshot",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "reservations",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "reservationV1"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "accountNode",
+        "name": "useAuthorityRecord",
+        "size": 10,
+        "docs": [],
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "key"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "allowedUses",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "bump",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "instructions": [],
+    "definedTypes": [
+      {
+        "kind": "definedTypeNode",
+        "name": "setCollectionSizeArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "size",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "createMasterEditionArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "maxSupply",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "mintNewEditionFromMasterEditionViaTokenArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "edition",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "transferOutOfEscrowArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "createMetadataAccountArgsV3",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "data",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "dataV2"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isMutable",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "collectionDetails",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "collectionDetails"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "updateMetadataAccountArgsV2",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "data",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "dataV2"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "updateAuthority",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "primarySaleHappened",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "booleanTypeNode",
+                  "size": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isMutable",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "booleanTypeNode",
+                  "size": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "approveUseAuthorityArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "numberOfUses",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "utilizeArgs",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "numberOfUses",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "authorizationData",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "payload",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "payload"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "assetData",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "name",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "symbol",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uri",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sellerFeeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creators",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "definedTypeLinkNode",
+                    "name": "creator"
+                  },
+                  "count": {
+                    "kind": "prefixedCountNode",
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  }
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "primarySaleHappened",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "isMutable",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tokenStandard",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "tokenStandard"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "collection",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "collection"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uses",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "uses"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "collectionDetails",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "collectionDetails"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "ruleSet",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "publicKeyTypeNode"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "collection",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verified",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "key",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "creator",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "address",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "verified",
+              "docs": [],
+              "type": {
+                "kind": "booleanTypeNode",
+                "size": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "share",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "data",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "name",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "symbol",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uri",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sellerFeeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creators",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "definedTypeLinkNode",
+                    "name": "creator"
+                  },
+                  "count": {
+                    "kind": "prefixedCountNode",
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  }
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "dataV2",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "name",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "symbol",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uri",
+              "docs": [],
+              "type": {
+                "kind": "sizePrefixTypeNode",
+                "type": {
+                  "kind": "stringTypeNode",
+                  "encoding": "utf8"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u32",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "sellerFeeBasisPoints",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "creators",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "definedTypeLinkNode",
+                    "name": "creator"
+                  },
+                  "count": {
+                    "kind": "prefixedCountNode",
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  }
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "collection",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "collection"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "uses",
+              "docs": [],
+              "type": {
+                "kind": "optionTypeNode",
+                "fixed": false,
+                "item": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "uses"
+                },
+                "prefix": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "reservation",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "address",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "spotsRemaining",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalSpots",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "reservationV1",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "address",
+              "docs": [],
+              "type": {
+                "kind": "publicKeyTypeNode"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "spotsRemaining",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "totalSpots",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "seedsVec",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "seeds",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "sizePrefixTypeNode",
+                  "type": {
+                    "kind": "bytesTypeNode"
+                  },
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "proofInfo",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "proof",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "fixedSizeTypeNode",
+                  "size": 32,
+                  "type": {
+                    "kind": "bytesTypeNode"
+                  }
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "payload",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "map",
+              "docs": [],
+              "type": {
+                "kind": "mapTypeNode",
+                "key": {
+                  "kind": "sizePrefixTypeNode",
+                  "type": {
+                    "kind": "stringTypeNode",
+                    "encoding": "utf8"
+                  },
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                },
+                "value": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "payloadType"
+                },
+                "count": {
+                  "kind": "prefixedCountNode",
+                  "prefix": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "uses",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "useMethod",
+              "docs": [],
+              "type": {
+                "kind": "definedTypeLinkNode",
+                "name": "useMethod"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "remaining",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "total",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "burnArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "delegateArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "collectionV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "saleV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "transferV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "dataV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "utilityV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "stakingV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "standardV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "lockedTransferV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "lockedAddress",
+                    "docs": [],
+                    "type": {
+                      "kind": "publicKeyTypeNode"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "programmableConfigV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "authorityItemV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "dataItemV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "collectionItemV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "programmableConfigItemV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "printDelegateV1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "revokeArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collectionV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "saleV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "transferV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "dataV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "utilityV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "stakingV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "standardV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "lockedTransferV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableConfigV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "migrationV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "authorityItemV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "dataItemV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collectionItemV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableConfigItemV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "printDelegateV1"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "metadataDelegateRole",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "authorityItem"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collection"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "use"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "data"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableConfig"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "dataItem"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collectionItem"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableConfigItem"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "holderDelegateRole",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "printDelegate"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "createArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "assetData",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "assetData"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "decimals",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "printSupply",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "printSupply"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "mintArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "transferArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "amount",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "updateArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "newUpdateAuthority",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "publicKeyTypeNode"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "data",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "data"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "primarySaleHappened",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "booleanTypeNode",
+                        "size": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        }
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "isMutable",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "booleanTypeNode",
+                        "size": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        }
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "collection",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "collectionToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "collectionDetails",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "collectionDetailsToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "uses",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "usesToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "ruleSet",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "ruleSetToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asUpdateAuthorityV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "newUpdateAuthority",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "publicKeyTypeNode"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "data",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "data"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "primarySaleHappened",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "booleanTypeNode",
+                        "size": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        }
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "isMutable",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "booleanTypeNode",
+                        "size": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        }
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "collection",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "collectionToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "collectionDetails",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "collectionDetailsToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "uses",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "usesToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "ruleSet",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "ruleSetToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "tokenStandard",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "tokenStandard"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asAuthorityItemDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "newUpdateAuthority",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "publicKeyTypeNode"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "primarySaleHappened",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "booleanTypeNode",
+                        "size": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        }
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "isMutable",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "booleanTypeNode",
+                        "size": {
+                          "kind": "numberTypeNode",
+                          "format": "u8",
+                          "endian": "le"
+                        }
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "tokenStandard",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "tokenStandard"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asCollectionDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "collection",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "collectionToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asDataDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "data",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "data"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asProgrammableConfigDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "ruleSet",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "ruleSetToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asDataItemDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "data",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "data"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asCollectionItemDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "collection",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "collectionToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "asProgrammableConfigItemDelegateV2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "ruleSet",
+                    "docs": [],
+                    "type": {
+                      "kind": "definedTypeLinkNode",
+                      "name": "ruleSetToggle"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "collectionToggle",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "none"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "clear"
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "set",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "collection"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "usesToggle",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "none"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "clear"
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "set",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "uses"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "collectionDetailsToggle",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "none"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "clear"
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "set",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "collectionDetails"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "ruleSetToggle",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "none"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "clear"
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "set",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "publicKeyTypeNode"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "printArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "edition",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "edition",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "lockArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "unlockArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "useArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "authorizationData",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "definedTypeLinkNode",
+                        "name": "authorizationData"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "verificationArgs",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "creatorV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collectionV1"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "tokenStandard",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "nonFungible"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "fungibleAsset"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "fungible"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "nonFungibleEdition"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableNonFungible"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableNonFungibleEdition"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "key",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "uninitialized"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "editionV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "masterEditionV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "reservationListV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "metadataV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "reservationListV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "masterEditionV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "editionMarker"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "useAuthorityRecord"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collectionAuthorityRecord"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "tokenOwnedEscrow"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "tokenRecord"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "metadataDelegate"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "editionMarkerV2"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "holderDelegate"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "collectionDetails",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "size",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u64",
+                      "endian": "le"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v2",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "padding",
+                    "docs": [],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 8,
+                      "type": {
+                        "kind": "bytesTypeNode"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "escrowAuthority",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "tokenOwner"
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "creator",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "publicKeyTypeNode"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "printSupply",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "zero"
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "limited",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "numberTypeNode",
+                    "format": "u64",
+                    "endian": "le"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "unlimited"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "programmableConfig",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumStructVariantTypeNode",
+              "name": "v1",
+              "struct": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "ruleSet",
+                    "docs": [],
+                    "type": {
+                      "kind": "optionTypeNode",
+                      "fixed": false,
+                      "item": {
+                        "kind": "publicKeyTypeNode"
+                      },
+                      "prefix": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "migrationType",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "collectionV1"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "programmableV1"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "tokenState",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "unlocked"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "locked"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "listed"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "tokenDelegateRole",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sale"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "transfer"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "utility"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "staking"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "standard"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "lockedTransfer"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "migration"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "authorityType",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "none"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "metadata"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "holder"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "metadataDelegate"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "tokenDelegate"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "payloadKey",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "amount"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "authority"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "authoritySeeds"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "delegate"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "delegateSeeds"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "destination"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "destinationSeeds"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "holder"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "source"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "sourceSeeds"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "payloadType",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "pubkey",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "publicKeyTypeNode"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "seeds",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "seedsVec"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "merkleProof",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "definedTypeLinkNode",
+                    "name": "proofInfo"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "enumTupleVariantTypeNode",
+              "name": "number",
+              "tuple": {
+                "kind": "tupleTypeNode",
+                "items": [
+                  {
+                    "kind": "numberTypeNode",
+                    "format": "u64",
+                    "endian": "le"
+                  }
+                ]
+              }
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "useMethod",
+        "docs": [],
+        "type": {
+          "kind": "enumTypeNode",
+          "variants": [
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "burn"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "multiple"
+            },
+            {
+              "kind": "enumEmptyVariantTypeNode",
+              "name": "single"
+            }
+          ],
+          "size": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      }
+    ],
+    "pdas": [],
+    "events": [],
+    "errors": [
+      {
+        "kind": "errorNode",
+        "name": "instructionUnpackError",
+        "code": 0,
+        "message": "",
+        "docs": [
+          "InstructionUnpackError"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "instructionPackError",
+        "code": 1,
+        "message": "",
+        "docs": [
+          "InstructionPackError"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notRentExempt",
+        "code": 2,
+        "message": "Lamport balance below rent-exempt threshold",
+        "docs": [
+          "NotRentExempt: Lamport balance below rent-exempt threshold"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "alreadyInitialized",
+        "code": 3,
+        "message": "Already initialized",
+        "docs": [
+          "AlreadyInitialized: Already initialized"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "uninitialized",
+        "code": 4,
+        "message": "Uninitialized",
+        "docs": [
+          "Uninitialized: Uninitialized"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMetadataKey",
+        "code": 5,
+        "message": " Metadata's key must match seed of ['metadata', program id, mint] provided",
+        "docs": [
+          "InvalidMetadataKey:  Metadata's key must match seed of ['metadata', program id, mint] provided"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidEditionKey",
+        "code": 6,
+        "message": "Edition's key must match seed of ['metadata', program id, name, 'edition'] provided",
+        "docs": [
+          "InvalidEditionKey: Edition's key must match seed of ['metadata', program id, name, 'edition'] provided"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "updateAuthorityIncorrect",
+        "code": 7,
+        "message": "Update Authority given does not match",
+        "docs": [
+          "UpdateAuthorityIncorrect: Update Authority given does not match"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "updateAuthorityIsNotSigner",
+        "code": 8,
+        "message": "Update Authority needs to be signer to update metadata",
+        "docs": [
+          "UpdateAuthorityIsNotSigner: Update Authority needs to be signer to update metadata"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notMintAuthority",
+        "code": 9,
+        "message": "You must be the mint authority and signer on this transaction",
+        "docs": [
+          "NotMintAuthority: You must be the mint authority and signer on this transaction"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMintAuthority",
+        "code": 10,
+        "message": "Mint authority provided does not match the authority on the mint",
+        "docs": [
+          "InvalidMintAuthority: Mint authority provided does not match the authority on the mint"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "nameTooLong",
+        "code": 11,
+        "message": "Name too long",
+        "docs": [
+          "NameTooLong: Name too long"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "symbolTooLong",
+        "code": 12,
+        "message": "Symbol too long",
+        "docs": [
+          "SymbolTooLong: Symbol too long"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "uriTooLong",
+        "code": 13,
+        "message": "URI too long",
+        "docs": [
+          "UriTooLong: URI too long"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "updateAuthorityMustBeEqualToMetadataAuthorityAndSigner",
+        "code": 14,
+        "message": "",
+        "docs": [
+          "UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mintMismatch",
+        "code": 15,
+        "message": "Mint given does not match mint on Metadata",
+        "docs": [
+          "MintMismatch: Mint given does not match mint on Metadata"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "editionsMustHaveExactlyOneToken",
+        "code": 16,
+        "message": "Editions must have exactly one token",
+        "docs": [
+          "EditionsMustHaveExactlyOneToken: Editions must have exactly one token"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "maxEditionsMintedAlready",
+        "code": 17,
+        "message": "",
+        "docs": [
+          "MaxEditionsMintedAlready"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenMintToFailed",
+        "code": 18,
+        "message": "",
+        "docs": [
+          "TokenMintToFailed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "masterRecordMismatch",
+        "code": 19,
+        "message": "",
+        "docs": [
+          "MasterRecordMismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "destinationMintMismatch",
+        "code": 20,
+        "message": "",
+        "docs": [
+          "DestinationMintMismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "editionAlreadyMinted",
+        "code": 21,
+        "message": "",
+        "docs": [
+          "EditionAlreadyMinted"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "printingMintDecimalsShouldBeZero",
+        "code": 22,
+        "message": "",
+        "docs": [
+          "PrintingMintDecimalsShouldBeZero"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "oneTimePrintingAuthorizationMintDecimalsShouldBeZero",
+        "code": 23,
+        "message": "",
+        "docs": [
+          "OneTimePrintingAuthorizationMintDecimalsShouldBeZero"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "editionMintDecimalsShouldBeZero",
+        "code": 24,
+        "message": "EditionMintDecimalsShouldBeZero",
+        "docs": [
+          "EditionMintDecimalsShouldBeZero: EditionMintDecimalsShouldBeZero"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenBurnFailed",
+        "code": 25,
+        "message": "",
+        "docs": [
+          "TokenBurnFailed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenAccountOneTimeAuthMintMismatch",
+        "code": 26,
+        "message": "",
+        "docs": [
+          "TokenAccountOneTimeAuthMintMismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "derivedKeyInvalid",
+        "code": 27,
+        "message": "Derived key invalid",
+        "docs": [
+          "DerivedKeyInvalid: Derived key invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "printingMintMismatch",
+        "code": 28,
+        "message": "The Printing mint does not match that on the master edition!",
+        "docs": [
+          "PrintingMintMismatch: The Printing mint does not match that on the master edition!"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "oneTimePrintingAuthMintMismatch",
+        "code": 29,
+        "message": "The One Time Printing Auth mint does not match that on the master edition!",
+        "docs": [
+          "OneTimePrintingAuthMintMismatch: The One Time Printing Auth mint does not match that on the master edition!"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenAccountMintMismatch",
+        "code": 30,
+        "message": "The mint of the token account does not match the Printing mint!",
+        "docs": [
+          "TokenAccountMintMismatch: The mint of the token account does not match the Printing mint!"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenAccountMintMismatchV2",
+        "code": 31,
+        "message": "The mint of the token account does not match the master metadata mint!",
+        "docs": [
+          "TokenAccountMintMismatchV2: The mint of the token account does not match the master metadata mint!"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notEnoughTokens",
+        "code": 32,
+        "message": "Not enough tokens to mint a limited edition",
+        "docs": [
+          "NotEnoughTokens: Not enough tokens to mint a limited edition"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "printingMintAuthorizationAccountMismatch",
+        "code": 33,
+        "message": "",
+        "docs": [
+          "PrintingMintAuthorizationAccountMismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "authorizationTokenAccountOwnerMismatch",
+        "code": 34,
+        "message": "",
+        "docs": [
+          "AuthorizationTokenAccountOwnerMismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "disabled",
+        "code": 35,
+        "message": "",
+        "docs": [
+          "Disabled"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "creatorsTooLong",
+        "code": 36,
+        "message": "Creators list too long",
+        "docs": [
+          "CreatorsTooLong: Creators list too long"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "creatorsMustBeAtleastOne",
+        "code": 37,
+        "message": "Creators must be at least one if set",
+        "docs": [
+          "CreatorsMustBeAtleastOne: Creators must be at least one if set"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mustBeOneOfCreators",
+        "code": 38,
+        "message": "",
+        "docs": [
+          "MustBeOneOfCreators"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "noCreatorsPresentOnMetadata",
+        "code": 39,
+        "message": "This metadata does not have creators",
+        "docs": [
+          "NoCreatorsPresentOnMetadata: This metadata does not have creators"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "creatorNotFound",
+        "code": 40,
+        "message": "This creator address was not found",
+        "docs": [
+          "CreatorNotFound: This creator address was not found"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBasisPoints",
+        "code": 41,
+        "message": "Basis points cannot be more than 10000",
+        "docs": [
+          "InvalidBasisPoints: Basis points cannot be more than 10000"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "primarySaleCanOnlyBeFlippedToTrue",
+        "code": 42,
+        "message": "Primary sale can only be flipped to true and is immutable",
+        "docs": [
+          "PrimarySaleCanOnlyBeFlippedToTrue: Primary sale can only be flipped to true and is immutable"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "ownerMismatch",
+        "code": 43,
+        "message": "Owner does not match that on the account given",
+        "docs": [
+          "OwnerMismatch: Owner does not match that on the account given"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "noBalanceInAccountForAuthorization",
+        "code": 44,
+        "message": "This account has no tokens to be used for authorization",
+        "docs": [
+          "NoBalanceInAccountForAuthorization: This account has no tokens to be used for authorization"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "shareTotalMustBe100",
+        "code": 45,
+        "message": "Share total must equal 100 for creator array",
+        "docs": [
+          "ShareTotalMustBe100: Share total must equal 100 for creator array"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationExists",
+        "code": 46,
+        "message": "",
+        "docs": [
+          "ReservationExists"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationDoesNotExist",
+        "code": 47,
+        "message": "",
+        "docs": [
+          "ReservationDoesNotExist"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationNotSet",
+        "code": 48,
+        "message": "",
+        "docs": [
+          "ReservationNotSet"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationAlreadyMade",
+        "code": 49,
+        "message": "",
+        "docs": [
+          "ReservationAlreadyMade"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "beyondMaxAddressSize",
+        "code": 50,
+        "message": "",
+        "docs": [
+          "BeyondMaxAddressSize"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "numericalOverflowError",
+        "code": 51,
+        "message": "NumericalOverflowError",
+        "docs": [
+          "NumericalOverflowError: NumericalOverflowError"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationBreachesMaximumSupply",
+        "code": 52,
+        "message": "",
+        "docs": [
+          "ReservationBreachesMaximumSupply"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "addressNotInReservation",
+        "code": 53,
+        "message": "",
+        "docs": [
+          "AddressNotInReservation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotVerifyAnotherCreator",
+        "code": 54,
+        "message": "You cannot unilaterally verify another creator, they must sign",
+        "docs": [
+          "CannotVerifyAnotherCreator: You cannot unilaterally verify another creator, they must sign"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotUnverifyAnotherCreator",
+        "code": 55,
+        "message": "You cannot unilaterally unverify another creator",
+        "docs": [
+          "CannotUnverifyAnotherCreator: You cannot unilaterally unverify another creator"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "spotMismatch",
+        "code": 56,
+        "message": "",
+        "docs": [
+          "SpotMismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectOwner",
+        "code": 57,
+        "message": "Incorrect account owner",
+        "docs": [
+          "IncorrectOwner: Incorrect account owner"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "printingWouldBreachMaximumSupply",
+        "code": 58,
+        "message": "",
+        "docs": [
+          "PrintingWouldBreachMaximumSupply"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "dataIsImmutable",
+        "code": 59,
+        "message": "Data is immutable",
+        "docs": [
+          "DataIsImmutable: Data is immutable"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "duplicateCreatorAddress",
+        "code": 60,
+        "message": "No duplicate creator addresses",
+        "docs": [
+          "DuplicateCreatorAddress: No duplicate creator addresses"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationSpotsRemainingShouldMatchTotalSpotsAtStart",
+        "code": 61,
+        "message": "",
+        "docs": [
+          "ReservationSpotsRemainingShouldMatchTotalSpotsAtStart"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenProgram",
+        "code": 62,
+        "message": "Invalid token program",
+        "docs": [
+          "InvalidTokenProgram: Invalid token program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "dataTypeMismatch",
+        "code": 63,
+        "message": "Data type mismatch",
+        "docs": [
+          "DataTypeMismatch: Data type mismatch"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "beyondAlottedAddressSize",
+        "code": 64,
+        "message": "",
+        "docs": [
+          "BeyondAlottedAddressSize"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationNotComplete",
+        "code": 65,
+        "message": "",
+        "docs": [
+          "ReservationNotComplete"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "triedToReplaceAnExistingReservation",
+        "code": 66,
+        "message": "",
+        "docs": [
+          "TriedToReplaceAnExistingReservation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidOperation",
+        "code": 67,
+        "message": "Invalid operation",
+        "docs": [
+          "InvalidOperation: Invalid operation"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidOwner",
+        "code": 68,
+        "message": "Invalid Owner",
+        "docs": [
+          "InvalidOwner: Invalid Owner"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "printingMintSupplyMustBeZeroForConversion",
+        "code": 69,
+        "message": "Printing mint supply must be zero for conversion",
+        "docs": [
+          "PrintingMintSupplyMustBeZeroForConversion: Printing mint supply must be zero for conversion"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "oneTimeAuthMintSupplyMustBeZeroForConversion",
+        "code": 70,
+        "message": "One Time Auth mint supply must be zero for conversion",
+        "docs": [
+          "OneTimeAuthMintSupplyMustBeZeroForConversion: One Time Auth mint supply must be zero for conversion"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidEditionIndex",
+        "code": 71,
+        "message": "You tried to insert one edition too many into an edition mark pda",
+        "docs": [
+          "InvalidEditionIndex: You tried to insert one edition too many into an edition mark pda"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationArrayShouldBeSizeOne",
+        "code": 72,
+        "message": "",
+        "docs": [
+          "ReservationArrayShouldBeSizeOne"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "isMutableCanOnlyBeFlippedToFalse",
+        "code": 73,
+        "message": "Is Mutable can only be flipped to false",
+        "docs": [
+          "IsMutableCanOnlyBeFlippedToFalse: Is Mutable can only be flipped to false"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "collectionCannotBeVerifiedInThisInstruction",
+        "code": 74,
+        "message": "Collection cannot be verified in this instruction",
+        "docs": [
+          "CollectionCannotBeVerifiedInThisInstruction: Collection cannot be verified in this instruction"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "removed",
+        "code": 75,
+        "message": "This instruction was deprecated in a previous release and is now removed",
+        "docs": [
+          "Removed: This instruction was deprecated in a previous release and is now removed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mustBeBurned",
+        "code": 76,
+        "message": "",
+        "docs": [
+          "MustBeBurned"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidUseMethod",
+        "code": 77,
+        "message": "This use method is invalid",
+        "docs": [
+          "InvalidUseMethod: This use method is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotChangeUseMethodAfterFirstUse",
+        "code": 78,
+        "message": "Cannot Change Use Method after the first use",
+        "docs": [
+          "CannotChangeUseMethodAfterFirstUse: Cannot Change Use Method after the first use"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotChangeUsesAfterFirstUse",
+        "code": 79,
+        "message": "Cannot Change Remaining or Available uses after the first use",
+        "docs": [
+          "CannotChangeUsesAfterFirstUse: Cannot Change Remaining or Available uses after the first use"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "collectionNotFound",
+        "code": 80,
+        "message": "Collection Not Found on Metadata",
+        "docs": [
+          "CollectionNotFound: Collection Not Found on Metadata"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCollectionUpdateAuthority",
+        "code": 81,
+        "message": "Collection Update Authority is invalid",
+        "docs": [
+          "InvalidCollectionUpdateAuthority: Collection Update Authority is invalid"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "collectionMustBeAUniqueMasterEdition",
+        "code": 82,
+        "message": "Collection Must Be a Unique Master Edition v2",
+        "docs": [
+          "CollectionMustBeAUniqueMasterEdition: Collection Must Be a Unique Master Edition v2"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "useAuthorityRecordAlreadyExists",
+        "code": 83,
+        "message": "The Use Authority Record Already Exists, to modify it Revoke, then Approve",
+        "docs": [
+          "UseAuthorityRecordAlreadyExists: The Use Authority Record Already Exists, to modify it Revoke, then Approve"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "useAuthorityRecordAlreadyRevoked",
+        "code": 84,
+        "message": "The Use Authority Record is empty or already revoked",
+        "docs": [
+          "UseAuthorityRecordAlreadyRevoked: The Use Authority Record is empty or already revoked"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unusable",
+        "code": 85,
+        "message": "This token has no uses",
+        "docs": [
+          "Unusable: This token has no uses"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notEnoughUses",
+        "code": 86,
+        "message": "There are not enough Uses left on this token.",
+        "docs": [
+          "NotEnoughUses: There are not enough Uses left on this token."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "collectionAuthorityRecordAlreadyExists",
+        "code": 87,
+        "message": "This Collection Authority Record Already Exists.",
+        "docs": [
+          "CollectionAuthorityRecordAlreadyExists: This Collection Authority Record Already Exists."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "collectionAuthorityDoesNotExist",
+        "code": 88,
+        "message": "This Collection Authority Record Does Not Exist.",
+        "docs": [
+          "CollectionAuthorityDoesNotExist: This Collection Authority Record Does Not Exist."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidUseAuthorityRecord",
+        "code": 89,
+        "message": "This Use Authority Record is invalid.",
+        "docs": [
+          "InvalidUseAuthorityRecord: This Use Authority Record is invalid."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCollectionAuthorityRecord",
+        "code": 90,
+        "message": "",
+        "docs": [
+          "InvalidCollectionAuthorityRecord"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidFreezeAuthority",
+        "code": 91,
+        "message": "Metadata does not match the freeze authority on the mint",
+        "docs": [
+          "InvalidFreezeAuthority: Metadata does not match the freeze authority on the mint"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDelegate",
+        "code": 92,
+        "message": "All tokens in this account have not been delegated to this user.",
+        "docs": [
+          "InvalidDelegate: All tokens in this account have not been delegated to this user."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotAdjustVerifiedCreator",
+        "code": 93,
+        "message": "",
+        "docs": [
+          "CannotAdjustVerifiedCreator"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotRemoveVerifiedCreator",
+        "code": 94,
+        "message": "Verified creators cannot be removed.",
+        "docs": [
+          "CannotRemoveVerifiedCreator: Verified creators cannot be removed."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotWipeVerifiedCreators",
+        "code": 95,
+        "message": "",
+        "docs": [
+          "CannotWipeVerifiedCreators"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notAllowedToChangeSellerFeeBasisPoints",
+        "code": 96,
+        "message": "",
+        "docs": [
+          "NotAllowedToChangeSellerFeeBasisPoints"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "editionOverrideCannotBeZero",
+        "code": 97,
+        "message": "Edition override cannot be zero",
+        "docs": [
+          "EditionOverrideCannotBeZero: Edition override cannot be zero"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidUser",
+        "code": 98,
+        "message": "Invalid User",
+        "docs": [
+          "InvalidUser: Invalid User"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "revokeCollectionAuthoritySignerIncorrect",
+        "code": 99,
+        "message": "Revoke Collection Authority signer is incorrect",
+        "docs": [
+          "RevokeCollectionAuthoritySignerIncorrect: Revoke Collection Authority signer is incorrect"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "tokenCloseFailed",
+        "code": 100,
+        "message": "",
+        "docs": [
+          "TokenCloseFailed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unsizedCollection",
+        "code": 101,
+        "message": "Can't use this function on unsized collection",
+        "docs": [
+          "UnsizedCollection: Can't use this function on unsized collection"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "sizedCollection",
+        "code": 102,
+        "message": "Can't use this function on a sized collection",
+        "docs": [
+          "SizedCollection: Can't use this function on a sized collection"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingCollectionMetadata",
+        "code": 103,
+        "message": "Missing collection metadata account",
+        "docs": [
+          "MissingCollectionMetadata: Missing collection metadata account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notAMemberOfCollection",
+        "code": 104,
+        "message": "This NFT is not a member of the specified collection.",
+        "docs": [
+          "NotAMemberOfCollection: This NFT is not a member of the specified collection."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notVerifiedMemberOfCollection",
+        "code": 105,
+        "message": "This NFT is not a verified member of the specified collection.",
+        "docs": [
+          "NotVerifiedMemberOfCollection: This NFT is not a verified member of the specified collection."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notACollectionParent",
+        "code": 106,
+        "message": "This NFT is not a collection parent NFT.",
+        "docs": [
+          "NotACollectionParent: This NFT is not a collection parent NFT."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "couldNotDetermineTokenStandard",
+        "code": 107,
+        "message": "Could not determine a TokenStandard type.",
+        "docs": [
+          "CouldNotDetermineTokenStandard: Could not determine a TokenStandard type."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingEditionAccount",
+        "code": 108,
+        "message": "This mint account has an edition but none was provided.",
+        "docs": [
+          "MissingEditionAccount: This mint account has an edition but none was provided."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notAMasterEdition",
+        "code": 109,
+        "message": "This edition is not a Master Edition",
+        "docs": [
+          "NotAMasterEdition: This edition is not a Master Edition"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "masterEditionHasPrints",
+        "code": 110,
+        "message": "This Master Edition has existing prints",
+        "docs": [
+          "MasterEditionHasPrints: This Master Edition has existing prints"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "borshDeserializationError",
+        "code": 111,
+        "message": "",
+        "docs": [
+          "BorshDeserializationError"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotUpdateVerifiedCollection",
+        "code": 112,
+        "message": "Cannot update a verified collection in this command",
+        "docs": [
+          "CannotUpdateVerifiedCollection: Cannot update a verified collection in this command"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "collectionMasterEditionAccountInvalid",
+        "code": 113,
+        "message": "Edition account doesnt match collection ",
+        "docs": [
+          "CollectionMasterEditionAccountInvalid: Edition account doesnt match collection "
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "alreadyVerified",
+        "code": 114,
+        "message": "Item is already verified.",
+        "docs": [
+          "AlreadyVerified: Item is already verified."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "alreadyUnverified",
+        "code": 115,
+        "message": "",
+        "docs": [
+          "AlreadyUnverified"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "notAPrintEdition",
+        "code": 116,
+        "message": "This edition is not a Print Edition",
+        "docs": [
+          "NotAPrintEdition: This edition is not a Print Edition"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMasterEdition",
+        "code": 117,
+        "message": "Invalid Master Edition",
+        "docs": [
+          "InvalidMasterEdition: Invalid Master Edition"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidPrintEdition",
+        "code": 118,
+        "message": "Invalid Print Edition",
+        "docs": [
+          "InvalidPrintEdition: Invalid Print Edition"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidEditionMarker",
+        "code": 119,
+        "message": "Invalid Edition Marker",
+        "docs": [
+          "InvalidEditionMarker: Invalid Edition Marker"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "reservationListDeprecated",
+        "code": 120,
+        "message": "Reservation List is Deprecated",
+        "docs": [
+          "ReservationListDeprecated: Reservation List is Deprecated"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "printEditionDoesNotMatchMasterEdition",
+        "code": 121,
+        "message": "Print Edition does not match Master Edition",
+        "docs": [
+          "PrintEditionDoesNotMatchMasterEdition: Print Edition does not match Master Edition"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "editionNumberGreaterThanMaxSupply",
+        "code": 122,
+        "message": "Edition Number greater than max supply",
+        "docs": [
+          "EditionNumberGreaterThanMaxSupply: Edition Number greater than max supply"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mustUnverify",
+        "code": 123,
+        "message": "Must unverify before migrating collections.",
+        "docs": [
+          "MustUnverify: Must unverify before migrating collections."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidEscrowBumpSeed",
+        "code": 124,
+        "message": "Invalid Escrow Account Bump Seed",
+        "docs": [
+          "InvalidEscrowBumpSeed: Invalid Escrow Account Bump Seed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mustBeEscrowAuthority",
+        "code": 125,
+        "message": "Must Escrow Authority",
+        "docs": [
+          "MustBeEscrowAuthority: Must Escrow Authority"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSystemProgram",
+        "code": 126,
+        "message": "Invalid System Program",
+        "docs": [
+          "InvalidSystemProgram: Invalid System Program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mustBeNonFungible",
+        "code": 127,
+        "message": "Must be a Non Fungible Token",
+        "docs": [
+          "MustBeNonFungible: Must be a Non Fungible Token"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "insufficientTokens",
+        "code": 128,
+        "message": "Insufficient tokens for transfer",
+        "docs": [
+          "InsufficientTokens: Insufficient tokens for transfer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "borshSerializationError",
+        "code": 129,
+        "message": "Borsh Serialization Error",
+        "docs": [
+          "BorshSerializationError: Borsh Serialization Error"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "noFreezeAuthoritySet",
+        "code": 130,
+        "message": "Cannot create NFT with no Freeze Authority.",
+        "docs": [
+          "NoFreezeAuthoritySet: Cannot create NFT with no Freeze Authority."
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCollectionSizeChange",
+        "code": 131,
+        "message": "Invalid collection size change",
+        "docs": [
+          "InvalidCollectionSizeChange: Invalid collection size change"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidBubblegumSigner",
+        "code": 132,
+        "message": "Invalid bubblegum signer",
+        "docs": [
+          "InvalidBubblegumSigner: Invalid bubblegum signer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "escrowParentHasDelegate",
+        "code": 133,
+        "message": "Escrow parent cannot have a delegate",
+        "docs": [
+          "EscrowParentHasDelegate: Escrow parent cannot have a delegate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mintIsNotSigner",
+        "code": 134,
+        "message": "Mint needs to be signer to initialize the account",
+        "docs": [
+          "MintIsNotSigner: Mint needs to be signer to initialize the account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenStandard",
+        "code": 135,
+        "message": "Invalid token standard",
+        "docs": [
+          "InvalidTokenStandard: Invalid token standard"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMintForTokenStandard",
+        "code": 136,
+        "message": "Invalid mint account for specified token standard",
+        "docs": [
+          "InvalidMintForTokenStandard: Invalid mint account for specified token standard"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAuthorizationRules",
+        "code": 137,
+        "message": "Invalid authorization rules account",
+        "docs": [
+          "InvalidAuthorizationRules: Invalid authorization rules account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingAuthorizationRules",
+        "code": 138,
+        "message": "Missing authorization rules account",
+        "docs": [
+          "MissingAuthorizationRules: Missing authorization rules account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingProgrammableConfig",
+        "code": 139,
+        "message": "Missing programmable configuration",
+        "docs": [
+          "MissingProgrammableConfig: Missing programmable configuration"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidProgrammableConfig",
+        "code": 140,
+        "message": "Invalid programmable configuration",
+        "docs": [
+          "InvalidProgrammableConfig: Invalid programmable configuration"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "delegateAlreadyExists",
+        "code": 141,
+        "message": "Delegate already exists",
+        "docs": [
+          "DelegateAlreadyExists: Delegate already exists"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "delegateNotFound",
+        "code": 142,
+        "message": "Delegate not found",
+        "docs": [
+          "DelegateNotFound: Delegate not found"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingAccountInBuilder",
+        "code": 143,
+        "message": "Required account not set in instruction builder",
+        "docs": [
+          "MissingAccountInBuilder: Required account not set in instruction builder"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingArgumentInBuilder",
+        "code": 144,
+        "message": "Required argument not set in instruction builder",
+        "docs": [
+          "MissingArgumentInBuilder: Required argument not set in instruction builder"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "featureNotSupported",
+        "code": 145,
+        "message": "Feature not supported currently",
+        "docs": [
+          "FeatureNotSupported: Feature not supported currently"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidSystemWallet",
+        "code": 146,
+        "message": "Invalid system wallet",
+        "docs": [
+          "InvalidSystemWallet: Invalid system wallet"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "onlySaleDelegateCanTransfer",
+        "code": 147,
+        "message": "Only the sale delegate can transfer while its set",
+        "docs": [
+          "OnlySaleDelegateCanTransfer: Only the sale delegate can transfer while its set"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingTokenAccount",
+        "code": 148,
+        "message": "Missing token account",
+        "docs": [
+          "MissingTokenAccount: Missing token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingSplTokenProgram",
+        "code": 149,
+        "message": "Missing SPL token program",
+        "docs": [
+          "MissingSplTokenProgram: Missing SPL token program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingAuthorizationRulesProgram",
+        "code": 150,
+        "message": "Missing authorization rules program",
+        "docs": [
+          "MissingAuthorizationRulesProgram: Missing authorization rules program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDelegateRoleForTransfer",
+        "code": 151,
+        "message": "Invalid delegate role for transfer",
+        "docs": [
+          "InvalidDelegateRoleForTransfer: Invalid delegate role for transfer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTransferAuthority",
+        "code": 152,
+        "message": "Invalid transfer authority",
+        "docs": [
+          "InvalidTransferAuthority: Invalid transfer authority"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "instructionNotSupported",
+        "code": 153,
+        "message": "Instruction not supported for ProgrammableNonFungible assets",
+        "docs": [
+          "InstructionNotSupported: Instruction not supported for ProgrammableNonFungible assets"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "keyMismatch",
+        "code": 154,
+        "message": "Public key does not match expected value",
+        "docs": [
+          "KeyMismatch: Public key does not match expected value"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "lockedToken",
+        "code": 155,
+        "message": "Token is locked",
+        "docs": [
+          "LockedToken: Token is locked"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "unlockedToken",
+        "code": 156,
+        "message": "Token is unlocked",
+        "docs": [
+          "UnlockedToken: Token is unlocked"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingDelegateRole",
+        "code": 157,
+        "message": "Missing delegate role",
+        "docs": [
+          "MissingDelegateRole: Missing delegate role"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAuthorityType",
+        "code": 158,
+        "message": "Invalid authority type",
+        "docs": [
+          "InvalidAuthorityType: Invalid authority type"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingTokenRecord",
+        "code": 159,
+        "message": "Missing token record account",
+        "docs": [
+          "MissingTokenRecord: Missing token record account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "mintSupplyMustBeZero",
+        "code": 160,
+        "message": "Mint supply must be zero for programmable assets",
+        "docs": [
+          "MintSupplyMustBeZero: Mint supply must be zero for programmable assets"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "dataIsEmptyOrZeroed",
+        "code": 161,
+        "message": "Data is empty or zeroed",
+        "docs": [
+          "DataIsEmptyOrZeroed: Data is empty or zeroed"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingTokenOwnerAccount",
+        "code": 162,
+        "message": "Missing token owner",
+        "docs": [
+          "MissingTokenOwnerAccount: Missing token owner"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMasterEditionAccountLength",
+        "code": 163,
+        "message": "Master edition account has an invalid length",
+        "docs": [
+          "InvalidMasterEditionAccountLength: Master edition account has an invalid length"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "incorrectTokenState",
+        "code": 164,
+        "message": "Incorrect token state",
+        "docs": [
+          "IncorrectTokenState: Incorrect token state"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDelegateRole",
+        "code": 165,
+        "message": "Invalid delegate role",
+        "docs": [
+          "InvalidDelegateRole: Invalid delegate role"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingPrintSupply",
+        "code": 166,
+        "message": "Print supply is required for non-fungibles",
+        "docs": [
+          "MissingPrintSupply: Print supply is required for non-fungibles"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingMasterEditionAccount",
+        "code": 167,
+        "message": "Missing master edition account",
+        "docs": [
+          "MissingMasterEditionAccount: Missing master edition account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "amountMustBeGreaterThanZero",
+        "code": 168,
+        "message": "Amount must be greater than zero",
+        "docs": [
+          "AmountMustBeGreaterThanZero: Amount must be greater than zero"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidDelegateArgs",
+        "code": 169,
+        "message": "Invalid delegate args",
+        "docs": [
+          "InvalidDelegateArgs: Invalid delegate args"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingLockedTransferAddress",
+        "code": 170,
+        "message": "Missing address for locked transfer",
+        "docs": [
+          "MissingLockedTransferAddress: Missing address for locked transfer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidLockedTransferAddress",
+        "code": 171,
+        "message": "Invalid destination address for locked transfer",
+        "docs": [
+          "InvalidLockedTransferAddress: Invalid destination address for locked transfer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "dataIncrementLimitExceeded",
+        "code": 172,
+        "message": "Exceeded account realloc increase limit",
+        "docs": [
+          "DataIncrementLimitExceeded: Exceeded account realloc increase limit"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotUpdateAssetWithDelegate",
+        "code": 173,
+        "message": "Cannot update the rule set of a programmable asset that has a delegate",
+        "docs": [
+          "CannotUpdateAssetWithDelegate: Cannot update the rule set of a programmable asset that has a delegate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAmount",
+        "code": 174,
+        "message": "Invalid token amount for this operation or token standard",
+        "docs": [
+          "InvalidAmount: Invalid token amount for this operation or token standard"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingMasterEditionMintAccount",
+        "code": 175,
+        "message": "Missing master edition mint account",
+        "docs": [
+          "MissingMasterEditionMintAccount: Missing master edition mint account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingMasterEditionTokenAccount",
+        "code": 176,
+        "message": "Missing master edition token account",
+        "docs": [
+          "MissingMasterEditionTokenAccount: Missing master edition token account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingEditionMarkerAccount",
+        "code": 177,
+        "message": "Missing edition marker account",
+        "docs": [
+          "MissingEditionMarkerAccount: Missing edition marker account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotBurnWithDelegate",
+        "code": 178,
+        "message": "Cannot burn while persistent delegate is set",
+        "docs": [
+          "CannotBurnWithDelegate: Cannot burn while persistent delegate is set"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingEdition",
+        "code": 179,
+        "message": "Missing edition account",
+        "docs": [
+          "MissingEdition: Missing edition account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidAssociatedTokenAccountProgram",
+        "code": 180,
+        "message": "Invalid Associated Token Account Program",
+        "docs": [
+          "InvalidAssociatedTokenAccountProgram: Invalid Associated Token Account Program"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidInstructionsSysvar",
+        "code": 181,
+        "message": "Invalid InstructionsSysvar",
+        "docs": [
+          "InvalidInstructionsSysvar: Invalid InstructionsSysvar"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidParentAccounts",
+        "code": 182,
+        "message": "Invalid or Unneeded parent accounts",
+        "docs": [
+          "InvalidParentAccounts: Invalid or Unneeded parent accounts"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidUpdateArgs",
+        "code": 183,
+        "message": "Authority cannot apply all update args",
+        "docs": [
+          "InvalidUpdateArgs: Authority cannot apply all update args"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "insufficientTokenBalance",
+        "code": 184,
+        "message": "Token account does not have enough tokens",
+        "docs": [
+          "InsufficientTokenBalance: Token account does not have enough tokens"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingCollectionMint",
+        "code": 185,
+        "message": "Missing collection account",
+        "docs": [
+          "MissingCollectionMint: Missing collection account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingCollectionMasterEdition",
+        "code": 186,
+        "message": "Missing collection master edition account",
+        "docs": [
+          "MissingCollectionMasterEdition: Missing collection master edition account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenRecord",
+        "code": 187,
+        "message": "Invalid token record account",
+        "docs": [
+          "InvalidTokenRecord: Invalid token record account"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidCloseAuthority",
+        "code": 188,
+        "message": "The close authority needs to be revoked by the Utility Delegate",
+        "docs": [
+          "InvalidCloseAuthority: The close authority needs to be revoked by the Utility Delegate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidInstruction",
+        "code": 189,
+        "message": "Invalid or removed instruction",
+        "docs": [
+          "InvalidInstruction: Invalid or removed instruction"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingDelegateRecord",
+        "code": 190,
+        "message": "Missing delegate record",
+        "docs": [
+          "MissingDelegateRecord: Missing delegate record"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidFeeAccount",
+        "code": 191,
+        "message": "",
+        "docs": [
+          "InvalidFeeAccount"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMetadataFlags",
+        "code": 192,
+        "message": "",
+        "docs": [
+          "InvalidMetadataFlags"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "cannotChangeUpdateAuthorityWithDelegate",
+        "code": 193,
+        "message": "Cannot change the update authority with a delegate",
+        "docs": [
+          "CannotChangeUpdateAuthorityWithDelegate: Cannot change the update authority with a delegate"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMintExtensionType",
+        "code": 194,
+        "message": "Invalid mint extension type",
+        "docs": [
+          "InvalidMintExtensionType: Invalid mint extension type"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMintCloseAuthority",
+        "code": 195,
+        "message": "Invalid mint close authority",
+        "docs": [
+          "InvalidMintCloseAuthority: Invalid mint close authority"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidMetadataPointer",
+        "code": 196,
+        "message": "Invalid metadata pointer",
+        "docs": [
+          "InvalidMetadataPointer: Invalid metadata pointer"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidTokenExtensionType",
+        "code": 197,
+        "message": "Invalid token extension type",
+        "docs": [
+          "InvalidTokenExtensionType: Invalid token extension type"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "missingImmutableOwnerExtension",
+        "code": 198,
+        "message": "Missing immutable owner extension",
+        "docs": [
+          "MissingImmutableOwnerExtension: Missing immutable owner extension"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "expectedUninitializedAccount",
+        "code": 199,
+        "message": "Expected account to be uninitialized",
+        "docs": [
+          "ExpectedUninitializedAccount: Expected account to be uninitialized"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "invalidEditionAccountLength",
+        "code": 200,
+        "message": "Edition account has an invalid length",
+        "docs": [
+          "InvalidEditionAccountLength: Edition account has an invalid length"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "accountAlreadyResized",
+        "code": 201,
+        "message": "Account has already been resized",
+        "docs": [
+          "AccountAlreadyResized: Account has already been resized"
+        ]
+      },
+      {
+        "kind": "errorNode",
+        "name": "conditionsForClosingNotMet",
+        "code": 202,
+        "message": "Conditions for closing not met",
+        "docs": [
+          "ConditionsForClosingNotMet: Conditions for closing not met"
+        ]
+      }
+    ]
+  },
+  "additionalPrograms": []
+}

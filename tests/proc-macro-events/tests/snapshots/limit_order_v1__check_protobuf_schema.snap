@@ -1,5 +1,5 @@
 ---
-source: tests/proc-macro-events/tests/lo_v1.rs
+source: tests/limit_order_v1.rs
 expression: "limit_order::PROTOBUF_SCHEMA"
 ---
 syntax = "proto3";
@@ -43,7 +43,7 @@ message InitializeOrderAccounts {
   PublicKey maker_input_account = 5;
   PublicKey input_mint = 6;
   PublicKey maker_output_account = 7;
-  PublicKey referral = 8;
+  optional PublicKey referral = 8;
   PublicKey output_mint = 9;
   PublicKey system_program = 10;
   PublicKey token_program = 11;
@@ -72,7 +72,7 @@ message FillOrderAccounts {
   PublicKey taker_input_account = 7;
   PublicKey fee_authority = 8;
   PublicKey program_fee_account = 9;
-  PublicKey referral = 10;
+  optional PublicKey referral = 10;
   PublicKey token_program = 11;
   PublicKey system_program = 12;
   repeated PublicKey remaining_accounts = 13;
@@ -118,7 +118,7 @@ message FlashFillOrderAccounts {
   PublicKey taker_input_account = 6;
   PublicKey fee_authority = 7;
   PublicKey program_fee_account = 8;
-  PublicKey referral = 9;
+  optional PublicKey referral = 9;
   PublicKey input_mint = 10;
   PublicKey input_mint_token_program = 11;
   PublicKey output_mint = 12;
@@ -143,7 +143,7 @@ message CancelOrderAccounts {
   PublicKey maker_input_account = 4;
   PublicKey system_program = 5;
   PublicKey token_program = 6;
-  PublicKey input_mint = 7;
+  optional PublicKey input_mint = 7;
   repeated PublicKey remaining_accounts = 8;
 }
     
@@ -162,7 +162,7 @@ message CancelExpiredOrderAccounts {
   PublicKey maker_input_account = 4;
   PublicKey system_program = 5;
   PublicKey token_program = 6;
-  PublicKey input_mint = 7;
+  optional PublicKey input_mint = 7;
   repeated PublicKey remaining_accounts = 8;
 }
     

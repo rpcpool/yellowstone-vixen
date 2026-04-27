@@ -1,0 +1,151 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.5.1",
+  "program": {
+    "kind": "programNode",
+    "name": "jupiterRegression",
+    "publicKey": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "version": "0.1.0",
+    "origin": "anchor",
+    "docs": [],
+    "accounts": [],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "route",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 8,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "0102030405060708",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      }
+    ],
+    "definedTypes": [],
+    "errors": [],
+    "pdas": [],
+    "events": [
+      {
+        "kind": "eventNode",
+        "name": "swapEvent",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "amm",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "inputMint",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "inputAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "outputMint",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "outputAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "40c6cde8260871e2",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "40c6cde8260871e2",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "additionalPrograms": []
+}

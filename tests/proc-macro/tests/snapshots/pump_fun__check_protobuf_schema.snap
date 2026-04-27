@@ -10,248 +10,37 @@ message PublicKey {
   bytes value = 1;
 }
     
-message AdminSetCreatorEvent {
-  int64 timestamp = 1;
-  PublicKey admin_set_creator_authority = 2;
-  PublicKey mint = 3;
-  PublicKey bonding_curve = 4;
-  PublicKey old_creator = 5;
-  PublicKey new_creator = 6;
-}
-    
-message AdminSetIdlAuthorityEvent {
-  PublicKey idl_authority = 1;
-}
-    
-message AdminUpdateTokenIncentivesEvent {
-  int64 start_time = 1;
-  int64 end_time = 2;
-  uint64 day_number = 3;
-  uint64 token_supply_per_day = 4;
-  PublicKey mint = 5;
-  int64 seconds_in_a_day = 6;
-  int64 timestamp = 7;
-}
-    
-message ClaimTokenIncentivesEvent {
-  PublicKey user = 1;
-  PublicKey mint = 2;
-  uint64 amount = 3;
-  int64 timestamp = 4;
-  uint64 total_claimed_tokens = 5;
-  uint64 current_sol_volume = 6;
-}
-    
-message CloseUserVolumeAccumulatorEvent {
-  PublicKey user = 1;
-  int64 timestamp = 2;
-  uint64 total_unclaimed_tokens = 3;
-  uint64 total_claimed_tokens = 4;
-  uint64 current_sol_volume = 5;
-  int64 last_update_timestamp = 6;
-}
-    
-message CollectCreatorFeeEvent {
-  int64 timestamp = 1;
-  PublicKey creator = 2;
-  uint64 creator_fee = 3;
-}
-    
-message CompleteEvent {
-  PublicKey user = 1;
-  PublicKey mint = 2;
-  PublicKey bonding_curve = 3;
-  int64 timestamp = 4;
-}
-    
-message CompletePumpAmmMigrationEvent {
-  PublicKey user = 1;
-  PublicKey mint = 2;
-  uint64 mint_amount = 3;
-  uint64 sol_amount = 4;
-  uint64 pool_migration_fee = 5;
-  PublicKey bonding_curve = 6;
-  int64 timestamp = 7;
-  PublicKey pool = 8;
-}
-    
-message CreateEvent {
-  string name = 1;
-  string symbol = 2;
-  string uri = 3;
-  PublicKey mint = 4;
-  PublicKey bonding_curve = 5;
-  PublicKey user = 6;
-  PublicKey creator = 7;
-  int64 timestamp = 8;
-  uint64 virtual_token_reserves = 9;
-  uint64 virtual_sol_reserves = 10;
-  uint64 real_token_reserves = 11;
-  uint64 token_total_supply = 12;
-  PublicKey token_program = 13;
-  bool is_mayhem_mode = 14;
-}
-    
-message ExtendAccountEvent {
-  PublicKey account = 1;
-  PublicKey user = 2;
-  uint64 current_size = 3;
-  uint64 new_size = 4;
-  int64 timestamp = 5;
+message ConfigStatus {
 }
     
 message FeeTier {
-  bytes market_cap_lamports_threshold = 1;
-  Fees fees = 2;
 }
     
 message Fees {
-  uint64 lp_fee_bps = 1;
-  uint64 protocol_fee_bps = 2;
-  uint64 creator_fee_bps = 3;
 }
     
-message InitUserVolumeAccumulatorEvent {
-  PublicKey payer = 1;
-  PublicKey user = 2;
-  int64 timestamp = 3;
+message OptionBool {
 }
     
-message ReservedFeeRecipientsEvent {
-  int64 timestamp = 1;
-  PublicKey reserved_fee_recipient = 2;
-  repeated PublicKey reserved_fee_recipients = 3;
-}
-    
-message SetCreatorEvent {
-  int64 timestamp = 1;
-  PublicKey mint = 2;
-  PublicKey bonding_curve = 3;
-  PublicKey creator = 4;
-}
-    
-message SetMetaplexCreatorEvent {
-  int64 timestamp = 1;
-  PublicKey mint = 2;
-  PublicKey bonding_curve = 3;
-  PublicKey metadata = 4;
-  PublicKey creator = 5;
-}
-    
-message SetParamsEvent {
-  uint64 initial_virtual_token_reserves = 1;
-  uint64 initial_virtual_sol_reserves = 2;
-  uint64 initial_real_token_reserves = 3;
-  uint64 final_real_sol_reserves = 4;
-  uint64 token_total_supply = 5;
-  uint64 fee_basis_points = 6;
-  PublicKey withdraw_authority = 7;
-  bool enable_migrate = 8;
-  uint64 pool_migration_fee = 9;
-  uint64 creator_fee_basis_points = 10;
-  repeated PublicKey fee_recipients = 11;
-  int64 timestamp = 12;
-  PublicKey set_creator_authority = 13;
-  PublicKey admin_set_creator_authority = 14;
-}
-    
-message SyncUserVolumeAccumulatorEvent {
-  PublicKey user = 1;
-  uint64 total_claimed_tokens_before = 2;
-  uint64 total_claimed_tokens_after = 3;
-  int64 timestamp = 4;
-}
-    
-message TradeEvent {
-  PublicKey mint = 1;
-  uint64 sol_amount = 2;
-  uint64 token_amount = 3;
-  bool is_buy = 4;
-  PublicKey user = 5;
-  int64 timestamp = 6;
-  uint64 virtual_sol_reserves = 7;
-  uint64 virtual_token_reserves = 8;
-  uint64 real_sol_reserves = 9;
-  uint64 real_token_reserves = 10;
-  PublicKey fee_recipient = 11;
-  uint64 fee_basis_points = 12;
-  uint64 fee = 13;
-  PublicKey creator = 14;
-  uint64 creator_fee_basis_points = 15;
-  uint64 creator_fee = 16;
-  bool track_volume = 17;
-  uint64 total_unclaimed_tokens = 18;
-  uint64 total_claimed_tokens = 19;
-  uint64 current_sol_volume = 20;
-  int64 last_update_timestamp = 21;
-  string ix_name = 22;
-}
-    
-message UpdateGlobalAuthorityEvent {
-  PublicKey global = 1;
-  PublicKey authority = 2;
-  PublicKey new_authority = 3;
-  int64 timestamp = 4;
+message Shareholder {
 }
     
 message BondingCurve {
-  uint64 virtual_token_reserves = 1;
-  uint64 virtual_sol_reserves = 2;
-  uint64 real_token_reserves = 3;
-  uint64 real_sol_reserves = 4;
-  uint64 token_total_supply = 5;
-  bool complete = 6;
-  PublicKey creator = 7;
-  bool is_mayhem_mode = 8;
 }
     
 message FeeConfig {
-  uint32 bump = 1;
-  PublicKey admin = 2;
-  Fees flat_fees = 3;
-  repeated FeeTier fee_tiers = 4;
 }
     
 message Global {
-  bool initialized = 1;
-  PublicKey authority = 2;
-  PublicKey fee_recipient = 3;
-  uint64 initial_virtual_token_reserves = 4;
-  uint64 initial_virtual_sol_reserves = 5;
-  uint64 initial_real_token_reserves = 6;
-  uint64 token_total_supply = 7;
-  uint64 fee_basis_points = 8;
-  PublicKey withdraw_authority = 9;
-  bool enable_migrate = 10;
-  uint64 pool_migration_fee = 11;
-  uint64 creator_fee_basis_points = 12;
-  repeated PublicKey fee_recipients = 13;
-  PublicKey set_creator_authority = 14;
-  PublicKey admin_set_creator_authority = 15;
-  bool create_v2_enabled = 16;
-  PublicKey whitelist_pda = 17;
-  PublicKey reserved_fee_recipient = 18;
-  bool mayhem_mode_enabled = 19;
-  repeated PublicKey reserved_fee_recipients = 20;
 }
     
 message GlobalVolumeAccumulator {
-  int64 start_time = 1;
-  int64 end_time = 2;
-  int64 seconds_in_a_day = 3;
-  PublicKey mint = 4;
-  repeated uint64 total_token_supply = 5;
-  repeated uint64 sol_volumes = 6;
+}
+    
+message SharingConfig {
 }
     
 message UserVolumeAccumulator {
-  PublicKey user = 1;
-  bool needs_claim = 2;
-  uint64 total_unclaimed_tokens = 3;
-  uint64 total_claimed_tokens = 4;
-  uint64 current_sol_volume = 5;
-  int64 last_update_timestamp = 6;
-  bool has_total_claimed_tokens = 7;
 }
     
 message AdminSetCreatorAccounts {
@@ -343,7 +132,7 @@ message BuyAccounts {
 message BuyArgs {
   uint64 amount = 1;
   uint64 max_sol_cost = 2;
-  bool track_volume = 3;
+  OptionBool track_volume = 3;
 }
     
 message Buy {
@@ -374,12 +163,29 @@ message BuyExactSolInAccounts {
 message BuyExactSolInArgs {
   uint64 spendable_sol_in = 1;
   uint64 min_tokens_out = 2;
-  bool track_volume = 3;
+  OptionBool track_volume = 3;
 }
     
 message BuyExactSolIn {
   BuyExactSolInAccounts accounts = 1;
   BuyExactSolInArgs args = 2;
+}
+    
+message ClaimCashbackAccounts {
+  PublicKey user = 1;
+  PublicKey user_volume_accumulator = 2;
+  PublicKey system_program = 3;
+  PublicKey event_authority = 4;
+  PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message ClaimCashbackArgs {
+}
+    
+message ClaimCashback {
+  ClaimCashbackAccounts accounts = 1;
+  ClaimCashbackArgs args = 2;
 }
     
 message ClaimTokenIncentivesAccounts {
@@ -495,11 +301,31 @@ message CreateV2Args {
   string uri = 3;
   PublicKey creator = 4;
   bool is_mayhem_mode = 5;
+  OptionBool is_cashback_enabled = 6;
 }
     
 message CreateV2 {
   CreateV2Accounts accounts = 1;
   CreateV2Args args = 2;
+}
+    
+message DistributeCreatorFeesAccounts {
+  PublicKey mint = 1;
+  PublicKey bonding_curve = 2;
+  PublicKey sharing_config = 3;
+  PublicKey creator_vault = 4;
+  PublicKey system_program = 5;
+  PublicKey event_authority = 6;
+  PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message DistributeCreatorFeesArgs {
+}
+    
+message DistributeCreatorFees {
+  DistributeCreatorFeesAccounts accounts = 1;
+  DistributeCreatorFeesArgs args = 2;
 }
     
 message ExtendAccountAccounts {
@@ -517,6 +343,22 @@ message ExtendAccountArgs {
 message ExtendAccount {
   ExtendAccountAccounts accounts = 1;
   ExtendAccountArgs args = 2;
+}
+    
+message GetMinimumDistributableFeeAccounts {
+  PublicKey mint = 1;
+  PublicKey bonding_curve = 2;
+  PublicKey sharing_config = 3;
+  PublicKey creator_vault = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message GetMinimumDistributableFeeArgs {
+}
+    
+message GetMinimumDistributableFee {
+  GetMinimumDistributableFeeAccounts accounts = 1;
+  GetMinimumDistributableFeeArgs args = 2;
 }
     
 message InitUserVolumeAccumulatorAccounts {
@@ -588,6 +430,23 @@ message Migrate {
   MigrateArgs args = 2;
 }
     
+message MigrateBondingCurveCreatorAccounts {
+  PublicKey mint = 1;
+  PublicKey bonding_curve = 2;
+  PublicKey sharing_config = 3;
+  PublicKey event_authority = 4;
+  PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message MigrateBondingCurveCreatorArgs {
+}
+    
+message MigrateBondingCurveCreator {
+  MigrateBondingCurveCreatorAccounts accounts = 1;
+  MigrateBondingCurveCreatorArgs args = 2;
+}
+    
 message SellAccounts {
   PublicKey global = 1;
   PublicKey fee_recipient = 2;
@@ -634,6 +493,26 @@ message SetCreatorArgs {
 message SetCreator {
   SetCreatorAccounts accounts = 1;
   SetCreatorArgs args = 2;
+}
+    
+message SetMayhemVirtualParamsAccounts {
+  PublicKey sol_vault_authority = 1;
+  PublicKey mayhem_token_vault = 2;
+  PublicKey mint = 3;
+  PublicKey global = 4;
+  PublicKey bonding_curve = 5;
+  PublicKey token_program = 6;
+  PublicKey event_authority = 7;
+  PublicKey program = 8;
+  repeated PublicKey remaining_accounts = 9;
+}
+    
+message SetMayhemVirtualParamsArgs {
+}
+    
+message SetMayhemVirtualParams {
+  SetMayhemVirtualParamsAccounts accounts = 1;
+  SetMayhemVirtualParamsArgs args = 2;
 }
     
 message SetMetaplexCreatorAccounts {
@@ -714,6 +593,23 @@ message SyncUserVolumeAccumulator {
   SyncUserVolumeAccumulatorArgs args = 2;
 }
     
+message ToggleCashbackEnabledAccounts {
+  PublicKey global = 1;
+  PublicKey authority = 2;
+  PublicKey event_authority = 3;
+  PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message ToggleCashbackEnabledArgs {
+  bool enabled = 1;
+}
+    
+message ToggleCashbackEnabled {
+  ToggleCashbackEnabledAccounts accounts = 1;
+  ToggleCashbackEnabledArgs args = 2;
+}
+    
 message ToggleCreateV2Accounts {
   PublicKey global = 1;
   PublicKey authority = 2;
@@ -771,7 +667,8 @@ message PumpFunAccount {
     FeeConfig fee_config = 2;
     Global global = 3;
     GlobalVolumeAccumulator global_volume_accumulator = 4;
-    UserVolumeAccumulator user_volume_accumulator = 5;
+    SharingConfig sharing_config = 5;
+    UserVolumeAccumulator user_volume_accumulator = 6;
   }
 }
 message Instructions {
@@ -781,23 +678,29 @@ message Instructions {
     AdminUpdateTokenIncentives admin_update_token_incentives = 3;
     Buy buy = 4;
     BuyExactSolIn buy_exact_sol_in = 5;
-    ClaimTokenIncentives claim_token_incentives = 6;
-    CloseUserVolumeAccumulator close_user_volume_accumulator = 7;
-    CollectCreatorFee collect_creator_fee = 8;
-    Create create = 9;
-    CreateV2 create_v2 = 10;
-    ExtendAccount extend_account = 11;
-    InitUserVolumeAccumulator init_user_volume_accumulator = 12;
-    Initialize initialize = 13;
-    Migrate migrate = 14;
-    Sell sell = 15;
-    SetCreator set_creator = 16;
-    SetMetaplexCreator set_metaplex_creator = 17;
-    SetParams set_params = 18;
-    SetReservedFeeRecipients set_reserved_fee_recipients = 19;
-    SyncUserVolumeAccumulator sync_user_volume_accumulator = 20;
-    ToggleCreateV2 toggle_create_v2 = 21;
-    ToggleMayhemMode toggle_mayhem_mode = 22;
-    UpdateGlobalAuthority update_global_authority = 23;
+    ClaimCashback claim_cashback = 6;
+    ClaimTokenIncentives claim_token_incentives = 7;
+    CloseUserVolumeAccumulator close_user_volume_accumulator = 8;
+    CollectCreatorFee collect_creator_fee = 9;
+    Create create = 10;
+    CreateV2 create_v2 = 11;
+    DistributeCreatorFees distribute_creator_fees = 12;
+    ExtendAccount extend_account = 13;
+    GetMinimumDistributableFee get_minimum_distributable_fee = 14;
+    InitUserVolumeAccumulator init_user_volume_accumulator = 15;
+    Initialize initialize = 16;
+    Migrate migrate = 17;
+    MigrateBondingCurveCreator migrate_bonding_curve_creator = 18;
+    Sell sell = 19;
+    SetCreator set_creator = 20;
+    SetMayhemVirtualParams set_mayhem_virtual_params = 21;
+    SetMetaplexCreator set_metaplex_creator = 22;
+    SetParams set_params = 23;
+    SetReservedFeeRecipients set_reserved_fee_recipients = 24;
+    SyncUserVolumeAccumulator sync_user_volume_accumulator = 25;
+    ToggleCashbackEnabled toggle_cashback_enabled = 26;
+    ToggleCreateV2 toggle_create_v2 = 27;
+    ToggleMayhemMode toggle_mayhem_mode = 28;
+    UpdateGlobalAuthority update_global_authority = 29;
   }
 }

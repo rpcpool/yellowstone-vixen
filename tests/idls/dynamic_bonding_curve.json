@@ -1928,22 +1928,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -2053,22 +2039,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -2249,22 +2221,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -2389,22 +2347,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -2579,22 +2523,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -2696,22 +2626,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -2886,22 +2802,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -3020,30 +2922,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "base",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "RPxw6MtVk21bVNH",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "virtualPool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "base"
               },
               "seeds": [
                 {
@@ -3186,30 +3066,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "operator",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "Ke6ht6eBM9K",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "whitelistedAddress",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "operator"
               },
               "seeds": [
                 {
@@ -3273,22 +3131,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -3360,30 +3204,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "partnerMetadata",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "Est3Thjk4cinarSTFdnhfW",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "feeClaimer",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "partnerMetadata"
               },
               "seeds": [
                 {
@@ -3445,22 +3267,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -3591,30 +3399,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "virtualPoolMetadata",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "8HKQHpN46bU7rWYVAcc6HqLttbsvx",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "virtualPool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "virtualPoolMetadata"
               },
               "seeds": [
                 {
@@ -3674,22 +3460,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -3887,22 +3659,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -4021,38 +3779,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "baseVault",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "VsdpysuUk1z6nj5",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "baseMint",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "pool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "baseVault"
               },
               "seeds": [
                 {
@@ -4086,38 +3814,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "quoteVault",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "VsdpysuUk1z6nj5",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "quoteMint",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "pool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "quoteVault"
               },
               "seeds": [
                 {
@@ -4219,22 +3917,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -4360,38 +4044,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "baseVault",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "VsdpysuUk1z6nj5",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "baseMint",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "pool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "baseVault"
               },
               "seeds": [
                 {
@@ -4425,38 +4079,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "quoteVault",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "VsdpysuUk1z6nj5",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "quoteMint",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "pool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "quoteVault"
               },
               "seeds": [
                 {
@@ -4539,22 +4163,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -5725,22 +5335,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -5816,30 +5412,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "migrationMetadata",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "59Su7Vv3DS",
-                      "encoding": "base58"
-                    }
-                  },
-                  {
-                    "kind": "variablePdaSeedNode",
-                    "name": "virtualPool",
-                    "docs": [],
-                    "type": {
-                      "kind": "publicKeyTypeNode"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "migrationMetadata"
               },
               "seeds": [
                 {
@@ -5887,22 +5461,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -6037,22 +5597,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -6248,22 +5794,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -6466,22 +5998,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -6580,22 +6098,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -6791,22 +6295,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -6943,22 +6433,8 @@
             "defaultValue": {
               "kind": "pdaValueNode",
               "pda": {
-                "kind": "pdaNode",
-                "name": "eventAuthority",
-                "docs": [],
-                "seeds": [
-                  {
-                    "kind": "constantPdaSeedNode",
-                    "type": {
-                      "kind": "bytesTypeNode"
-                    },
-                    "value": {
-                      "kind": "bytesValueNode",
-                      "data": "tyvCZETMWX6hYsUwTchxRWG",
-                      "encoding": "base58"
-                    }
-                  }
-                ]
+                "kind": "pdaLinkNode",
+                "name": "eventAuthority"
               },
               "seeds": []
             }
@@ -8558,6 +8034,168 @@
       },
       {
         "kind": "definedTypeNode",
+        "name": "swapResult",
+        "docs": [
+          "Encodes all results of swapping"
+        ],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "actualInputAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outputAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "nextSqrtPrice",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u128",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tradingFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "protocolFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "referralFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "swapResult2",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "includedFeeInputAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "excludedFeeInputAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "amountLeft",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "outputAmount",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "nextSqrtPrice",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u128",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "tradingFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "protocolFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            },
+            {
+              "kind": "structFieldTypeNode",
+              "name": "referralFee",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
         "name": "tokenSupplyParams",
         "docs": [],
         "type": {
@@ -8655,7 +8293,2300 @@
         }
       }
     ],
-    "pdas": [],
+    "pdas": [
+      {
+        "kind": "pdaNode",
+        "name": "eventAuthority",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "tyvCZETMWX6hYsUwTchxRWG",
+              "encoding": "base58"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "base",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "RPxw6MtVk21bVNH",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "virtualPool",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "operator",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "Ke6ht6eBM9K",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "whitelistedAddress",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "partnerMetadata",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "Est3Thjk4cinarSTFdnhfW",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "feeClaimer",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "virtualPoolMetadata",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "8HKQHpN46bU7rWYVAcc6HqLttbsvx",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "virtualPool",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "baseVault",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "VsdpysuUk1z6nj5",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "baseMint",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "pool",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "quoteVault",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "VsdpysuUk1z6nj5",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "quoteMint",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "pool",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "pdaNode",
+        "name": "migrationMetadata",
+        "docs": [],
+        "seeds": [
+          {
+            "kind": "constantPdaSeedNode",
+            "type": {
+              "kind": "bytesTypeNode"
+            },
+            "value": {
+              "kind": "bytesValueNode",
+              "data": "59Su7Vv3DS",
+              "encoding": "base58"
+            }
+          },
+          {
+            "kind": "variablePdaSeedNode",
+            "name": "virtualPool",
+            "docs": [],
+            "type": {
+              "kind": "publicKeyTypeNode"
+            }
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "kind": "eventNode",
+        "name": "evtClaimCreatorTradingFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenBaseAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenQuoteAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "9ae4d7ca859bd68a",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "9ae4d7ca859bd68a",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtClaimPoolCreationFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "receiver",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "creationFee",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "956f952c8840af3e",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "956f952c8840af3e",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtClaimProtocolFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenBaseAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenQuoteAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "baf44bfbbc0d1921",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "baf44bfbbc0d1921",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtClaimProtocolLiquidityMigrationFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenBaseAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenQuoteAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "51a8741fa1561b23",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "51a8741fa1561b23",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtClaimTradingFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenBaseAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenQuoteAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1a5375f05cca70fe",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1a5375f05cca70fe",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCloseClaimFeeOperator",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "claimFeeOperator",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "operator",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "6f2725376ed8c217",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "6f2725376ed8c217",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCreateClaimFeeOperator",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "operator",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1506997844741cb1",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1506997844741cb1",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCreateConfig",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "config",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "quoteMint",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "feeClaimer",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "owner",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "poolFees",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "poolFeeParameters"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "collectFeeMode",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "migrationOption",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "activationType",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenDecimal",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tokenType",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "partnerPermanentLockedLiquidityPercentage",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "partnerLiquidityPercentage",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "creatorPermanentLockedLiquidityPercentage",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "creatorLiquidityPercentage",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "swapBaseAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "migrationQuoteThreshold",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "migrationBaseAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "sqrtStartPrice",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u128",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "lockedVesting",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "lockedVestingParams"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "migrationFeeOption",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "fixedTokenSupplyFlag",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "preMigrationTokenSupply",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "postMigrationTokenSupply",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "curve",
+                "docs": [],
+                "type": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "definedTypeLinkNode",
+                    "name": "liquidityDistributionParameters"
+                  },
+                  "count": {
+                    "kind": "prefixedCountNode",
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u32",
+                      "endian": "le"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "83cfb4aeb449a536",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "83cfb4aeb449a536",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCreateConfigV2",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "config",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "quoteMint",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "feeClaimer",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "leftoverReceiver",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "configParameters",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "configParameters"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "a34a42bb77c31a90",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "a34a42bb77c31a90",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCreateMeteoraMigrationMetadata",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "virtualPool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "63a7853fd68faf8b",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "63a7853fd68faf8b",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCreatorWithdrawSurplus",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "surplusAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "9849150f4257359d",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "9849150f4257359d",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtCurveComplete",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "config",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "baseReserve",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "quoteReserve",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "e5e756549c864b18",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "e5e756549c864b18",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtInitializePool",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "config",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "creator",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "baseMint",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "poolType",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "activationPoint",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "e432f655cb428625",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "e432f655cb428625",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtPartnerClaimPoolCreationFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "partner",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "creationFee",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "feeReceiver",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "aedf2c96916259c3",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "aedf2c96916259c3",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtPartnerMetadata",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "partnerMetadata",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "feeClaimer",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "c87f06370d200896",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "c87f06370d200896",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtPartnerWithdrawMigrationFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "fee",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "b5697f4308bb7839",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "b5697f4308bb7839",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtPartnerWithdrawSurplus",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "surplusAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "c3389809e8482316",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "c3389809e8482316",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtSwap",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "config",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tradeDirection",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "hasReferral",
+                "docs": [],
+                "type": {
+                  "kind": "booleanTypeNode",
+                  "size": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "params",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "swapParameters"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "swapResult",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "swapResult"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "amountIn",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "currentTimestamp",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1b3c15d58aaabb93",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1b3c15d58aaabb93",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtSwap2",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "config",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "tradeDirection",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "hasReferral",
+                "docs": [],
+                "type": {
+                  "kind": "booleanTypeNode",
+                  "size": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "swapParameters",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "swapParameters2"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "swapResult",
+                "docs": [],
+                "type": {
+                  "kind": "definedTypeLinkNode",
+                  "name": "swapResult2"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "quoteReserveAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "migrationThreshold",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "currentTimestamp",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "bd4233a826507599",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "bd4233a826507599",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtUpdatePoolCreator",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "creator",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "newCreator",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "6be1a5ed5b9ed5dc",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "6be1a5ed5b9ed5dc",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtVirtualPoolMetadata",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "virtualPoolMetadata",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "virtualPool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "bc12484cc35b264a",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "bc12484cc35b264a",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtWithdrawLeftover",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "leftoverReceiver",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "leftoverAmount",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "bfbd688f6f9c5ee5",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "bfbd688f6f9c5ee5",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "eventNode",
+        "name": "evtWithdrawMigrationFee",
+        "docs": [],
+        "data": {
+          "kind": "hiddenPrefixTypeNode",
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "pool",
+                "docs": [],
+                "type": {
+                  "kind": "publicKeyTypeNode"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "fee",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "flag",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": [
+            {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1acb5455a11764d6",
+                "encoding": "base16"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "fixedSizeTypeNode",
+                "size": 8,
+                "type": {
+                  "kind": "bytesTypeNode"
+                }
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "1acb5455a11764d6",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      }
+    ],
     "errors": [
       {
         "kind": "errorNode",
@@ -9267,1813 +11198,6 @@
         "message": "Invalid compounding parameters",
         "docs": [
           "InvalidCompoundingParameters: Invalid compounding parameters"
-        ]
-      }
-    ],
-    "events": [
-      {
-        "kind": "instructionNode",
-        "name": "evtClaimCreatorTradingFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "9ae4d7ca859bd68a",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenBaseAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenQuoteAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtClaimPoolCreationFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "956f952c8840af3e",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "receiver",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "creationFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtClaimProtocolFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "baf44bfbbc0d1921",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenBaseAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenQuoteAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtClaimProtocolLiquidityMigrationFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "51a8741fa1561b23",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenBaseAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenQuoteAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtClaimTradingFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "1a5375f05cca70fe",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenBaseAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenQuoteAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCloseClaimFeeOperator",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "6f2725376ed8c217",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "claimFeeOperator",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "operator",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCreateClaimFeeOperator",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "1506997844741cb1",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "operator",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCreateConfig",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "83cfb4aeb449a536",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "config",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "quoteMint",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "feeClaimer",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "owner",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "poolFees",
-            "docs": [],
-            "type": {
-              "kind": "definedTypeLinkNode",
-              "name": "poolFeeParameters"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "collectFeeMode",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "migrationOption",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "activationType",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenDecimal",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tokenType",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "partnerPermanentLockedLiquidityPercentage",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "partnerLiquidityPercentage",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "creatorPermanentLockedLiquidityPercentage",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "creatorLiquidityPercentage",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "swapBaseAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "migrationQuoteThreshold",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "migrationBaseAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "sqrtStartPrice",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u128",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "lockedVesting",
-            "docs": [],
-            "type": {
-              "kind": "definedTypeLinkNode",
-              "name": "lockedVestingParams"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "migrationFeeOption",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "fixedTokenSupplyFlag",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "preMigrationTokenSupply",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "postMigrationTokenSupply",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "curve",
-            "docs": [],
-            "type": {
-              "kind": "arrayTypeNode",
-              "item": {
-                "kind": "definedTypeLinkNode",
-                "name": "liquidityDistributionParameters"
-              },
-              "count": {
-                "kind": "prefixedCountNode",
-                "prefix": {
-                  "kind": "numberTypeNode",
-                  "format": "u32",
-                  "endian": "le"
-                }
-              }
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCreateConfigV2",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "a34a42bb77c31a90",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "config",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "quoteMint",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "feeClaimer",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "leftoverReceiver",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "configParameters",
-            "docs": [],
-            "type": {
-              "kind": "definedTypeLinkNode",
-              "name": "configParameters"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCreateMeteoraMigrationMetadata",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "63a7853fd68faf8b",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "virtualPool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCreatorWithdrawSurplus",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "9849150f4257359d",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "surplusAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtCurveComplete",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "e5e756549c864b18",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "config",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "baseReserve",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "quoteReserve",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtInitializePool",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "e432f655cb428625",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "config",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "creator",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "baseMint",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "poolType",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "activationPoint",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtPartnerClaimPoolCreationFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "aedf2c96916259c3",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "partner",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "creationFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "feeReceiver",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtPartnerMetadata",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "c87f06370d200896",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "partnerMetadata",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "feeClaimer",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtPartnerWithdrawMigrationFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "b5697f4308bb7839",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "fee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtPartnerWithdrawSurplus",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "c3389809e8482316",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "surplusAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtSwap",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "1b3c15d58aaabb93",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "config",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tradeDirection",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "hasReferral",
-            "docs": [],
-            "type": {
-              "kind": "booleanTypeNode",
-              "size": {
-                "kind": "numberTypeNode",
-                "format": "u8",
-                "endian": "le"
-              }
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "params",
-            "docs": [],
-            "type": {
-              "kind": "definedTypeLinkNode",
-              "name": "swapParameters"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "actualInputAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "outputAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "nextSqrtPrice",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u128",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tradingFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "protocolFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "referralFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "amountIn",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "currentTimestamp",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtSwap2",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "bd4233a826507599",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "config",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tradeDirection",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "hasReferral",
-            "docs": [],
-            "type": {
-              "kind": "booleanTypeNode",
-              "size": {
-                "kind": "numberTypeNode",
-                "format": "u8",
-                "endian": "le"
-              }
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "swapParameters",
-            "docs": [],
-            "type": {
-              "kind": "definedTypeLinkNode",
-              "name": "swapParameters2"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "includedFeeInputAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "excludedFeeInputAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "amountLeft",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "outputAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "nextSqrtPrice",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u128",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "tradingFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "protocolFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "referralFee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "quoteReserveAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "migrationThreshold",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "currentTimestamp",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtUpdatePoolCreator",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "6be1a5ed5b9ed5dc",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "creator",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "newCreator",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtVirtualPoolMetadata",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "bc12484cc35b264a",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "virtualPoolMetadata",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "virtualPool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtWithdrawLeftover",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "bfbd688f6f9c5ee5",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "leftoverReceiver",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "leftoverAmount",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
-        ]
-      },
-      {
-        "kind": "instructionNode",
-        "name": "evtWithdrawMigrationFee",
-        "docs": [],
-        "optionalAccountStrategy": "programId",
-        "accounts": [],
-        "arguments": [
-          {
-            "kind": "instructionArgumentNode",
-            "name": "discriminator",
-            "defaultValueStrategy": "omitted",
-            "docs": [],
-            "type": {
-              "kind": "fixedSizeTypeNode",
-              "size": 8,
-              "type": {
-                "kind": "bytesTypeNode"
-              }
-            },
-            "defaultValue": {
-              "kind": "bytesValueNode",
-              "data": "1acb5455a11764d6",
-              "encoding": "base16"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "pool",
-            "docs": [],
-            "type": {
-              "kind": "publicKeyTypeNode"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "fee",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u64",
-              "endian": "le"
-            }
-          },
-          {
-            "kind": "instructionArgumentNode",
-            "name": "flag",
-            "docs": [],
-            "type": {
-              "kind": "numberTypeNode",
-              "format": "u8",
-              "endian": "le"
-            }
-          }
-        ],
-        "discriminators": [
-          {
-            "kind": "fieldDiscriminatorNode",
-            "name": "discriminator",
-            "offset": 8
-          }
         ]
       }
     ]

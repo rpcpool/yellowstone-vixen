@@ -1536,9 +1536,9 @@ dependencies = [
 
 [[package]]
 name = "codama-errors"
-version = "0.6.5"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3e7948cb55c07d184959bd3f74689b91e9c756e7b6cb0ae49292e701517607f"
+checksum = "e83caa4ec55d965afe09e82f6cda234e7814fe87d0f62c03cd8e3e4fee7eb661"
 dependencies = [
  "cargo_toml",
  "proc-macro2",
@@ -1549,9 +1549,9 @@ dependencies = [
 
 [[package]]
 name = "codama-nodes"
-version = "0.6.5"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cc5c97c1cd85a08ae0b3e262544f406f134578c26e4ebef29e6f99ee3fee1b1"
+checksum = "4508aea0d3c9fae4f215bacdc65e5fa2f3dad62c3739cc687d3b64cbf5e8f5b3"
 dependencies = [
  "codama-errors",
  "codama-nodes-derive",
@@ -1562,9 +1562,9 @@ dependencies = [
 
 [[package]]
 name = "codama-nodes-derive"
-version = "0.6.5"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1dc6bf1ad55332c331151cc849986fbc26bd7c01c3e0b190b422e4432a46dc6"
+checksum = "c34bd7edd5cea2557d180a91dfc78d557e86209b6ee01f03a64b6d23abdcb393"
 dependencies = [
  "codama-errors",
  "codama-syn-helpers",
@@ -1576,9 +1576,9 @@ dependencies = [
 
 [[package]]
 name = "codama-syn-helpers"
-version = "0.6.5"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b48abf111be2d4bdc3d2294234d1a307b4111e69945779824d3bd20ba22f100"
+checksum = "c6a3af19123cf8f914f4ee3ff1d0841bc446673d148bc25ee9aece97d971a51e"
 dependencies = [
  "codama-errors",
  "derive_more 1.0.0",
@@ -6231,7 +6231,7 @@ dependencies = [
  "once_cell",
  "ring",
  "rustls-pki-types",
- "rustls-webpki 0.103.10",
+ "rustls-webpki 0.103.13",
  "subtle",
  "zeroize",
 ]
@@ -6281,7 +6281,7 @@ dependencies = [
  "rustls 0.23.35",
  "rustls-native-certs",
  "rustls-platform-verifier-android",
- "rustls-webpki 0.103.10",
+ "rustls-webpki 0.103.13",
  "security-framework 3.5.1",
  "security-framework-sys",
  "webpki-root-certs",
@@ -6306,9 +6306,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.10"
+version = "0.103.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df33b2b81ac578cabaf06b89b0631153a3f416b0a886e8a7a1707fb51abbd1ef"
+checksum = "61c429a8649f110dddef65e2a5ad240f747e85f7758a6bccc7e5777bd33f756e"
 dependencies = [
  "aws-lc-rs",
  "ring",
@@ -13829,7 +13829,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -13850,7 +13850,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-coordinator"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "bs58",
@@ -13874,7 +13874,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-meta-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -13887,7 +13887,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-bpf-loader-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "bincode",
  "prost 0.14.1",
@@ -13903,7 +13903,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14028,7 +14028,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jetstream-source"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "bincode",
@@ -14058,7 +14058,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-kafka-sink"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "futures 0.3.31",
  "mockito",
@@ -14077,7 +14077,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "futures 0.3.31",
  "regex",
@@ -14093,7 +14093,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -14108,7 +14108,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proc-macro"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -14125,7 +14125,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proto"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -14138,7 +14138,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-slot-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "tokio",
  "yellowstone-vixen-core",
@@ -14147,7 +14147,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14165,7 +14165,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "agave-snapshots",
  "async-trait",
@@ -14192,7 +14192,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14218,7 +14218,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "bs58",
  "bytemuck",
@@ -14241,7 +14241,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14260,7 +14260,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stream"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14284,7 +14284,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "bytesize 2.3.1",
@@ -14303,7 +14303,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-trait",
  "clap 4.5.53",

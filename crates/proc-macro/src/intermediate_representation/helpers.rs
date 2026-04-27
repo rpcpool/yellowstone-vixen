@@ -308,6 +308,10 @@ fn map_type(t: &codama_nodes::TypeNode) -> FieldTypeIr {
         T::Option(o) => map_type(&o.item),
         T::Array(a) => map_type(&a.item),
 
+        // Maps have no direct proto equivalent with complex key/value types;
+        // serialize the entire map as a raw byte blob.
+        T::Map(_) => FieldTypeIr::Scalar(ScalarIr::Bytes),
+
         other => panic!("map_type not implemented for {:?}", other),
     }
 }
@@ -330,5 +334,21 @@ pub fn unwrap_nested_struct(
 
         // If Codama adds more wrappers later, we want to fail loudly.
         other => panic!("Unsupported AccountNode.data wrapper: {:?}", other),
+    }
+}
+
+/// Unwrap a Codama TypeNode to the underlying StructTypeNode for events.
+///
+/// Event data is a TypeNode that may be wrapped in a HiddenPrefix (for the discriminator bytes).
+pub fn unwrap_event_struct(node: &codama_nodes::TypeNode) -> &codama_nodes::StructTypeNode {
+    use codama_nodes::TypeNode as T;
+
+    match node {
+        T::Struct(s) => s,
+        T::HiddenPrefix(w) => unwrap_event_struct(&w.r#type),
+        T::HiddenSuffix(w) => unwrap_event_struct(&w.r#type),
+        T::FixedSize(w) => unwrap_event_struct(&w.r#type),
+        T::SizePrefix(w) => unwrap_event_struct(&w.r#type),
+        other => panic!("Unsupported EventNode.data wrapper: {:?}", other),
     }
 }

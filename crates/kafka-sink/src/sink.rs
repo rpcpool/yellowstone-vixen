@@ -46,7 +46,7 @@ impl ParsedOutput {
 pub enum ParseOutcome {
     Parsed(ParsedOutput),
     Filtered,
-    Error,
+    Error(String),
 }
 
 // --- DynInstructionParser ---
@@ -92,7 +92,7 @@ where
                 Err(ParseError::Filtered) => ParseOutcome::Filtered,
                 Err(e) => {
                     tracing::warn!(?e, program = %self.program_name, "Error parsing instruction");
-                    ParseOutcome::Error
+                    ParseOutcome::Error(e.to_string())
                 },
             }
         })
@@ -152,7 +152,7 @@ where
                 Err(ParseError::Filtered) => ParseOutcome::Filtered,
                 Err(e) => {
                     tracing::warn!(?e, program = %self.program_name, "Error parsing account");
-                    ParseOutcome::Error
+                    ParseOutcome::Error(e.to_string())
                 },
             }
         })
@@ -316,6 +316,14 @@ pub struct KafkaSink {
     schema_ids: HashMap<String, RegisteredSchema>,
 }
 
+struct InstructionRecordContext<'a> {
+    slot: u64,
+    tx_index: u64,
+    signature: &'a [u8],
+    fee_payer: Option<&'a [u8]>,
+    path: &'a Path,
+}
+
 impl KafkaSink {
     pub fn topics(&self) -> Vec<&str> {
         collect_topics(&self.instruction_parsers, &self.account_parsers)
@@ -380,6 +388,13 @@ impl KafkaSink {
         ix: &InstructionUpdate,
     ) -> (Option<PreparedRecord>, bool) {
         let mut had_error = false;
+        let context = InstructionRecordContext {
+            slot,
+            tx_index,
+            signature,
+            fee_payer: Self::instruction_fee_payer(ix),
+            path,
+        };
 
         for parser in &self.instruction_parsers {
             // Only dispatch to parsers for this instruction's program.
@@ -389,27 +404,20 @@ impl KafkaSink {
 
             match parser.try_parse(ix).await {
                 ParseOutcome::Parsed(parsed) => {
-                    let record = self.prepare_decoded_instruction_record(
-                        slot,
-                        tx_index,
-                        signature,
-                        path,
-                        parsed,
-                        parser.topic(),
-                    );
+                    let record =
+                        self.prepare_decoded_instruction_record(&context, parsed, parser.topic());
 
                     return (Some(record), false);
                 },
                 ParseOutcome::Filtered => {
                     // Filtered means "not decoded" but not an error, so no fallback emission.
                 },
-                ParseOutcome::Error => {
+                ParseOutcome::Error(e) => {
                     had_error = true;
 
                     if let Some(fallback) = parser.fallback_topic() {
-                        let record = self.prepare_fallback_instruction_record(
-                            slot, tx_index, signature, path, ix, fallback,
-                        );
+                        let record =
+                            self.prepare_fallback_instruction_record(&context, ix, fallback, &e);
 
                         return (Some(record), true);
                     }
@@ -421,21 +429,18 @@ impl KafkaSink {
 
     /// Build the base headers and key shared by all instruction record types.
     fn instruction_base_record(
-        slot: u64,
-        tx_index: u64,
-        signature: &[u8],
-        path: &Path,
+        context: &InstructionRecordContext<'_>,
     ) -> (String, Vec<RecordHeader>) {
-        let sig_str = bs58::encode(signature).into_string();
+        let sig_str = bs58::encode(context.signature).into_string();
 
-        let path_str = format!("{path:?}");
+        let path_str = format!("{:?}", context.path);
 
-        let key = make_instruction_record_key(slot, &sig_str, &path_str);
+        let key = make_instruction_record_key(context.slot, &sig_str, &path_str);
 
         let headers = vec![
             RecordHeader {
                 key: "slot",
-                value: slot.to_string(),
+                value: context.slot.to_string(),
             },
             RecordHeader {
                 key: "signature",
@@ -443,13 +448,23 @@ impl KafkaSink {
             },
             RecordHeader {
                 key: "tx_index",
-                value: tx_index.to_string(),
+                value: context.tx_index.to_string(),
             },
             RecordHeader {
                 key: "ix_index",
                 value: path_str,
             },
         ];
+        let headers = if let Some(fee_payer) = context.fee_payer {
+            let mut headers = headers;
+            headers.push(RecordHeader {
+                key: "fee_payer",
+                value: bs58::encode(fee_payer).into_string(),
+            });
+            headers
+        } else {
+            headers
+        };
 
         (key, headers)
     }
@@ -473,16 +488,13 @@ impl KafkaSink {
 
     /// Prepare a record for a successfully decoded instruction.
     /// Payload is protobuf-encoded with Confluent wire format, metadata goes in Kafka headers.
-    pub fn prepare_decoded_instruction_record(
+    fn prepare_decoded_instruction_record(
         &self,
-        slot: u64,
-        tx_index: u64,
-        signature: &[u8],
-        path: &Path,
+        context: &InstructionRecordContext<'_>,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let (key, headers) = Self::instruction_base_record(slot, tx_index, signature, path);
+        let (key, headers) = Self::instruction_base_record(context);
 
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
@@ -498,16 +510,14 @@ impl KafkaSink {
 
     /// Prepare a fallback record for unrecognized instructions.
     /// Payload is plain JSON (`RawInstructionEvent`), metadata in headers.
-    pub fn prepare_fallback_instruction_record(
+    fn prepare_fallback_instruction_record(
         &self,
-        slot: u64,
-        tx_index: u64,
-        signature: &[u8],
-        path: &Path,
+        context: &InstructionRecordContext<'_>,
         ix: &InstructionUpdate,
         fallback_topic: &str,
+        error: &str,
     ) -> PreparedRecord {
-        let (key, mut headers) = Self::instruction_base_record(slot, tx_index, signature, path);
+        let (key, mut headers) = Self::instruction_base_record(context);
 
         let program_id = bs58::encode(ix.program).into_string();
 
@@ -516,10 +526,15 @@ impl KafkaSink {
             value: program_id.clone(),
         });
 
+        headers.push(RecordHeader {
+            key: "parse_error",
+            value: error.to_string(),
+        });
+
         let fallback_event = RawInstructionEvent {
-            slot,
-            signature: bs58::encode(signature).into_string(),
-            ix_index: format!("{path:?}"),
+            slot: context.slot,
+            signature: bs58::encode(context.signature).into_string(),
+            ix_index: format!("{:?}", context.path),
             program_id: program_id.clone(),
             data: bs58::encode(&ix.data).into_string(),
         };
@@ -535,6 +550,10 @@ impl KafkaSink {
             is_decoded: false,
             kind: RecordKind::Instruction,
         }
+    }
+
+    fn instruction_fee_payer(ix: &InstructionUpdate) -> Option<&[u8]> {
+        ix.shared.accounts.static_keys.first().map(Vec::as_slice)
     }
 
     // --- Subscription constructors ---
@@ -573,6 +592,7 @@ impl KafkaSink {
 
         let pubkey_str = bs58::encode(&inner.pubkey).into_string();
         let owner_str = bs58::encode(&inner.owner).into_string();
+        let write_version = inner.write_version;
 
         let mut had_error = false;
 
@@ -583,6 +603,7 @@ impl KafkaSink {
                         Some(self.prepare_decoded_account_record(
                             slot,
                             &pubkey_str,
+                            write_version,
                             &owner_str,
                             parsed,
                             parser.topic(),
@@ -593,7 +614,7 @@ impl KafkaSink {
                 ParseOutcome::Filtered => {
                     // Filtered means "not decoded" but not an error, so no fallback emission.
                 },
-                ParseOutcome::Error => {
+                ParseOutcome::Error(e) => {
                     had_error = true;
 
                     if let Some(fallback) = parser.fallback_topic() {
@@ -601,9 +622,11 @@ impl KafkaSink {
                             Some(self.prepare_fallback_account_record(
                                 slot,
                                 &pubkey_str,
+                                write_version,
                                 &owner_str,
                                 &inner.data,
                                 fallback,
+                                &e,
                             )),
                             true,
                         );
@@ -619,11 +642,12 @@ impl KafkaSink {
         &self,
         slot: u64,
         pubkey: &str,
+        write_version: u64,
         owner: &str,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let key = make_account_record_key(slot, pubkey);
+        let key = make_account_record_key(slot, pubkey, write_version);
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
         let headers = vec![
@@ -634,6 +658,10 @@ impl KafkaSink {
             RecordHeader {
                 key: "pubkey",
                 value: pubkey.to_string(),
+            },
+            RecordHeader {
+                key: "write_version",
+                value: write_version.to_string(),
             },
             RecordHeader {
                 key: "owner",
@@ -651,17 +679,20 @@ impl KafkaSink {
         }
     }
 
-    /// Prepare a fallback record for accounts that a parser filtered out.
+    /// Prepare a fallback record for accounts that failed to parse.
     /// Payload is plain JSON (`RawAccountEvent`), metadata in headers.
+    #[allow(clippy::too_many_arguments)]
     fn prepare_fallback_account_record(
         &self,
         slot: u64,
         pubkey: &str,
+        write_version: u64,
         owner: &str,
         data: &[u8],
         fallback_topic: &str,
+        error: &str,
     ) -> PreparedRecord {
-        let key = make_account_record_key(slot, pubkey);
+        let key = make_account_record_key(slot, pubkey, write_version);
 
         let headers = vec![
             RecordHeader {
@@ -673,14 +704,23 @@ impl KafkaSink {
                 value: pubkey.to_string(),
             },
             RecordHeader {
+                key: "write_version",
+                value: write_version.to_string(),
+            },
+            RecordHeader {
                 key: "owner",
                 value: owner.to_string(),
+            },
+            RecordHeader {
+                key: "parse_error",
+                value: error.to_string(),
             },
         ];
 
         let fallback_event = RawAccountEvent {
             slot,
             pubkey: pubkey.to_string(),
+            write_version,
             owner: owner.to_string(),
             data: bs58::encode(data).into_string(),
         };
@@ -711,7 +751,7 @@ mod tests {
 
     use prost::Message;
     use yellowstone_vixen_core::{
-        instruction::{InstructionShared, InstructionUpdate, Path},
+        instruction::{AccountKeys, InstructionShared, InstructionUpdate, Path},
         ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
     };
     #[cfg(feature = "experimental-account-parser")]
@@ -829,7 +869,14 @@ mod tests {
             program,
             accounts: vec![],
             data: vec![1, 2, 3],
-            shared: Arc::new(InstructionShared::default()),
+            shared: Arc::new(InstructionShared {
+                accounts: AccountKeys {
+                    static_keys: vec![vec![4_u8; 32]],
+                    dynamic_rw: vec![],
+                    dynamic_ro: vec![],
+                },
+                ..InstructionShared::default()
+            }),
             inner: vec![],
             path: Path::new_single(0),
             log_range: 0..0,
@@ -964,6 +1011,15 @@ mod tests {
                 .map(|header| header.value.as_str()),
             Some("7")
         );
+        let expected_fee_payer = yellowstone_vixen_core::bs58::encode([4_u8; 32]).into_string();
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "fee_payer")
+                .map(|header| header.value.as_str()),
+            Some(expected_fee_payer.as_str())
+        );
     }
 
     #[test]
@@ -1000,6 +1056,15 @@ mod tests {
                 .find(|header| header.key == "tx_index")
                 .map(|header| header.value.as_str()),
             Some("7")
+        );
+        let expected_fee_payer = yellowstone_vixen_core::bs58::encode([4_u8; 32]).into_string();
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "fee_payer")
+                .map(|header| header.value.as_str()),
+            Some(expected_fee_payer.as_str())
         );
     }
 
@@ -1039,14 +1104,17 @@ mod tests {
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected fallback record");
+        let pubkey = yellowstone_vixen_core::bs58::encode([2_u8; 32]).into_string();
 
         assert_eq!(record.topic, "failed.test.accounts");
+        assert_eq!(record.key, format!("100:{pubkey}:11"));
         assert!(had_error);
 
         let event: RawAccountEvent =
             serde_json::from_slice(&record.payload).expect("fallback payload must be JSON");
 
         assert_eq!(event.slot, 100);
+        assert_eq!(event.write_version, 11);
         assert_eq!(
             event.owner,
             yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
@@ -1074,9 +1142,15 @@ mod tests {
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected decoded record");
+        let pubkey = yellowstone_vixen_core::bs58::encode([2_u8; 32]).into_string();
 
         assert_eq!(record.topic, "test.accounts");
+        assert_eq!(record.key, format!("100:{pubkey}:11"));
         assert!(!had_error);
         assert!(record.is_decoded);
+        assert!(record
+            .headers
+            .iter()
+            .any(|header| { header.key == "write_version" && header.value == "11" }));
     }
 }
