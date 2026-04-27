@@ -12,7 +12,7 @@ resolver = "2"
 authors = ["Triton One", "ABK-Labs", "Jupiter Exchange"]
 edition = "2024"
 license = "MIT"
-version = "0.6.1"
+version = "0.6.2"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 publish = false
 
