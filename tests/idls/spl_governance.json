@@ -3566,14 +3566,6 @@
         "accounts": [
           {
             "kind": "instructionAccountNode",
-            "name": "realm",
-            "isWritable": false,
-            "isSigner": false,
-            "isOptional": false,
-            "docs": []
-          },
-          {
-            "kind": "instructionAccountNode",
             "name": "governance",
             "isWritable": true,
             "isSigner": true,

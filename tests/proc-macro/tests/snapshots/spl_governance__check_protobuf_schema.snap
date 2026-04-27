@@ -817,9 +817,8 @@ message Legacy3 {
 }
     
 message SetGovernanceConfigAccounts {
-  PublicKey realm = 1;
-  PublicKey governance = 2;
-  repeated PublicKey remaining_accounts = 3;
+  PublicKey governance = 1;
+  repeated PublicKey remaining_accounts = 2;
 }
     
 message SetGovernanceConfigArgs {

@@ -61,6 +61,104 @@ async fn parse_cast_vote_ix() {
     });
 }
 
+#[tokio::test]
+async fn parse_execute_transaction_ix() {
+    let parser = spl_governance::InstructionParser;
+
+    let ixs = tx_fixture!(
+        "3WUyNrFiDCV9g8yHgftMDYCN2j2CP2E6hkAGqKSnhK9QJUGFofhgUzvE712Ya3u92kioRJ1zsdkWAAC6CaJrcFKN",
+        &parser
+    );
+
+    let (accounts, args) = ixs
+        .iter()
+        .find_map(|ix| match &ix.as_ref()?.instruction {
+            spl_governance::instruction::Instruction::ExecuteTransaction { accounts, args } => {
+                Some((accounts, args))
+            },
+            _ => None,
+        })
+        .expect("no ExecuteTransaction found");
+
+    assert_eq!(
+        accounts,
+        &spl_governance::instruction::ExecuteTransactionAccounts {
+            governance: p("5Nn7GMBt1YrPWuzZ7nwY8kBsLkaUhCunnQM9nYaD1MZm"),
+            proposal: p("2vb2Gu5reR1CNeoCSKibZSZvYFyRLRGu4xseB8HQPfvm"),
+            proposal_transaction: p("Ho6j7WH8rqeWu3rsZE5dJhs2d1xAn7cJqsUyCjHjzgCz"),
+            instruction_program: p("GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw"),
+            remaining_accounts: Some(p("5Nn7GMBt1YrPWuzZ7nwY8kBsLkaUhCunnQM9nYaD1MZm")),
+        }
+    );
+
+    assert_eq!(
+        args,
+        &spl_governance::instruction::ExecuteTransactionArgs {}
+    );
+
+    let (set_accounts, set_args) = ixs
+        .iter()
+        .find_map(|ix| match &ix.as_ref()?.instruction {
+            spl_governance::instruction::Instruction::SetGovernanceConfig { accounts, args } => {
+                Some((accounts, args))
+            },
+            _ => None,
+        })
+        .expect("no SetGovernanceConfig found");
+
+    assert_eq!(
+        set_accounts,
+        &spl_governance::instruction::SetGovernanceConfigAccounts {
+            governance: p("5Nn7GMBt1YrPWuzZ7nwY8kBsLkaUhCunnQM9nYaD1MZm"),
+            remaining_accounts: vec![],
+        }
+    );
+
+    assert_eq!(
+        set_args,
+        &spl_governance::instruction::SetGovernanceConfigArgs {
+            config: spl_governance::GovernanceConfig {
+                community_vote_threshold: spl_governance::VoteThreshold {
+                    kind: spl_governance::vote_threshold::Kind::YesVotePercentage(
+                        spl_governance::VoteThresholdYesVotePercentage { item_0: 20 },
+                    ),
+                },
+                min_community_weight_to_create_proposal: 10_000_000_000_000,
+                transactions_hold_up_time: 0,
+                voting_base_time: 259_200,
+                community_vote_tipping: spl_governance::VoteTipping {
+                    kind: spl_governance::vote_tipping::Kind::Disabled(
+                        spl_governance::VoteTippingDisabled {},
+                    ),
+                },
+                council_vote_threshold: spl_governance::VoteThreshold {
+                    kind: spl_governance::vote_threshold::Kind::YesVotePercentage(
+                        spl_governance::VoteThresholdYesVotePercentage { item_0: 70 },
+                    ),
+                },
+                council_veto_vote_threshold: spl_governance::VoteThreshold {
+                    kind: spl_governance::vote_threshold::Kind::YesVotePercentage(
+                        spl_governance::VoteThresholdYesVotePercentage { item_0: 60 },
+                    ),
+                },
+                min_council_weight_to_create_proposal: 1,
+                council_vote_tipping: spl_governance::VoteTipping {
+                    kind: spl_governance::vote_tipping::Kind::Early(
+                        spl_governance::VoteTippingEarly {}
+                    ),
+                },
+                community_veto_vote_threshold: spl_governance::VoteThreshold {
+                    kind: spl_governance::vote_threshold::Kind::Disabled(
+                        spl_governance::VoteThresholdDisabled {},
+                    ),
+                },
+                voting_cool_off_time: 86_400,
+                deposit_exempt_proposal_count: 10,
+            },
+        }
+    );
+}
+
 ///
 /// Proto encode round-trip for instruction dispatch.
 ///
