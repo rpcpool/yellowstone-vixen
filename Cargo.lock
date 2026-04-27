@@ -1536,8 +1536,9 @@ dependencies = [
 
 [[package]]
 name = "codama-errors"
-version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e83caa4ec55d965afe09e82f6cda234e7814fe87d0f62c03cd8e3e4fee7eb661"
 dependencies = [
  "cargo_toml",
  "proc-macro2",
@@ -1548,8 +1549,9 @@ dependencies = [
 
 [[package]]
 name = "codama-nodes"
-version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4508aea0d3c9fae4f215bacdc65e5fa2f3dad62c3739cc687d3b64cbf5e8f5b3"
 dependencies = [
  "codama-errors",
  "codama-nodes-derive",
@@ -1560,8 +1562,9 @@ dependencies = [
 
 [[package]]
 name = "codama-nodes-derive"
-version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c34bd7edd5cea2557d180a91dfc78d557e86209b6ee01f03a64b6d23abdcb393"
 dependencies = [
  "codama-errors",
  "codama-syn-helpers",
@@ -1573,8 +1576,9 @@ dependencies = [
 
 [[package]]
 name = "codama-syn-helpers"
-version = "0.8.0"
-source = "git+https://github.com/the-orex/codama-rs?branch=handle-events#31ea36cfae03b4baecd09ce63f3dc69dcb2bc6aa"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6a3af19123cf8f914f4ee3ff1d0841bc446673d148bc25ee9aece97d971a51e"
 dependencies = [
  "codama-errors",
  "derive_more 1.0.0",
@@ -2037,7 +2041,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d162beedaa69905488a8da94f5ac3edb4dd4788b732fadb7bd120b2625c1976"
 dependencies = [
  "data-encoding",
- "syn 1.0.109",
+ "syn 2.0.111",
 ]
 
 [[package]]
