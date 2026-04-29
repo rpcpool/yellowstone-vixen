@@ -248,6 +248,53 @@ impl InstructionUpdate {
     #[must_use]
     pub fn log_messages(&self) -> &[String] { &self.shared.log_messages[self.log_range.clone()] }
 
+    /// Returns the log messages emitted *directly* by this instruction's
+    /// program, excluding lines emitted while an inner CPI is on top of the
+    /// invocation stack.
+    ///
+    /// Unlike [`log_messages`](Self::log_messages), which yields every line
+    /// inside this instruction's `invoke`/`success` window (including nested
+    /// CPI logs), this iterator skips any line that occurs while a deeper
+    /// `Program ... invoke [N+1]` is active.
+    ///
+    /// The opening `Program <id> invoke [N]` and closing
+    /// `Program <id> success`/`failed:` lines for this instruction are
+    /// included; the lines between them are filtered to depth-0 only.
+    ///
+    /// Example output for an outer Raydium ix that CPIs to the token program:
+    ///
+    /// ```text,ignore
+    /// Program RAY invoke [1]
+    /// Program log: ray_log: swap-base-in
+    /// Program log: ray_log: swap done
+    /// Program RAY success
+    /// ```
+    ///
+    /// (Token-program lines emitted at depth 2 are skipped.)
+    pub fn direct_log_messages(&self) -> impl Iterator<Item = &str> {
+        use crate::log_messages::{classify_log_line, LogLineKind};
+
+        let lines = self.log_messages();
+        let mut depth: u32 = 0;
+
+        lines.iter().filter_map(move |line| {
+            match classify_log_line(line) {
+                LogLineKind::Invoke => {
+                    depth += 1;
+                    // Only the outermost invoke (this instruction's own) is at
+                    // depth 1 after the increment; deeper invokes are skipped.
+                    (depth == 1).then_some(line.as_str())
+                }
+                LogLineKind::Close => {
+                    let was_outer = depth == 1;
+                    depth = depth.saturating_sub(1);
+                    was_outer.then_some(line.as_str())
+                }
+                LogLineKind::Other => (depth == 1).then_some(line.as_str()),
+            }
+        })
+    }
+
     /// Build instruction updates from a transaction update.
     ///
     /// # Errors
