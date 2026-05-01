@@ -236,7 +236,7 @@ pub struct AccountSlot<R> {
     pub failed_account_count: u64,
 }
 
-/// Clonable handle for handlers to send messages to the coordinator.
+/// Cloneable handle for handlers to send messages to the coordinator.
 #[derive(Clone)]
 pub struct CoordinatorHandle<R> {
     tx: tokio::sync::mpsc::Sender<CoordinatorMessage<R>>,
