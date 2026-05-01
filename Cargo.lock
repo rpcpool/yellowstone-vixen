@@ -3756,10 +3756,11 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "jetstreamer-firehose"
-version = "0.2.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54bc19adb42c467b655ac2a56ae6e144ebd39c020cbb852c3c383652adc100ec"
+checksum = "6e52ad086d65d20d26a24551a802a232dc993b2b7f67bacd608ec4ceb7336e96"
 dependencies = [
+ "ahash 0.8.12",
  "base64 0.22.1",
  "bincode",
  "cid",
@@ -3768,11 +3769,13 @@ dependencies = [
  "dashmap",
  "fnv",
  "futures-util",
+ "libc",
  "log",
  "multihash",
  "once_cell",
  "prost 0.11.9",
  "reqwest 0.12.24",
+ "ripget",
  "rseek",
  "serde",
  "serde_cbor",
@@ -3784,6 +3787,7 @@ dependencies = [
  "solana-hash 3.1.0",
  "solana-ledger",
  "solana-logger",
+ "solana-message 3.0.1",
  "solana-reward-info",
  "solana-rpc",
  "solana-runtime",
@@ -3794,15 +3798,17 @@ dependencies = [
  "solana-transaction-status",
  "thiserror 2.0.17",
  "tokio",
+ "url 2.5.7",
+ "wincode 0.2.5",
  "xxhash-rust",
  "zstd",
 ]
 
 [[package]]
 name = "jetstreamer-utils"
-version = "0.2.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7c413b93e384d56432ac80604fdf41282526cfeba7e6d8127b7d34a238ccc11"
+checksum = "8e6507e6c0f73a7e348eb84cb11708bdc4d4219dbed089b9223fecef1f0c1e0d"
 dependencies = [
  "ctrlc",
  "libc",
@@ -6103,6 +6109,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ripget"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5430a564aaf6e9413e9ad5f27b629211c0ef7c746bd034714de4e97cb312ef4"
+dependencies = [
+ "clap 4.5.53",
+ "env_logger",
+ "futures-util",
+ "indicatif 0.18.3",
+ "log",
+ "reqwest 0.12.24",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.17",
+]
+
+[[package]]
 name = "rocksdb"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7792,7 +7815,7 @@ dependencies = [
  "solana-signature 3.1.0",
  "solana-transaction",
  "solana-transaction-error 3.0.0",
- "wincode",
+ "wincode 0.1.2",
 ]
 
 [[package]]
@@ -8511,7 +8534,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "trees",
- "wincode",
+ "wincode 0.1.2",
 ]
 
 [[package]]
@@ -13278,7 +13301,20 @@ dependencies = [
  "quote",
  "solana-short-vec 3.0.0",
  "thiserror 2.0.17",
- "wincode-derive",
+ "wincode-derive 0.1.1",
+]
+
+[[package]]
+name = "wincode"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5cec722a3274e47d1524cbe2cea762f2c19d615bd9d73ada21db9066349d57e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "solana-short-vec 3.0.0",
+ "thiserror 2.0.17",
+ "wincode-derive 0.2.3",
 ]
 
 [[package]]
@@ -13286,6 +13322,18 @@ name = "wincode-derive"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a144d1576a6d65f9c80df1d531e12b197057c6f69a6e9d4a183fe61e9f135568"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
+]
+
+[[package]]
+name = "wincode-derive"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8961eb04054a1b2e026b5628e24da7e001350249a787e1a85aa961f33dc5f286"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -14048,7 +14096,7 @@ dependencies = [
  "solana-transaction-status",
  "thiserror 1.0.69",
  "tokio",
- "tokio-util 0.7.17",
+ "toml 0.8.23",
  "tracing",
  "yellowstone-grpc-client",
  "yellowstone-grpc-proto",

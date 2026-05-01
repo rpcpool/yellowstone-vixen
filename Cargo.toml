@@ -97,8 +97,8 @@ quote = "1"
 zstd = "^0.13.0"
 bytemuck = "^1"
 tokio-util = "0.7"
-jetstreamer-firehose = "0.2"
-jetstreamer-utils = "0.2"
+jetstreamer-firehose = "0.5"
+jetstreamer-utils = "0.5"
 warp = "0.3"
 
 yellowstone-block-machine = { version = "0.4.0" }
