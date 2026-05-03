@@ -505,7 +505,8 @@ impl SourceTrait for JetstreamSource {
 
         if config.buffer_window_bytes.is_some() && !config.sequential {
             tracing::warn!(
-                "`buffer_window_bytes` is set but `sequential` is false; the value will be ignored by jetstreamer-firehose"
+                "`buffer_window_bytes` is set but `sequential` is false; the value will be \
+                 ignored by jetstreamer-firehose"
             );
         }
 
