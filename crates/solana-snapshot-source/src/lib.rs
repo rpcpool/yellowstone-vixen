@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use solana_account::ReadableAccount;
 use solana_accounts_db::{
-    accounts_db::AccountsDbConfig,
+    accounts_db::{AccountsDbConfig, DEFAULT_MEMLOCK_BUDGET_SIZE},
     accounts_index::{ScanConfig, ScanOrder},
     is_loadable::IsLoadable,
     utils::create_all_accounts_run_and_snapshot_dirs,
@@ -59,6 +59,7 @@ impl SolanaSnapshot {
         let accounts_db_config = AccountsDbConfig {
             base_working_path: Some(ledger_path.clone()),
             skip_initial_hash_calc: true,
+            memlock_budget_size: DEFAULT_MEMLOCK_BUDGET_SIZE,
             ..AccountsDbConfig::default()
         };
 
@@ -316,7 +317,18 @@ impl SourceTrait for SolanaSnapshotSource {
             .map_err(|_| VixenError::Io(std::io::Error::other("Scan thread panicked")))
         });
 
-        let _ = scan_handle.await;
+        let scan_result = scan_handle
+            .await
+            .map_err(|_| VixenError::Io(std::io::Error::other("Scan task panicked")))?
+            .and_then(std::convert::identity);
+
+        if let Err(error) = scan_result {
+            let message = format!("{error:?}");
+            drop(sync_tx);
+            let _ = sender_handle.await;
+            let _ = status_tx.send(SourceExitStatus::Error(message));
+            return Err(error);
+        }
 
         tracing::info!("Snapshot source finished");
 
