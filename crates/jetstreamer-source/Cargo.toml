@@ -20,7 +20,6 @@ yellowstone-grpc-client = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 thiserror = { workspace = true }
-tokio-util = { workspace = true }
 prost-types = { workspace = true }
 
 jetstreamer-firehose = { workspace = true }
@@ -37,6 +36,9 @@ solana-transaction-status = { workspace = true }
 solana-runtime = { workspace = true }
 
 bincode = "1.3"
+
+[dev-dependencies]
+toml = { workspace = true }
 
 [features]
 default = []

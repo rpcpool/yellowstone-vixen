@@ -6,8 +6,7 @@ use std::sync::{
 use async_trait::async_trait;
 use futures_util::FutureExt;
 use jetstreamer_firehose::firehose::{firehose, BlockData, OnErrorFn, TransactionData};
-use tokio::sync::{mpsc, mpsc::Sender, oneshot};
-use tokio_util::sync::CancellationToken;
+use tokio::sync::{broadcast, mpsc, mpsc::Sender, oneshot};
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateBlock},
@@ -395,6 +394,20 @@ pub struct JetstreamSourceConfig {
     #[arg(long, env, default_value = "1000")]
     pub network_capacity_mb: usize,
 
+    /// Sequential mode: single firehose worker thread with parallel ripget
+    /// downloads. Required by upstream for the high-throughput (≥150k TPS)
+    /// path; `threads` then configures ripget range concurrency.
+    #[arg(long, env, default_value = "false")]
+    #[serde(default)]
+    pub sequential: bool,
+
+    /// Ripget hot/cold window size in bytes when `sequential` is enabled.
+    /// Ignored when `sequential` is `false`. `None` uses the upstream
+    /// default (`min(4 GiB, 15% of available RAM)`).
+    #[arg(long, env)]
+    #[serde(default)]
+    pub buffer_window_bytes: Option<u64>,
+
     /// Optional side channel for `PossibleLeaderSkipped` events.
     #[serde(skip)]
     #[arg(skip)]
@@ -470,6 +483,10 @@ impl SourceTrait for JetstreamSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
+    // TODO: plumb a caller-provided CancellationToken into `connect` once
+    // `SourceTrait::connect` exposes a cancellation hook. Upstream
+    // `firehose()` accepts an `Option<broadcast::Receiver<()>>` for
+    // cooperative shutdown but we currently pass `None`.
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
@@ -486,11 +503,15 @@ impl SourceTrait for JetstreamSource {
             expected.validate_matches(&ProcessEnvConfig::from_process())?;
         }
 
-        let cancellation_token = CancellationToken::new();
-        let token = cancellation_token.clone();
+        if config.buffer_window_bytes.is_some() && !config.sequential {
+            tracing::warn!(
+                "`buffer_window_bytes` is set but `sequential` is false; the value will be \
+                 ignored by jetstreamer-firehose"
+            );
+        }
 
         tokio::spawn(async move {
-            let exit_status = match Self::stream_loop(config, filters, tx.clone(), token).await {
+            let exit_status = match Self::stream_loop(config, filters, tx.clone()).await {
                 Ok(()) => SourceExitStatus::Completed,
                 Err(e) => {
                     error!(error = %e, "Jetstream streaming failed");
@@ -514,7 +535,6 @@ impl JetstreamSource {
         config: JetstreamSourceConfig,
         filters: Filters,
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
-        _cancellation_token: CancellationToken,
     ) -> Result<(), Error> {
         let (start_slot, end_slot) = config.range.to_slot_range().map_err(|e| {
             Error::SlotRangeResolution(format!(
@@ -551,6 +571,8 @@ impl JetstreamSource {
 
         let result = firehose(
             config.threads as u64,
+            config.sequential,
+            config.buffer_window_bytes,
             start_slot..end_slot,
             on_block,
             on_tx,
@@ -564,7 +586,7 @@ impl JetstreamSource {
                     >,
                 >,
             >,
-            None,
+            None::<broadcast::Receiver<()>>,
         )
         .await;
 
@@ -700,6 +722,8 @@ mod tests {
             network: "mainnet".to_string(),
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
+            sequential: false,
+            buffer_window_bytes: None,
             possible_leader_skipped_tx: None,
         };
 
@@ -709,6 +733,60 @@ mod tests {
         assert_eq!(source.config.archive_url, "https://api.old-faithful.net");
         assert_eq!(source.config.threads, 4);
         assert_eq!(source.config.network, "mainnet");
+        assert!(!source.config.sequential);
+        assert!(source.config.buffer_window_bytes.is_none());
+    }
+
+    #[test]
+    fn test_jetstream_source_config_toml_roundtrip() {
+        let toml_str = r#"
+archive-url = "https://api.old-faithful.net"
+threads = 4
+network = "mainnet"
+compact-index-base-url = "https://files.old-faithful.net"
+network-capacity-mb = 1000
+sequential = true
+buffer-window-bytes = 1073741824
+
+[range]
+slot-start = 1000
+slot-end = 2000
+"#;
+
+        let config: JetstreamSourceConfig =
+            toml::from_str(toml_str).expect("valid TOML for JetstreamSourceConfig");
+
+        assert!(config.sequential);
+        assert_eq!(config.buffer_window_bytes, Some(1_073_741_824));
+        assert_eq!(config.archive_url, "https://api.old-faithful.net");
+        assert_eq!(config.threads, 4);
+    }
+
+    #[test]
+    fn test_jetstream_source_config_toml_defaults_when_omitted() {
+        let toml_str = r#"
+archive-url = "https://api.old-faithful.net"
+threads = 4
+network = "mainnet"
+compact-index-base-url = "https://files.old-faithful.net"
+network-capacity-mb = 1000
+
+[range]
+slot-start = 1000
+slot-end = 2000
+"#;
+
+        let config: JetstreamSourceConfig = toml::from_str(toml_str)
+            .expect("TOML omitting `sequential` and `buffer-window-bytes` must deserialize");
+
+        assert!(
+            !config.sequential,
+            "`sequential` must default to false when absent from TOML"
+        );
+        assert!(
+            config.buffer_window_bytes.is_none(),
+            "`buffer_window_bytes` must default to None when absent from TOML"
+        );
     }
 
     #[tokio::test]

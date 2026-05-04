@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `yellowstone-vixen-jetstream-source`: bumped `jetstreamer-firehose` and `jetstreamer-utils` from `0.2` to `0.5` to track upstream Anza releases.
+- **Breaking** for downstream struct-literal construction: `JetstreamSourceConfig` gained two new fields, `sequential: bool` (default `false`) and `buffer_window_bytes: Option<u64>` (default `None`), to expose the upstream `sequential` / ripget buffer-window controls. Both are `#[serde(default)]` and have clap defaults, so deserialized and CLI-built configs are unaffected; only direct struct-literal initialization needs updating.
+
 ## [0.5.0] - 2025-09-15
 
 ### Added

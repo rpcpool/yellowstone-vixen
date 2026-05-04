@@ -2,11 +2,18 @@
 archive-url = "https://api.old-faithful.net"
 epoch = 885
 threads = 4
-reorder-buffer-size = 1000
-slot-timeout-secs = 30
 network = "mainnet"
 compact-index-base-url = "https://files.old-faithful.net"
 network-capacity-mb = 1000
+
+# Optional: enable upstream's sequential mode (single firehose worker thread
+# with parallel ripget downloads, ≥150k TPS). When disabled, `threads` controls
+# parallel firehose workers; when enabled, it controls ripget concurrency.
+# sequential = false
+
+# Optional: ripget hot/cold window size in bytes; only takes effect when
+# `sequential = true`. Defaults to min(4 GiB, 15% of available RAM).
+# buffer-window-bytes = 1073741824
 
 [filters]
 # Add any filters needed for parsing specific programs or accounts
