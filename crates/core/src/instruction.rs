@@ -284,12 +284,12 @@ impl InstructionUpdate {
                     // Only the outermost invoke (this instruction's own) is at
                     // depth 1 after the increment; deeper invokes are skipped.
                     (depth == 1).then_some(line.as_str())
-                }
+                },
                 LogLineKind::Close => {
                     let was_outer = depth == 1;
                     depth = depth.saturating_sub(1);
                     was_outer.then_some(line.as_str())
-                }
+                },
                 LogLineKind::Other => (depth == 1).then_some(line.as_str()),
             }
         })

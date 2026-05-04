@@ -117,15 +117,15 @@ fn assign_logs_recursive(logs: &[String], start: usize, ix: &mut InstructionUpda
                     continue;
                 }
                 depth += 1;
-            }
+            },
             LogLineKind::Close => {
                 depth -= 1;
                 if depth == 0 {
                     ix.log_range = invoke_pos..(pos + 1);
                     return pos + 1;
                 }
-            }
-            LogLineKind::Other => {}
+            },
+            LogLineKind::Other => {},
         }
 
         pos += 1;
@@ -175,7 +175,7 @@ pub fn split_logs_by_outer_ix(logs: &[String]) -> Vec<Vec<String>> {
             match kind {
                 LogLineKind::Invoke => depth += 1,
                 LogLineKind::Close => depth -= 1,
-                LogLineKind::Other => {}
+                LogLineKind::Other => {},
             }
 
             current.push(line.clone());
@@ -419,14 +419,11 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[0].direct_log_messages().collect();
-        assert_eq!(
-            direct,
-            vec![
-                "Program RAY invoke [1]",
-                "Program log: ray_log: recovering",
-                "Program RAY success",
-            ]
-        );
+        assert_eq!(direct, vec![
+            "Program RAY invoke [1]",
+            "Program log: ray_log: recovering",
+            "Program RAY success",
+        ]);
     }
 
     /// Iter 3: when an outer ix has no inner CPIs, `direct_log_messages()`
@@ -520,15 +517,12 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[0].direct_log_messages().collect();
-        assert_eq!(
-            direct,
-            vec![
-                "Program A invoke [1]",
-                "Program log: A start",
-                "Program log: A end",
-                "Program A success",
-            ]
-        );
+        assert_eq!(direct, vec![
+            "Program A invoke [1]",
+            "Program log: A start",
+            "Program log: A end",
+            "Program A success",
+        ]);
     }
 
     /// Iter 5: an outer ix's own `Program data:` line is preserved; an inner
@@ -616,14 +610,11 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[0].direct_log_messages().collect();
-        assert_eq!(
-            direct,
-            vec![
-                "Program OUTER invoke [1]",
-                "Program return: OUTER 8fo2SxUAAAA=",
-                "Program OUTER success",
-            ]
-        );
+        assert_eq!(direct, vec![
+            "Program OUTER invoke [1]",
+            "Program return: OUTER 8fo2SxUAAAA=",
+            "Program OUTER success",
+        ]);
     }
 
     /// Iter 7: adversarial input — a `Program log:` payload that contains
@@ -722,21 +713,48 @@ mod tests {
     #[test]
     fn classify_log_line_covers_all_shapes() {
         // Real invokes
-        assert_eq!(classify_log_line("Program ABC invoke [1]"), LogLineKind::Invoke);
-        assert_eq!(classify_log_line("Program ABC invoke [2]"), LogLineKind::Invoke);
-        assert_eq!(classify_log_line("Program ABC invoke [99]"), LogLineKind::Invoke);
+        assert_eq!(
+            classify_log_line("Program ABC invoke [1]"),
+            LogLineKind::Invoke
+        );
+        assert_eq!(
+            classify_log_line("Program ABC invoke [2]"),
+            LogLineKind::Invoke
+        );
+        assert_eq!(
+            classify_log_line("Program ABC invoke [99]"),
+            LogLineKind::Invoke
+        );
 
         // Real closes
         assert_eq!(classify_log_line("Program ABC success"), LogLineKind::Close);
-        assert_eq!(classify_log_line("Program ABC failed: custom error: 0x1"), LogLineKind::Close);
+        assert_eq!(
+            classify_log_line("Program ABC failed: custom error: 0x1"),
+            LogLineKind::Close
+        );
 
         // Runtime-tagged lines are Other regardless of payload
         assert_eq!(classify_log_line("Program log: hello"), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program log: invoke [2]"), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program log: success"), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program log: failed: nope"), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program data: BASE64=="), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program return: ABC abc="), LogLineKind::Other);
+        assert_eq!(
+            classify_log_line("Program log: invoke [2]"),
+            LogLineKind::Other
+        );
+        assert_eq!(
+            classify_log_line("Program log: success"),
+            LogLineKind::Other
+        );
+        assert_eq!(
+            classify_log_line("Program log: failed: nope"),
+            LogLineKind::Other
+        );
+        assert_eq!(
+            classify_log_line("Program data: BASE64=="),
+            LogLineKind::Other
+        );
+        assert_eq!(
+            classify_log_line("Program return: ABC abc="),
+            LogLineKind::Other
+        );
 
         // Compute-units consumption line is Other (not a close)
         assert_eq!(
@@ -750,8 +768,17 @@ mod tests {
         assert_eq!(classify_log_line("Program "), LogLineKind::Other);
 
         // Malformed invoke variants are Other
-        assert_eq!(classify_log_line("Program ABC invoke []"), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program ABC invoke [abc]"), LogLineKind::Other);
-        assert_eq!(classify_log_line("Program ABC invoke 1"), LogLineKind::Other);
+        assert_eq!(
+            classify_log_line("Program ABC invoke []"),
+            LogLineKind::Other
+        );
+        assert_eq!(
+            classify_log_line("Program ABC invoke [abc]"),
+            LogLineKind::Other
+        );
+        assert_eq!(
+            classify_log_line("Program ABC invoke 1"),
+            LogLineKind::Other
+        );
     }
 }
