@@ -708,6 +708,85 @@ mod tests {
         );
     }
 
+    /// Non-regression for tx
+    /// `bLyrwGENd4hog5k5aVbtxz5jrpDmUEQR62GyWzbJHdjwdgPTz8LhY5WV9dUjX6zsHycUaigFLxaj4LYZ6QBQQz9`:
+    /// an order-book program emits `Program log: Order failed: ...` while at
+    /// depth 1, then closes with `success`. A substring-based parser would
+    /// see `failed:` and pop depth too early, dropping the trailing
+    /// `Program data:` payload from the ix's direct view.
+    #[test]
+    fn direct_log_messages_ignores_failed_in_program_log_payload() {
+        let logs: Vec<String> = vec![
+            "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+            "Program ComputeBudget111111111111111111111111111111 success",
+            "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+            "Program ComputeBudget111111111111111111111111111111 success",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp invoke [1]",
+            "Program log: Instruction: FillBuyOrder",
+            "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
+            "Program data: PLOdAKSDJuxLZszcvjrux1i3dIf1tgBQ0nQMjTMRL5pL1u21Iyqb6SA",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute units",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp success",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+
+        // Classifier-level guarantee.
+        assert_eq!(
+            classify_log_line(
+                "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
+            ),
+            LogLineKind::Other,
+            "`Program log:` payload starting with `failed:` must not be a Close",
+        );
+
+        // split_logs_by_outer_ix groups all 10 lines into 3 outer ixs (2 + 2 + 6).
+        let groups = split_logs_by_outer_ix(&logs);
+        assert_eq!(groups.len(), 3);
+        assert_eq!(groups[2].len(), 6);
+        assert_eq!(
+            groups[2][2],
+            "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
+        );
+        assert_eq!(
+            groups[2][5],
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp success",
+        );
+
+        // assign_log_messages + direct_log_messages: the depth-1 `failed:`
+        // payload, the trailing `Program data:`, and the consumed-units line
+        // must all survive on the FillBuyOrder ix.
+        let shared = Arc::new(InstructionShared {
+            log_messages: logs.clone(),
+            ..InstructionShared::default()
+        });
+
+        let mut outer = (0..3u8)
+            .map(|i| InstructionUpdate {
+                program: KeyBytes::new([i + 1; 32]),
+                accounts: vec![],
+                data: vec![],
+                shared: Arc::clone(&shared),
+                inner: vec![],
+                path: Path::new_single(i.into()),
+                log_range: 0..0,
+            })
+            .collect::<Vec<_>>();
+
+        assign_log_messages(&shared.log_messages, &mut outer);
+
+        let direct: Vec<&str> = outer[2].direct_log_messages().collect();
+        assert_eq!(direct, vec![
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp invoke [1]",
+            "Program log: Instruction: FillBuyOrder",
+            "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
+            "Program data: PLOdAKSDJuxLZszcvjrux1i3dIf1tgBQ0nQMjTMRL5pL1u21Iyqb6SA",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute units",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp success",
+        ]);
+    }
+
     /// Direct unit coverage of the line classifier. Pins the structural
     /// rules independent of the higher-level filtering logic.
     #[test]
