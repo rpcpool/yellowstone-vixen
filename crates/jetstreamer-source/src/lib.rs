@@ -959,6 +959,10 @@ mod convert {
                         _ => proto::RewardType::Unspecified as i32,
                     },
                     commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
+                    commission_bps: r
+                        .commission
+                        .map(|c| (u16::from(c) * 100).to_string())
+                        .unwrap_or_default(),
                 })
                 .collect(),
             loaded_writable_addresses: meta
