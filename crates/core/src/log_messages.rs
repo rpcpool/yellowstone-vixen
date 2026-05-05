@@ -725,7 +725,8 @@ mod tests {
             "Program log: Instruction: FillBuyOrder",
             "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
             "Program data: PLOdAKSDJuxLZszcvjrux1i3dIf1tgBQ0nQMjTMRL5pL1u21Iyqb6SA",
-            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute units",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute \
+             units",
             "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp success",
         ]
         .into_iter()
@@ -782,7 +783,8 @@ mod tests {
             "Program log: Instruction: FillBuyOrder",
             "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
             "Program data: PLOdAKSDJuxLZszcvjrux1i3dIf1tgBQ0nQMjTMRL5pL1u21Iyqb6SA",
-            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute units",
+            "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute \
+             units",
             "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp success",
         ]);
     }
