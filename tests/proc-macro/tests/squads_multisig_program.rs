@@ -98,15 +98,20 @@ async fn schema_matches_encoder_for_vault_transaction_create() {
 
     // Encode through the producer-side prost impl (what the kafka sink emits).
     let mut buf = Vec::new();
+
     instructions.encode(&mut buf).expect("encode failed");
+
     assert!(!buf.is_empty());
 
     // Build a descriptor pool from PROTOBUF_SCHEMA (what consumers see) and
     // try to decode the wire bytes against the schema's `Instructions` type.
     let fdp = protox_parse::parse("schema.proto", squads_multisig_program::PROTOBUF_SCHEMA)
         .expect("schema parse failed");
+
     let mut pool = DescriptorPool::new();
-    pool.add_file_descriptor_proto(fdp).expect("descriptor add failed");
+
+    pool.add_file_descriptor_proto(fdp)
+        .expect("descriptor add failed");
 
     let inst_desc = pool
         .get_message_by_name("squads_multisig_program.Instructions")
@@ -122,5 +127,6 @@ async fn schema_matches_encoder_for_vault_transaction_create() {
         .fields()
         .find(|(f, _)| f.name() == "vault_transaction_create")
         .expect("vault_transaction_create variant missing in decoded payload");
+
     assert_eq!(oneof_field.0.number(), 17);
 }
