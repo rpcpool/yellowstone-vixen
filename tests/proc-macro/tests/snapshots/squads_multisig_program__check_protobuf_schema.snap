@@ -1,0 +1,955 @@
+---
+source: tests/proc-macro/tests/squads_multisig_program.rs
+assertion_line: 14
+expression: "squads_multisig_program::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package squads_multisig_program;
+
+message PublicKey {
+  bytes value = 1;
+}
+    
+message ProposalVoteArgs {
+  optional string memo = 1;
+}
+    
+message VaultTransactionCreateArgs {
+  uint32 vault_index = 1;
+  uint32 ephemeral_signers = 2;
+  bytes transaction_message = 3;
+  optional string memo = 4;
+}
+    
+message Member {
+  PublicKey key = 1;
+  Permissions permissions = 2;
+}
+    
+message Permissions {
+  uint32 mask = 1;
+}
+    
+message VaultTransactionMessage {
+  uint32 num_signers = 1;
+  uint32 num_writable_signers = 2;
+  uint32 num_writable_non_signers = 3;
+  repeated PublicKey account_keys = 4;
+  repeated MultisigCompiledInstruction instructions = 5;
+  repeated MultisigMessageAddressTableLookup address_table_lookups = 6;
+}
+    
+message MultisigCompiledInstruction {
+  uint32 program_id_index = 1;
+  bytes account_indexes = 2;
+  bytes data = 3;
+}
+    
+message MultisigMessageAddressTableLookup {
+  PublicKey account_key = 1;
+  bytes writable_indexes = 2;
+  bytes readonly_indexes = 3;
+}
+    
+message VoteApprove {
+}
+    
+message VoteReject {
+}
+    
+message VoteCancel {
+}
+    
+message ConfigActionAddMember {
+  Member new_member = 1;
+}
+    
+message ConfigActionRemoveMember {
+  PublicKey old_member = 1;
+}
+    
+message ConfigActionChangeThreshold {
+  uint32 new_threshold = 1;
+}
+    
+message ConfigActionSetTimeLock {
+  uint32 new_time_lock = 1;
+}
+    
+message ConfigActionAddSpendingLimit {
+  PublicKey create_key = 1;
+  uint32 vault_index = 2;
+  PublicKey mint = 3;
+  uint64 amount = 4;
+  Period period = 5;
+  repeated PublicKey members = 6;
+  repeated PublicKey destinations = 7;
+}
+    
+message ConfigActionRemoveSpendingLimit {
+  PublicKey spending_limit = 1;
+}
+    
+message ConfigActionSetRentCollector {
+  optional PublicKey new_rent_collector = 1;
+}
+    
+message ProposalStatusDraft {
+  int64 timestamp = 1;
+}
+    
+message ProposalStatusActive {
+  int64 timestamp = 1;
+}
+    
+message ProposalStatusRejected {
+  int64 timestamp = 1;
+}
+    
+message ProposalStatusApproved {
+  int64 timestamp = 1;
+}
+    
+message ProposalStatusExecuting {
+}
+    
+message ProposalStatusExecuted {
+  int64 timestamp = 1;
+}
+    
+message ProposalStatusCancelled {
+  int64 timestamp = 1;
+}
+    
+message PeriodOneTime {
+}
+    
+message PeriodDay {
+}
+    
+message PeriodWeek {
+}
+    
+message PeriodMonth {
+}
+    
+message Batch {
+  PublicKey multisig = 1;
+  PublicKey creator = 2;
+  uint64 index = 3;
+  uint32 bump = 4;
+  uint32 vault_index = 5;
+  uint32 vault_bump = 6;
+  uint32 size = 7;
+  uint32 executed_transaction_index = 8;
+}
+    
+message VaultBatchTransaction {
+  uint32 bump = 1;
+  bytes ephemeral_signer_bumps = 2;
+  VaultTransactionMessage message = 3;
+}
+    
+message ConfigTransaction {
+  PublicKey multisig = 1;
+  PublicKey creator = 2;
+  uint64 index = 3;
+  uint32 bump = 4;
+  repeated ConfigAction actions = 5;
+}
+    
+message Multisig {
+  PublicKey create_key = 1;
+  PublicKey config_authority = 2;
+  uint32 threshold = 3;
+  uint32 time_lock = 4;
+  uint64 transaction_index = 5;
+  uint64 stale_transaction_index = 6;
+  optional PublicKey rent_collector = 7;
+  uint32 bump = 8;
+  repeated Member members = 9;
+}
+    
+message ProgramConfig {
+  PublicKey authority = 1;
+  uint64 multisig_creation_fee = 2;
+  PublicKey treasury = 3;
+  bytes reserved = 4;
+}
+    
+message Proposal {
+  PublicKey multisig = 1;
+  uint64 transaction_index = 2;
+  ProposalStatus status = 3;
+  uint32 bump = 4;
+  repeated PublicKey approved = 5;
+  repeated PublicKey rejected = 6;
+  repeated PublicKey cancelled = 7;
+}
+    
+message SpendingLimit {
+  PublicKey multisig = 1;
+  PublicKey create_key = 2;
+  uint32 vault_index = 3;
+  PublicKey mint = 4;
+  uint64 amount = 5;
+  Period period = 6;
+  uint64 remaining_amount = 7;
+  int64 last_reset = 8;
+  uint32 bump = 9;
+  repeated PublicKey members = 10;
+  repeated PublicKey destinations = 11;
+}
+    
+message TransactionBuffer {
+  PublicKey multisig = 1;
+  PublicKey creator = 2;
+  uint32 buffer_index = 3;
+  uint32 vault_index = 4;
+  bytes final_buffer_hash = 5;
+  uint32 final_buffer_size = 6;
+  bytes buffer = 7;
+}
+    
+message VaultTransaction {
+  PublicKey multisig = 1;
+  PublicKey creator = 2;
+  uint64 index = 3;
+  uint32 bump = 4;
+  uint32 vault_index = 5;
+  uint32 vault_bump = 6;
+  bytes ephemeral_signer_bumps = 7;
+  VaultTransactionMessage message = 8;
+}
+    
+message ProgramConfigInitAccounts {
+  PublicKey program_config = 1;
+  PublicKey initializer = 2;
+  PublicKey system_program = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message ProgramConfigInitArgs {
+  PublicKey authority = 1;
+  uint64 multisig_creation_fee = 2;
+  PublicKey treasury = 3;
+}
+    
+message ProgramConfigInit {
+  ProgramConfigInitAccounts accounts = 1;
+  ProgramConfigInitArgs args = 2;
+}
+    
+message ProgramConfigSetAuthorityAccounts {
+  PublicKey program_config = 1;
+  PublicKey authority = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message ProgramConfigSetAuthorityArgs {
+  PublicKey new_authority = 1;
+}
+    
+message ProgramConfigSetAuthority {
+  ProgramConfigSetAuthorityAccounts accounts = 1;
+  ProgramConfigSetAuthorityArgs args = 2;
+}
+    
+message ProgramConfigSetMultisigCreationFeeAccounts {
+  PublicKey program_config = 1;
+  PublicKey authority = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message ProgramConfigSetMultisigCreationFeeArgs {
+  uint64 new_multisig_creation_fee = 1;
+}
+    
+message ProgramConfigSetMultisigCreationFee {
+  ProgramConfigSetMultisigCreationFeeAccounts accounts = 1;
+  ProgramConfigSetMultisigCreationFeeArgs args = 2;
+}
+    
+message ProgramConfigSetTreasuryAccounts {
+  PublicKey program_config = 1;
+  PublicKey authority = 2;
+  repeated PublicKey remaining_accounts = 3;
+}
+    
+message ProgramConfigSetTreasuryArgs {
+  PublicKey new_treasury = 1;
+}
+    
+message ProgramConfigSetTreasury {
+  ProgramConfigSetTreasuryAccounts accounts = 1;
+  ProgramConfigSetTreasuryArgs args = 2;
+}
+    
+message MultisigCreateAccounts {
+  PublicKey null = 1;
+  repeated PublicKey remaining_accounts = 2;
+}
+    
+message MultisigCreateArgs {
+}
+    
+message MultisigCreate {
+  MultisigCreateAccounts accounts = 1;
+  MultisigCreateArgs args = 2;
+}
+    
+message MultisigCreateV2Accounts {
+  PublicKey program_config = 1;
+  PublicKey treasury = 2;
+  PublicKey multisig = 3;
+  PublicKey create_key = 4;
+  PublicKey creator = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message MultisigCreateV2Args {
+  optional PublicKey config_authority = 1;
+  uint32 threshold = 2;
+  repeated Member members = 3;
+  uint32 time_lock = 4;
+  optional PublicKey rent_collector = 5;
+  optional string memo = 6;
+}
+    
+message MultisigCreateV2 {
+  MultisigCreateV2Accounts accounts = 1;
+  MultisigCreateV2Args args = 2;
+}
+    
+message MultisigAddMemberAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  optional PublicKey rent_payer = 3;
+  optional PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigAddMemberArgs {
+  Member new_member = 1;
+  optional string memo = 2;
+}
+    
+message MultisigAddMember {
+  MultisigAddMemberAccounts accounts = 1;
+  MultisigAddMemberArgs args = 2;
+}
+    
+message MultisigRemoveMemberAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  optional PublicKey rent_payer = 3;
+  optional PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigRemoveMemberArgs {
+  PublicKey old_member = 1;
+  optional string memo = 2;
+}
+    
+message MultisigRemoveMember {
+  MultisigRemoveMemberAccounts accounts = 1;
+  MultisigRemoveMemberArgs args = 2;
+}
+    
+message MultisigSetTimeLockAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  optional PublicKey rent_payer = 3;
+  optional PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigSetTimeLockArgs {
+  uint32 time_lock = 1;
+  optional string memo = 2;
+}
+    
+message MultisigSetTimeLock {
+  MultisigSetTimeLockAccounts accounts = 1;
+  MultisigSetTimeLockArgs args = 2;
+}
+    
+message MultisigChangeThresholdAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  optional PublicKey rent_payer = 3;
+  optional PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigChangeThresholdArgs {
+  uint32 new_threshold = 1;
+  optional string memo = 2;
+}
+    
+message MultisigChangeThreshold {
+  MultisigChangeThresholdAccounts accounts = 1;
+  MultisigChangeThresholdArgs args = 2;
+}
+    
+message MultisigSetConfigAuthorityAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  optional PublicKey rent_payer = 3;
+  optional PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigSetConfigAuthorityArgs {
+  PublicKey config_authority = 1;
+  optional string memo = 2;
+}
+    
+message MultisigSetConfigAuthority {
+  MultisigSetConfigAuthorityAccounts accounts = 1;
+  MultisigSetConfigAuthorityArgs args = 2;
+}
+    
+message MultisigSetRentCollectorAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  optional PublicKey rent_payer = 3;
+  optional PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigSetRentCollectorArgs {
+  optional PublicKey rent_collector = 1;
+  optional string memo = 2;
+}
+    
+message MultisigSetRentCollector {
+  MultisigSetRentCollectorAccounts accounts = 1;
+  MultisigSetRentCollectorArgs args = 2;
+}
+    
+message MultisigAddSpendingLimitAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  PublicKey spending_limit = 3;
+  PublicKey rent_payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message MultisigAddSpendingLimitArgs {
+  PublicKey create_key = 1;
+  uint32 vault_index = 2;
+  PublicKey mint = 3;
+  uint64 amount = 4;
+  Period period = 5;
+  repeated PublicKey members = 6;
+  repeated PublicKey destinations = 7;
+  optional string memo = 8;
+}
+    
+message MultisigAddSpendingLimit {
+  MultisigAddSpendingLimitAccounts accounts = 1;
+  MultisigAddSpendingLimitArgs args = 2;
+}
+    
+message MultisigRemoveSpendingLimitAccounts {
+  PublicKey multisig = 1;
+  PublicKey config_authority = 2;
+  PublicKey spending_limit = 3;
+  PublicKey rent_collector = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message MultisigRemoveSpendingLimitArgs {
+  optional string memo = 1;
+}
+    
+message MultisigRemoveSpendingLimit {
+  MultisigRemoveSpendingLimitAccounts accounts = 1;
+  MultisigRemoveSpendingLimitArgs args = 2;
+}
+    
+message ConfigTransactionCreateAccounts {
+  PublicKey multisig = 1;
+  PublicKey transaction = 2;
+  PublicKey creator = 3;
+  PublicKey rent_payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message ConfigTransactionCreateArgs {
+  repeated ConfigAction actions = 1;
+  optional string memo = 2;
+}
+    
+message ConfigTransactionCreate {
+  ConfigTransactionCreateAccounts accounts = 1;
+  ConfigTransactionCreateArgs args = 2;
+}
+    
+message ConfigTransactionExecuteAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  PublicKey transaction = 4;
+  optional PublicKey rent_payer = 5;
+  optional PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message ConfigTransactionExecuteArgs {
+}
+    
+message ConfigTransactionExecute {
+  ConfigTransactionExecuteAccounts accounts = 1;
+  ConfigTransactionExecuteArgs args = 2;
+}
+    
+message VaultTransactionCreateAccounts {
+  PublicKey multisig = 1;
+  PublicKey transaction = 2;
+  PublicKey creator = 3;
+  PublicKey rent_payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message VaultTransactionCreate {
+  VaultTransactionCreateAccounts accounts = 1;
+  VaultTransactionCreateArgs args = 2;
+}
+    
+message TransactionBufferCreateAccounts {
+  PublicKey multisig = 1;
+  PublicKey transaction_buffer = 2;
+  PublicKey creator = 3;
+  PublicKey rent_payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message TransactionBufferCreateArgs {
+  uint32 buffer_index = 1;
+  uint32 vault_index = 2;
+  bytes final_buffer_hash = 3;
+  uint32 final_buffer_size = 4;
+  bytes buffer = 5;
+}
+    
+message TransactionBufferCreate {
+  TransactionBufferCreateAccounts accounts = 1;
+  TransactionBufferCreateArgs args = 2;
+}
+    
+message TransactionBufferCloseAccounts {
+  PublicKey multisig = 1;
+  PublicKey transaction_buffer = 2;
+  PublicKey creator = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message TransactionBufferCloseArgs {
+}
+    
+message TransactionBufferClose {
+  TransactionBufferCloseAccounts accounts = 1;
+  TransactionBufferCloseArgs args = 2;
+}
+    
+message TransactionBufferExtendAccounts {
+  PublicKey multisig = 1;
+  PublicKey transaction_buffer = 2;
+  PublicKey creator = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message TransactionBufferExtendArgs {
+  bytes buffer = 1;
+}
+    
+message TransactionBufferExtend {
+  TransactionBufferExtendAccounts accounts = 1;
+  TransactionBufferExtendArgs args = 2;
+}
+    
+message VaultTransactionCreateFromBufferAccounts {
+  PublicKey vault_transaction_create_multisig = 1;
+  PublicKey vault_transaction_create_transaction = 2;
+  PublicKey vault_transaction_create_creator = 3;
+  PublicKey vault_transaction_create_rent_payer = 4;
+  PublicKey vault_transaction_create_system_program = 5;
+  PublicKey transaction_buffer = 6;
+  PublicKey creator = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message VaultTransactionCreateFromBufferArgs {
+  VaultTransactionCreateArgs args = 1;
+}
+    
+message VaultTransactionCreateFromBuffer {
+  VaultTransactionCreateFromBufferAccounts accounts = 1;
+  VaultTransactionCreateFromBufferArgs args = 2;
+}
+    
+message VaultTransactionExecuteAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey transaction = 3;
+  PublicKey member = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message VaultTransactionExecuteArgs {
+}
+    
+message VaultTransactionExecute {
+  VaultTransactionExecuteAccounts accounts = 1;
+  VaultTransactionExecuteArgs args = 2;
+}
+    
+message BatchCreateAccounts {
+  PublicKey multisig = 1;
+  PublicKey batch = 2;
+  PublicKey creator = 3;
+  PublicKey rent_payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message BatchCreateArgs {
+  uint32 vault_index = 1;
+  optional string memo = 2;
+}
+    
+message BatchCreate {
+  BatchCreateAccounts accounts = 1;
+  BatchCreateArgs args = 2;
+}
+    
+message BatchAddTransactionAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey batch = 3;
+  PublicKey transaction = 4;
+  PublicKey member = 5;
+  PublicKey rent_payer = 6;
+  PublicKey system_program = 7;
+  repeated PublicKey remaining_accounts = 8;
+}
+    
+message BatchAddTransactionArgs {
+  uint32 ephemeral_signers = 1;
+  bytes transaction_message = 2;
+}
+    
+message BatchAddTransaction {
+  BatchAddTransactionAccounts accounts = 1;
+  BatchAddTransactionArgs args = 2;
+}
+    
+message BatchExecuteTransactionAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  PublicKey batch = 4;
+  PublicKey transaction = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message BatchExecuteTransactionArgs {
+}
+    
+message BatchExecuteTransaction {
+  BatchExecuteTransactionAccounts accounts = 1;
+  BatchExecuteTransactionArgs args = 2;
+}
+    
+message ProposalCreateAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey creator = 3;
+  PublicKey rent_payer = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message ProposalCreateArgs {
+  uint64 transaction_index = 1;
+  bool draft = 2;
+}
+    
+message ProposalCreate {
+  ProposalCreateAccounts accounts = 1;
+  ProposalCreateArgs args = 2;
+}
+    
+message ProposalActivateAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message ProposalActivateArgs {
+}
+    
+message ProposalActivate {
+  ProposalActivateAccounts accounts = 1;
+  ProposalActivateArgs args = 2;
+}
+    
+message ProposalApproveAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message ProposalApproveArgs {
+  ProposalVoteArgs args = 1;
+}
+    
+message ProposalApprove {
+  ProposalApproveAccounts accounts = 1;
+  ProposalApproveArgs args = 2;
+}
+    
+message ProposalRejectAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message ProposalRejectArgs {
+  ProposalVoteArgs args = 1;
+}
+    
+message ProposalReject {
+  ProposalRejectAccounts accounts = 1;
+  ProposalRejectArgs args = 2;
+}
+    
+message ProposalCancelAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  repeated PublicKey remaining_accounts = 4;
+}
+    
+message ProposalCancelArgs {
+  ProposalVoteArgs args = 1;
+}
+    
+message ProposalCancel {
+  ProposalCancelAccounts accounts = 1;
+  ProposalCancelArgs args = 2;
+}
+    
+message ProposalCancelV2Accounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey proposal = 3;
+  PublicKey system_program = 4;
+  repeated PublicKey remaining_accounts = 5;
+}
+    
+message ProposalCancelV2Args {
+  ProposalVoteArgs args = 1;
+}
+    
+message ProposalCancelV2 {
+  ProposalCancelV2Accounts accounts = 1;
+  ProposalCancelV2Args args = 2;
+}
+    
+message SpendingLimitUseAccounts {
+  PublicKey multisig = 1;
+  PublicKey member = 2;
+  PublicKey spending_limit = 3;
+  PublicKey vault = 4;
+  PublicKey destination = 5;
+  optional PublicKey system_program = 6;
+  optional PublicKey mint = 7;
+  optional PublicKey vault_token_account = 8;
+  optional PublicKey destination_token_account = 9;
+  optional PublicKey token_program = 10;
+  repeated PublicKey remaining_accounts = 11;
+}
+    
+message SpendingLimitUseArgs {
+  uint64 amount = 1;
+  uint32 decimals = 2;
+  optional string memo = 3;
+}
+    
+message SpendingLimitUse {
+  SpendingLimitUseAccounts accounts = 1;
+  SpendingLimitUseArgs args = 2;
+}
+    
+message ConfigTransactionAccountsCloseAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey transaction = 3;
+  PublicKey rent_collector = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message ConfigTransactionAccountsCloseArgs {
+}
+    
+message ConfigTransactionAccountsClose {
+  ConfigTransactionAccountsCloseAccounts accounts = 1;
+  ConfigTransactionAccountsCloseArgs args = 2;
+}
+    
+message VaultTransactionAccountsCloseAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey transaction = 3;
+  PublicKey rent_collector = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message VaultTransactionAccountsCloseArgs {
+}
+    
+message VaultTransactionAccountsClose {
+  VaultTransactionAccountsCloseAccounts accounts = 1;
+  VaultTransactionAccountsCloseArgs args = 2;
+}
+    
+message VaultBatchTransactionAccountCloseAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey batch = 3;
+  PublicKey transaction = 4;
+  PublicKey rent_collector = 5;
+  PublicKey system_program = 6;
+  repeated PublicKey remaining_accounts = 7;
+}
+    
+message VaultBatchTransactionAccountCloseArgs {
+}
+    
+message VaultBatchTransactionAccountClose {
+  VaultBatchTransactionAccountCloseAccounts accounts = 1;
+  VaultBatchTransactionAccountCloseArgs args = 2;
+}
+    
+message BatchAccountsCloseAccounts {
+  PublicKey multisig = 1;
+  PublicKey proposal = 2;
+  PublicKey batch = 3;
+  PublicKey rent_collector = 4;
+  PublicKey system_program = 5;
+  repeated PublicKey remaining_accounts = 6;
+}
+    
+message BatchAccountsCloseArgs {
+}
+    
+message BatchAccountsClose {
+  BatchAccountsCloseAccounts accounts = 1;
+  BatchAccountsCloseArgs args = 2;
+}
+    
+message SquadsMultisigProgramAccount {
+  oneof account {
+    Batch batch = 1;
+    VaultBatchTransaction vault_batch_transaction = 2;
+    ConfigTransaction config_transaction = 3;
+    Multisig multisig = 4;
+    ProgramConfig program_config = 5;
+    Proposal proposal = 6;
+    SpendingLimit spending_limit = 7;
+    TransactionBuffer transaction_buffer = 8;
+    VaultTransaction vault_transaction = 9;
+  }
+}
+message Vote {
+  oneof kind {
+    VoteApprove approve = 1;
+    VoteReject reject = 2;
+    VoteCancel cancel = 3;
+  }
+}
+message ConfigAction {
+  oneof kind {
+    ConfigActionAddMember add_member = 1;
+    ConfigActionRemoveMember remove_member = 2;
+    ConfigActionChangeThreshold change_threshold = 3;
+    ConfigActionSetTimeLock set_time_lock = 4;
+    ConfigActionAddSpendingLimit add_spending_limit = 5;
+    ConfigActionRemoveSpendingLimit remove_spending_limit = 6;
+    ConfigActionSetRentCollector set_rent_collector = 7;
+  }
+}
+message ProposalStatus {
+  oneof kind {
+    ProposalStatusDraft draft = 1;
+    ProposalStatusActive active = 2;
+    ProposalStatusRejected rejected = 3;
+    ProposalStatusApproved approved = 4;
+    ProposalStatusExecuting executing = 5;
+    ProposalStatusExecuted executed = 6;
+    ProposalStatusCancelled cancelled = 7;
+  }
+}
+message Period {
+  oneof kind {
+    PeriodOneTime one_time = 1;
+    PeriodDay day = 2;
+    PeriodWeek week = 3;
+    PeriodMonth month = 4;
+  }
+}
+message Instructions {
+  oneof instruction {
+    ProgramConfigInit program_config_init = 1;
+    ProgramConfigSetAuthority program_config_set_authority = 2;
+    ProgramConfigSetMultisigCreationFee program_config_set_multisig_creation_fee = 3;
+    ProgramConfigSetTreasury program_config_set_treasury = 4;
+    MultisigCreate multisig_create = 5;
+    MultisigCreateV2 multisig_create_v2 = 6;
+    MultisigAddMember multisig_add_member = 7;
+    MultisigRemoveMember multisig_remove_member = 8;
+    MultisigSetTimeLock multisig_set_time_lock = 9;
+    MultisigChangeThreshold multisig_change_threshold = 10;
+    MultisigSetConfigAuthority multisig_set_config_authority = 11;
+    MultisigSetRentCollector multisig_set_rent_collector = 12;
+    MultisigAddSpendingLimit multisig_add_spending_limit = 13;
+    MultisigRemoveSpendingLimit multisig_remove_spending_limit = 14;
+    ConfigTransactionCreate config_transaction_create = 15;
+    ConfigTransactionExecute config_transaction_execute = 16;
+    VaultTransactionCreate vault_transaction_create = 17;
+    TransactionBufferCreate transaction_buffer_create = 18;
+    TransactionBufferClose transaction_buffer_close = 19;
+    TransactionBufferExtend transaction_buffer_extend = 20;
+    VaultTransactionCreateFromBuffer vault_transaction_create_from_buffer = 21;
+    VaultTransactionExecute vault_transaction_execute = 22;
+    BatchCreate batch_create = 23;
+    BatchAddTransaction batch_add_transaction = 24;
+    BatchExecuteTransaction batch_execute_transaction = 25;
+    ProposalCreate proposal_create = 26;
+    ProposalActivate proposal_activate = 27;
+    ProposalApprove proposal_approve = 28;
+    ProposalReject proposal_reject = 29;
+    ProposalCancel proposal_cancel = 30;
+    ProposalCancelV2 proposal_cancel_v2 = 31;
+    SpendingLimitUse spending_limit_use = 32;
+    ConfigTransactionAccountsClose config_transaction_accounts_close = 33;
+    VaultTransactionAccountsClose vault_transaction_accounts_close = 34;
+    VaultBatchTransactionAccountClose vault_batch_transaction_account_close = 35;
+    BatchAccountsClose batch_accounts_close = 36;
+  }
+}
