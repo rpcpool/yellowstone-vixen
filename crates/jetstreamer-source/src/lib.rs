@@ -242,16 +242,7 @@ impl VixenStreamHandler {
                     update_oneof: Some(UpdateOneof::Block(SubscribeUpdateBlock {
                         slot,
                         blockhash: blockhash.to_string(),
-                        rewards: Some(
-                            yellowstone_grpc_proto::solana::storage::confirmed_block::Rewards {
-                                rewards: vec![],
-                                num_partitions: rewards.num_partitions.map(|np| {
-                                    yellowstone_grpc_proto::solana::storage::confirmed_block::NumPartitions {
-                                        num_partitions: np,
-                                    }
-                                }),
-                            },
-                        ),
+                        rewards: Some(convert::keyed_rewards(&rewards)),
                         block_time: block_time.map(|bt| UnixTimestamp { timestamp: bt }),
                         block_height: block_height.map(|bh| BlockHeight { block_height: bh }),
                         executed_transaction_count,
@@ -825,14 +816,140 @@ slot-end = 2000
             assert_eq!(end_exclusive, (epoch + 1) * 432_000); // end-exclusive
         }
     }
+
+    #[test]
+    fn keyed_rewards_round_trip_through_proto() {
+        use solana_pubkey::Pubkey;
+        use solana_reward_info::{RewardInfo, RewardType as SdkRewardType};
+        use solana_runtime::bank::KeyedRewardsAndNumPartitions;
+        use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
+
+        let fee_pk = Pubkey::new_unique();
+        let rent_pk = Pubkey::new_unique();
+        let staking_pk = Pubkey::new_unique();
+        let voting_pk = Pubkey::new_unique();
+
+        let input = KeyedRewardsAndNumPartitions {
+            keyed_rewards: vec![
+                (fee_pk, RewardInfo {
+                    reward_type: SdkRewardType::Fee,
+                    lamports: 1,
+                    post_balance: 100,
+                    commission: None,
+                }),
+                (rent_pk, RewardInfo {
+                    reward_type: SdkRewardType::Rent,
+                    lamports: -2, // i64, can be negative
+                    post_balance: 200,
+                    commission: None,
+                }),
+                (staking_pk, RewardInfo {
+                    reward_type: SdkRewardType::Staking,
+                    lamports: 3,
+                    post_balance: 300,
+                    commission: Some(7),
+                }),
+                (voting_pk, RewardInfo {
+                    reward_type: SdkRewardType::Voting,
+                    lamports: 4,
+                    post_balance: 400,
+                    commission: Some(0),
+                }),
+            ],
+            num_partitions: Some(64),
+        };
+
+        let out = convert::keyed_rewards(&input);
+
+        assert_eq!(out.rewards.len(), 4);
+
+        // Pubkey strings round-trip via Display
+        assert_eq!(out.rewards[0].pubkey, fee_pk.to_string());
+        assert_eq!(out.rewards[1].pubkey, rent_pk.to_string());
+        assert_eq!(out.rewards[2].pubkey, staking_pk.to_string());
+        assert_eq!(out.rewards[3].pubkey, voting_pk.to_string());
+
+        // Proto enum discriminants: Unspecified=0, Fee=1, Rent=2, Staking=3, Voting=4.
+        assert_eq!(out.rewards[0].reward_type, proto::RewardType::Fee as i32);
+        assert_eq!(out.rewards[1].reward_type, proto::RewardType::Rent as i32);
+        assert_eq!(
+            out.rewards[2].reward_type,
+            proto::RewardType::Staking as i32
+        );
+        assert_eq!(out.rewards[3].reward_type, proto::RewardType::Voting as i32);
+
+        // Lamports + post_balance pass through unchanged.
+        assert_eq!(out.rewards[1].lamports, -2);
+        assert_eq!(out.rewards[2].post_balance, 300);
+
+        // Commission: stringified u8 when Some, empty when None.
+        assert_eq!(out.rewards[0].commission, "");
+        assert_eq!(out.rewards[2].commission, "7");
+        assert_eq!(out.rewards[3].commission, "0");
+
+        // num_partitions wrapped in proto NumPartitions.
+        assert_eq!(
+            out.num_partitions,
+            Some(proto::NumPartitions { num_partitions: 64 })
+        );
+    }
+
+    #[test]
+    fn keyed_rewards_empty_input_yields_empty_proto() {
+        use solana_runtime::bank::KeyedRewardsAndNumPartitions;
+
+        let empty = KeyedRewardsAndNumPartitions {
+            keyed_rewards: vec![],
+            num_partitions: None,
+        };
+        let out = convert::keyed_rewards(&empty);
+        assert!(out.rewards.is_empty());
+        assert!(out.num_partitions.is_none());
+    }
 }
 
 mod convert {
     use solana_message::VersionedMessage;
-    use solana_runtime::bank::RewardType;
+    use solana_runtime::bank::{KeyedRewardsAndNumPartitions, RewardType};
     use solana_transaction::versioned::VersionedTransaction;
     use solana_transaction_status::{TransactionStatusMeta, TransactionTokenBalance};
     use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
+
+    /// Convert the firehose's `KeyedRewardsAndNumPartitions` into the proto
+    /// `Rewards` shape that `SubscribeUpdateBlock` carries. The proto enum
+    /// uses `Unspecified=0, Fee=1, Rent=2, Staking=3, Voting=4`; the Solana
+    /// SDK enum has no `Unspecified`, so the mapping is total. `commission`
+    /// is encoded as a stringified `u8` (proto convention), or empty when
+    /// absent.
+    pub fn keyed_rewards(keyed: &KeyedRewardsAndNumPartitions) -> proto::Rewards {
+        let rewards = keyed
+            .keyed_rewards
+            .iter()
+            .map(|(address, info)| {
+                let reward_type = match info.reward_type {
+                    RewardType::Fee => proto::RewardType::Fee,
+                    RewardType::Rent => proto::RewardType::Rent,
+                    RewardType::Staking => proto::RewardType::Staking,
+                    RewardType::Voting => proto::RewardType::Voting,
+                } as i32;
+
+                proto::Reward {
+                    pubkey: address.to_string(),
+                    lamports: info.lamports,
+                    post_balance: info.post_balance,
+                    reward_type,
+                    commission: info.commission.map(|c| c.to_string()).unwrap_or_default(),
+                }
+            })
+            .collect();
+
+        proto::Rewards {
+            rewards,
+            num_partitions: keyed
+                .num_partitions
+                .map(|num_partitions| proto::NumPartitions { num_partitions }),
+        }
+    }
 
     pub fn transaction(tx: VersionedTransaction) -> proto::Transaction {
         let signatures = tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect();
