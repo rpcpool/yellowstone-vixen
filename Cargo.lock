@@ -5335,6 +5335,7 @@ name = "proc-macro-test"
 version = "0.0.0"
 dependencies = [
  "borsh 1.6.0",
+ "hex",
  "insta",
  "prost 0.14.1",
  "prost-reflect",

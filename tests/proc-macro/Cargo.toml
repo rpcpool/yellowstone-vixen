@@ -46,6 +46,7 @@ yellowstone-vixen = { workspace = true }
 
 prost = { workspace = true }
 borsh = { workspace = true }
+hex = { workspace = true }
 
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
