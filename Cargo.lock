@@ -14091,6 +14091,7 @@ dependencies = [
  "solana-message 3.0.1",
  "solana-msg 3.0.0",
  "solana-pubkey 3.0.0",
+ "solana-reward-info",
  "solana-runtime",
  "solana-transaction",
  "solana-transaction-status",
