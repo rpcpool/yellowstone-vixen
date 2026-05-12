@@ -8,6 +8,8 @@ use crate::intermediate_representation::{
     FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr, ScalarIr, TypeIr, TypeKindIr,
 };
 
+// Generated types derive `serde::Serialize`/`Deserialize` behind the `serde` feature flag.
+// Enable it in consumer crates that need JSON (or other serde-format) conversion.
 pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::SchemaIr) -> TokenStream {
     let mut out = TokenStream::new();
 
