@@ -134,9 +134,14 @@ async fn parse_swap_base_in_with_default_parser() {
 #[test]
 fn check_json_serialization() {
     // account
-    let json_str = serde_json::to_string(&raydium_amm::AmmConfig::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let config = raydium_amm::AmmConfig::default();
+    let json_str = serde_json::to_string(&config).expect("failed to json serialize");
+    let _: raydium_amm::AmmConfig =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
     // instruction
-    let json_str = serde_json::to_string(&raydium_amm::instruction::CreateConfigAccount::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let ix = raydium_amm::instruction::CreateConfigAccount::default();
+    let json_str = serde_json::to_string(&ix).expect("failed to json serialize");
+    let _: raydium_amm::instruction::CreateConfigAccount =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

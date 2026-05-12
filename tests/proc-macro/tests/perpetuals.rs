@@ -460,10 +460,14 @@ async fn proto_round_trip_instruction() {
 #[test]
 fn check_json_serialization() {
     // account
-    let json_str = serde_json::to_string(&perpetuals::Assets::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let assets = perpetuals::Assets::default();
+    let json_str = serde_json::to_string(&assets).expect("failed to json serialize");
+    let _: perpetuals::Assets =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
     // instruction
-    let json_str =
-        serde_json::to_string(&perpetuals::instruction::CreateAndDelegateStakeAccount::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let ix = perpetuals::instruction::CreateAndDelegateStakeAccount::default();
+    let json_str = serde_json::to_string(&ix).expect("failed to json serialize");
+    let _: perpetuals::instruction::CreateAndDelegateStakeAccount =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

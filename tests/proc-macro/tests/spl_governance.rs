@@ -32,33 +32,39 @@ async fn parse_cast_vote_ix() {
         })
         .expect("no CastVote found");
 
-    assert_eq!(accounts, &spl_governance::instruction::CastVoteAccounts {
-        realm: p("3YADdZuLqfZ8ZHnxDNMnMs77qbVdhioe6yi3b4i3hfNA"),
-        governance: p("AZQNzTK3KHW27S3BAyRhx8fSiyH9s5TioaEwHGHa6DPk"),
-        proposal: p("BnHj4jH3kiYtBvDHsyQu7fQoqumvmEQXGiUtG7B5Nb5V"),
-        proposal_owner_record: p("FDF1VFkXsBzfSF9D119EWtVmWFCxvdPGaXGJTbmZdrEX"),
-        voter_token_owner_record: p("FnADdgaj1oBmKY9VgBJQSsr32kk8dNKnowcMCaqcGdKB"),
-        governance_authority: p("MiLSTQNcHDmZ1cHTo7fC5kvUYMFDBuEDk2HQ2hAGs3Y"),
-        vote_record: p("2ut1G4mjn4nRATPSECyXR3ZBa9qV9KyjMWBiSxdFxsGR"),
-        vote_governing_token_mint: p("v3b7hZDtSvFiZuYPe71ZA13ZgijcfoksT6NZRrProoc"),
-        payer: p("MiLSTQNcHDmZ1cHTo7fC5kvUYMFDBuEDk2HQ2hAGs3Y"),
-        system_program: p("11111111111111111111111111111111"),
-        realm_config: p("ECbYUKF92QGzSBhyhyNSR1LjDhdwG94mXTAvbMEdDPtF"),
-        voter_weight_record: Some(p("FnADdgaj1oBmKY9VgBJQSsr32kk8dNKnowcMCaqcGdKB")),
-        max_voter_weight_record: None,
-        remaining_accounts: vec![],
-    });
+    assert_eq!(
+        accounts,
+        &spl_governance::instruction::CastVoteAccounts {
+            realm: p("3YADdZuLqfZ8ZHnxDNMnMs77qbVdhioe6yi3b4i3hfNA"),
+            governance: p("AZQNzTK3KHW27S3BAyRhx8fSiyH9s5TioaEwHGHa6DPk"),
+            proposal: p("BnHj4jH3kiYtBvDHsyQu7fQoqumvmEQXGiUtG7B5Nb5V"),
+            proposal_owner_record: p("FDF1VFkXsBzfSF9D119EWtVmWFCxvdPGaXGJTbmZdrEX"),
+            voter_token_owner_record: p("FnADdgaj1oBmKY9VgBJQSsr32kk8dNKnowcMCaqcGdKB"),
+            governance_authority: p("MiLSTQNcHDmZ1cHTo7fC5kvUYMFDBuEDk2HQ2hAGs3Y"),
+            vote_record: p("2ut1G4mjn4nRATPSECyXR3ZBa9qV9KyjMWBiSxdFxsGR"),
+            vote_governing_token_mint: p("v3b7hZDtSvFiZuYPe71ZA13ZgijcfoksT6NZRrProoc"),
+            payer: p("MiLSTQNcHDmZ1cHTo7fC5kvUYMFDBuEDk2HQ2hAGs3Y"),
+            system_program: p("11111111111111111111111111111111"),
+            realm_config: p("ECbYUKF92QGzSBhyhyNSR1LjDhdwG94mXTAvbMEdDPtF"),
+            voter_weight_record: Some(p("FnADdgaj1oBmKY9VgBJQSsr32kk8dNKnowcMCaqcGdKB")),
+            max_voter_weight_record: None,
+            remaining_accounts: vec![],
+        }
+    );
 
-    assert_eq!(args, &spl_governance::instruction::CastVoteArgs {
-        vote: spl_governance::Vote {
-            kind: spl_governance::vote::Kind::Approve(spl_governance::VoteApprove {
-                item_0: vec![spl_governance::VoteChoice {
-                    rank: 0,
-                    weight_percentage: 100,
-                }],
-            }),
-        },
-    });
+    assert_eq!(
+        args,
+        &spl_governance::instruction::CastVoteArgs {
+            vote: spl_governance::Vote {
+                kind: spl_governance::vote::Kind::Approve(spl_governance::VoteApprove {
+                    item_0: vec![spl_governance::VoteChoice {
+                        rank: 0,
+                        weight_percentage: 100,
+                    }],
+                }),
+            },
+        }
+    );
 }
 
 #[tokio::test]
@@ -266,9 +272,14 @@ async fn parse_proposal_v2_account() {
 #[test]
 fn check_json_serialization() {
     // account
-    let json_str = serde_json::to_string(&spl_governance::GovernanceV2::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let gov = spl_governance::GovernanceV2::default();
+    let json_str = serde_json::to_string(&gov).expect("failed to json serialize");
+    let _: spl_governance::GovernanceV2 =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
     // instruction
-    let json_str = serde_json::to_string(&spl_governance::SetRealmAuthorityAction::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let action = spl_governance::SetRealmAuthorityAction::default();
+    let json_str = serde_json::to_string(&action).expect("failed to json serialize");
+    let _: spl_governance::SetRealmAuthorityAction =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

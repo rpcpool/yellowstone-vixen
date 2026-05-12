@@ -29,9 +29,14 @@ fn instruction_dispatch_index_is_some() {
 #[test]
 fn check_json_serialization() {
     // account
-    let json_str = serde_json::to_string(&loopscale::AssetData::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let asset = loopscale::AssetData::default();
+    let json_str = serde_json::to_string(&asset).expect("failed to json serialize");
+    let _: loopscale::AssetData =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
     // instruction
-    let json_str = serde_json::to_string(&loopscale::CreateStrategyParams::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let params = loopscale::CreateStrategyParams::default();
+    let json_str = serde_json::to_string(&params).expect("failed to json serialize");
+    let _: loopscale::CreateStrategyParams =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

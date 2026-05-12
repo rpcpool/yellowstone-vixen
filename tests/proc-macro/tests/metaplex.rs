@@ -29,9 +29,14 @@ fn account_dispatch_index_is_some() {
 #[test]
 fn check_json_serialization() {
     // account
-    let json_str = serde_json::to_string(&token_metadata::AssetData::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let asset = token_metadata::AssetData::default();
+    let json_str = serde_json::to_string(&asset).expect("failed to json serialize");
+    let _: token_metadata::AssetData =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
     // instruction
-    let json_str = serde_json::to_string(&token_metadata::CreateMasterEditionArgs::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let args = token_metadata::CreateMasterEditionArgs::default();
+    let json_str = serde_json::to_string(&args).expect("failed to json serialize");
+    let _: token_metadata::CreateMasterEditionArgs =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

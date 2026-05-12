@@ -112,6 +112,8 @@ async fn parse_flash_fill_transaction() {
 
 #[test]
 fn check_json_serialization() {
-    let json_str = serde_json::to_string(&limit_order::event::TradeEvent::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let event = limit_order::event::TradeEvent::default();
+    let json_str = serde_json::to_string(&event).expect("failed to json serialize");
+    let _: limit_order::event::TradeEvent =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

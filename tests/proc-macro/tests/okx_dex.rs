@@ -112,9 +112,13 @@ async fn parse_swap_v3_ix() {
 #[test]
 fn check_json_serialization() {
     // account
-    let json_str = serde_json::to_string(&dex_solana::Route::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let route = dex_solana::Route::default();
+    let json_str = serde_json::to_string(&route).expect("failed to json serialize");
+    let _: dex_solana::Route = serde_json::from_str(&json_str).expect("failed to json deserialize");
+
     // instruction
-    let json_str = serde_json::to_string(&dex_solana::instruction::Swap::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let swap = dex_solana::instruction::Swap::default();
+    let json_str = serde_json::to_string(&swap).expect("failed to json serialize");
+    let _: dex_solana::instruction::Swap =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

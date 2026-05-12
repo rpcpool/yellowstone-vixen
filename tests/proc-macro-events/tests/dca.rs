@@ -121,6 +121,8 @@ async fn proto_round_trip() {
 
 #[test]
 fn check_json_serialization() {
-    let json_str = serde_json::to_string(&dca::Dca::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let dca = dca::event::DepositAccounts::default();
+    let json_str = serde_json::to_string(&dca).expect("failed to json serialize");
+    let _: dca::event::DepositAccounts =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

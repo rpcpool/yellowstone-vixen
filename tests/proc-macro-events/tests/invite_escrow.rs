@@ -95,6 +95,8 @@ async fn proto_round_trip() {
 
 #[test]
 fn check_json_serialization() {
-    let json_str = serde_json::to_string(&invite_escrow::InviteInfo::default());
-    assert!(json_str.is_ok(), "failed to json serialize");
+    let info = invite_escrow::event::InitializeArgs::default();
+    let json_str = serde_json::to_string(&info).expect("failed to json serialize");
+    let _: invite_escrow::event::InitializeArgs =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
 }

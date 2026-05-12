@@ -31,7 +31,7 @@ yellowstone-vixen-stake-pool-parser = { path = "../../crates/stake-pool-parser",
     "proto",
 ] }
 
-serde = { workspace = true, optional = true }
+serde = { version = "^1.0.198", optional = true }
 
 [dev-dependencies]
 yellowstone-vixen-proc-macro = { path = "../../crates/proc-macro", features = [
@@ -57,4 +57,4 @@ regex = "^1.11.0"
 
 insta = "1.46.3"
 
-serde_json = { workspace = true }
+serde_json = "^1.0.0"
