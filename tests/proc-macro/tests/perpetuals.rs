@@ -456,3 +456,14 @@ async fn proto_round_trip_instruction() {
     // Verify encoded_len matches actual output size.
     assert_eq!(original.encoded_len(), buf.len());
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let json_str = serde_json::to_string(&perpetuals::Assets::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+    // instruction
+    let json_str =
+        serde_json::to_string(&perpetuals::instruction::CreateAndDelegateStakeAccount::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

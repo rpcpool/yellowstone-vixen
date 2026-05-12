@@ -130,3 +130,13 @@ async fn parse_swap_base_in_with_default_parser() {
         })
         .expect("default parser should resolve SwapBaseInCompact by account count");
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let json_str = serde_json::to_string(&raydium_amm::AmmConfig::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+    // instruction
+    let json_str = serde_json::to_string(&raydium_amm::instruction::CreateConfigAccount::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

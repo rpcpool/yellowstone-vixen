@@ -11,3 +11,14 @@ fn check_protobuf_schema() {
 }
 
 // TODO: add test for parsing MeteoraDammMigrationMetadata account which has duplicated field names
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let json_str = serde_json::to_string(&dynamic_bonding_curve::Config::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+    // instruction
+    let json_str =
+        serde_json::to_string(&dynamic_bonding_curve::InitializePoolParameters::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

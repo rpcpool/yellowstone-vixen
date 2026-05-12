@@ -118,3 +118,9 @@ async fn proto_round_trip() {
         "encoded_len() must match actual encoded size"
     );
 }
+
+#[test]
+fn check_json_serialization() {
+    let json_str = serde_json::to_string(&dca::Dca::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

@@ -25,3 +25,13 @@ fn account_dispatch_index_is_some() {
         "expected AccountDispatch message index for an accounts-only IDL"
     );
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let json_str = serde_json::to_string(&token_metadata::AssetData::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+    // instruction
+    let json_str = serde_json::to_string(&token_metadata::CreateMasterEditionArgs::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

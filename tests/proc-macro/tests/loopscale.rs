@@ -25,3 +25,13 @@ fn instruction_dispatch_index_is_some() {
         "expected InstructionDispatch message index for a program with instructions"
     );
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let json_str = serde_json::to_string(&loopscale::AssetData::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+    // instruction
+    let json_str = serde_json::to_string(&loopscale::CreateStrategyParams::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

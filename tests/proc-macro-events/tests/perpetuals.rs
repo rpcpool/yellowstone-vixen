@@ -318,3 +318,9 @@ fn instruction_parser_implements_id() {
     let id: Cow<'static, str> = parser.id();
     assert!(!id.is_empty());
 }
+
+#[test]
+fn check_json_serialization() {
+    let json_str = serde_json::to_string(&perpetuals::event::BorrowFromCustodyEvent::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

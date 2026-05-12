@@ -11,3 +11,10 @@ fn check_protobuf_schema() {
 
     insta::assert_snapshot!(order_engine::PROTOBUF_SCHEMA);
 }
+
+#[test]
+fn check_json_serialization() {
+    // instruction
+    let json_str = serde_json::to_string(&order_engine::instruction::Fill::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}

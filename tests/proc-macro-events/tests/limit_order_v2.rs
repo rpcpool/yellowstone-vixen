@@ -116,3 +116,9 @@ async fn parse_fill_order_transaction() {
     let expected_refs: Vec<_> = expected.iter().collect();
     assert_eq!(outputs, expected_refs);
 }
+
+#[test]
+fn check_json_serialization() {
+    let json_str = serde_json::to_string(&limit_order2::event::TradeEvent::default());
+    assert!(json_str.is_ok(), "failed to json serialize");
+}
