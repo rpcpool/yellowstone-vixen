@@ -20,7 +20,10 @@ yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }
 bs58 = { workspace = true }
+serde = { workspace = true, optional = true }
+
 
 [features]
 default = []
 proto = ["yellowstone-vixen-proc-macro/proto"]
+serde = ["dep:serde"]

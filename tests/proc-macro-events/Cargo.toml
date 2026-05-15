@@ -4,6 +4,10 @@ version = "0.0.0"
 edition = "2024"
 publish = false
 
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
 # This crate is excluded from the main workspace to avoid feature unification.
 # When built inside the workspace, `program-events` would bleed into
 # `proc-macro-test` via Cargo's feature-unification, causing its
@@ -26,6 +30,8 @@ yellowstone-vixen-block-meta-parser = { path = "../../crates/block-meta-parser",
 yellowstone-vixen-stake-pool-parser = { path = "../../crates/stake-pool-parser", features = [
     "proto",
 ] }
+
+serde = { version = "^1.0.198", optional = true }
 
 [dev-dependencies]
 yellowstone-vixen-proc-macro = { path = "../../crates/proc-macro", features = [
@@ -50,3 +56,5 @@ tokio = { version = "^1.48.0", features = ["macros", "rt-multi-thread"] }
 regex = "^1.11.0"
 
 insta = "1.46.3"
+
+serde_json = "^1.0.0"

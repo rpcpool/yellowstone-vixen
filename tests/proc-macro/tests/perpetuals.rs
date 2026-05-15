@@ -456,3 +456,18 @@ async fn proto_round_trip_instruction() {
     // Verify encoded_len matches actual output size.
     assert_eq!(original.encoded_len(), buf.len());
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let assets = perpetuals::Assets::default();
+    let json_str = serde_json::to_string(&assets).expect("failed to json serialize");
+    let _: perpetuals::Assets =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
+    // instruction
+    let ix = perpetuals::instruction::CreateAndDelegateStakeAccount::default();
+    let json_str = serde_json::to_string(&ix).expect("failed to json serialize");
+    let _: perpetuals::instruction::CreateAndDelegateStakeAccount =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}

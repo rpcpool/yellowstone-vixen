@@ -26,3 +26,18 @@ fn account_dispatch_index_is_some() {
         "expected AccountDispatch message index to be present for an accounts-only IDL"
     );
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let state = margin::LiquidationState::default();
+    let json_str = serde_json::to_string(&state).expect("failed to json serialize");
+    let _: margin::LiquidationState =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
+    // instruction
+    let invoke = margin::LiquidatorInvokeBegin::default();
+    let json_str = serde_json::to_string(&invoke).expect("failed to json serialize");
+    let _: margin::LiquidatorInvokeBegin =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}

@@ -104,3 +104,18 @@ async fn parse_buy_ix() {
     assert_eq!(buy_accounts, &expected.accounts);
     assert_eq!(buy_args, &expected.args);
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let curve = pump_fun::BondingCurve::default();
+    let json_str = serde_json::to_string(&curve).expect("failed to json serialize");
+    let _: pump_fun::BondingCurve =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
+    // instruction
+    let buy = pump_fun::instruction::Buy::default();
+    let json_str = serde_json::to_string(&buy).expect("failed to json serialize");
+    let _: pump_fun::instruction::Buy =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}

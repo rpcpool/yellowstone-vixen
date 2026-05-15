@@ -25,3 +25,18 @@ fn account_dispatch_index_is_some() {
         "expected AccountDispatch message index for an accounts-only IDL"
     );
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let asset = token_metadata::AssetData::default();
+    let json_str = serde_json::to_string(&asset).expect("failed to json serialize");
+    let _: token_metadata::AssetData =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
+    // instruction
+    let args = token_metadata::CreateMasterEditionArgs::default();
+    let json_str = serde_json::to_string(&args).expect("failed to json serialize");
+    let _: token_metadata::CreateMasterEditionArgs =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}

@@ -118,3 +118,11 @@ async fn proto_round_trip() {
         "encoded_len() must match actual encoded size"
     );
 }
+
+#[test]
+fn check_json_serialization() {
+    let dca = dca::event::DepositAccounts::default();
+    let json_str = serde_json::to_string(&dca).expect("failed to json serialize");
+    let _: dca::event::DepositAccounts =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}
