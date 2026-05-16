@@ -469,6 +469,18 @@ pub struct JetstreamSourceConfig {
     #[serde(skip)]
     #[arg(skip)]
     pub possible_leader_skipped_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
+
+    /// Optional cooperative-shutdown signal forwarded to upstream
+    /// `firehose()`. When the caller broadcasts `()` on the paired
+    /// `broadcast::Sender`, the firehose loop unwinds at the next slot
+    /// boundary instead of running to completion.
+    ///
+    /// We store a `Sender` (not a `Receiver`) so the config remains
+    /// `Clone`; `connect()` calls `.subscribe()` to obtain its own
+    /// receiver when wiring the firehose call.
+    #[serde(skip)]
+    #[arg(skip)]
+    pub shutdown_signal_tx: Option<broadcast::Sender<()>>,
 }
 
 /// Configuration for slot ranges or epochs
@@ -540,10 +552,6 @@ impl SourceTrait for JetstreamSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
-    // TODO: plumb a caller-provided CancellationToken into `connect` once
-    // `SourceTrait::connect` exposes a cancellation hook. Upstream
-    // `firehose()` accepts an `Option<broadcast::Receiver<()>>` for
-    // cooperative shutdown but we currently pass `None`.
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
@@ -638,6 +646,13 @@ impl JetstreamSource {
             None
         };
 
+        // Subscribe to the caller-provided shutdown channel, if any. Subscribing
+        // here (after the receiver-less period during config construction) means
+        // signals broadcast before this line are lost — callers that need
+        // deterministic shutdown should keep the `Sender` alive and broadcast
+        // only after `connect()` returns.
+        let shutdown_signal = config.shutdown_signal_tx.as_ref().map(|tx| tx.subscribe());
+
         let result = firehose(
             config.threads as u64,
             config.sequential,
@@ -655,7 +670,7 @@ impl JetstreamSource {
                     >,
                 >,
             >,
-            None::<broadcast::Receiver<()>>,
+            shutdown_signal,
         )
         .await;
 
@@ -794,6 +809,7 @@ mod tests {
             sequential: false,
             buffer_window_bytes: None,
             possible_leader_skipped_tx: None,
+            shutdown_signal_tx: None,
         };
 
         let filters = Filters::new(std::collections::HashMap::new());
@@ -969,6 +985,43 @@ slot-end = 2000
                 .is_empty(),
             "entry buffer must be drained after block emission"
         );
+    }
+
+    #[tokio::test]
+    async fn shutdown_signal_round_trip_through_config() {
+        // Mirrors how `connect()` consumes the channel: store a `Sender` on
+        // the config, then `.subscribe()` to get a `Receiver` at the firehose
+        // call site. Broadcasts must reach the receiver.
+        let (shutdown_tx, _) = broadcast::channel::<()>(1);
+        let config = JetstreamSourceConfig {
+            archive_url: "https://api.old-faithful.net".to_string(),
+            range: SlotRangeConfig {
+                slot_start: Some(1000),
+                slot_end: Some(2000),
+                epoch: None,
+            },
+            threads: 4,
+            network: "mainnet".to_string(),
+            compact_index_base_url: "https://files.old-faithful.net".to_string(),
+            network_capacity_mb: 1000,
+            sequential: false,
+            buffer_window_bytes: None,
+            possible_leader_skipped_tx: None,
+            shutdown_signal_tx: Some(shutdown_tx.clone()),
+        };
+
+        // Config must remain Clone — `broadcast::Sender` is Clone, so the
+        // outer derive should still hold. Compile-time check; the runtime
+        // assertion confirms the cloned Sender points at the same channel.
+        let config_cloned = config.clone();
+        let mut rx = config_cloned
+            .shutdown_signal_tx
+            .as_ref()
+            .expect("sender present")
+            .subscribe();
+
+        shutdown_tx.send(()).expect("at least one receiver");
+        rx.recv().await.expect("broadcast delivered");
     }
 
     #[tokio::test]
