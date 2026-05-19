@@ -512,6 +512,36 @@ impl InstructionUpdate {
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
     pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
+
+    /// Iterate over this instruction and nested CPI instructions with the
+    /// flat instruction index used by Solana's inner-instruction list.
+    ///
+    /// [`InstructionUpdate::path`] preserves the CPI call tree reconstructed
+    /// from `stack_height`, so a grandchild CPI can have a path such as `3.2.1`.
+    /// The returned index for CPI records instead uses the flat execution order
+    /// under the outer instruction. This is the index shape used by Kafka keys
+    /// and `ix_index` headers.
+    pub fn visit_all_with_flat_indices(&self) -> impl Iterator<Item = (&InstructionUpdate, Path)> {
+        let outer_index = self.path.as_slice().first().copied();
+        let mut next_inner_index = 0;
+        let mut visited_outer = false;
+
+        self.visit_all().map(move |instruction| {
+            if !visited_outer {
+                visited_outer = true;
+                return (instruction, instruction.path.clone());
+            }
+
+            let Some(outer_index) = outer_index else {
+                return (instruction, instruction.path.clone());
+            };
+
+            let path = Path::from(vec![outer_index, next_inner_index]);
+            next_inner_index += 1;
+
+            (instruction, path)
+        })
+    }
 }
 
 /// An iterator over all inner instructions stored in an instruction update.
@@ -556,23 +586,27 @@ impl<'a> Iterator for VisitAll<'a> {
 ///
 /// Derive instruction paths from the flat `stack_heights` array returned by the Solana runtime.
 ///
-/// Each inner instruction carries a stack height indicating its nesting depth
-/// (1 = top-level CPI, 2 = CPI called by a CPI, etc.).
+/// Each inner instruction carries Solana's runtime `stack_height`. Top-level
+/// transaction instructions execute at stack height `1`, so inner CPI
+/// instructions start at `2` (`2` = direct CPI from a top-level instruction,
+/// `3` = CPI called by a CPI, etc.). If you think in CPI nesting depth, that is
+/// `stack_height - 1`.
 /// This function reconstructs the full tree path for every instruction
 /// by tracking a virtual stack of child indices.
 ///
 /// ## Example
 ///
-/// Given outer instruction index 3 and these inner instructions:
+/// Given displayed outer instruction `3` (`outer_index = 2` in the
+/// zero-based Solana transaction arrays) and these inner instructions:
 ///
 /// ```text
-/// stack_heights: [1, 1, 2, 2, 1]
+/// stack_heights: [2, 2, 3, 3, 2]
 ///
-/// ix[0]: height=1  →  Path [3, 0]       (first child of outer ix 3)
-/// ix[1]: height=1  →  Path [3, 1]       (second child, same level)
-/// ix[2]: height=2  →  Path [3, 1, 0]    (first grandchild under ix[1])
-/// ix[3]: height=2  →  Path [3, 1, 1]    (second grandchild, same level)
-/// ix[4]: height=1  →  Path [3, 2]       (back up to child level)
+/// ix[0]: height=2  ->  raw Path [2, 0]     -> displayed as 3.1
+/// ix[1]: height=2  ->  raw Path [2, 1]     -> displayed as 3.2
+/// ix[2]: height=3  ->  raw Path [2, 1, 0]  -> displayed as 3.2.1
+/// ix[3]: height=3  ->  raw Path [2, 1, 1]  -> displayed as 3.2.2
+/// ix[4]: height=2  ->  raw Path [2, 2]     -> displayed as 3.3
 /// ```
 ///
 fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<Path> {
@@ -644,6 +678,16 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use yellowstone_grpc_proto::geyser::SubscribeUpdateTransactionInfo;
+
+    use super::{
+        CompiledInstruction, InnerInstruction, InnerInstructions, InstructionShared,
+        InstructionUpdate, Message, MessageHeader, Transaction, TransactionStatusMeta,
+    };
+    use crate::TransactionUpdate;
+
     #[test]
     fn test_ix_path_parent() {
         use super::Path;
@@ -677,5 +721,202 @@ mod tests {
         assert!(!p2.is_ancestor_of(&p1));
         assert!(!p1.is_ancestor_of(&p3));
         assert!(!p1.is_parent_of(&p1));
+    }
+
+    #[test]
+    fn derives_nested_paths_from_stack_heights() {
+        use super::derive_paths_from_stackheights;
+
+        let paths = derive_paths_from_stackheights(
+            &[
+                Some(2),
+                Some(2),
+                Some(3),
+                Some(3),
+                Some(3),
+                Some(3),
+                Some(2),
+            ],
+            2,
+        );
+
+        let paths = paths
+            .iter()
+            .map(|path| format!("{path:?}"))
+            .collect::<Vec<_>>();
+
+        assert_eq!(paths, [
+            "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"
+        ]);
+    }
+
+    #[test]
+    fn visit_all_with_flat_indices_keeps_flat_index_separate_from_tree_path() {
+        let instruction = instruction(vec![2], vec![
+            instruction(vec![2, 0], vec![]),
+            instruction(vec![2, 1], vec![
+                instruction(vec![2, 1, 0], vec![]),
+                instruction(vec![2, 1, 1], vec![]),
+                instruction(vec![2, 1, 2], vec![]),
+                instruction(vec![2, 1, 3], vec![]),
+            ]),
+            instruction(vec![2, 2], vec![]),
+        ]);
+
+        let nested_paths = instruction
+            .visit_all()
+            .map(|instruction| format!("{:?}", instruction.path))
+            .collect::<Vec<_>>();
+
+        assert_eq!(nested_paths, [
+            "3", "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"
+        ]);
+
+        // Public ixIndex mirrors the flat Solana inner-instruction list:
+        // the nested Token CPIs occupy 3.3 through 3.6, so the next direct
+        // CPI under the same outer instruction is 3.7.
+        let flat_indices = instruction
+            .visit_all_with_flat_indices()
+            .map(|(instruction, flat_index)| {
+                (format!("{:?}", instruction.path), format!("{flat_index:?}"))
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(flat_indices, [
+            ("3".to_owned(), "3".to_owned()),
+            ("3.1".to_owned(), "3.1".to_owned()),
+            ("3.2".to_owned(), "3.2".to_owned()),
+            ("3.2.1".to_owned(), "3.3".to_owned()),
+            ("3.2.2".to_owned(), "3.4".to_owned()),
+            ("3.2.3".to_owned(), "3.5".to_owned()),
+            ("3.2.4".to_owned(), "3.6".to_owned()),
+            ("3.3".to_owned(), "3.7".to_owned()),
+        ]);
+    }
+
+    #[test]
+    fn build_from_txn_preserves_tree_paths_and_flat_indices_mirror_inner_instruction_order() {
+        let instructions =
+            InstructionUpdate::build_from_txn(&transaction_with_nested_inner_instructions())
+                .expect("transaction should build");
+
+        let outer_instruction = &instructions[2];
+        let nested_paths = outer_instruction
+            .visit_all()
+            .map(|instruction| format!("{:?}", instruction.path))
+            .collect::<Vec<_>>();
+
+        assert_eq!(nested_paths, [
+            "3", "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"
+        ]);
+
+        let flat_indices = outer_instruction
+            .visit_all_with_flat_indices()
+            .map(|(instruction, flat_index)| {
+                (format!("{:?}", instruction.path), format!("{flat_index:?}"))
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(flat_indices, [
+            ("3".to_owned(), "3".to_owned()),
+            ("3.1".to_owned(), "3.1".to_owned()),
+            ("3.2".to_owned(), "3.2".to_owned()),
+            ("3.2.1".to_owned(), "3.3".to_owned()),
+            ("3.2.2".to_owned(), "3.4".to_owned()),
+            ("3.2.3".to_owned(), "3.5".to_owned()),
+            ("3.2.4".to_owned(), "3.6".to_owned()),
+            ("3.3".to_owned(), "3.7".to_owned()),
+        ]);
+    }
+
+    fn instruction(path: Vec<u32>, inner: Vec<InstructionUpdate>) -> InstructionUpdate {
+        use super::{Path, Pubkey};
+
+        InstructionUpdate {
+            program: Pubkey::default(),
+            accounts: Vec::new(),
+            data: Vec::new(),
+            shared: Arc::new(InstructionShared::default()),
+            inner,
+            path: Path::from(path),
+            log_range: 0..0,
+        }
+    }
+
+    fn transaction_with_nested_inner_instructions() -> TransactionUpdate {
+        TransactionUpdate {
+            slot: 1,
+            transaction: Some(SubscribeUpdateTransactionInfo {
+                signature: vec![9; 64],
+                is_vote: false,
+                transaction: Some(Transaction {
+                    signatures: vec![vec![9; 64]],
+                    message: Some(Message {
+                        header: Some(MessageHeader {
+                            num_required_signatures: 1,
+                            num_readonly_signed_accounts: 0,
+                            num_readonly_unsigned_accounts: 0,
+                        }),
+                        account_keys: (0..8).map(|byte| vec![byte; 32]).collect(),
+                        recent_blockhash: vec![7; 32],
+                        instructions: vec![
+                            compiled_instruction(0),
+                            compiled_instruction(1),
+                            compiled_instruction(2),
+                        ],
+                        versioned: false,
+                        address_table_lookups: vec![],
+                    }),
+                }),
+                meta: Some(TransactionStatusMeta {
+                    err: None,
+                    fee: 0,
+                    pre_balances: vec![],
+                    post_balances: vec![],
+                    inner_instructions: vec![InnerInstructions {
+                        index: 2,
+                        instructions: vec![
+                            inner_instruction(3, 2),
+                            inner_instruction(4, 2),
+                            inner_instruction(5, 3),
+                            inner_instruction(6, 3),
+                            inner_instruction(3, 3),
+                            inner_instruction(4, 3),
+                            inner_instruction(5, 2),
+                        ],
+                    }],
+                    inner_instructions_none: false,
+                    log_messages: vec![],
+                    log_messages_none: false,
+                    pre_token_balances: vec![],
+                    post_token_balances: vec![],
+                    rewards: vec![],
+                    loaded_writable_addresses: vec![],
+                    loaded_readonly_addresses: vec![],
+                    return_data: None,
+                    return_data_none: true,
+                    compute_units_consumed: None,
+                    cost_units: None,
+                }),
+                index: 0,
+            }),
+        }
+    }
+
+    fn compiled_instruction(program_id_index: u32) -> CompiledInstruction {
+        CompiledInstruction {
+            program_id_index,
+            accounts: vec![],
+            data: vec![],
+        }
+    }
+
+    fn inner_instruction(program_id_index: u32, stack_height: u32) -> InnerInstruction {
+        InnerInstruction {
+            program_id_index,
+            accounts: vec![],
+            data: vec![],
+            stack_height: Some(stack_height),
+        }
     }
 }

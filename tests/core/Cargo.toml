@@ -1,0 +1,10 @@
+[package]
+name = "core-test"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dev-dependencies]
+yellowstone-grpc-proto = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen-mock = { workspace = true }
