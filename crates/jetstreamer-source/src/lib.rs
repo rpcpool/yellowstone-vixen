@@ -8,9 +8,7 @@ use std::{
 
 use async_trait::async_trait;
 use futures_util::FutureExt;
-use jetstreamer_firehose::firehose::{
-    firehose, BlockData, EntryData, OnErrorFn, TransactionData,
-};
+use jetstreamer_firehose::firehose::{firehose, BlockData, EntryData, OnErrorFn, TransactionData};
 use tokio::sync::{broadcast, mpsc, mpsc::Sender, oneshot};
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
@@ -906,21 +904,18 @@ slot-end = 2000
         use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
 
         let mut prefilters = StdHashMap::new();
-        prefilters.insert(
-            "block-with-entries".to_string(),
-            Prefilter {
-                account: None,
-                transaction: None,
-                block_meta: None,
-                block: Some(BlockPrefilter {
-                    accounts_include: Default::default(),
-                    include_transactions: false,
-                    include_accounts: false,
-                    include_entries: true,
-                }),
-                slot: None,
-            },
-        );
+        prefilters.insert("block-with-entries".to_string(), Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: None,
+            block: Some(BlockPrefilter {
+                accounts_include: Default::default(),
+                include_transactions: false,
+                include_accounts: false,
+                include_entries: true,
+            }),
+            slot: None,
+        });
         let filters = Filters::new(prefilters);
 
         let (updates_tx, mut updates_rx) = mpsc::channel(4);
