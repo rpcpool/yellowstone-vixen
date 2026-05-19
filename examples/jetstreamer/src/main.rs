@@ -183,6 +183,7 @@ fn main() -> Result<()> {
         sequential: false,
         buffer_window_bytes: None,
         possible_leader_skipped_tx: None,
+        shutdown_signal_tx: None,
     };
 
     // SAFETY: Called from main() before the Tokio runtime is created.

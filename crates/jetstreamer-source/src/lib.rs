@@ -1,11 +1,14 @@
-use std::sync::{
-    atomic::{AtomicU64, Ordering},
-    Arc,
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc, Mutex,
+    },
 };
 
 use async_trait::async_trait;
 use futures_util::FutureExt;
-use jetstreamer_firehose::firehose::{firehose, BlockData, OnErrorFn, TransactionData};
+use jetstreamer_firehose::firehose::{firehose, BlockData, EntryData, OnErrorFn, TransactionData};
 use tokio::sync::{broadcast, mpsc, mpsc::Sender, oneshot};
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
@@ -141,6 +144,14 @@ struct VixenStreamHandler {
     // Cache matching filters to avoid iteration per item
     block_matches: Vec<String>,
     transaction_matches: Vec<String>,
+    // True iff any block filter requested `include_entries`. When false we
+    // skip the per-entry buffering work entirely.
+    wants_entries: bool,
+    // Per-slot buffer of entries arriving via `on_entry`. Drained when the
+    // matching `BlockData::Block` is emitted. Upstream `firehose` emits all
+    // entries for a slot on a single thread before the slot's block message,
+    // so slot is a sufficient key.
+    entry_buffer: Mutex<HashMap<u64, Vec<EntryData>>>,
     // Counter for progress logging
     blocks_processed: AtomicU64,
 }
@@ -151,11 +162,13 @@ impl VixenStreamHandler {
         skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
         filters: Filters,
     ) -> Self {
-        let (block_matches, transaction_matches) = Self::precalculate_filters(&filters);
+        let (block_matches, transaction_matches, wants_entries) =
+            Self::precalculate_filters(&filters);
 
         info!(
             block_filters = block_matches.len(),
             transaction_filters = transaction_matches.len(),
+            wants_entries,
             "Initialized VixenStreamHandler with cached filters"
         );
 
@@ -164,13 +177,16 @@ impl VixenStreamHandler {
             skipped_slots_tx,
             block_matches,
             transaction_matches,
+            wants_entries,
+            entry_buffer: Mutex::new(HashMap::new()),
             blocks_processed: AtomicU64::new(0),
         }
     }
 
-    fn precalculate_filters(filters: &Filters) -> (Vec<String>, Vec<String>) {
+    fn precalculate_filters(filters: &Filters) -> (Vec<String>, Vec<String>, bool) {
         let mut block_matches = Vec::new();
         let mut transaction_matches = Vec::new();
+        let mut wants_entries = false;
 
         for (filter_id, prefilter) in &filters.parsers_filters {
             // 1. Calculate Block Matches
@@ -181,6 +197,9 @@ impl VixenStreamHandler {
                     || block_filter.include_entries)
             {
                 block_match = true;
+                if block_filter.include_entries {
+                    wants_entries = true;
+                }
             }
             if prefilter.block_meta.is_some() || prefilter.slot.is_some() {
                 block_match = true;
@@ -200,7 +219,21 @@ impl VixenStreamHandler {
             }
         }
 
-        (block_matches, transaction_matches)
+        (block_matches, transaction_matches, wants_entries)
+    }
+
+    async fn process_entry(&self, entry: EntryData) -> Result<(), SharedError> {
+        if !self.wants_entries {
+            return Ok(());
+        }
+
+        let slot = entry.slot;
+        {
+            let mut buf = self.entry_buffer.lock().expect("entry_buffer poisoned");
+            buf.entry(slot).or_default().push(entry);
+        }
+
+        Ok(())
     }
 
     async fn process_block(&self, block: BlockData) -> Result<(), SharedError> {
@@ -222,6 +255,15 @@ impl VixenStreamHandler {
                 if self.block_matches.is_empty() {
                     debug!(slot, "No filters interested in block, skipping");
 
+                    // Drop any entries buffered for this slot — no consumer.
+                    if self.wants_entries {
+                        let _ = self
+                            .entry_buffer
+                            .lock()
+                            .expect("entry_buffer poisoned")
+                            .remove(&slot);
+                    }
+
                     // Log progress every 10,000 blocks even if skipped
                     let count = self.blocks_processed.fetch_add(1, Ordering::Relaxed);
                     if count.is_multiple_of(10_000) && count > 0 {
@@ -237,6 +279,28 @@ impl VixenStreamHandler {
                     debug!(slot, count, "Processed blocks (found matches)");
                 }
 
+                let entries = if self.wants_entries {
+                    let buffered = self
+                        .entry_buffer
+                        .lock()
+                        .expect("entry_buffer poisoned")
+                        .remove(&slot)
+                        .unwrap_or_default();
+
+                    if buffered.len() as u64 != entry_count {
+                        debug!(
+                            slot,
+                            buffered = buffered.len(),
+                            entry_count,
+                            "Buffered entry count differs from block entry_count"
+                        );
+                    }
+
+                    convert::entries(buffered)
+                } else {
+                    Vec::new()
+                };
+
                 let update = SubscribeUpdate {
                     filters: self.block_matches.clone(),
                     update_oneof: Some(UpdateOneof::Block(SubscribeUpdateBlock {
@@ -249,7 +313,7 @@ impl VixenStreamHandler {
                         transactions: vec![],
                         updated_account_count: 0,
                         accounts: vec![],
-                        entries: vec![],
+                        entries,
                         entries_count: entry_count,
                         parent_slot,
                         parent_blockhash: parent_blockhash.to_string(),
@@ -403,6 +467,18 @@ pub struct JetstreamSourceConfig {
     #[serde(skip)]
     #[arg(skip)]
     pub possible_leader_skipped_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
+
+    /// Optional cooperative-shutdown signal forwarded to upstream
+    /// `firehose()`. When the caller broadcasts `()` on the paired
+    /// `broadcast::Sender`, the firehose loop unwinds at the next slot
+    /// boundary instead of running to completion.
+    ///
+    /// We store a `Sender` (not a `Receiver`) so the config remains
+    /// `Clone`; `connect()` calls `.subscribe()` to obtain its own
+    /// receiver when wiring the firehose call.
+    #[serde(skip)]
+    #[arg(skip)]
+    pub shutdown_signal_tx: Option<broadcast::Sender<()>>,
 }
 
 /// Configuration for slot ranges or epochs
@@ -474,10 +550,6 @@ impl SourceTrait for JetstreamSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
-    // TODO: plumb a caller-provided CancellationToken into `connect` once
-    // `SourceTrait::connect` exposes a cancellation hook. Upstream
-    // `firehose()` accepts an `Option<broadcast::Receiver<()>>` for
-    // cooperative shutdown but we currently pass `None`.
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
@@ -560,6 +632,25 @@ impl JetstreamSource {
             async move { handler_callback.process_transaction(tx).await }.boxed()
         });
 
+        // Register an `on_entry` callback only when at least one filter requested
+        // entries; otherwise let the firehose skip entry decoding entirely.
+        let on_entry = if handler.wants_entries {
+            let handler_on_entry = handler.clone();
+            Some(move |_thread_id: usize, entry: EntryData| {
+                let handler_callback = handler_on_entry.clone();
+                async move { handler_callback.process_entry(entry).await }.boxed()
+            })
+        } else {
+            None
+        };
+
+        // Subscribe to the caller-provided shutdown channel, if any. Subscribing
+        // here (after the receiver-less period during config construction) means
+        // signals broadcast before this line are lost — callers that need
+        // deterministic shutdown should keep the `Sender` alive and broadcast
+        // only after `connect()` returns.
+        let shutdown_signal = config.shutdown_signal_tx.as_ref().map(|tx| tx.subscribe());
+
         let result = firehose(
             config.threads as u64,
             config.sequential,
@@ -567,7 +658,7 @@ impl JetstreamSource {
             start_slot..end_slot,
             on_block,
             on_tx,
-            None::<jetstreamer_firehose::firehose::OnEntryFn>,
+            on_entry,
             None::<jetstreamer_firehose::firehose::OnRewardFn>,
             None::<OnErrorFn>,
             None::<
@@ -577,7 +668,7 @@ impl JetstreamSource {
                     >,
                 >,
             >,
-            None::<broadcast::Receiver<()>>,
+            shutdown_signal,
         )
         .await;
 
@@ -716,6 +807,7 @@ mod tests {
             sequential: false,
             buffer_window_bytes: None,
             possible_leader_skipped_tx: None,
+            shutdown_signal_tx: None,
         };
 
         let filters = Filters::new(std::collections::HashMap::new());
@@ -800,6 +892,164 @@ slot-end = 2000
         assert!(
             updates_rx.try_recv().is_err(),
             "no fake block update should be emitted"
+        );
+    }
+
+    #[tokio::test]
+    async fn buffered_entries_attach_to_block_when_include_entries_set() {
+        use std::collections::HashMap as StdHashMap;
+
+        use solana_hash::Hash;
+        use solana_runtime::bank::KeyedRewardsAndNumPartitions;
+        use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
+
+        let mut prefilters = StdHashMap::new();
+        prefilters.insert("block-with-entries".to_string(), Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: None,
+            block: Some(BlockPrefilter {
+                accounts_include: Default::default(),
+                include_transactions: false,
+                include_accounts: false,
+                include_entries: true,
+            }),
+            slot: None,
+        });
+        let filters = Filters::new(prefilters);
+
+        let (updates_tx, mut updates_rx) = mpsc::channel(4);
+        let handler = VixenStreamHandler::new(updates_tx, None, filters);
+        assert!(handler.wants_entries, "filter requested entries");
+
+        for entry_index in 0..3 {
+            handler
+                .process_entry(EntryData {
+                    slot: 42,
+                    entry_index,
+                    transaction_indexes: (entry_index * 2)..(entry_index * 2 + 2),
+                    num_hashes: 12_500,
+                    hash: Hash::new_from_array([entry_index as u8; 32]),
+                })
+                .await
+                .expect("entry buffer push");
+        }
+
+        handler
+            .process_block(BlockData::Block {
+                parent_slot: 41,
+                parent_blockhash: Hash::default(),
+                slot: 42,
+                blockhash: Hash::default(),
+                rewards: KeyedRewardsAndNumPartitions {
+                    keyed_rewards: Vec::new(),
+                    num_partitions: None,
+                },
+                block_time: None,
+                block_height: None,
+                executed_transaction_count: 6,
+                entry_count: 3,
+            })
+            .await
+            .expect("block emission");
+
+        let update = updates_rx.recv().await.expect("block update");
+        let UpdateOneof::Block(block) = update
+            .expect("ok")
+            .update_oneof
+            .expect("update_oneof present")
+        else {
+            panic!("expected Block variant");
+        };
+
+        assert_eq!(block.entries_count, 3);
+        assert_eq!(block.entries.len(), 3);
+        assert_eq!(block.entries[0].index, 0);
+        assert_eq!(block.entries[0].starting_transaction_index, 0);
+        assert_eq!(block.entries[0].executed_transaction_count, 2);
+        assert_eq!(block.entries[2].index, 2);
+        assert_eq!(block.entries[2].starting_transaction_index, 4);
+
+        // Buffer must be drained after emission — second block on the same slot
+        // would otherwise leak stale entries.
+        assert!(
+            handler
+                .entry_buffer
+                .lock()
+                .expect("entry_buffer poisoned")
+                .is_empty(),
+            "entry buffer must be drained after block emission"
+        );
+    }
+
+    #[tokio::test]
+    async fn shutdown_signal_round_trip_through_config() {
+        // Mirrors how `connect()` consumes the channel: store a `Sender` on
+        // the config, then `.subscribe()` to get a `Receiver` at the firehose
+        // call site. Broadcasts must reach the receiver.
+        let (shutdown_tx, _) = broadcast::channel::<()>(1);
+        let config = JetstreamSourceConfig {
+            archive_url: "https://api.old-faithful.net".to_string(),
+            range: SlotRangeConfig {
+                slot_start: Some(1000),
+                slot_end: Some(2000),
+                epoch: None,
+            },
+            threads: 4,
+            network: "mainnet".to_string(),
+            compact_index_base_url: "https://files.old-faithful.net".to_string(),
+            network_capacity_mb: 1000,
+            sequential: false,
+            buffer_window_bytes: None,
+            possible_leader_skipped_tx: None,
+            shutdown_signal_tx: Some(shutdown_tx.clone()),
+        };
+
+        // Config must remain Clone — `broadcast::Sender` is Clone, so the
+        // outer derive should still hold. Compile-time check; the runtime
+        // assertion confirms the cloned Sender points at the same channel.
+        let config_cloned = config.clone();
+        let mut rx = config_cloned
+            .shutdown_signal_tx
+            .as_ref()
+            .expect("sender present")
+            .subscribe();
+
+        shutdown_tx.send(()).expect("at least one receiver");
+        rx.recv().await.expect("broadcast delivered");
+    }
+
+    #[tokio::test]
+    async fn entries_are_not_buffered_when_no_filter_requests_them() {
+        let (updates_tx, _updates_rx) = mpsc::channel(4);
+        let handler = VixenStreamHandler::new(
+            updates_tx,
+            None,
+            Filters::new(std::collections::HashMap::new()),
+        );
+        assert!(
+            !handler.wants_entries,
+            "no filter set => entries should be skipped"
+        );
+
+        handler
+            .process_entry(EntryData {
+                slot: 1,
+                entry_index: 0,
+                transaction_indexes: 0..0,
+                num_hashes: 0,
+                hash: solana_hash::Hash::default(),
+            })
+            .await
+            .expect("noop entry");
+
+        assert!(
+            handler
+                .entry_buffer
+                .lock()
+                .expect("entry_buffer poisoned")
+                .is_empty(),
+            "buffer must stay empty when wants_entries is false"
         );
     }
 
@@ -909,11 +1159,34 @@ slot-end = 2000
 }
 
 mod convert {
+    use jetstreamer_firehose::firehose::EntryData;
     use solana_message::VersionedMessage;
     use solana_runtime::bank::{KeyedRewardsAndNumPartitions, RewardType};
     use solana_transaction::versioned::VersionedTransaction;
     use solana_transaction_status::{TransactionStatusMeta, TransactionTokenBalance};
-    use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
+    use yellowstone_grpc_proto::{
+        geyser::SubscribeUpdateEntry, solana::storage::confirmed_block as proto,
+    };
+
+    /// Convert buffered firehose entries into the proto shape carried on
+    /// `SubscribeUpdateBlock.entries`. Caller is responsible for ordering;
+    /// upstream emits entries in `entry_index` order on a single thread per
+    /// slot, so the buffered `Vec` is already sorted.
+    pub fn entries(buffered: Vec<EntryData>) -> Vec<SubscribeUpdateEntry> {
+        buffered
+            .into_iter()
+            .map(|e| SubscribeUpdateEntry {
+                slot: e.slot,
+                index: e.entry_index as u64,
+                num_hashes: e.num_hashes,
+                hash: e.hash.to_bytes().to_vec(),
+                executed_transaction_count: (e.transaction_indexes.end
+                    - e.transaction_indexes.start)
+                    as u64,
+                starting_transaction_index: e.transaction_indexes.start as u64,
+            })
+            .collect()
+    }
 
     /// Convert the firehose's `KeyedRewardsAndNumPartitions` into the proto
     /// `Rewards` shape that `SubscribeUpdateBlock` carries. The proto enum
