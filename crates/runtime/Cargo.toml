@@ -25,6 +25,11 @@ yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 
+[dev-dependencies]
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+yellowstone-grpc-proto = { workspace = true }
+
 [features]
 default = []
 opentelemetry = ["dep:opentelemetry"]
