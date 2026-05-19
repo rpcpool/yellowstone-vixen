@@ -106,10 +106,10 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
         };
 
         for ix_update in &instructions {
-            for ix in ix_update.visit_all() {
+            for (ix, flat_index) in ix_update.visit_all_with_flat_indices() {
                 let (result, had_error) = self
                     .parsers
-                    .parse_instruction(slot, tx_index, &ix.shared.signature, &ix.path, ix)
+                    .parse_instruction(slot, tx_index, &ix.shared.signature, &flat_index, ix)
                     .await;
 
                 if let Some(record) = result {
@@ -117,7 +117,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 
                     let send_result = self
                         .handle
-                        .send_instruction_parsed(slot, sort_key(tx_index, &ix.path), record)
+                        .send_instruction_parsed(slot, sort_key(tx_index, &flat_index), record)
                         .await;
 
                     if let Err(e) = send_result {
