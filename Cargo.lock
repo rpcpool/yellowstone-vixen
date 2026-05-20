@@ -1764,6 +1764,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "core-test"
+version = "0.0.0"
+dependencies = [
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+]
+
+[[package]]
 name = "core2"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5341,6 +5350,8 @@ dependencies = [
  "prost-reflect",
  "protox-parse",
  "regex",
+ "serde",
+ "serde_json",
  "tokio",
  "vixen-test-utils",
  "yellowstone-vixen",
@@ -14094,6 +14105,7 @@ dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
  "rustls 0.23.35",
+ "serde",
  "toml 0.8.23",
  "tracing",
  "yellowstone-vixen",
@@ -14174,10 +14186,12 @@ dependencies = [
  "prometheus",
  "prost-types 0.14.1",
  "serde",
+ "solana-hash 3.1.0",
  "solana-instruction 3.0.0",
  "solana-message 3.0.1",
  "solana-msg 3.0.0",
  "solana-pubkey 3.0.0",
+ "solana-reward-info",
  "solana-runtime",
  "solana-transaction",
  "solana-transaction-status",

@@ -262,3 +262,18 @@ async fn parse_proposal_v2_account() {
 
     assert_eq!(proposal, expected);
 }
+
+#[test]
+fn check_json_serialization() {
+    // account
+    let gov = spl_governance::GovernanceV2::default();
+    let json_str = serde_json::to_string(&gov).expect("failed to json serialize");
+    let _: spl_governance::GovernanceV2 =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+
+    // instruction
+    let action = spl_governance::SetRealmAuthorityAction::default();
+    let json_str = serde_json::to_string(&action).expect("failed to json serialize");
+    let _: spl_governance::SetRealmAuthorityAction =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}

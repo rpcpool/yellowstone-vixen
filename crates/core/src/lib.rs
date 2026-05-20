@@ -631,6 +631,27 @@ impl<const LEN: usize> TryFrom<Cow<'_, str>> for KeyBytes<LEN> {
     fn try_from(value: Cow<str>) -> Result<Self, Self::Error> { value.parse() }
 }
 
+impl<const LEN: usize> serde::Serialize for KeyBytes<LEN> {
+    fn serialize<S: serde::Serializer>(&self, ser: S) -> Result<S::Ok, S::Error> {
+        ser.serialize_str(&bs58::encode(&self.0).into_string())
+    }
+}
+
+impl<'de, const LEN: usize> serde::Deserialize<'de> for KeyBytes<LEN> {
+    fn deserialize<D: serde::Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
+        use serde::de::Error;
+        let s = <&str>::deserialize(de)?;
+        let v = bs58::decode(s).into_vec().map_err(D::Error::custom)?;
+        let arr: [u8; LEN] = v.try_into().map_err(|v: Vec<u8>| {
+            D::Error::custom(format!(
+                "KeyBytes<{LEN}>: expected {LEN} bytes, got {}",
+                v.len()
+            ))
+        })?;
+        Ok(Self(arr))
+    }
+}
+
 /// An error that can occur when building a prefilter.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum PrefilterError {

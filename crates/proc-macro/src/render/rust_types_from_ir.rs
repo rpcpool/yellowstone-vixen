@@ -8,6 +8,8 @@ use crate::intermediate_representation::{
     FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr, ScalarIr, TypeIr, TypeKindIr,
 };
 
+// Generated types derive `serde::Serialize`/`Deserialize` behind the `serde` feature flag.
+// Enable it in consumer crates that need JSON (or other serde-format) conversion.
 pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::SchemaIr) -> TokenStream {
     let mut out = TokenStream::new();
 
@@ -149,6 +151,7 @@ fn render_struct_type(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> TokenS
 
         quote! {
             #[derive(Clone, PartialEq, ::borsh::BorshDeserialize, ::borsh::BorshSerialize)]
+            #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
             pub struct #ident {
                 #(#fields),*
             }
@@ -158,6 +161,7 @@ fn render_struct_type(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> TokenS
     } else {
         quote! {
             #[derive(Clone, Debug, PartialEq, ::borsh::BorshDeserialize, ::borsh::BorshSerialize)]
+            #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
             pub struct #ident {
                 #(#fields),*
             }
@@ -302,6 +306,7 @@ fn render_dispatch(
 
     quote! {
         #[derive(Clone, #parent_debug_derive PartialEq)]
+        #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
         pub struct #wrapper_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
         }
@@ -312,6 +317,7 @@ fn render_dispatch(
             #(#module_types)*
 
             #[derive(Clone, Debug, PartialEq)]
+            #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
             pub enum #oneof_ident {
                 #(#variants),*
             }
@@ -404,9 +410,15 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
     });
 
     let enum_derive = if cfg!(feature = "proto") {
-        quote! { #[derive(Clone, PartialEq, ::prost::Oneof)] }
+        quote! {
+            #[derive(Clone, PartialEq, ::prost::Oneof)]
+            #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
+        }
     } else {
-        quote! { #[derive(Clone, Debug, PartialEq)] }
+        quote! {
+            #[derive(Clone, Debug, PartialEq)]
+            #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
+        }
     };
 
     let proto_impls = if cfg!(feature = "proto") {
@@ -447,6 +459,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
 
     quote! {
         #[derive(Clone, #debug_derive PartialEq)]
+        #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
         pub struct #parent_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
         }

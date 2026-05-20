@@ -6,7 +6,8 @@ pub struct RawInstructionEvent {
     pub slot: u64,
     /// Transaction signature (base58).
     pub signature: String,
-    /// Instruction index (e.g., "0.1.2").
+    /// Instruction index. CPI instructions use the flat inner-instruction
+    /// ordinal under their outer instruction (for example, "3.7").
     pub ix_index: String,
     /// Program ID (base58).
     pub program_id: String,

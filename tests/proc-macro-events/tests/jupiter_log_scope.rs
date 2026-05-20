@@ -85,3 +85,11 @@ fn parses_top_level_jupiter_program_data_for_swap_event() {
     );
     assert_eq!(args.output_amount, 1337);
 }
+
+#[test]
+fn check_json_serialization() {
+    let args = jupiter_regression::event::SwapEventArgs::default();
+    let json_str = serde_json::to_string(&args).expect("failed to json serialize");
+    let _: jupiter_regression::event::SwapEventArgs =
+        serde_json::from_str(&json_str).expect("failed to json deserialize");
+}

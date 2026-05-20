@@ -2876,6 +2876,8 @@ dependencies = [
  "insta",
  "prost",
  "regex",
+ "serde",
+ "serde_json",
  "tokio",
  "vixen-test-utils",
  "yellowstone-vixen",

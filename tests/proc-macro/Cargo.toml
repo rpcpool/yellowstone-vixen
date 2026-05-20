@@ -4,6 +4,10 @@ version = "0.0.0"
 edition = "2024"
 publish = false
 
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
 # Workspace feature-unification workaround
 #
 # Parser crates have `default = []` so external consumers can opt out of
@@ -34,6 +38,8 @@ yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = [
 yellowstone-vixen-block-meta-parser = { workspace = true, features = ["proto"] }
 yellowstone-vixen-stake-pool-parser = { workspace = true, features = ["proto"] }
 
+serde = { workspace = true, optional = true }
+
 [dev-dependencies]
 yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
 yellowstone-vixen-mock = { workspace = true }
@@ -58,3 +64,5 @@ insta = "1.46.3"
 # string directly (mirrors what a Schema-Registry consumer does).
 prost-reflect = "0.16"
 protox-parse = "0.9"
+
+serde_json = { workspace = true }

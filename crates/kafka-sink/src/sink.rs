@@ -379,6 +379,12 @@ impl KafkaSink {
     /// If parser-level fallback is configured, parse errors may be routed there.
     /// Returns the record (if any) and a `had_error` flag indicating whether any
     /// parser encountered an unexpected failure (vs expected filtering).
+    ///
+    /// `path` is the externally visible flat index used in Kafka keys and
+    /// `ix_index` headers. For CPI instructions this should use the flat
+    /// inner-instruction ordinal returned from
+    /// [`InstructionUpdate::visit_all_with_flat_indices`], not necessarily
+    /// `ix.path`, which preserves the nested CPI call tree for parsers.
     pub async fn parse_instruction(
         &self,
         slot: u64,
@@ -776,6 +782,12 @@ mod tests {
         calls: Arc<AtomicUsize>,
     }
 
+    #[derive(Clone)]
+    struct PathRecordingInstructionParser {
+        program_id: Pubkey,
+        seen_path: Arc<std::sync::Mutex<Option<String>>>,
+    }
+
     #[derive(Clone, PartialEq, Message)]
     struct TestInstructionMessage {
         #[prost(uint64, tag = "1")]
@@ -804,6 +816,26 @@ mod tests {
     }
 
     impl ProgramParser for TestInstructionParser {
+        fn program_id(&self) -> Pubkey { self.program_id }
+    }
+
+    impl Parser for PathRecordingInstructionParser {
+        type Input = InstructionUpdate;
+        type Output = TestInstructionMessage;
+
+        fn id(&self) -> Cow<'static, str> { "path-recording-instruction-parser".into() }
+
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+        async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
+            *self.seen_path.lock().expect("path recorder mutex poisoned") =
+                Some(format!("{:?}", value.path));
+
+            Ok(TestInstructionMessage { value: 42 })
+        }
+    }
+
+    impl ProgramParser for PathRecordingInstructionParser {
         fn program_id(&self) -> Pubkey { self.program_id }
     }
 
@@ -1065,6 +1097,46 @@ mod tests {
                 .find(|header| header.key == "fee_payer")
                 .map(|header| header.value.as_str()),
             Some(expected_fee_payer.as_str())
+        );
+    }
+
+    #[test]
+    fn instruction_record_ix_index_uses_flat_index_without_rewriting_parser_path() {
+        let seen_path = Arc::new(std::sync::Mutex::new(None));
+        let parser = PathRecordingInstructionParser {
+            program_id: [1; 32].into(),
+            seen_path: Arc::clone(&seen_path),
+        };
+
+        let sink = KafkaSinkBuilder::new()
+            .instruction_parser(parser, "test", "test.instructions")
+            .build();
+
+        let mut ix = instruction_with_program([1; 32].into());
+        ix.path = Path::from(vec![2, 2]);
+        let flat_index = Path::from(vec![2, 6]);
+
+        let (record, had_error) =
+            futures::executor::block_on(sink.parse_instruction(100, 7, b"sig", &flat_index, &ix));
+
+        let record = record.expect("expected decoded record");
+
+        assert!(!had_error);
+        // Kafka ix_index is the flat index even though the parser still sees
+        // the richer nested call-tree path.
+        assert_eq!(
+            record
+                .headers
+                .iter()
+                .find(|header| header.key == "ix_index")
+                .map(|header| header.value.as_str()),
+            Some("3.7")
+        );
+        let sig_str = yellowstone_vixen_core::bs58::encode(b"sig").into_string();
+        assert_eq!(record.key, format!("100:{sig_str}:3.7"));
+        assert_eq!(
+            *seen_path.lock().expect("path recorder mutex poisoned"),
+            Some("3.3".to_owned())
         );
     }
 
