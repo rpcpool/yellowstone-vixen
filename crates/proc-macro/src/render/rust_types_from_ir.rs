@@ -220,6 +220,29 @@ fn render_dispatch(
         })
         .collect();
 
+    // Re-export top-level types for variants whose `<IxName>Args` (or
+    // `<EvName>Args`) wrapper was suppressed because it would collide with a
+    // top-level DefinedType. The variant's `args:` field then resolves to the
+    // re-exported (FLAT) type, matching what the proto schema declares — so
+    // encode/decode through the schema agree byte-for-byte. See
+    // `build_instructions_schema::build_instruction_messages` for the
+    // suppression rule.
+    let module_reexports: Vec<TokenStream> = oneof_ir
+        .variants
+        .iter()
+        .filter_map(|v| {
+            let args_name = format!("{}Args", v.message_type);
+
+            if local_names.contains(args_name.as_str()) {
+                None
+            } else {
+                let args_ident = format_ident!("{}", args_name);
+
+                Some(quote! { pub use super::#args_ident; })
+            }
+        })
+        .collect();
+
     // Struct variants: `Swap { accounts: SwapAccounts, args: SwapArgs }`
     let variants = oneof_ir.variants.iter().map(|v| {
         let v_ident = format_ident!("{}", v.variant_name);
@@ -289,6 +312,8 @@ fn render_dispatch(
         }
 
         pub mod #mod_ident {
+            #(#module_reexports)*
+
             #(#module_types)*
 
             #[derive(Clone, Debug, PartialEq)]

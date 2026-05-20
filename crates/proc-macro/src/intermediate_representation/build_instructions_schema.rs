@@ -161,11 +161,27 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
 
     let arg_fields = build_fields_ir(&args_name, &ix.arguments, ir, TypeKindIr::Helper);
 
-    ir.types.push(TypeIr {
-        name: args_name.clone(),
-        fields: arg_fields,
-        kind: TypeKindIr::Instruction,
-    });
+    // Skip emitting the instruction-kind args wrapper when its name collides
+    // with a top-level DefinedType. The proto schema renderer drops duplicate
+    // names and keeps the DefinedType's flat shape, so emitting the Rust
+    // wrapper here would encode one extra layer of nesting compared to what
+    // the schema declares (a schema/encoder mismatch the consumer can't
+    // decode). With the wrapper omitted, field resolution in the dispatch
+    // wrapper struct (`instruction::<IxName>`) naturally falls back to
+    // `super::<args_name>`, and the dispatch module emits a `pub use` to
+    // keep `instruction::<args_name>` paths working in parser helper fns.
+    let collides_with_defined_type = ir
+        .types
+        .iter()
+        .any(|t| t.name == args_name && t.kind == TypeKindIr::DefinedType);
+
+    if !collides_with_defined_type {
+        ir.types.push(TypeIr {
+            name: args_name.clone(),
+            fields: arg_fields,
+            kind: TypeKindIr::Instruction,
+        });
+    }
 
     ir.types.push(TypeIr {
         name: payload_name,

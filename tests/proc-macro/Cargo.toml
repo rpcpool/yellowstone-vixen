@@ -52,11 +52,17 @@ yellowstone-vixen = { workspace = true }
 
 prost = { workspace = true }
 borsh = { workspace = true }
+hex = { workspace = true }
 
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 
 regex = { workspace = true }
 
 insta = "1.46.3"
+
+# Used by the squads_multisig_program test to decode against the schema
+# string directly (mirrors what a Schema-Registry consumer does).
+prost-reflect = "0.16"
+protox-parse = "0.9"
 
 serde_json = { workspace = true }
