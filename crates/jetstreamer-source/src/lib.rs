@@ -222,6 +222,20 @@ impl VixenStreamHandler {
         (block_matches, transaction_matches, wants_entries)
     }
 
+    /// Lock `entry_buffer`, converting a poisoned mutex into a structured
+    /// error instead of panicking inside the hot streaming loop.
+    fn lock_entry_buffer(
+        &self,
+    ) -> Result<std::sync::MutexGuard<'_, HashMap<u64, Vec<EntryData>>>, SharedError> {
+        self.entry_buffer.lock().map_err(|poison| {
+            error!(
+                error = %poison,
+                "entry_buffer mutex poisoned; another task panicked while holding the lock"
+            );
+            Box::new(Error::EntryBufferPoisoned(poison.to_string())) as SharedError
+        })
+    }
+
     async fn process_entry(&self, entry: EntryData) -> Result<(), SharedError> {
         if !self.wants_entries {
             return Ok(());
@@ -229,7 +243,7 @@ impl VixenStreamHandler {
 
         let slot = entry.slot;
         {
-            let mut buf = self.entry_buffer.lock().expect("entry_buffer poisoned");
+            let mut buf = self.lock_entry_buffer()?;
             buf.entry(slot).or_default().push(entry);
         }
 
@@ -257,11 +271,7 @@ impl VixenStreamHandler {
 
                     // Drop any entries buffered for this slot — no consumer.
                     if self.wants_entries {
-                        let _ = self
-                            .entry_buffer
-                            .lock()
-                            .expect("entry_buffer poisoned")
-                            .remove(&slot);
+                        let _ = self.lock_entry_buffer()?.remove(&slot);
                     }
 
                     // Log progress every 10,000 blocks even if skipped
@@ -280,12 +290,7 @@ impl VixenStreamHandler {
                 }
 
                 let entries = if self.wants_entries {
-                    let buffered = self
-                        .entry_buffer
-                        .lock()
-                        .expect("entry_buffer poisoned")
-                        .remove(&slot)
-                        .unwrap_or_default();
+                    let buffered = self.lock_entry_buffer()?.remove(&slot).unwrap_or_default();
 
                     if buffered.len() as u64 != entry_count {
                         debug!(
@@ -728,6 +733,9 @@ pub enum Error {
 
     #[error("Process env does not match config (did you call init_process_env?): {0}")]
     EnvMismatch(String),
+
+    #[error("Entry buffer mutex poisoned: {0}")]
+    EntryBufferPoisoned(String),
 }
 
 impl From<Error> for VixenError {
@@ -1017,6 +1025,60 @@ slot-end = 2000
 
         shutdown_tx.send(()).expect("at least one receiver");
         rx.recv().await.expect("broadcast delivered");
+    }
+
+    #[tokio::test]
+    async fn process_entry_returns_error_when_buffer_mutex_poisoned() {
+        use std::collections::HashMap as StdHashMap;
+
+        use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
+
+        let mut prefilters = StdHashMap::new();
+        prefilters.insert("wants-entries".to_string(), Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: None,
+            block: Some(BlockPrefilter {
+                accounts_include: Default::default(),
+                include_transactions: false,
+                include_accounts: false,
+                include_entries: true,
+            }),
+            slot: None,
+        });
+        let filters = Filters::new(prefilters);
+
+        let (updates_tx, _updates_rx) = mpsc::channel(4);
+        let handler = Arc::new(VixenStreamHandler::new(updates_tx, None, filters));
+
+        // Poison the mutex by panicking while holding the lock on a worker
+        // thread. After the join, any subsequent `.lock()` returns Err.
+        let poisoner = Arc::clone(&handler);
+        let join = std::thread::spawn(move || {
+            let _guard = poisoner.entry_buffer.lock().unwrap();
+            panic!("intentional poison for test");
+        })
+        .join();
+        assert!(join.is_err(), "poisoner thread should have panicked");
+
+        let result = handler
+            .process_entry(EntryData {
+                slot: 1,
+                entry_index: 0,
+                transaction_indexes: 0..0,
+                num_hashes: 0,
+                hash: solana_hash::Hash::default(),
+            })
+            .await;
+
+        let err = result.expect_err("poisoned mutex must surface as error, not panic");
+        let downcast = err
+            .downcast_ref::<Error>()
+            .expect("error must downcast to jetstream-source Error");
+        assert!(
+            matches!(downcast, Error::EntryBufferPoisoned(_)),
+            "expected EntryBufferPoisoned, got {downcast:?}"
+        );
     }
 
     #[tokio::test]
