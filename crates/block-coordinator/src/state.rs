@@ -163,7 +163,7 @@ impl<R> CoordinatorState<R> {
                 *self.account_event_counts.entry(slot).or_default() += 1;
             },
             CoordinatorEvent::InstructionRecordParsed { slot, key, record } => {
-                if !self.validate_instruction_slot(slot, "InstructionRecordParsed")? {
+                if !self.validate_instruction_slot(slot, "InstructionRecordParsed") {
                     return Ok(());
                 }
                 self.buffer
@@ -180,7 +180,7 @@ impl<R> CoordinatorState<R> {
                 buf.increment_account_processed_count();
             },
             CoordinatorEvent::TransactionParsed { slot } => {
-                if !self.validate_instruction_slot(slot, "TransactionParsed")? {
+                if !self.validate_instruction_slot(slot, "TransactionParsed") {
                     return Ok(());
                 }
                 self.buffer
@@ -201,7 +201,7 @@ impl<R> CoordinatorState<R> {
                     buf.increment_parse_stat(kind);
                     buf.increment_account_processed_count();
                 } else {
-                    if !self.validate_instruction_slot(slot, "ParseStats")? {
+                    if !self.validate_instruction_slot(slot, "ParseStats") {
                         return Ok(());
                     }
                     self.buffer
@@ -328,21 +328,17 @@ impl<R> CoordinatorState<R> {
         false
     }
 
-    /// Instruction events are fatal if stale unless the slot is known discarded.
-    fn validate_instruction_slot(
-        &self,
-        slot: Slot,
-        event: &'static str,
-    ) -> Result<bool, CoordinatorError> {
+    /// Instruction events for slots at or behind the flush frontier are stale.
+    fn validate_instruction_slot(&self, slot: Slot, event: &'static str) -> bool {
         if self.discarded_slots.contains(&slot) {
             self.log_discarded_slot_drop(slot, event);
-            return Ok(false);
+            return false;
         }
         if self
             .last_instruction_flushed_slot
             .is_some_and(|last| slot <= last)
         {
-            tracing::error!(
+            tracing::warn!(
                 slot,
                 event,
                 last_instruction_flushed = ?self.last_instruction_flushed_slot,
@@ -350,14 +346,11 @@ impl<R> CoordinatorState<R> {
                 oldest_pending_slot = ?self.oldest_pending_slot(),
                 discarded_slot_count = self.discarded_slots.len(),
                 known_discarded = self.discarded_slots.contains(&slot),
-                "Instruction event for slot at or behind flush frontier without discard tombstone"
+                "Instruction event for slot at or behind flush frontier; dropping"
             );
-            return Err(CoordinatorError::TwoGateInvariantViolation {
-                slot,
-                last_flushed: self.last_instruction_flushed_slot,
-            });
+            return false;
         }
-        Ok(true)
+        true
     }
 
     /// Relaxed validation for account events — warn + drop if post-flush (not fatal).
@@ -640,26 +633,26 @@ mod tests {
     }
 
     #[test]
-    fn post_flush_instruction_events_without_discard_tombstone_return_error() {
+    fn post_flush_instruction_events_without_discard_tombstone_are_dropped() {
         let mut state = CoordinatorState::<String>::default();
         apply_ready_slot(&mut state, 100, 99, 0);
 
         let _ = drain_both(&mut state).unwrap();
 
-        let err = state
+        state
             .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot: 100,
                 key: InstructionRecordSortKey::new(0, vec![0]),
                 record: "late".to_string(),
             })
-            .unwrap_err();
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::TransactionParsed { slot: 100 })
+            .unwrap();
 
-        match err {
-            CoordinatorError::TwoGateInvariantViolation { slot, .. } => {
-                assert_eq!(slot, 100);
-            },
-            _ => panic!("Unexpected error: {err}"),
-        }
+        let flushed = drain_both(&mut state).unwrap();
+        assert!(flushed.is_empty());
+        assert_eq!(state.pending_slot_count(), 0);
     }
 
     #[test]

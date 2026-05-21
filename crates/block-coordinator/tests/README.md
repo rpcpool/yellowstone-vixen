@@ -41,10 +41,10 @@
 | `parsed_messages_before_lifecycle_are_buffered` | Early messages preserved |
 | `double_confirmation_is_idempotent` | Confirming twice is safe |
 
-### Invariant Violation
+### Late Post-Flush Messages
 | Test | Verifies |
 |------|----------|
-| `late_message_for_flushed_slot_errors_without_discard_tombstone` | Errors on stale parsed events unless the slot is known discarded |
+| `late_message_for_flushed_slot_is_dropped` | Drops stale parsed events after the flush frontier |
 
 ## Fixture File
 

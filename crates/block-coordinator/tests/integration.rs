@@ -40,7 +40,7 @@
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
 //! │  ┌──────────────────────────────┐YES┌──────────────────────────────────────┐│
-//! │  │ slot <= last_instruction_    ├──►│ ERROR (TwoGateInvariantViolation)    ││
+//! │  │ slot <= last_instruction_    ├──►│ DROP + WARN                          ││
 //! │  │ flushed_slot?                │   │ Instruction event after flush frontier││
 //! │  └────────┬─────────────────────┘   └──────────────────────────────────────┘│
 //! │           │ NO                 └─────────────────────────────────┘          │
@@ -163,8 +163,8 @@
 //! │    ✓ parsed_before_lifecycle_buffered  Early messages preserved             │
 //! │    ✓ double_confirmation_is_idempotent Confirming twice is safe             │
 //! │                                                                             │
-//! │  INVARIANT VIOLATION:                                                       │
-//! │    ✓ late_message_for_flushed_slot_errors_without_discard_tombstone          │
+//! │  LATE POST-FLUSH MESSAGES:                                                  │
+//! │    ✓ late_message_for_flushed_slot_is_dropped  Drops stale parsed events    │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
@@ -917,7 +917,7 @@ async fn gap_in_sequence_blocks_flush() {
 }
 
 #[tokio::test]
-async fn late_message_for_flushed_slot_errors_without_discard_tombstone() {
+async fn late_message_for_flushed_slot_is_dropped() {
     let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
@@ -945,20 +945,28 @@ async fn late_message_for_flushed_slot_errors_without_discard_tombstone() {
         .expect("Channel closed");
     assert_eq!(flushed.slot, 100);
 
-    // Send late message without a discard tombstone - this is still fatal because
-    // it may mean a canonical transaction was missed.
+    // Send late message. Restarting from the slot topic would resume after this
+    // stale slot anyway, so the coordinator drops it without terminating.
     send_record_to_slot(&parsed_tx, 100, "too-late").await;
+
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    assert!(
+        !handle.is_finished(),
+        "Coordinator should keep running after stale parsed events"
+    );
+    assert!(output_rx.try_recv().is_err(), "Unexpected stale flush");
+
+    drop(slot);
+    drop(input_tx);
+    drop(parsed_tx);
 
     let result = tokio::time::timeout(Duration::from_secs(2), handle)
         .await
-        .expect("Timed out waiting for coordinator failure")
+        .expect("Timed out waiting for coordinator shutdown")
         .expect("task join");
     assert!(
-        matches!(
-            result,
-            Err(CoordinatorError::TwoGateInvariantViolation { .. })
-        ),
-        "Expected TwoGateInvariantViolation, got: {result:?}"
+        result.is_ok(),
+        "Expected clean coordinator shutdown, got: {result:?}"
     );
 }
 
