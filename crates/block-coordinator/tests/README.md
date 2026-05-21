@@ -41,10 +41,10 @@
 | `parsed_messages_before_lifecycle_are_buffered` | Early messages preserved |
 | `double_confirmation_is_idempotent` | Confirming twice is safe |
 
-### Invariant Violation (panic tests)
+### Invariant Violation
 | Test | Verifies |
 |------|----------|
-| `late_message_for_flushed_slot_panics` | Panics on two-gate violation |
+| `late_message_for_flushed_slot_errors_without_discard_tombstone` | Errors on stale parsed events unless the slot is known discarded |
 
 ## Fixture File
 

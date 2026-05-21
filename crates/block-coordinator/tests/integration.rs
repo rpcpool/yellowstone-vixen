@@ -35,7 +35,7 @@
 //! │           │                                                                 │
 //! │           ▼                                                                 │
 //! │  ┌────────────────────┐  YES   ┌─────────────────────────────────┐          │
-//! │  │ slot in discarded? ├───────►│ DROP (dead/forked/untracked)    │          │
+//! │  │ slot in discarded? ├───────►│ DROP + WARN (non-canonical)     │          │
 //! │  └────────┬───────────┘        │ [discarded_slot_ignores_parsed] │          │
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
@@ -163,8 +163,8 @@
 //! │    ✓ parsed_before_lifecycle_buffered  Early messages preserved             │
 //! │    ✓ double_confirmation_is_idempotent Confirming twice is safe             │
 //! │                                                                             │
-//! │  INVARIANT VIOLATION (panic tests):                                         │
-//! │    ✓ late_message_for_flushed_slot_errors  Detects two-gate bug             │
+//! │  INVARIANT VIOLATION:                                                       │
+//! │    ✓ late_message_for_flushed_slot_errors_without_discard_tombstone          │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
@@ -792,6 +792,9 @@ async fn untracked_slot_discarded() {
     harness.send_orphan_block_summary(100, 99).await;
     harness.expect_no_flush().await;
 
+    send_record_to_slot(&harness.parsed_tx, 100, "ignored-untracked").await;
+    harness.expect_no_flush().await;
+
     let next = harness.slot(101).parent(100).empty().await;
     next.confirm().await;
 
@@ -914,7 +917,7 @@ async fn gap_in_sequence_blocks_flush() {
 }
 
 #[tokio::test]
-async fn late_message_for_flushed_slot_errors() {
+async fn late_message_for_flushed_slot_errors_without_discard_tombstone() {
     let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
@@ -942,11 +945,14 @@ async fn late_message_for_flushed_slot_errors() {
         .expect("Channel closed");
     assert_eq!(flushed.slot, 100);
 
-    // Send late message - this should return an error
+    // Send late message without a discard tombstone - this is still fatal because
+    // it may mean a canonical transaction was missed.
     send_record_to_slot(&parsed_tx, 100, "too-late").await;
 
-    // Wait for coordinator task to complete (it should return an error)
-    let result = handle.await.expect("task join");
+    let result = tokio::time::timeout(Duration::from_secs(2), handle)
+        .await
+        .expect("Timed out waiting for coordinator failure")
+        .expect("task join");
     assert!(
         matches!(
             result,
