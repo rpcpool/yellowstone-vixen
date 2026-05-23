@@ -59,6 +59,7 @@ pub struct CoordinatorState<R> {
 }
 
 impl<R> CoordinatorState<R> {
+    const DISCARDED_SLOT_RETENTION_BEHIND_FLUSH: Slot = 512;
     /// arbitrary number
     const MAX_DISCARDED_SLOTS: usize = 100;
 
@@ -145,6 +146,7 @@ impl<R> CoordinatorState<R> {
                     return Ok(());
                 }
                 if self.discarded_slots.contains(&slot) {
+                    self.log_discarded_slot_drop(slot, "AccountEventSeen");
                     return Ok(());
                 }
                 // If account gate is already frozen for this slot, warn + skip.
@@ -161,7 +163,7 @@ impl<R> CoordinatorState<R> {
                 *self.account_event_counts.entry(slot).or_default() += 1;
             },
             CoordinatorEvent::InstructionRecordParsed { slot, key, record } => {
-                if !self.validate_instruction_slot(slot)? {
+                if !self.validate_instruction_slot(slot, "InstructionRecordParsed") {
                     return Ok(());
                 }
                 self.buffer
@@ -170,7 +172,7 @@ impl<R> CoordinatorState<R> {
                     .insert_instruction_record(key, record);
             },
             CoordinatorEvent::AccountRecordParsed { slot, key, record } => {
-                if !self.validate_account_slot(slot) {
+                if !self.validate_account_slot(slot, "AccountRecordParsed") {
                     return Ok(());
                 }
                 let buf = self.buffer.entry(slot).or_default();
@@ -178,7 +180,7 @@ impl<R> CoordinatorState<R> {
                 buf.increment_account_processed_count();
             },
             CoordinatorEvent::TransactionParsed { slot } => {
-                if !self.validate_instruction_slot(slot)? {
+                if !self.validate_instruction_slot(slot, "TransactionParsed") {
                     return Ok(());
                 }
                 self.buffer
@@ -192,14 +194,14 @@ impl<R> CoordinatorState<R> {
                     ParseStatsKind::AccountFiltered | ParseStatsKind::AccountError
                 );
                 if is_account_stat {
-                    if !self.validate_account_slot(slot) {
+                    if !self.validate_account_slot(slot, "ParseStats") {
                         return Ok(());
                     }
                     let buf = self.buffer.entry(slot).or_default();
                     buf.increment_parse_stat(kind);
                     buf.increment_account_processed_count();
                 } else {
-                    if !self.validate_instruction_slot(slot)? {
+                    if !self.validate_instruction_slot(slot, "ParseStats") {
                         return Ok(());
                     }
                     self.buffer
@@ -326,26 +328,35 @@ impl<R> CoordinatorState<R> {
         false
     }
 
-    /// Strict validation for instruction events — TwoGateInvariantViolation if post-flush.
-    fn validate_instruction_slot(&self, slot: Slot) -> Result<bool, CoordinatorError> {
+    /// Instruction events for slots at or behind the flush frontier are stale.
+    fn validate_instruction_slot(&self, slot: Slot, event: &'static str) -> bool {
         if self.discarded_slots.contains(&slot) {
-            return Ok(false);
+            self.log_discarded_slot_drop(slot, event);
+            return false;
         }
         if self
             .last_instruction_flushed_slot
             .is_some_and(|last| slot <= last)
         {
-            return Err(CoordinatorError::TwoGateInvariantViolation {
+            tracing::warn!(
                 slot,
-                last_flushed: self.last_instruction_flushed_slot,
-            });
+                event,
+                last_instruction_flushed = ?self.last_instruction_flushed_slot,
+                last_account_flushed = ?self.last_account_flushed_slot,
+                oldest_pending_slot = ?self.oldest_pending_slot(),
+                discarded_slot_count = self.discarded_slots.len(),
+                known_discarded = self.discarded_slots.contains(&slot),
+                "Instruction event for slot at or behind flush frontier; dropping"
+            );
+            return false;
         }
-        Ok(true)
+        true
     }
 
     /// Relaxed validation for account events — warn + drop if post-flush (not fatal).
-    fn validate_account_slot(&mut self, slot: Slot) -> bool {
+    fn validate_account_slot(&mut self, slot: Slot, event: &'static str) -> bool {
         if self.discarded_slots.contains(&slot) {
+            self.log_discarded_slot_drop(slot, event);
             return false;
         }
         if self
@@ -371,6 +382,23 @@ impl<R> CoordinatorState<R> {
         true
     }
 
+    fn log_discarded_slot_drop(&self, slot: Slot, event: &'static str) {
+        tracing::warn!(
+            slot,
+            event,
+            had_buffer = self.buffer.contains_key(&slot),
+            buffered_record_count = self
+                .buffer
+                .get(&slot)
+                .map_or(0, SlotRecordBuffer::record_count),
+            last_instruction_flushed = ?self.last_instruction_flushed_slot,
+            last_account_flushed = ?self.last_account_flushed_slot,
+            oldest_pending_slot = ?self.oldest_pending_slot(),
+            discarded_slot_count = self.discarded_slots.len(),
+            "Dropping event for known discarded slot"
+        );
+    }
+
     /// Freeze the account gate for a slot: move account_event_counts into expected_account_count
     /// and mark account_commitment_reached.
     fn freeze_account_gate(&mut self, slot: Slot) {
@@ -388,20 +416,31 @@ impl<R> CoordinatorState<R> {
     }
 
     fn discard_slot(&mut self, slot: Slot, reason: DiscardReason) {
-        self.discarded_slots.insert(slot);
+        let was_known_discarded = !self.discarded_slots.insert(slot);
         self.account_event_counts.remove(&slot);
         self.prune_discarded_slots();
-        if let Some(buf) = self.buffer.remove(&slot) {
-            tracing::warn!(slot, %reason, records = buf.record_count(), "Discarding slot");
-        }
+        let buffer = self.buffer.remove(&slot);
+        let record_count = buffer.as_ref().map_or(0, SlotRecordBuffer::record_count);
+        tracing::warn!(
+            slot,
+            %reason,
+            had_buffer = buffer.is_some(),
+            record_count,
+            was_known_discarded,
+            last_instruction_flushed = ?self.last_instruction_flushed_slot,
+            last_account_flushed = ?self.last_account_flushed_slot,
+            "Discarding slot"
+        );
     }
 
-    /// Remove discarded-slot entries that are already covered by `last_flushed_slot`.
+    /// Remove discarded-slot entries far behind `last_flushed_slot`.
     ///
-    /// Once a slot is flushed past a discarded slot, the `parent_slot <= last`
-    /// check in `drain_flushable` already covers it — the entry in
-    /// `discarded_slots` is redundant. Pruning only these entries ensures we
-    /// never evict an entry still needed for gap resolution.
+    /// Once a slot is flushed past a discarded slot, parent gap resolution no
+    /// longer needs that discarded marker. We still retain a short trailing
+    /// window because processed streams can deliver late transaction parse
+    /// results for non-canonical slots after the canonical frontier advanced.
+    /// Those tombstones let us drop stale fork/dead/untracked messages instead
+    /// of misclassifying them as two-gate violations.
     ///
     /// A hard cap remains as a safety net: if the set grows beyond
     /// `MAX_DISCARDED_SLOTS` even after pruning (i.e. many discards ahead of
@@ -409,7 +448,8 @@ impl<R> CoordinatorState<R> {
     /// permanently stall the pipeline.
     fn prune_discarded_slots(&mut self) {
         if let Some(last) = self.last_flushed_slot() {
-            self.discarded_slots.retain(|&s| s > last);
+            let min_retained = last.saturating_sub(Self::DISCARDED_SLOT_RETENTION_BEHIND_FLUSH);
+            self.discarded_slots.retain(|&s| s > min_retained);
         }
         if self.discarded_slots.len() > Self::MAX_DISCARDED_SLOTS {
             tracing::warn!(
@@ -593,26 +633,26 @@ mod tests {
     }
 
     #[test]
-    fn two_gate_violation_returns_error() {
+    fn post_flush_instruction_events_without_discard_tombstone_are_dropped() {
         let mut state = CoordinatorState::<String>::default();
         apply_ready_slot(&mut state, 100, 99, 0);
 
         let _ = drain_both(&mut state).unwrap();
 
-        let err = state
+        state
             .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot: 100,
                 key: InstructionRecordSortKey::new(0, vec![0]),
                 record: "late".to_string(),
             })
-            .unwrap_err();
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::TransactionParsed { slot: 100 })
+            .unwrap();
 
-        match err {
-            CoordinatorError::TwoGateInvariantViolation { slot, .. } => {
-                assert_eq!(slot, 100);
-            },
-            _ => panic!("Unexpected error: {err}"),
-        }
+        let flushed = drain_both(&mut state).unwrap();
+        assert!(flushed.is_empty());
+        assert_eq!(state.pending_slot_count(), 0);
     }
 
     #[test]
@@ -641,7 +681,7 @@ mod tests {
     }
 
     #[test]
-    fn prune_removes_entries_below_last_flushed() {
+    fn prune_removes_entries_far_below_last_flushed() {
         let mut state = CoordinatorState::<String>::default();
 
         for s in 50..60 {
@@ -653,11 +693,58 @@ mod tests {
                 .unwrap();
         }
 
-        apply_ready_slot(&mut state, 100, 99, 0);
+        apply_ready_slot(&mut state, 1000, 999, 0);
         let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
 
         assert_eq!(state.discarded_slots.len(), 0);
+    }
+
+    #[test]
+    fn prune_retains_recent_discarded_slots_below_last_flushed() {
+        let mut state = CoordinatorState::<String>::default();
+
+        state
+            .apply(CoordinatorEvent::SlotDiscarded {
+                slot: 96,
+                reason: DiscardReason::Forked,
+            })
+            .unwrap();
+
+        apply_ready_slot(&mut state, 100, 99, 0);
+        let flushed = drain_both(&mut state).unwrap();
+        assert_eq!(flushed.len(), 1);
+
+        assert!(state.discarded_slots.contains(&96));
+    }
+
+    #[test]
+    fn late_parsed_message_for_recent_discarded_slot_is_dropped_after_flush_frontier_advances() {
+        let mut state = CoordinatorState::<String>::default();
+
+        state
+            .apply(CoordinatorEvent::SlotDiscarded {
+                slot: 96,
+                reason: DiscardReason::Forked,
+            })
+            .unwrap();
+
+        apply_ready_slot(&mut state, 100, 99, 0);
+        let flushed = drain_both(&mut state).unwrap();
+        assert_eq!(flushed.len(), 1);
+
+        state
+            .apply(CoordinatorEvent::InstructionRecordParsed {
+                slot: 96,
+                key: InstructionRecordSortKey::new(0, vec![0]),
+                record: "late fork".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::TransactionParsed { slot: 96 })
+            .unwrap();
+
+        assert_eq!(state.pending_slot_count(), 0);
     }
 
     #[test]
@@ -687,7 +774,7 @@ mod tests {
         assert_eq!(state.last_flushed_slot(), Some(100));
         assert_eq!(state.pending_slot_count(), 1);
         assert_eq!(state.oldest_pending_slot(), Some(102));
-        assert_eq!(state.discarded_slot_count(), 0);
+        assert_eq!(state.discarded_slot_count(), 1);
     }
 
     #[test]
