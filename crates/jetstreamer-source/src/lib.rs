@@ -1,9 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc, Mutex,
-    },
+    sync::{Arc, Mutex},
 };
 
 use async_trait::async_trait;
@@ -152,8 +149,6 @@ struct VixenStreamHandler {
     // entries for a slot on a single thread before the slot's block message,
     // so slot is a sufficient key.
     entry_buffer: Mutex<HashMap<u64, Vec<EntryData>>>,
-    // Counter for progress logging
-    blocks_processed: AtomicU64,
 }
 
 impl VixenStreamHandler {
@@ -179,7 +174,6 @@ impl VixenStreamHandler {
             transaction_matches,
             wants_entries,
             entry_buffer: Mutex::new(HashMap::new()),
-            blocks_processed: AtomicU64::new(0),
         }
     }
 
@@ -274,19 +268,7 @@ impl VixenStreamHandler {
                         let _ = self.lock_entry_buffer()?.remove(&slot);
                     }
 
-                    // Log progress every 10,000 blocks even if skipped
-                    let count = self.blocks_processed.fetch_add(1, Ordering::Relaxed);
-                    if count.is_multiple_of(10_000) && count > 0 {
-                        debug!(slot, count, "Processed blocks (skipping non-matching)");
-                    }
-
                     return Ok(());
-                }
-
-                // Log progress every 10,000 blocks
-                let count = self.blocks_processed.fetch_add(1, Ordering::Relaxed);
-                if count.is_multiple_of(10_000) && count > 0 {
-                    debug!(slot, count, "Processed blocks (found matches)");
                 }
 
                 let entries = if self.wants_entries {
@@ -468,6 +450,13 @@ pub struct JetstreamSourceConfig {
     #[serde(default)]
     pub buffer_window_bytes: Option<u64>,
 
+    /// Emit a structured progress stats line every N slots, sourced from
+    /// upstream `firehose` `StatsTracking` aggregates (blocks, transactions,
+    /// entries, leader-skipped slots). `0` disables progress logging.
+    #[arg(long, env, default_value = "10000")]
+    #[serde(default = "default_stats_interval_slots")]
+    pub stats_interval_slots: u64,
+
     /// Optional side channel for `PossibleLeaderSkipped` events.
     #[serde(skip)]
     #[arg(skip)]
@@ -485,6 +474,8 @@ pub struct JetstreamSourceConfig {
     #[arg(skip)]
     pub shutdown_signal_tx: Option<broadcast::Sender<()>>,
 }
+
+fn default_stats_interval_slots() -> u64 { 10_000 }
 
 /// Configuration for slot ranges or epochs
 #[derive(Debug, Clone, serde::Deserialize, clap::Args)]
@@ -598,6 +589,49 @@ impl SourceTrait for JetstreamSource {
     }
 }
 
+/// Log a structured firehose progress pulse.
+///
+/// Registered as the upstream `StatsTracking` callback so periodic stats come
+/// straight from the engine's own aggregates — blocks, transactions, entries,
+/// and leader-skipped slots — rather than a hand-rolled block counter.
+///
+/// `on_stats` fires once per worker thread when that thread crosses a
+/// `stats_interval_slots` boundary; the counters are global aggregates, so
+/// `thread_id` is logged to identify which worker emitted the pulse.
+///
+/// Example output:
+///
+/// ```text, ignore
+/// INFO Firehose progress thread_id=2 slots=20000 blocks=19987 transactions=4821334 entries=20000 leader_skipped_slots=13 tps=152000
+/// ```
+fn log_firehose_stats(
+    thread_id: usize,
+    stats: jetstreamer_firehose::firehose::Stats,
+) -> futures_util::future::BoxFuture<'static, Result<(), SharedError>> {
+    async move {
+        let elapsed = stats.time_since_last_pulse.as_secs_f64();
+        let tps = if elapsed > 0.0 {
+            (stats.transactions_since_last_pulse as f64 / elapsed).round() as u64
+        } else {
+            0
+        };
+
+        info!(
+            thread_id,
+            slots = stats.slots_processed,
+            blocks = stats.blocks_processed,
+            transactions = stats.transactions_processed,
+            entries = stats.entries_processed,
+            leader_skipped_slots = stats.leader_skipped_slots,
+            tps,
+            "Firehose progress"
+        );
+
+        Ok(())
+    }
+    .boxed()
+}
+
 impl JetstreamSource {
     async fn stream_loop(
         config: JetstreamSourceConfig,
@@ -656,6 +690,17 @@ impl JetstreamSource {
         // only after `connect()` returns.
         let shutdown_signal = config.shutdown_signal_tx.as_ref().map(|tx| tx.subscribe());
 
+        // Register upstream `StatsTracking` so periodic progress comes from the
+        // firehose's own aggregates. `stats_interval_slots == 0` disables it —
+        // this also avoids upstream's unguarded `slot % interval` (a `0`
+        // interval would divide by zero).
+        let stats_tracking = (config.stats_interval_slots != 0).then_some(
+            jetstreamer_firehose::firehose::StatsTracking {
+                on_stats: log_firehose_stats,
+                tracking_interval_slots: config.stats_interval_slots,
+            },
+        );
+
         let result = firehose(
             config.threads as u64,
             config.sequential,
@@ -666,13 +711,7 @@ impl JetstreamSource {
             on_entry,
             None::<jetstreamer_firehose::firehose::OnRewardFn>,
             None::<OnErrorFn>,
-            None::<
-                jetstreamer_firehose::firehose::StatsTracking<
-                    jetstreamer_firehose::firehose::HandlerFn<
-                        jetstreamer_firehose::firehose::Stats,
-                    >,
-                >,
-            >,
+            stats_tracking,
             shutdown_signal,
         )
         .await;
@@ -814,6 +853,7 @@ mod tests {
             network_capacity_mb: 1000,
             sequential: false,
             buffer_window_bytes: None,
+            stats_interval_slots: 10_000,
             possible_leader_skipped_tx: None,
             shutdown_signal_tx: None,
         };
@@ -838,6 +878,7 @@ compact-index-base-url = "https://files.old-faithful.net"
 network-capacity-mb = 1000
 sequential = true
 buffer-window-bytes = 1073741824
+stats-interval-slots = 500
 
 [range]
 slot-start = 1000
@@ -849,6 +890,7 @@ slot-end = 2000
 
         assert!(config.sequential);
         assert_eq!(config.buffer_window_bytes, Some(1_073_741_824));
+        assert_eq!(config.stats_interval_slots, 500);
         assert_eq!(config.archive_url, "https://api.old-faithful.net");
         assert_eq!(config.threads, 4);
     }
@@ -877,6 +919,10 @@ slot-end = 2000
         assert!(
             config.buffer_window_bytes.is_none(),
             "`buffer_window_bytes` must default to None when absent from TOML"
+        );
+        assert_eq!(
+            config.stats_interval_slots, 10_000,
+            "`stats_interval_slots` must default to 10_000 when absent from TOML"
         );
     }
 
@@ -1009,6 +1055,7 @@ slot-end = 2000
             network_capacity_mb: 1000,
             sequential: false,
             buffer_window_bytes: None,
+            stats_interval_slots: 10_000,
             possible_leader_skipped_tx: None,
             shutdown_signal_tx: Some(shutdown_tx.clone()),
         };
