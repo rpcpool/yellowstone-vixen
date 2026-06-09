@@ -280,10 +280,50 @@ pub struct UiAmountToAmountArgs {
 
 #[vixen]
 #[derive(Clone, PartialEq)]
+pub struct WithdrawExcessLamportsAccounts {
+    pub source: Pubkey,
+    pub destination: Pubkey,
+    pub authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
+}
+
+#[vixen]
+#[derive(Clone, PartialEq)]
+pub struct UnwrapLamportsAccounts {
+    pub source: Pubkey,
+    pub destination: Pubkey,
+    pub authority: Pubkey,
+    pub multisig_signers: Vec<Pubkey>,
+}
+
+#[vixen]
+#[derive(Clone, PartialEq)]
+pub struct UnwrapLamportsArgs {
+    pub amount: Option<u64>,
+}
+
+#[vixen]
+#[derive(Clone, PartialEq)]
+pub struct BatchInstruction {
+    pub number_of_accounts: u32,
+    pub accounts: Vec<Pubkey>,
+    pub data: Vec<u8>,
+    pub instruction: Option<TokenProgram>,
+}
+
+#[vixen]
+#[derive(Clone, PartialEq)]
+pub struct Batch {
+    pub instructions: Vec<BatchInstruction>,
+    pub remaining_accounts: Vec<Pubkey>,
+}
+
+#[vixen]
+#[derive(Clone, PartialEq)]
 pub struct TokenProgram {
     #[hint(
         oneof = "instruction::Instruction",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23"
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26"
     )]
     pub instruction: Option<instruction::Instruction>,
 }
@@ -444,6 +484,19 @@ pub mod instruction {
         pub args: super::UiAmountToAmountArgs,
     }
 
+    #[vixen]
+    #[derive(Clone, PartialEq)]
+    pub struct WithdrawExcessLamports {
+        pub accounts: super::WithdrawExcessLamportsAccounts,
+    }
+
+    #[vixen]
+    #[derive(Clone, PartialEq)]
+    pub struct UnwrapLamports {
+        pub accounts: super::UnwrapLamportsAccounts,
+        pub args: super::UnwrapLamportsArgs,
+    }
+
     #[vixen(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
@@ -470,5 +523,8 @@ pub mod instruction {
         InitializeImmutableOwner(InitializeImmutableOwner),
         AmountToUiAmount(AmountToUiAmount),
         UiAmountToAmount(UiAmountToAmount),
+        WithdrawExcessLamports(WithdrawExcessLamports),
+        UnwrapLamports(UnwrapLamports),
+        Batch(super::Batch),
     }
 }
