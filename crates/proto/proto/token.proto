@@ -182,6 +182,20 @@ message UiAmountToAmountAccounts {
   PublicKey mint = 1;
 }
 
+message WithdrawExcessLamportsAccounts {
+  PublicKey source = 1;
+  PublicKey destination = 2;
+  PublicKey authority = 3;
+  repeated PublicKey multisig_signers = 4;
+}
+
+message UnwrapLamportsAccounts {
+  PublicKey source = 1;
+  PublicKey destination = 2;
+  PublicKey authority = 3;
+  repeated PublicKey multisig_signers = 4;
+}
+
 // ── Instruction args ───────────────────────────────────────────────
 
 message TransferArgs {
@@ -245,6 +259,22 @@ message AmountToUiAmountArgs {
 
 message UiAmountToAmountArgs {
   string ui_amount = 1;
+}
+
+message UnwrapLamportsArgs {
+  optional uint64 amount = 1;
+}
+
+message BatchInstruction {
+  uint32 number_of_accounts = 1;
+  repeated PublicKey accounts = 2;
+  bytes data = 3;
+  TokenProgram instruction = 4;
+}
+
+message Batch {
+  repeated BatchInstruction instructions = 1;
+  repeated PublicKey remaining_accounts = 2;
 }
 
 // ── Instruction wrappers ───────────────────────────────────────────
@@ -356,6 +386,15 @@ message UiAmountToAmountInstruction {
   UiAmountToAmountArgs args = 2;
 }
 
+message WithdrawExcessLamportsInstruction {
+  WithdrawExcessLamportsAccounts accounts = 1;
+}
+
+message UnwrapLamportsInstruction {
+  UnwrapLamportsAccounts accounts = 1;
+  UnwrapLamportsArgs args = 2;
+}
+
 // ── Dispatch ───────────────────────────────────────────────────────
 
 message TokenProgram {
@@ -383,5 +422,8 @@ message TokenProgram {
     InitializeImmutableOwnerInstruction initialize_immutable_owner = 21;
     AmountToUiAmountInstruction amount_to_ui_amount = 22;
     UiAmountToAmountInstruction ui_amount_to_amount = 23;
+    WithdrawExcessLamportsInstruction withdraw_excess_lamports = 24;
+    UnwrapLamportsInstruction unwrap_lamports = 25;
+    Batch batch = 26;
   }
 }

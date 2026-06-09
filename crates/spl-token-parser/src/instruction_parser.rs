@@ -8,7 +8,9 @@ use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result, ResultExt}
 
 use crate::Pubkey;
 
-fn pk(key: &yellowstone_vixen_core::Pubkey) -> Pubkey { Pubkey::new(key.0) }
+fn pk(key: &yellowstone_vixen_core::Pubkey) -> Pubkey {
+    Pubkey::new(key.0)
+}
 
 fn pk_from_key(key: &spl_token::solana_program::pubkey::Pubkey) -> Pubkey {
     Pubkey::new(key.to_bytes())
@@ -19,9 +21,13 @@ const UNWRAP_LAMPORTS_TAG: u8 = 39;
 const BATCH_TAG: u8 = 255;
 const MAX_BATCH_DEPTH: usize = 8;
 
-fn pks(keys: &[yellowstone_vixen_core::Pubkey]) -> Vec<Pubkey> { keys.iter().map(pk).collect() }
+fn pks(keys: &[yellowstone_vixen_core::Pubkey]) -> Vec<Pubkey> {
+    keys.iter().map(pk).collect()
+}
 
-fn invalid_data(message: &'static str) -> Error { Error::new(message) }
+fn invalid_data(message: &'static str) -> Error {
+    Error::new(message)
+}
 
 fn unpack_optional_u64(input: &[u8]) -> Result<Option<u64>> {
     match input {
@@ -44,7 +50,9 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = crate::TokenProgram;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "token_program::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "token_program::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -64,7 +72,9 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token::ID.to_bytes().into()
+    }
 }
 
 #[inline]
@@ -714,5 +724,32 @@ mod tests {
             Some((1, 0, 3, vec![7, 0, 171, 135, 4, 0, 0, 0, 0], 76_000_000, 0)),
             "p-token batch fixture should wrap a single MintTo instruction",
         );
+    }
+
+    #[cfg(feature = "proto")]
+    #[tokio::test]
+    async fn test_ptoken_batch_proto_round_trip() {
+        use prost::Message as _;
+
+        let parser = InstructionParser;
+
+        let ixs = tx_fixture!(PTOKEN_BATCH_TX, &parser);
+
+        let original = ixs
+            .into_iter()
+            .flatten()
+            .find(|ix| {
+                matches!(
+                    ix.instruction.as_ref(),
+                    Some(crate::instruction::Instruction::Batch(_))
+                )
+            })
+            .expect("no p-token batch instruction in fixture");
+        let mut buf = Vec::new();
+        original.encode(&mut buf).expect("proto encode failed");
+
+        let decoded = crate::TokenProgram::decode(buf.as_slice()).expect("proto decode failed");
+
+        assert_eq!(decoded, original);
     }
 }
