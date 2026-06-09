@@ -17,7 +17,7 @@ fn pk_from_key(key: &spl_token::solana_program::pubkey::Pubkey) -> Pubkey {
 }
 
 const WITHDRAW_EXCESS_LAMPORTS_TAG: u8 = 38;
-const UNWRAP_LAMPORTS_TAG: u8 = 39;
+const UNWRAP_LAMPORTS_TAG: u8 = 45;
 const BATCH_TAG: u8 = 255;
 const MAX_BATCH_DEPTH: usize = 8;
 
@@ -666,6 +666,10 @@ mod tests {
 
     const PTOKEN_BATCH_TX: &str =
         "5cqt7QpW2WhyQoJC7u8WhVivoUC5rWrHudWAssYrm2xDTTvVszVAXyCidco5DAXqwc4u4DSAXmmt1kzCKwJP2iW8";
+    const PTOKEN_WITHDRAW_EXCESS_LAMPORTS_TX: &str =
+        "3YLwc2z7pbzU1xbduwxkjjMcdzyPE7ozoVH5jrMMDzNEK7zUgdMhbtBwE17gJcgBNBKvNxWrCS76qzfjpabXgwoL";
+    const PTOKEN_UNWRAP_LAMPORTS_TX: &str =
+        "3kHqY7UUDsyqYoyhSBNjpQjWCr8BhZB6eT7MDzU2ThwECuDdRHm2FjUktikf6crHLmHo5WWuEBdL4caZec5YbFTg";
 
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
@@ -723,6 +727,74 @@ mod tests {
             actual,
             Some((1, 0, 3, vec![7, 0, 171, 135, 4, 0, 0, 0, 0], 76_000_000, 0)),
             "p-token batch fixture should wrap a single MintTo instruction",
+        );
+    }
+
+    #[tokio::test]
+    async fn test_ptoken_unwrap_lamports_ix_parsing() {
+        let parser = InstructionParser;
+
+        let ixs = tx_fixture!(PTOKEN_UNWRAP_LAMPORTS_TX, &parser);
+
+        let actual =
+            ixs.iter()
+                .filter_map(Option::as_ref)
+                .find_map(|ix| match ix.instruction.as_ref() {
+                    Some(crate::instruction::Instruction::UnwrapLamports(unwrap_lamports)) => {
+                        Some((
+                            unwrap_lamports.accounts.source.to_string(),
+                            unwrap_lamports.accounts.destination.to_string(),
+                            unwrap_lamports.accounts.authority.to_string(),
+                            unwrap_lamports.accounts.multisig_signers.len(),
+                            unwrap_lamports.args.amount,
+                        ))
+                    },
+                    _ => None,
+                });
+
+        assert_eq!(
+            actual,
+            Some((
+                "8gFZKWfWHcaLekuCoe7qNY8qdLwRKvsdRxU4zMHsBsMR".to_string(),
+                "5K82iU97sj2F7hERTHy86HfdPbBqw3bJn9QkrN5tJ1vj".to_string(),
+                "F7p3dFrjRTbtRp8FRF6qHLomXbKRBzpvBLjtQcfcgmNe".to_string(),
+                0,
+                Some(2_752_920_000),
+            )),
+            "p-token unwrap fixture should decode source, destination, authority, and amount",
+        );
+    }
+
+    #[tokio::test]
+    async fn test_ptoken_withdraw_excess_lamports_ix_parsing() {
+        let parser = InstructionParser;
+
+        let ixs = tx_fixture!(PTOKEN_WITHDRAW_EXCESS_LAMPORTS_TX, &parser);
+
+        let actual =
+            ixs.iter()
+                .filter_map(Option::as_ref)
+                .find_map(|ix| match ix.instruction.as_ref() {
+                    Some(crate::instruction::Instruction::WithdrawExcessLamports(
+                        withdraw_excess_lamports,
+                    )) => Some((
+                        withdraw_excess_lamports.accounts.source.to_string(),
+                        withdraw_excess_lamports.accounts.destination.to_string(),
+                        withdraw_excess_lamports.accounts.authority.to_string(),
+                        withdraw_excess_lamports.accounts.multisig_signers.len(),
+                    )),
+                    _ => None,
+                });
+
+        assert_eq!(
+            actual,
+            Some((
+                "41niYdTfJAqJHPfxkhm4LDYpYsUaSqhcMUbfYND9sDmL".to_string(),
+                "CqJVUVbxJae8GfYsSooA5qzjHmoZusB1Hni7Ed1eEDeH".to_string(),
+                "CqJVUVbxJae8GfYsSooA5qzjHmoZusB1Hni7Ed1eEDeH".to_string(),
+                0,
+            )),
+            "p-token withdraw excess lamports fixture should decode source, destination, and authority",
         );
     }
 
