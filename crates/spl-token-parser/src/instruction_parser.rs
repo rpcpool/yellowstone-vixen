@@ -8,9 +8,7 @@ use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result, ResultExt}
 
 use crate::Pubkey;
 
-fn pk(key: &yellowstone_vixen_core::Pubkey) -> Pubkey {
-    Pubkey::new(key.0)
-}
+fn pk(key: &yellowstone_vixen_core::Pubkey) -> Pubkey { Pubkey::new(key.0) }
 
 fn pk_from_key(key: &spl_token::solana_program::pubkey::Pubkey) -> Pubkey {
     Pubkey::new(key.to_bytes())
@@ -21,13 +19,9 @@ const UNWRAP_LAMPORTS_TAG: u8 = 39;
 const BATCH_TAG: u8 = 255;
 const MAX_BATCH_DEPTH: usize = 8;
 
-fn pks(keys: &[yellowstone_vixen_core::Pubkey]) -> Vec<Pubkey> {
-    keys.iter().map(pk).collect()
-}
+fn pks(keys: &[yellowstone_vixen_core::Pubkey]) -> Vec<Pubkey> { keys.iter().map(pk).collect() }
 
-fn invalid_data(message: &'static str) -> Error {
-    Error::new(message)
-}
+fn invalid_data(message: &'static str) -> Error { Error::new(message) }
 
 fn unpack_optional_u64(input: &[u8]) -> Result<Option<u64>> {
     match input {
@@ -50,9 +44,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = crate::TokenProgram;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "token_program::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "token_program::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -72,9 +64,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[inline]
@@ -694,34 +684,35 @@ mod tests {
 
         let ixs = tx_fixture!(PTOKEN_BATCH_TX, &parser);
 
-        let batch = ixs
-            .iter()
-            .filter_map(Option::as_ref)
-            .find_map(|ix| match ix.instruction.as_ref() {
-                Some(crate::instruction::Instruction::Batch(batch)) => Some(batch),
-                _ => None,
-            })
-            .expect("no p-token batch instruction in fixture");
+        let actual =
+            ixs.iter()
+                .filter_map(Option::as_ref)
+                .find_map(|ix| match ix.instruction.as_ref() {
+                    Some(crate::instruction::Instruction::Batch(batch)) => {
+                        let batch_ix = batch.instructions.first()?;
+                        let Some(crate::TokenProgram {
+                            instruction: Some(crate::instruction::Instruction::MintTo(mint_to)),
+                        }) = &batch_ix.instruction
+                        else {
+                            return None;
+                        };
 
-        assert_eq!(batch.instructions.len(), 1);
-        assert!(batch.remaining_accounts.is_empty());
+                        Some((
+                            batch.instructions.len(),
+                            batch.remaining_accounts.len(),
+                            batch_ix.number_of_accounts,
+                            batch_ix.data.clone(),
+                            mint_to.args.amount,
+                            mint_to.accounts.multisig_signers.len(),
+                        ))
+                    },
+                    _ => None,
+                });
 
-        let batch_ix = &batch.instructions[0];
-        assert_eq!(batch_ix.number_of_accounts, 3);
         assert_eq!(
-            batch_ix.data,
-            vec![7, 0, 171, 135, 4, 0, 0, 0, 0],
-            "batch should wrap a single MintTo instruction",
+            actual,
+            Some((1, 0, 3, vec![7, 0, 171, 135, 4, 0, 0, 0, 0], 76_000_000, 0)),
+            "p-token batch fixture should wrap a single MintTo instruction",
         );
-
-        let Some(crate::TokenProgram {
-            instruction: Some(crate::instruction::Instruction::MintTo(mint_to)),
-        }) = &batch_ix.instruction
-        else {
-            panic!("Invalid inner batch instruction");
-        };
-
-        assert_eq!(mint_to.args.amount, 76_000_000);
-        assert!(mint_to.accounts.multisig_signers.is_empty());
     }
 }
