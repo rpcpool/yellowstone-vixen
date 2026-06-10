@@ -106,9 +106,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = SplStakePoolProgramState;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "spl_stake_pool::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "spl_stake_pool::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -128,7 +126,5 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_stake_pool::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_stake_pool::ID.to_bytes().into() }
 }

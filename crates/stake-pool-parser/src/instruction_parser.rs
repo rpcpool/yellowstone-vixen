@@ -14,9 +14,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = StakePoolProgram;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "StakePool::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "StakePool::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

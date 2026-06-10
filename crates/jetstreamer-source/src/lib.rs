@@ -553,9 +553,7 @@ pub struct JetstreamSource {
 impl SourceTrait for JetstreamSource {
     type Config = JetstreamSourceConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self {
-        Self { config, filters }
-    }
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
     async fn connect(
         &self,
@@ -914,21 +912,18 @@ slot-end = 2000
         use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
 
         let mut prefilters = StdHashMap::new();
-        prefilters.insert(
-            "block-with-entries".to_string(),
-            Prefilter {
-                account: None,
-                transaction: None,
-                block_meta: None,
-                block: Some(BlockPrefilter {
-                    accounts_include: Default::default(),
-                    include_transactions: false,
-                    include_accounts: false,
-                    include_entries: true,
-                }),
-                slot: None,
-            },
-        );
+        prefilters.insert("block-with-entries".to_string(), Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: None,
+            block: Some(BlockPrefilter {
+                accounts_include: Default::default(),
+                include_transactions: false,
+                include_accounts: false,
+                include_entries: true,
+            }),
+            slot: None,
+        });
         let filters = Filters::new(prefilters);
 
         let (updates_tx, mut updates_rx) = mpsc::channel(4);
@@ -1039,21 +1034,18 @@ slot-end = 2000
         use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
 
         let mut prefilters = StdHashMap::new();
-        prefilters.insert(
-            "wants-entries".to_string(),
-            Prefilter {
-                account: None,
-                transaction: None,
-                block_meta: None,
-                block: Some(BlockPrefilter {
-                    accounts_include: Default::default(),
-                    include_transactions: false,
-                    include_accounts: false,
-                    include_entries: true,
-                }),
-                slot: None,
-            },
-        );
+        prefilters.insert("wants-entries".to_string(), Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: None,
+            block: Some(BlockPrefilter {
+                accounts_include: Default::default(),
+                include_transactions: false,
+                include_accounts: false,
+                include_entries: true,
+            }),
+            slot: None,
+        });
         let filters = Filters::new(prefilters);
 
         let (updates_tx, _updates_rx) = mpsc::channel(4);
@@ -1151,42 +1143,30 @@ slot-end = 2000
 
         let input = KeyedRewardsAndNumPartitions {
             keyed_rewards: vec![
-                (
-                    fee_pk,
-                    RewardInfo {
-                        reward_type: SdkRewardType::Fee,
-                        lamports: 1,
-                        post_balance: 100,
-                        commission: None,
-                    },
-                ),
-                (
-                    rent_pk,
-                    RewardInfo {
-                        reward_type: SdkRewardType::Rent,
-                        lamports: -2, // i64, can be negative
-                        post_balance: 200,
-                        commission: None,
-                    },
-                ),
-                (
-                    staking_pk,
-                    RewardInfo {
-                        reward_type: SdkRewardType::Staking,
-                        lamports: 3,
-                        post_balance: 300,
-                        commission: Some(7),
-                    },
-                ),
-                (
-                    voting_pk,
-                    RewardInfo {
-                        reward_type: SdkRewardType::Voting,
-                        lamports: 4,
-                        post_balance: 400,
-                        commission: Some(0),
-                    },
-                ),
+                (fee_pk, RewardInfo {
+                    reward_type: SdkRewardType::Fee,
+                    lamports: 1,
+                    post_balance: 100,
+                    commission: None,
+                }),
+                (rent_pk, RewardInfo {
+                    reward_type: SdkRewardType::Rent,
+                    lamports: -2, // i64, can be negative
+                    post_balance: 200,
+                    commission: None,
+                }),
+                (staking_pk, RewardInfo {
+                    reward_type: SdkRewardType::Staking,
+                    lamports: 3,
+                    post_balance: 300,
+                    commission: Some(7),
+                }),
+                (voting_pk, RewardInfo {
+                    reward_type: SdkRewardType::Voting,
+                    lamports: 4,
+                    post_balance: 400,
+                    commission: Some(0),
+                }),
             ],
             num_partitions: Some(64),
         };

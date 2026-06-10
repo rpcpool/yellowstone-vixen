@@ -223,9 +223,7 @@ struct TestHarness {
 }
 
 impl TestHarness {
-    fn spawn() -> Self {
-        Self::spawn_with_options(true, AccountCommitAt::Confirmed)
-    }
+    fn spawn() -> Self { Self::spawn_with_options(true, AccountCommitAt::Confirmed) }
 
     fn spawn_with_require_tx_gate(require_tx_gate: bool) -> Self {
         Self::spawn_with_options(require_tx_gate, AccountCommitAt::Confirmed)
@@ -453,9 +451,7 @@ impl SlotBuilder {
         self
     }
 
-    async fn empty(self) -> Slot {
-        self.send_lifecycle(0).await
-    }
+    async fn empty(self) -> Slot { self.send_lifecycle(0).await }
 
     async fn parsed(self) -> Slot {
         let tx_count = self.records.len().max(1) as u64;

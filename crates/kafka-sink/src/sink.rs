@@ -98,21 +98,13 @@ where
         })
     }
 
-    fn topic(&self) -> &str {
-        &self.topic
-    }
+    fn topic(&self) -> &str { &self.topic }
 
-    fn program_name(&self) -> &str {
-        &self.program_name
-    }
+    fn program_name(&self) -> &str { &self.program_name }
 
-    fn program_id(&self) -> Pubkey {
-        self.program_id
-    }
+    fn program_id(&self) -> Pubkey { self.program_id }
 
-    fn fallback_topic(&self) -> Option<&str> {
-        self.fallback_topic.as_deref()
-    }
+    fn fallback_topic(&self) -> Option<&str> { self.fallback_topic.as_deref() }
 }
 
 // --- DynAccountParser ---
@@ -166,21 +158,13 @@ where
         })
     }
 
-    fn topic(&self) -> &str {
-        &self.topic
-    }
+    fn topic(&self) -> &str { &self.topic }
 
-    fn program_name(&self) -> &str {
-        &self.program_name
-    }
+    fn program_name(&self) -> &str { &self.program_name }
 
-    fn fallback_topic(&self) -> Option<&str> {
-        self.fallback_topic.as_deref()
-    }
+    fn fallback_topic(&self) -> Option<&str> { self.fallback_topic.as_deref() }
 
-    fn program_id(&self) -> Pubkey {
-        self.program_id
-    }
+    fn program_id(&self) -> Pubkey { self.program_id }
 }
 
 pub struct KafkaSinkBuilder {
@@ -206,9 +190,7 @@ fn collect_topics<'a>(
 }
 
 impl Default for KafkaSinkBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl KafkaSinkBuilder {
@@ -348,19 +330,13 @@ impl KafkaSink {
     }
 
     /// Returns true if any transaction-derived work is configured.
-    pub fn has_transaction_work(&self) -> bool {
-        !self.instruction_parsers.is_empty()
-    }
+    pub fn has_transaction_work(&self) -> bool { !self.instruction_parsers.is_empty() }
 
     /// Returns true if any account parsers are registered.
-    pub fn has_account_parsers(&self) -> bool {
-        !self.account_parsers.is_empty()
-    }
+    pub fn has_account_parsers(&self) -> bool { !self.account_parsers.is_empty() }
 
     /// Returns the account parsers (used by AccountSubscription to build prefilter).
-    pub fn account_parsers(&self) -> &[Arc<dyn DynAccountParser>] {
-        &self.account_parsers
-    }
+    pub fn account_parsers(&self) -> &[Arc<dyn DynAccountParser>] { &self.account_parsers }
 
     /// Set schema IDs for encoding messages with Confluent wire format.
     /// The key should be the subject name (e.g., "spl-token.instructions-value").
@@ -822,13 +798,9 @@ mod tests {
         type Input = InstructionUpdate;
         type Output = TestInstructionMessage;
 
-        fn id(&self) -> Cow<'static, str> {
-            "test-instruction-parser".into()
-        }
+        fn id(&self) -> Cow<'static, str> { "test-instruction-parser".into() }
 
-        fn prefilter(&self) -> Prefilter {
-            Prefilter::default()
-        }
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
 
         async fn parse(&self, _value: &Self::Input) -> ParseResult<Self::Output> {
             self.calls.fetch_add(1, Ordering::Relaxed);
@@ -844,22 +816,16 @@ mod tests {
     }
 
     impl ProgramParser for TestInstructionParser {
-        fn program_id(&self) -> Pubkey {
-            self.program_id
-        }
+        fn program_id(&self) -> Pubkey { self.program_id }
     }
 
     impl Parser for PathRecordingInstructionParser {
         type Input = InstructionUpdate;
         type Output = TestInstructionMessage;
 
-        fn id(&self) -> Cow<'static, str> {
-            "path-recording-instruction-parser".into()
-        }
+        fn id(&self) -> Cow<'static, str> { "path-recording-instruction-parser".into() }
 
-        fn prefilter(&self) -> Prefilter {
-            Prefilter::default()
-        }
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
 
         async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
             *self.seen_path.lock().expect("path recorder mutex poisoned") =
@@ -870,9 +836,7 @@ mod tests {
     }
 
     impl ProgramParser for PathRecordingInstructionParser {
-        fn program_id(&self) -> Pubkey {
-            self.program_id
-        }
+        fn program_id(&self) -> Pubkey { self.program_id }
     }
 
     #[cfg(feature = "experimental-account-parser")]
@@ -902,13 +866,9 @@ mod tests {
         type Input = AccountUpdate;
         type Output = TestAccountMessage;
 
-        fn id(&self) -> Cow<'static, str> {
-            "test-account-parser".into()
-        }
+        fn id(&self) -> Cow<'static, str> { "test-account-parser".into() }
 
-        fn prefilter(&self) -> Prefilter {
-            Prefilter::default()
-        }
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
 
         async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
             let owner = value
@@ -933,9 +893,7 @@ mod tests {
 
     #[cfg(feature = "experimental-account-parser")]
     impl ProgramParser for TestAccountParser {
-        fn program_id(&self) -> Pubkey {
-            self.program_id
-        }
+        fn program_id(&self) -> Pubkey { self.program_id }
     }
 
     fn instruction_with_program(program: Pubkey) -> InstructionUpdate {

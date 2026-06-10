@@ -219,9 +219,7 @@ fn bytes_native_type(scalar: &ScalarIr) -> TokenStream {
 }
 
 /// Whether a scalar is a public key that needs Pubkey ↔ PublicKeyProtoWrapper conversion for proto.
-fn is_pubkey_scalar(scalar: &ScalarIr) -> bool {
-    matches!(scalar, ScalarIr::PublicKey)
-}
+fn is_pubkey_scalar(scalar: &ScalarIr) -> bool { matches!(scalar, ScalarIr::PublicKey) }
 
 /// Return the `prost::encoding` module path for a scalar type.
 fn prost_encoding_mod(scalar: &ScalarIr) -> TokenStream {

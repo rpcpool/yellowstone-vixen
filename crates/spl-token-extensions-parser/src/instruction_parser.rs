@@ -30,9 +30,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = TokenExtensionProgram;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "token_extensions::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "token_extensions::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -47,9 +45,7 @@ impl Parser for InstructionParser {
 }
 
 impl ProgramParser for InstructionParser {
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 impl InstructionParser {

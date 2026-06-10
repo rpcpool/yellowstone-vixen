@@ -23,9 +23,7 @@ impl Parser for TransactionSubscription {
     type Input = TransactionUpdate;
     type Output = TransactionUpdate;
 
-    fn id(&self) -> Cow<'static, str> {
-        "kafka-sink::TransactionSubscription".into()
-    }
+    fn id(&self) -> Cow<'static, str> { "kafka-sink::TransactionSubscription".into() }
 
     fn prefilter(&self) -> Prefilter {
         let prefilter = Prefilter {
@@ -48,9 +46,7 @@ impl Parser for TransactionSubscription {
         prefilter
     }
 
-    async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
-        Ok(value.clone())
-    }
+    async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> { Ok(value.clone()) }
 }
 
 /// Pass-through parser for account updates.
@@ -84,18 +80,14 @@ impl AccountSubscription {
     }
 
     /// Construct with explicit owner program IDs.
-    pub fn with_owners(owners: Vec<Pubkey>) -> Self {
-        Self { owners }
-    }
+    pub fn with_owners(owners: Vec<Pubkey>) -> Self { Self { owners } }
 }
 
 impl Parser for AccountSubscription {
     type Input = AccountUpdate;
     type Output = AccountUpdate;
 
-    fn id(&self) -> Cow<'static, str> {
-        "kafka-sink::AccountSubscription".into()
-    }
+    fn id(&self) -> Cow<'static, str> { "kafka-sink::AccountSubscription".into() }
 
     fn prefilter(&self) -> Prefilter {
         let prefilter = Prefilter::builder()
@@ -112,7 +104,5 @@ impl Parser for AccountSubscription {
         prefilter
     }
 
-    async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
-        Ok(value.clone())
-    }
+    async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> { Ok(value.clone()) }
 }

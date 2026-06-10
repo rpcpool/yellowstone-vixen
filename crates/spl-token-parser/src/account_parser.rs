@@ -135,9 +135,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = TokenProgramState;
 
-    fn id(&self) -> Cow<'static, str> {
-        "token_program::AccountParser".into()
-    }
+    fn id(&self) -> Cow<'static, str> { "token_program::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -174,9 +172,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(test)]

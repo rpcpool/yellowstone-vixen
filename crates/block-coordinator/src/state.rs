@@ -76,21 +76,15 @@ impl<R> CoordinatorState<R> {
         }
     }
 
-    pub fn pending_slot_count(&self) -> usize {
-        self.buffer.len()
-    }
+    pub fn pending_slot_count(&self) -> usize { self.buffer.len() }
 
-    pub fn discarded_slot_count(&self) -> usize {
-        self.discarded_slots.len()
-    }
+    pub fn discarded_slot_count(&self) -> usize { self.discarded_slots.len() }
 
     pub fn last_instruction_flushed_slot(&self) -> Option<Slot> {
         self.last_instruction_flushed_slot
     }
 
-    pub fn last_account_flushed_slot(&self) -> Option<Slot> {
-        self.last_account_flushed_slot
-    }
+    pub fn last_account_flushed_slot(&self) -> Option<Slot> { self.last_account_flushed_slot }
 
     /// For backwards compatibility / observability: the minimum of the two flush slots.
     pub fn last_flushed_slot(&self) -> Option<Slot> {
@@ -107,13 +101,9 @@ impl<R> CoordinatorState<R> {
         self.buffer.first_key_value().map(|(&s, _)| s)
     }
 
-    pub fn late_account_record_drops(&self) -> u64 {
-        self.late_account_record_drops
-    }
+    pub fn late_account_record_drops(&self) -> u64 { self.late_account_record_drops }
 
-    pub fn late_account_event_drops(&self) -> u64 {
-        self.late_account_event_drops
-    }
+    pub fn late_account_event_drops(&self) -> u64 { self.late_account_event_drops }
 
     pub fn apply(&mut self, event: CoordinatorEvent<R>) -> Result<(), CoordinatorError> {
         match event {
@@ -472,9 +462,7 @@ impl<R> CoordinatorState<R> {
 }
 
 impl<R> Default for CoordinatorState<R> {
-    fn default() -> Self {
-        Self::new(AccountCommitAt::Confirmed)
-    }
+    fn default() -> Self { Self::new(AccountCommitAt::Confirmed) }
 }
 
 #[cfg(test)]
@@ -1214,10 +1202,10 @@ mod tests {
 
         let acct_flushed = state.drain_account_flushable();
         assert_eq!(acct_flushed.len(), 1);
-        assert_eq!(
-            acct_flushed[0].records,
-            vec!["first".to_string(), "second".to_string()]
-        );
+        assert_eq!(acct_flushed[0].records, vec![
+            "first".to_string(),
+            "second".to_string()
+        ]);
     }
 
     #[test]

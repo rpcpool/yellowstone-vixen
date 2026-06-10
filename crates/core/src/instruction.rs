@@ -57,9 +57,7 @@ impl Missing {
 
 impl From<Missing> for ParseError {
     #[inline]
-    fn from(value: Missing) -> Self {
-        Self::Missing(value)
-    }
+    fn from(value: Missing) -> Self { Self::Missing(value) }
 }
 
 /// Shared data between all instructions in a transaction.
@@ -154,21 +152,15 @@ impl Path {
 
     /// Get the current instruction path as a slice.
     #[must_use]
-    pub fn as_slice(&self) -> &[u32] {
-        &self.0
-    }
+    pub fn as_slice(&self) -> &[u32] { &self.0 }
 
     /// Get the length of the instruction path.
     #[must_use]
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
+    pub fn len(&self) -> usize { self.0.len() }
 
     /// Check if the instruction path is empty.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
 
     /// Check if this instruction path is a (direct) parent of another instruction path.
     #[must_use]
@@ -192,9 +184,7 @@ impl Path {
 }
 
 impl From<Vec<u32>> for Path {
-    fn from(value: Vec<u32>) -> Self {
-        Self(value)
-    }
+    fn from(value: Vec<u32>) -> Self { Self(value) }
 }
 
 impl Debug for Path {
@@ -231,9 +221,7 @@ impl AccountKeys {
     /// # Errors
     /// Returns an error if the index is invalid.
     pub fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
-    where
-        I::Error: Into<std::num::TryFromIntError>,
-    {
+    where I::Error: Into<std::num::TryFromIntError> {
         let idx = idx
             .try_into()
             .map_err(|e| AccountKeyError::IndexConvert(e.into()))?;
@@ -258,9 +246,7 @@ impl InstructionUpdate {
     ///
     /// This is a zero-copy slice into the shared transaction log messages.
     #[must_use]
-    pub fn log_messages(&self) -> &[String] {
-        &self.shared.log_messages[self.log_range.clone()]
-    }
+    pub fn log_messages(&self) -> &[String] { &self.shared.log_messages[self.log_range.clone()] }
 
     /// Returns the log messages emitted *directly* by this instruction's
     /// program, excluding lines emitted while an inner CPI is on top of the
@@ -525,9 +511,7 @@ impl InstructionUpdate {
 
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_> {
-        VisitAll::new(self)
-    }
+    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
 
     /// Iterate over this instruction and nested CPI instructions with the
     /// flat instruction index used by Solana's inner-instruction list.
@@ -573,9 +557,7 @@ enum VisitAllState<'a> {
 
 impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(ixs: &'a InstructionUpdate) -> Self {
-        Self(VisitAllState::Init(ixs))
-    }
+    fn new(ixs: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(ixs)) }
 }
 
 impl<'a> Iterator for VisitAll<'a> {
@@ -763,40 +745,32 @@ mod tests {
             .map(|path| format!("{path:?}"))
             .collect::<Vec<_>>();
 
-        assert_eq!(
-            paths,
-            ["3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"]
-        );
+        assert_eq!(paths, [
+            "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"
+        ]);
     }
 
     #[test]
     fn visit_all_with_flat_indices_keeps_flat_index_separate_from_tree_path() {
-        let instruction = instruction(
-            vec![2],
-            vec![
-                instruction(vec![2, 0], vec![]),
-                instruction(
-                    vec![2, 1],
-                    vec![
-                        instruction(vec![2, 1, 0], vec![]),
-                        instruction(vec![2, 1, 1], vec![]),
-                        instruction(vec![2, 1, 2], vec![]),
-                        instruction(vec![2, 1, 3], vec![]),
-                    ],
-                ),
-                instruction(vec![2, 2], vec![]),
-            ],
-        );
+        let instruction = instruction(vec![2], vec![
+            instruction(vec![2, 0], vec![]),
+            instruction(vec![2, 1], vec![
+                instruction(vec![2, 1, 0], vec![]),
+                instruction(vec![2, 1, 1], vec![]),
+                instruction(vec![2, 1, 2], vec![]),
+                instruction(vec![2, 1, 3], vec![]),
+            ]),
+            instruction(vec![2, 2], vec![]),
+        ]);
 
         let nested_paths = instruction
             .visit_all()
             .map(|instruction| format!("{:?}", instruction.path))
             .collect::<Vec<_>>();
 
-        assert_eq!(
-            nested_paths,
-            ["3", "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"]
-        );
+        assert_eq!(nested_paths, [
+            "3", "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"
+        ]);
 
         // Public ixIndex mirrors the flat Solana inner-instruction list:
         // the nested Token CPIs occupy 3.3 through 3.6, so the next direct
@@ -808,19 +782,16 @@ mod tests {
             })
             .collect::<Vec<_>>();
 
-        assert_eq!(
-            flat_indices,
-            [
-                ("3".to_owned(), "3".to_owned()),
-                ("3.1".to_owned(), "3.1".to_owned()),
-                ("3.2".to_owned(), "3.2".to_owned()),
-                ("3.2.1".to_owned(), "3.3".to_owned()),
-                ("3.2.2".to_owned(), "3.4".to_owned()),
-                ("3.2.3".to_owned(), "3.5".to_owned()),
-                ("3.2.4".to_owned(), "3.6".to_owned()),
-                ("3.3".to_owned(), "3.7".to_owned()),
-            ]
-        );
+        assert_eq!(flat_indices, [
+            ("3".to_owned(), "3".to_owned()),
+            ("3.1".to_owned(), "3.1".to_owned()),
+            ("3.2".to_owned(), "3.2".to_owned()),
+            ("3.2.1".to_owned(), "3.3".to_owned()),
+            ("3.2.2".to_owned(), "3.4".to_owned()),
+            ("3.2.3".to_owned(), "3.5".to_owned()),
+            ("3.2.4".to_owned(), "3.6".to_owned()),
+            ("3.3".to_owned(), "3.7".to_owned()),
+        ]);
     }
 
     #[test]
@@ -835,10 +806,9 @@ mod tests {
             .map(|instruction| format!("{:?}", instruction.path))
             .collect::<Vec<_>>();
 
-        assert_eq!(
-            nested_paths,
-            ["3", "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"]
-        );
+        assert_eq!(nested_paths, [
+            "3", "3.1", "3.2", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.3"
+        ]);
 
         let flat_indices = outer_instruction
             .visit_all_with_flat_indices()
@@ -847,19 +817,16 @@ mod tests {
             })
             .collect::<Vec<_>>();
 
-        assert_eq!(
-            flat_indices,
-            [
-                ("3".to_owned(), "3".to_owned()),
-                ("3.1".to_owned(), "3.1".to_owned()),
-                ("3.2".to_owned(), "3.2".to_owned()),
-                ("3.2.1".to_owned(), "3.3".to_owned()),
-                ("3.2.2".to_owned(), "3.4".to_owned()),
-                ("3.2.3".to_owned(), "3.5".to_owned()),
-                ("3.2.4".to_owned(), "3.6".to_owned()),
-                ("3.3".to_owned(), "3.7".to_owned()),
-            ]
-        );
+        assert_eq!(flat_indices, [
+            ("3".to_owned(), "3".to_owned()),
+            ("3.1".to_owned(), "3.1".to_owned()),
+            ("3.2".to_owned(), "3.2".to_owned()),
+            ("3.2.1".to_owned(), "3.3".to_owned()),
+            ("3.2.2".to_owned(), "3.4".to_owned()),
+            ("3.2.3".to_owned(), "3.5".to_owned()),
+            ("3.2.4".to_owned(), "3.6".to_owned()),
+            ("3.3".to_owned(), "3.7".to_owned()),
+        ]);
     }
 
     fn instruction(path: Vec<u32>, inner: Vec<InstructionUpdate>) -> InstructionUpdate {

@@ -29,9 +29,7 @@ impl KafkaCompressionType {
 }
 
 impl fmt::Display for KafkaCompressionType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(self.as_str()) }
 }
 
 impl FromStr for KafkaCompressionType {
@@ -170,49 +168,27 @@ impl fmt::Debug for KafkaSinkConfig {
     }
 }
 
-fn default_schema_registry_url() -> String {
-    "http://localhost:8081".to_string()
-}
+fn default_schema_registry_url() -> String { "http://localhost:8081".to_string() }
 
-fn default_transaction_slots_topic() -> String {
-    "transaction.slots".to_string()
-}
+fn default_transaction_slots_topic() -> String { "transaction.slots".to_string() }
 
-fn default_account_slots_topic() -> String {
-    "account.slots".to_string()
-}
+fn default_account_slots_topic() -> String { "account.slots".to_string() }
 
-fn default_buffer_size() -> usize {
-    100
-}
+fn default_buffer_size() -> usize { 100 }
 
-fn default_message_timeout_ms() -> u32 {
-    5000
-}
+fn default_message_timeout_ms() -> u32 { 5000 }
 
-fn default_queue_buffering_max_messages() -> u32 {
-    100000
-}
+fn default_queue_buffering_max_messages() -> u32 { 100000 }
 
-fn default_batch_num_messages() -> u32 {
-    1000
-}
+fn default_batch_num_messages() -> u32 { 1000 }
 
-fn default_transaction_timeout_ms() -> u32 {
-    30000
-}
+fn default_transaction_timeout_ms() -> u32 { 30000 }
 
-fn default_kafka_write_max_attempts() -> u32 {
-    3
-}
+fn default_kafka_write_max_attempts() -> u32 { 3 }
 
-fn default_kafka_transaction_op_max_attempts() -> u32 {
-    2
-}
+fn default_kafka_transaction_op_max_attempts() -> u32 { 2 }
 
-fn default_kafka_retry_backoff_ms() -> u64 {
-    200
-}
+fn default_kafka_retry_backoff_ms() -> u64 { 200 }
 
 impl Default for KafkaSinkConfig {
     fn default() -> Self {

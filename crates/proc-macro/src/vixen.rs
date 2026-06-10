@@ -581,9 +581,7 @@ fn take_proto_attr(attrs: &mut Vec<Attribute>) -> syn::Result<Option<TokenStream
     }
 }
 
-fn parse_attr(tokens: TokenStream) -> Attribute {
-    syn::parse_quote!(#tokens)
-}
+fn parse_attr(tokens: TokenStream) -> Attribute { syn::parse_quote!(#tokens) }
 
 fn has_derive(item: &ItemEnum, name: &str) -> bool {
     item.attrs.iter().any(|attr| {

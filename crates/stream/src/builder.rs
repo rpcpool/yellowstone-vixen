@@ -44,15 +44,11 @@ impl BuilderKind for StreamKind<'_> {
 }
 
 impl<S: SourceTrait> Default for StreamBuilder<'_, S> {
-    fn default() -> Self {
-        Self(Builder::default())
-    }
+    fn default() -> Self { Self(Builder::default()) }
 }
 
 impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
-    pub fn new(builder: Builder<StreamKind<'a>, S>) -> Self {
-        Self(builder)
-    }
+    pub fn new(builder: Builder<StreamKind<'a>, S>) -> Self { Self(builder) }
 }
 
 fn wrap_parser<P: Debug + Parser + Send + Sync + 'static>(

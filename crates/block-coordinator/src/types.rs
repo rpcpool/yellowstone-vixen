@@ -198,9 +198,7 @@ pub enum AccountCommitAt {
 }
 
 impl Default for AccountCommitAt {
-    fn default() -> Self {
-        Self::Confirmed
-    }
+    fn default() -> Self { Self::Confirmed }
 }
 
 /// How accounts are processed and output.
@@ -213,9 +211,7 @@ pub enum AccountMode {
 }
 
 impl Default for AccountMode {
-    fn default() -> Self {
-        Self::FinalizedPassthrough
-    }
+    fn default() -> Self { Self::FinalizedPassthrough }
 }
 
 /// An instruction slot ready for downstream consumption (e.g., Kafka write).
@@ -247,9 +243,7 @@ pub struct CoordinatorHandle<R> {
 }
 
 impl<R: Send> CoordinatorHandle<R> {
-    pub fn new(tx: tokio::sync::mpsc::Sender<CoordinatorMessage<R>>) -> Self {
-        Self { tx }
-    }
+    pub fn new(tx: tokio::sync::mpsc::Sender<CoordinatorMessage<R>>) -> Self { Self { tx } }
 
     pub async fn send_instruction_parsed(
         &self,

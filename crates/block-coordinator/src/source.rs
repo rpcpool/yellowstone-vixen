@@ -28,9 +28,7 @@ use crate::{fixtures::FixtureWriter, types::CoordinatorInput};
 
 const DEFAULT_STREAM_IDLE_WARN_SECS: u64 = 0;
 
-const fn default_stream_idle_warn_secs() -> u64 {
-    DEFAULT_STREAM_IDLE_WARN_SECS
-}
+const fn default_stream_idle_warn_secs() -> u64 { DEFAULT_STREAM_IDLE_WARN_SECS }
 
 /// Config for CoordinatorSource.
 ///
@@ -127,9 +125,7 @@ pub struct CoordinatorSource {
 impl SourceTrait for CoordinatorSource {
     type Config = CoordinatorSourceConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self {
-        Self { config, filters }
-    }
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
     async fn connect(
         &self,

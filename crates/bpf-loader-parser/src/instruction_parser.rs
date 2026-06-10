@@ -13,9 +13,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = crate::BpfLoaderProgram;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "bpf_loader::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "bpf_loader::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

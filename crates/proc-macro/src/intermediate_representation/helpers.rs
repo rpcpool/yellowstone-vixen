@@ -11,13 +11,9 @@ pub trait FieldLikeNode {
 }
 
 impl FieldLikeNode for codama_nodes::StructFieldTypeNode {
-    fn name(&self) -> &codama_nodes::CamelCaseString {
-        &self.name
-    }
+    fn name(&self) -> &codama_nodes::CamelCaseString { &self.name }
 
-    fn r#type(&self) -> &codama_nodes::TypeNode {
-        &self.r#type
-    }
+    fn r#type(&self) -> &codama_nodes::TypeNode { &self.r#type }
 
     fn default_value_strategy(&self) -> Option<codama_nodes::DefaultValueStrategy> {
         self.default_value_strategy
@@ -25,13 +21,9 @@ impl FieldLikeNode for codama_nodes::StructFieldTypeNode {
 }
 
 impl FieldLikeNode for codama_nodes::InstructionArgumentNode {
-    fn name(&self) -> &codama_nodes::CamelCaseString {
-        &self.name
-    }
+    fn name(&self) -> &codama_nodes::CamelCaseString { &self.name }
 
-    fn r#type(&self) -> &codama_nodes::TypeNode {
-        &self.r#type
-    }
+    fn r#type(&self) -> &codama_nodes::TypeNode { &self.r#type }
 
     fn default_value_strategy(&self) -> Option<codama_nodes::DefaultValueStrategy> {
         self.default_value_strategy

@@ -125,9 +125,7 @@ pub struct OneofVariantIr {
 }
 
 impl SchemaIr {
-    pub fn has_type(&self, name: &str) -> bool {
-        self.types.iter().any(|m| m.name == name)
-    }
+    pub fn has_type(&self, name: &str) -> bool { self.types.iter().any(|m| m.name == name) }
 
     pub fn push_unique_type(&mut self, msg: TypeIr) {
         if self.has_type(&msg.name) {
