@@ -13,7 +13,9 @@ use yellowstone_vixen_spl_token_parser::{
     instruction::Instruction, InstructionParser, TokenProgram,
 };
 
-fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
+fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String {
+    pubkey.to_string()
+}
 
 fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::Pubkey>) -> String {
     match pubkey {

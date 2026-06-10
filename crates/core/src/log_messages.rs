@@ -419,11 +419,14 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[0].direct_log_messages().collect();
-        assert_eq!(direct, vec![
-            "Program RAY invoke [1]",
-            "Program log: ray_log: recovering",
-            "Program RAY success",
-        ]);
+        assert_eq!(
+            direct,
+            vec![
+                "Program RAY invoke [1]",
+                "Program log: ray_log: recovering",
+                "Program RAY success",
+            ]
+        );
     }
 
     /// Iter 3: when an outer ix has no inner CPIs, `direct_log_messages()`
@@ -517,12 +520,15 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[0].direct_log_messages().collect();
-        assert_eq!(direct, vec![
-            "Program A invoke [1]",
-            "Program log: A start",
-            "Program log: A end",
-            "Program A success",
-        ]);
+        assert_eq!(
+            direct,
+            vec![
+                "Program A invoke [1]",
+                "Program log: A start",
+                "Program log: A end",
+                "Program A success",
+            ]
+        );
     }
 
     /// Iter 5: an outer ix's own `Program data:` line is preserved; an inner
@@ -610,11 +616,14 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[0].direct_log_messages().collect();
-        assert_eq!(direct, vec![
-            "Program OUTER invoke [1]",
-            "Program return: OUTER 8fo2SxUAAAA=",
-            "Program OUTER success",
-        ]);
+        assert_eq!(
+            direct,
+            vec![
+                "Program OUTER invoke [1]",
+                "Program return: OUTER 8fo2SxUAAAA=",
+                "Program OUTER success",
+            ]
+        );
     }
 
     /// Iter 7: adversarial input — a `Program log:` payload that contains
@@ -778,7 +787,9 @@ mod tests {
         assign_log_messages(&shared.log_messages, &mut outer);
 
         let direct: Vec<&str> = outer[2].direct_log_messages().collect();
-        assert_eq!(direct, vec![
+        assert_eq!(
+            direct,
+            vec![
             "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp invoke [1]",
             "Program log: Instruction: FillBuyOrder",
             "Program log: Order failed: 4eef0e8bd59547c7a78c42466a6f99de - 8 contracts",
@@ -786,7 +797,8 @@ mod tests {
             "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp consumed 25636 of 31932 compute \
              units",
             "Program 3ZZuTbwC6aJbvteyVxXUS7gtFYdf7AuXeitx6VyvjvUp success",
-        ]);
+        ]
+        );
     }
 
     /// Direct unit coverage of the line classifier. Pins the structural

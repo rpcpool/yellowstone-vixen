@@ -110,7 +110,9 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl Debug for SerializablePubkey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { Display::fmt(self, f) }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self, f)
+    }
 }
 
 impl Display for SerializablePubkey {
@@ -120,11 +122,15 @@ impl Display for SerializablePubkey {
 }
 
 impl From<KeyBytes<32>> for SerializablePubkey {
-    fn from(value: KeyBytes<32>) -> Self { Self(value.into_bytes()) }
+    fn from(value: KeyBytes<32>) -> Self {
+        Self(value.into_bytes())
+    }
 }
 
 impl From<SerializablePubkey> for KeyBytes<32> {
-    fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
+    fn from(value: SerializablePubkey) -> Self {
+        Self::new(value.0)
+    }
 }
 
 pub type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]

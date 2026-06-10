@@ -66,7 +66,9 @@ impl SolanaAccountsRpcSource {
 impl SourceTrait for SolanaAccountsRpcSource {
     type Config = SolanaAccountsRpcConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     #[allow(deprecated)] // get_program_accounts_with_config is deprecated but replacement not yet stable
     async fn connect(

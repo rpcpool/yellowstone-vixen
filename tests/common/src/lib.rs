@@ -3,7 +3,9 @@ use std::{io::Write, process::Command};
 use yellowstone_vixen_core::Pubkey;
 
 /// Parse a base58 public key string.
-pub fn p(s: &str) -> Pubkey { s.parse().unwrap() }
+pub fn p(s: &str) -> Pubkey {
+    s.parse().unwrap()
+}
 
 /// Validate that a protobuf schema string is syntactically correct by running `protoc`.
 ///

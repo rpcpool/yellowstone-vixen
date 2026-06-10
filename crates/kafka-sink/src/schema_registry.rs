@@ -239,10 +239,13 @@ pub fn ensure_schemas_registered(
 
         tracing::debug!(subject = %schema_def.subject, schema_id, "Schema ready");
 
-        registered.insert(schema_def.subject.clone(), RegisteredSchema {
-            schema_id,
-            message_index: schema_def.message_index,
-        });
+        registered.insert(
+            schema_def.subject.clone(),
+            RegisteredSchema {
+                schema_id,
+                message_index: schema_def.message_index,
+            },
+        );
     }
 
     Ok(registered)

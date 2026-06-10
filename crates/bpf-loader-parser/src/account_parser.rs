@@ -53,7 +53,9 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = BpfLoaderState;
 
-    fn id(&self) -> Cow<'static, str> { "bpf_loader::AccountParser".into() }
+    fn id(&self) -> Cow<'static, str> {
+        "bpf_loader::AccountParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

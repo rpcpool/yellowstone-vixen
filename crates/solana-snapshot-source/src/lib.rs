@@ -88,10 +88,13 @@ impl SolanaSnapshot {
         let account_paths = account_run_paths;
 
         tracing::info!("Opening blockstore at {:?}", ledger_path);
-        let blockstore = Blockstore::open_with_options(&ledger_path, BlockstoreOptions {
-            access_type: AccessType::PrimaryForMaintenance,
-            ..BlockstoreOptions::default()
-        })
+        let blockstore = Blockstore::open_with_options(
+            &ledger_path,
+            BlockstoreOptions {
+                access_type: AccessType::PrimaryForMaintenance,
+                ..BlockstoreOptions::default()
+            },
+        )
         .map_err(|e| {
             VixenError::Io(std::io::Error::other(format!(
                 "Failed to open blockstore: {e}"
@@ -170,16 +173,22 @@ impl FilterOwnerKeyLookup {
         Self(Arc::new(lookup))
     }
 
-    fn lookup_by_owner(&self, owner: &Pubkey) -> Option<Vec<String>> { self.0.get(owner).cloned() }
+    fn lookup_by_owner(&self, owner: &Pubkey) -> Option<Vec<String>> {
+        self.0.get(owner).cloned()
+    }
 
-    fn owners(&self) -> Vec<Pubkey> { self.0.keys().copied().collect() }
+    fn owners(&self) -> Vec<Pubkey> {
+        self.0.keys().copied().collect()
+    }
 }
 
 #[async_trait]
 impl SourceTrait for SolanaSnapshotSource {
     type Config = SolanaSnapshotConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(
         &self,

@@ -398,9 +398,13 @@ impl SlotWriteExecutor {
         }
     }
 
-    fn producer(&self) -> &FutureProducer { self.producer.as_ref() }
+    fn producer(&self) -> &FutureProducer {
+        self.producer.as_ref()
+    }
 
-    fn write_retry_policy(&self) -> RetrySettings { self.write_retry_policy }
+    fn write_retry_policy(&self) -> RetrySettings {
+        self.write_retry_policy
+    }
 
     async fn initialize(&self) -> Result<(), SinkError> {
         let DeliveryGuarantee::Transactional {
