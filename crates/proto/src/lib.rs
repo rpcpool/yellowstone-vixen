@@ -33,7 +33,7 @@ mod vixen {
             /// 0-based index of the account dispatch message (`TokenProgramState`) in the proto file descriptor.
             pub const ACCOUNT_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(4);
             /// 0-based index of the instruction dispatch message (`TokenProgram`) in the proto file descriptor.
-            pub const INSTRUCTION_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(64);
+            pub const INSTRUCTION_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(71);
         }
 
         pub mod bpf_loader {
