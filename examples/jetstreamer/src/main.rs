@@ -152,6 +152,10 @@ struct Opts {
     /// Archive URL
     #[arg(long, default_value = "https://api.old-faithful.net")]
     archive_url: String,
+
+    /// Emit a firehose progress stats line every N slots (0 disables)
+    #[arg(long, default_value = "10000")]
+    stats_interval_slots: u64,
 }
 
 /// Entry point: set env vars while the process is still single-threaded,
@@ -182,6 +186,7 @@ fn main() -> Result<()> {
         network_capacity_mb: 100000,
         sequential: false,
         buffer_window_bytes: None,
+        stats_interval_slots: opts.stats_interval_slots,
         possible_leader_skipped_tx: None,
         shutdown_signal_tx: None,
     };
