@@ -1,3 +1,5 @@
+mod raydium_amm;
+
 use std::path::PathBuf;
 
 use clap::Parser as _;
