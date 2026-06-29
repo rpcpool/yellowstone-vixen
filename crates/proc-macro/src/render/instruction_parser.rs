@@ -672,12 +672,13 @@ pub fn instruction_parser(
                         return Err(ParseError::Filtered);
                     }
 
-                    // 1. Try parsing the regular instruction.
-                    let instruction = resolve_instruction_default(
+                    // 1. Parse the regular instruction. Do not hide errors here: Kafka
+                    // fallback routing relies on parser errors to emit raw failed records.
+                    let instruction = Some(resolve_instruction_default(
                         &ix_update.accounts,
                         &ix_update.data,
                         &ix_update.path,
-                    ).ok();
+                    )?);
 
                     let mut program_events = Vec::new();
 

@@ -45,6 +45,7 @@ vixen-test-utils = { path = "../common" }
 yellowstone-vixen-parser = { path = "../../crates/parser" }
 yellowstone-vixen-core = { path = "../../crates/core", features = ["proto"] }
 yellowstone-vixen = { path = "../../crates/runtime" }
+yellowstone-vixen-kafka-sink = { path = "../../crates/kafka-sink" }
 
 base64 = "^0.22.1"
 hex = "^0.4.3"
