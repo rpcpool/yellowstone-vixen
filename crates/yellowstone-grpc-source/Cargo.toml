@@ -19,3 +19,6 @@ yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+
+[dev-dependencies]
+toml = { workspace = true }
