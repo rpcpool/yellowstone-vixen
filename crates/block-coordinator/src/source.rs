@@ -154,15 +154,20 @@ impl SourceTrait for CoordinatorSource {
             .unwrap_or("CoordinatorSource");
         let timeout = Duration::from_secs(config.timeout);
 
-        let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
+        let mut builder = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
             .x_token(config.x_token.clone())?
             .max_decoding_message_size(config.max_decoding_message_size.unwrap_or(usize::MAX))
             .accept_compressed(config.accept_compression.unwrap_or_default().into())
             .connect_timeout(timeout)
             .timeout(timeout)
-            .tls_config(ClientTlsConfig::new().with_native_roots())?
-            .connect()
-            .await?;
+            .tls_config(ClientTlsConfig::new().with_native_roots())?;
+
+        if let Some(reconnect_config) = config.reconnect_config() {
+            tracing::info!(source_label, ?reconnect_config, "Auto-reconnect enabled");
+            builder = builder.set_reconnect_config(reconnect_config);
+        }
+
+        let mut client = builder.connect().await?;
 
         let subscribe_request = SubscribeRequest::from(self.filters.clone())
             .with_coordinator_subscriptions()

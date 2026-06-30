@@ -9,8 +9,8 @@ Add this crate to your `Cargo.toml` (usually as a `proc-macro` dependency):
 ```toml
 [dependencies]
 borsh = { version = "^1.0.0", features = ["derive"] }
-yellowstone-vixen-parser = { version = "0.6.0" }
-yellowstone-vixen-proc-macro = { version = "0.6.0" }
+yellowstone-vixen-parser = { version = "0.7.0" }
+yellowstone-vixen-proc-macro = { version = "0.7.0" }
 ```
 
 Then, in your code:

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::StreamExt;
 use tokio::sync::{mpsc::Sender, oneshot};
-use yellowstone_grpc_client::GeyserGrpcClient;
+use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig};
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
@@ -32,6 +32,16 @@ impl From<VixenCompressionEncoding> for CompressionEncoding {
     }
 }
 
+const fn default_auto_reconnect() -> bool { true }
+
+/// Reconnect defaults, deliberately sturdier than the client library's
+/// (3 retries / 10ms base), which gives up in under ~100ms. With these,
+/// 10 retries doubling from 500ms cover outages up to ~4 minutes
+/// (500ms, 1s, 2s, 4s, 8s, 16s, 32s, 64s, 128s, 256s).
+const DEFAULT_RECONNECT_MAX_RETRIES: u32 = 10;
+const DEFAULT_RECONNECT_INITIAL_BACKOFF: Duration = Duration::from_millis(500);
+const DEFAULT_RECONNECT_MULTIPLIER: f64 = 2.0;
+
 /// Yellowstone connection configuration.
 #[derive(Debug, clap::Args, serde::Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
@@ -57,6 +67,79 @@ pub struct YellowstoneGrpcConfig {
 
     #[arg(long, env)]
     pub accept_compression: Option<VixenCompressionEncoding>,
+
+    /// Enable the client's built-in auto-reconnect on the gRPC stream.
+    ///
+    /// When enabled, the stream reconnects with exponential backoff after a
+    /// transient failure, resumes from the last seen slot, and deduplicates
+    /// replayed events. The server must have `replay_stored_slots` configured
+    /// for gap-free recovery.
+    ///
+    /// Defaults to `true`: a config file omitting this key (including ones that
+    /// predate the field) gets auto-reconnect. Set to `false` to opt out.
+    #[arg(long, env, default_value_t = true)]
+    #[serde(default = "default_auto_reconnect")]
+    pub auto_reconnect: bool,
+
+    /// Max reconnect attempts before the stream gives up.
+    ///
+    /// Only applies when `auto_reconnect` is set. Falls back to the client
+    /// library default when unset.
+    #[arg(long, env)]
+    pub reconnect_max_retries: Option<u32>,
+
+    /// Number of recent slots retained for dedup during the replay window.
+    ///
+    /// Only applies when `auto_reconnect` is set. Falls back to the client
+    /// library default when unset.
+    #[arg(long, env)]
+    pub reconnect_slot_retention: Option<usize>,
+}
+
+impl YellowstoneGrpcConfig {
+    /// Build the auto-reconnect config from the user-facing flags.
+    ///
+    /// Uses sturdier backoff defaults than the client library (see
+    /// [`DEFAULT_RECONNECT_MAX_RETRIES`] and friends); `reconnect_max_retries`
+    /// and `reconnect_slot_retention` override the retry count and dedup window.
+    ///
+    /// Example output:
+    /// ```rust, ignore
+    /// // auto_reconnect = false
+    /// assert!(config.reconnect_config().is_none());
+    ///
+    /// // auto_reconnect = true, no overrides -> sturdy defaults
+    /// let rc = config.reconnect_config().unwrap();
+    /// assert_eq!(rc.backoff.max_retries, 10);
+    /// assert_eq!(rc.backoff.multiplier, 2.0);
+    /// ```
+    ///
+    /// Returns `None` when auto-reconnect is disabled.
+    pub fn reconnect_config(&self) -> Option<ReconnectConfig> {
+        if !self.auto_reconnect {
+            return None;
+        }
+
+        let max_retries = self
+            .reconnect_max_retries
+            .unwrap_or(DEFAULT_RECONNECT_MAX_RETRIES);
+
+        let backoff = Backoff::new(
+            DEFAULT_RECONNECT_INITIAL_BACKOFF,
+            DEFAULT_RECONNECT_MULTIPLIER,
+            max_retries,
+        );
+
+        // Start from the library default for fields we keep (slot_retention),
+        // then swap in the sturdier backoff.
+        let mut config = ReconnectConfig::default().with_backoff(backoff);
+
+        if let Some(slot_retention) = self.reconnect_slot_retention {
+            config.slot_retention = slot_retention;
+        }
+
+        Some(config)
+    }
 }
 
 /// A `Source` implementation for the Yellowstone gRPC API.
@@ -81,15 +164,20 @@ impl SourceTrait for YellowstoneGrpcSource {
         let config = self.config.clone();
         let timeout = Duration::from_secs(config.timeout);
 
-        let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
+        let mut builder = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
             .x_token(config.x_token.clone())?
             .max_decoding_message_size(config.max_decoding_message_size.unwrap_or(usize::MAX))
             .accept_compressed(config.accept_compression.unwrap_or_default().into())
             .connect_timeout(timeout)
             .timeout(timeout)
-            .tls_config(ClientTlsConfig::new().with_native_roots())?
-            .connect()
-            .await?;
+            .tls_config(ClientTlsConfig::new().with_native_roots())?;
+
+        if let Some(reconnect_config) = config.reconnect_config() {
+            tracing::debug!(?reconnect_config, "Auto-reconnect enabled");
+            builder = builder.set_reconnect_config(reconnect_config);
+        }
+
+        let mut client = builder.connect().await?;
 
         let mut subscribe_request: SubscribeRequest = filters.into();
         if let Some(from_slot) = config.from_slot {
@@ -145,5 +233,99 @@ impl SourceTrait for YellowstoneGrpcSource {
         let _ = status_tx.send(exit_status);
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::YellowstoneGrpcConfig;
+
+    /// A config file predating the reconnect fields must still deserialize:
+    /// missing `Option` keys become `None`, and the missing `auto-reconnect`
+    /// key defaults to `true` via `#[serde(default = "default_auto_reconnect")]`,
+    /// so legacy configs get auto-reconnect.
+    #[test]
+    fn deserializes_legacy_config_with_reconnect_on_by_default() {
+        let legacy = r#"
+            endpoint = "https://example.rpcpool.com"
+            x-token = "secret"
+            timeout = 60
+        "#;
+
+        let config: YellowstoneGrpcConfig =
+            toml::from_str(legacy).expect("legacy config must deserialize");
+
+        assert!(config.auto_reconnect);
+        assert!(config.reconnect_config().is_some());
+    }
+
+    /// Auto-reconnect can be explicitly disabled.
+    #[test]
+    fn reconnect_can_be_disabled() {
+        let disabled = r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            auto-reconnect = false
+        "#;
+
+        let config: YellowstoneGrpcConfig =
+            toml::from_str(disabled).expect("config must deserialize");
+
+        assert!(!config.auto_reconnect);
+        assert!(config.reconnect_config().is_none());
+    }
+
+    /// With no overrides, the helper yields the sturdy built-in defaults
+    /// (not the weak library defaults), and keeps the library slot_retention.
+    #[test]
+    fn reconnect_config_uses_sturdy_defaults() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            auto-reconnect = true
+        "#,
+        )
+        .expect("config must deserialize");
+
+        let reconnect = config.reconnect_config().expect("auto-reconnect enabled");
+
+        assert_eq!(
+            reconnect.backoff.max_retries,
+            super::DEFAULT_RECONNECT_MAX_RETRIES
+        );
+        assert_eq!(
+            reconnect.backoff.multiplier,
+            super::DEFAULT_RECONNECT_MULTIPLIER
+        );
+        assert_eq!(
+            reconnect.backoff.initial_interval,
+            super::DEFAULT_RECONNECT_INITIAL_BACKOFF
+        );
+        // slot_retention is not overridden, so it keeps the library default.
+        assert_eq!(
+            reconnect.slot_retention,
+            yellowstone_grpc_client::ReconnectConfig::default().slot_retention
+        );
+    }
+
+    /// Config overrides win over the built-in defaults.
+    #[test]
+    fn reconnect_config_applies_overrides() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            auto-reconnect = true
+            reconnect-max-retries = 25
+            reconnect-slot-retention = 300
+        "#,
+        )
+        .expect("config must deserialize");
+
+        let reconnect = config.reconnect_config().expect("auto-reconnect enabled");
+
+        assert_eq!(reconnect.backoff.max_retries, 25);
+        assert_eq!(reconnect.slot_retention, 300);
     }
 }
