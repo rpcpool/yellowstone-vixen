@@ -11,6 +11,13 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 - `yellowstone-vixen-jetstream-source`: bumped `jetstreamer-firehose` and `jetstreamer-utils` from `0.2` to `0.5` to track upstream Anza releases.
 - **Breaking** for downstream struct-literal construction: `JetstreamSourceConfig` gained two new fields, `sequential: bool` (default `false`) and `buffer_window_bytes: Option<u64>` (default `None`), to expose the upstream `sequential` / ripget buffer-window controls. Both are `#[serde(default)]` and have clap defaults, so deserialized and CLI-built configs are unaffected; only direct struct-literal initialization needs updating.
+- Bumped `yellowstone-grpc-client` from `12` to `13.1` and `yellowstone-grpc-proto` from `12` to `12.4`, picking up the client's built-in auto-reconnect support introduced in v13.1.
+- Auto-reconnect on the Yellowstone gRPC source is now **on by default**. It is configured via three new `YellowstoneGrpcConfig` fields: `auto-reconnect` (bool, default `true`), `reconnect-max-retries`, and `reconnect-slot-retention`. When enabled the source uses a sturdy default backoff (10 retries, 500 ms base, 2.0× multiplier — covers outages up to ~4 minutes) instead of the client library's weaker default. Set `auto-reconnect = false` to opt out. Existing config files keep deserializing (`#[serde(default)]`), but downstream struct-literal construction of `YellowstoneGrpcConfig` must initialize the new fields. Requires the server to have `replay_stored_slots` configured for gap-free recovery.
+
+### Added
+
+- `SubscribeRequest` filter structs gained `cuckoo_accounts_filter` (`SubscribeRequestFilterAccounts`), `token_accounts` (`SubscribeRequestFilterTransactions`), and `cuckoo_account_include` (`SubscribeRequestFilterBlocks`) from `yellowstone-grpc-proto` 12.5. All are defaulted to `None`, preserving prior behavior.
+- `Reward` gained `commission_bps` (string) from `yellowstone-grpc-proto` 12.5; defaulted to an empty string on the jetstream source's reward conversion paths.
 
 ### Fixed
 
