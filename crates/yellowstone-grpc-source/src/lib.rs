@@ -290,9 +290,18 @@ mod tests {
 
         let reconnect = config.reconnect_config().expect("auto-reconnect enabled");
 
-        assert_eq!(reconnect.backoff.max_retries, super::DEFAULT_RECONNECT_MAX_RETRIES);
-        assert_eq!(reconnect.backoff.multiplier, super::DEFAULT_RECONNECT_MULTIPLIER);
-        assert_eq!(reconnect.backoff.initial_interval, super::DEFAULT_RECONNECT_INITIAL_BACKOFF);
+        assert_eq!(
+            reconnect.backoff.max_retries,
+            super::DEFAULT_RECONNECT_MAX_RETRIES
+        );
+        assert_eq!(
+            reconnect.backoff.multiplier,
+            super::DEFAULT_RECONNECT_MULTIPLIER
+        );
+        assert_eq!(
+            reconnect.backoff.initial_interval,
+            super::DEFAULT_RECONNECT_INITIAL_BACKOFF
+        );
         // slot_retention is not overridden, so it keeps the library default.
         assert_eq!(
             reconnect.slot_retention,
