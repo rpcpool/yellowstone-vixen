@@ -948,6 +948,7 @@ impl From<Filters> for SubscribeRequest {
                         filters: vec![],
                         // We receive all accounts updates
                         nonempty_txn_signature: None,
+                        cuckoo_accounts_filter: None,
                     }))
                 })
                 .collect(),
@@ -983,6 +984,7 @@ impl From<Filters> for SubscribeRequest {
                             .iter()
                             .map(ToString::to_string)
                             .collect(),
+                        token_accounts: None,
                     }))
                 })
                 .collect(),
@@ -1002,6 +1004,7 @@ impl From<Filters> for SubscribeRequest {
                         include_transactions: Some(v.include_transactions),
                         include_accounts: Some(v.include_accounts),
                         include_entries: Some(v.include_entries),
+                        cuckoo_account_include: None,
                     }))
                 })
                 .collect(),

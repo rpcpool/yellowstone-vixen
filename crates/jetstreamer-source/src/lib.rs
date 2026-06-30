@@ -1321,6 +1321,7 @@ mod convert {
                     post_balance: info.post_balance,
                     reward_type,
                     commission: info.commission.map(|c| c.to_string()).unwrap_or_default(),
+                    commission_bps: String::new(),
                 }
             })
             .collect();
@@ -1458,6 +1459,7 @@ mod convert {
                         _ => proto::RewardType::Unspecified as i32,
                     },
                     commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
+                    commission_bps: String::new(),
                 })
                 .collect(),
             loaded_writable_addresses: meta
