@@ -14060,7 +14060,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14081,7 +14081,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-coordinator"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "bs58",
@@ -14105,7 +14105,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-meta-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -14118,7 +14118,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-bpf-loader-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "bincode",
  "prost 0.14.1",
@@ -14134,7 +14134,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14260,7 +14260,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jetstream-source"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "bincode",
@@ -14292,7 +14292,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-kafka-sink"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "futures 0.3.31",
  "mockito",
@@ -14311,7 +14311,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "futures 0.3.31",
  "regex",
@@ -14327,7 +14327,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -14342,7 +14342,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proc-macro"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -14359,7 +14359,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proto"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -14372,7 +14372,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-slot-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "tokio",
  "yellowstone-vixen-core",
@@ -14381,7 +14381,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14399,7 +14399,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "agave-snapshots",
  "async-trait",
@@ -14426,7 +14426,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14452,7 +14452,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "bs58",
  "bytemuck",
@@ -14475,7 +14475,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -14494,7 +14494,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stream"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14518,7 +14518,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "bytesize 2.3.1",
@@ -14537,7 +14537,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",

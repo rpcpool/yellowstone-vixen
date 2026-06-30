@@ -12,7 +12,7 @@ resolver = "2"
 authors = ["Triton One", "ABK-Labs", "Jupiter Exchange"]
 edition = "2024"
 license = "MIT"
-version = "0.6.2"
+version = "0.7.0"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 publish = false
 
@@ -108,31 +108,31 @@ yellowstone-grpc-proto = { version = "12.4", default-features = false }
 rdkafka = { version = "0.36", features = ["cmake-build", "ssl", "zstd"] }
 reqwest = { version = "0.12", features = ["json", "blocking", "stream"] }
 
-yellowstone-vixen = { path = "crates/runtime", version = "0.6.1" }
-yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.6.1" }
-yellowstone-vixen-stream = { path = "crates/stream", version = "0.6.1" }
-yellowstone-vixen-core = { path = "crates/core", version = "0.6.1" }
-yellowstone-vixen-mock = { path = "crates/mock", version = "0.6.1" }
-yellowstone-vixen-parser = { path = "crates/parser", version = "0.6.1" }
-yellowstone-vixen-proto = { path = "crates/proto", version = "0.6.1" }
+yellowstone-vixen = { path = "crates/runtime", version = "0.7.0" }
+yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.7.0" }
+yellowstone-vixen-stream = { path = "crates/stream", version = "0.7.0" }
+yellowstone-vixen-core = { path = "crates/core", version = "0.7.0" }
+yellowstone-vixen-mock = { path = "crates/mock", version = "0.7.0" }
+yellowstone-vixen-parser = { path = "crates/parser", version = "0.7.0" }
+yellowstone-vixen-proto = { path = "crates/proto", version = "0.7.0" }
 
 # Parsers
-yellowstone-vixen-bpf-loader-parser = { path = "crates/bpf-loader-parser", version = "0.6.1" }
-yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.6.1" }
-yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.6.1" }
-yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.6.1" }
-yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.6.1" }
-yellowstone-vixen-stake-pool-parser = { path = "crates/stake-pool-parser", version = "0.6.1" }
+yellowstone-vixen-bpf-loader-parser = { path = "crates/bpf-loader-parser", version = "0.7.0" }
+yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.7.0" }
+yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.7.0" }
+yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.7.0" }
+yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.7.0" }
+yellowstone-vixen-stake-pool-parser = { path = "crates/stake-pool-parser", version = "0.7.0" }
 
 # Sources
-yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.6.1" }
-yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.6.1" }
-yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.6.1" }
-yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.6.1" }
-yellowstone-vixen-jetstream-source = { path = "crates/jetstreamer-source", version = "0.6.1" }
+yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.7.0" }
+yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.7.0" }
+yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.7.0" }
+yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.7.0" }
+yellowstone-vixen-jetstream-source = { path = "crates/jetstreamer-source", version = "0.7.0" }
 
 # Coordinators
-yellowstone-vixen-block-coordinator = { path = "crates/block-coordinator", version = "0.6.1" }
+yellowstone-vixen-block-coordinator = { path = "crates/block-coordinator", version = "0.7.0" }
 
 # Sinks
-yellowstone-vixen-kafka-sink = { path = "crates/kafka-sink", version = "0.6.0" }
+yellowstone-vixen-kafka-sink = { path = "crates/kafka-sink", version = "0.7.0" }
