@@ -297,9 +297,14 @@ impl TransactionPrefilter {
         accounts_include.extend(other.accounts_include);
         accounts_required.extend(other.accounts_required);
 
-        if other.failed.is_none() {
-            *failed = None;
-        }
+        // The union of two success/failure filters accepts everything the two
+        //  accept together. Only when both sides agree on a concrete value does
+        //  that value survive; any disagreement (or an existing "any" filter)
+        //  widens to `None`, i.e. accept all transactions.
+        *failed = match (*failed, other.failed) {
+            (Some(a), Some(b)) if a == b => Some(a),
+            _ => None,
+        };
     }
 }
 
@@ -1038,6 +1043,89 @@ mod tests {
             include_accounts,
             include_transactions,
             include_entries,
+        }
+    }
+
+    fn transaction_prefilter(failed: Option<bool>) -> TransactionPrefilter {
+        TransactionPrefilter {
+            accounts_include: HashSet::new(),
+            accounts_required: HashSet::new(),
+            failed,
+        }
+    }
+
+    #[test]
+    fn test_transaction_prefilter_merge_same_values_unchanged() {
+        {
+            let mut a = transaction_prefilter(Some(false));
+            a.merge(transaction_prefilter(Some(false)));
+            assert_eq!(
+                a.failed,
+                Some(false),
+                "Some(false) + Some(false) => Some(false)"
+            );
+        }
+
+        {
+            let mut a = transaction_prefilter(Some(true));
+            a.merge(transaction_prefilter(Some(true)));
+            assert_eq!(
+                a.failed,
+                Some(true),
+                "Some(true) + Some(true) => Some(true)"
+            );
+        }
+
+        {
+            let mut a = transaction_prefilter(None);
+            a.merge(transaction_prefilter(None));
+            assert_eq!(a.failed, None, "None + None => None");
+        }
+    }
+
+    #[test]
+    fn test_transaction_prefilter_merge_different_values_widen_to_none() {
+        let mut a = transaction_prefilter(Some(false));
+        a.merge(transaction_prefilter(Some(true)));
+
+        assert_eq!(
+            a.failed, None,
+            "BUG: Some(false) + Some(true) must widen to None (accept all)"
+        );
+    }
+
+    #[test]
+    fn test_transaction_prefilter_merge_none_widens_to_none() {
+        {
+            let mut a = transaction_prefilter(Some(false));
+            a.merge(transaction_prefilter(None));
+            assert_eq!(a.failed, None, "Some(false) + None => None");
+        }
+
+        {
+            let mut a = transaction_prefilter(None);
+            a.merge(transaction_prefilter(Some(true)));
+            assert_eq!(a.failed, None, "None + Some(true) => None");
+        }
+    }
+
+    #[test]
+    fn test_transaction_prefilter_merge_commutativity() {
+        let values = [Some(false), Some(true), None];
+
+        for &lhs in &values {
+            for &rhs in &values {
+                let mut ab = transaction_prefilter(lhs);
+                ab.merge(transaction_prefilter(rhs));
+
+                let mut ba = transaction_prefilter(rhs);
+                ba.merge(transaction_prefilter(lhs));
+
+                assert_eq!(
+                    ab, ba,
+                    "merge({lhs:?}, {rhs:?}) should equal merge({rhs:?}, {lhs:?}) (commutativity)"
+                );
+            }
         }
     }
 

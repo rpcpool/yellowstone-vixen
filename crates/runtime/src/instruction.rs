@@ -48,7 +48,19 @@ impl InstructionPipeline {
                 match res {
                     Ok(()) => (),
                     Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
-                    Err(e) => err = Some(e.handle::<InstructionUpdate>(&pipe.id())),
+                    Err(e) => {
+                        let handled = e.handle::<InstructionUpdate>(&pipe.id());
+
+                        if err.is_some() {
+                            tracing::warn!(
+                                pipeline = %pipe.id(),
+                                "replacing a previous unreported pipeline error; \
+                                 the earlier failure is being dropped"
+                            );
+                        }
+
+                        err = Some(handled);
+                    },
                 }
             }
         }
