@@ -60,8 +60,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync, R: Sync> vixen::Handler<V, R> for Logger {
-    async fn handle(&self, value: &V, _raw: &R) -> vixen::HandlerResult<()> {
+impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
+    async fn handle(&self, value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> {
         tracing::info!(?value);
         Ok(())
     }
