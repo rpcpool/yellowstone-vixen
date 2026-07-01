@@ -8,6 +8,20 @@ pub fn pad_hex(hex: &str) -> String {
     }
 }
 
+pub fn decode_hex_text(value: &str) -> Result<Vec<u8>, hex::FromHexError> {
+    let trimmed = value.trim();
+    let without_prefix = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+        .unwrap_or(trimmed);
+    let cleaned: String = without_prefix
+        .chars()
+        .filter(|c| !c.is_ascii_whitespace() && *c != '_')
+        .collect();
+
+    hex::decode(pad_hex(&cleaned))
+}
+
 ///
 /// Convert a PascalCase or camelCase string to snake_case.
 ///

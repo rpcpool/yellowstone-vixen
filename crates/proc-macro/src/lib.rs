@@ -159,7 +159,8 @@ impl IncludeVixenParserInput {
 
 fn decode_hex_bytes_literal(lit: &HexBytesLiteral) -> syn::Result<Vec<u8>> {
     match lit {
-        HexBytesLiteral::Str(lit) => decode_hex_text(&lit.value(), lit.span()),
+        HexBytesLiteral::Str(lit) => crate::utils::decode_hex_text(&lit.value())
+            .map_err(|err| invalid_cpi_event_discriminator_hex(lit.span(), err)),
         HexBytesLiteral::Int(lit) => decode_int_literal(lit),
     }
 }
@@ -169,7 +170,8 @@ fn decode_int_literal(lit: &LitInt) -> syn::Result<Vec<u8>> {
     let trimmed = value.trim();
 
     if trimmed.starts_with("0x") || trimmed.starts_with("0X") {
-        return decode_hex_text(trimmed, lit.span());
+        return crate::utils::decode_hex_text(trimmed)
+            .map_err(|err| invalid_cpi_event_discriminator_hex(lit.span(), err));
     }
 
     let value = lit.base10_parse::<u128>()?;
@@ -185,23 +187,14 @@ fn decode_int_literal(lit: &LitInt) -> syn::Result<Vec<u8>> {
     Ok(bytes[first_non_zero..].to_vec())
 }
 
-fn decode_hex_text(value: &str, span: proc_macro2::Span) -> syn::Result<Vec<u8>> {
-    let trimmed = value.trim();
-    let without_prefix = trimmed
-        .strip_prefix("0x")
-        .or_else(|| trimmed.strip_prefix("0X"))
-        .unwrap_or(trimmed);
-    let cleaned: String = without_prefix
-        .chars()
-        .filter(|c| !c.is_ascii_whitespace() && *c != '_')
-        .collect();
-
-    hex::decode(crate::utils::pad_hex(&cleaned)).map_err(|err| {
-        syn::Error::new(
-            span,
-            format!("cpi_event_discriminator must be hex bytes: {err}"),
-        )
-    })
+fn invalid_cpi_event_discriminator_hex(
+    span: proc_macro2::Span,
+    err: hex::FromHexError,
+) -> syn::Error {
+    syn::Error::new(
+        span,
+        format!("cpi_event_discriminator must be hex bytes: {err}"),
+    )
 }
 
 fn expand_include_vixen_parser(
