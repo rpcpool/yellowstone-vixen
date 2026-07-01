@@ -592,6 +592,7 @@ pub fn instruction_parser(
     program_name_camel: &CamelCaseString,
     instructions: &[codama_nodes::InstructionNode],
     has_events: bool,
+    cpi_event_config: &super::vixen_parser::CpiEventConfig,
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
@@ -632,7 +633,8 @@ pub fn instruction_parser(
 
     // When program-events feature is active and the IDL has events,
     // InstructionParser outputs ProgramEventOutput instead of Instructions.
-    let event_ix_tag = super::ANCHOR_EVENT_IX_TAG;
+    let event_ix_tag = cpi_event_config.discriminator.iter().copied();
+    let event_payload_offset = cpi_event_config.payload_offset;
 
     let instruction_parser_impl = if has_events {
         let output_ident = format_ident!("ProgramEventOutput");
@@ -666,9 +668,9 @@ pub fn instruction_parser(
 
                     // Skip standalone CPI events — they are collected by the
                     // parent instruction's parse call below.
-                    const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
+                    const EVENT_IX_TAG: &[u8] = &[#(#event_ix_tag),*];
 
-                    if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
+                    if ix_update.data.starts_with(EVENT_IX_TAG) {
                         return Err(ParseError::Filtered);
                     }
 
@@ -684,13 +686,15 @@ pub fn instruction_parser(
 
                     // 2. Scan inner instructions for CPI self-invocation events.
                     for inner in &ix_update.inner {
-                        if inner.data.len() >= 8
-                            && inner.data[..8] == EVENT_IX_TAG
+                        const EVENT_PAYLOAD_OFFSET: usize = #event_payload_offset;
+
+                        if inner.data.starts_with(EVENT_IX_TAG)
+                            && inner.data.len() >= EVENT_PAYLOAD_OFFSET
                             && *inner.program == PROGRAM_ID
                         {
-                            // Strip the EVENT_IX_TAG prefix — the event discriminator
-                            // follows immediately after it.
-                            if let Ok(ev) = resolve_event_default(&inner.accounts, &inner.data[8..]) {
+                            // Strip the CPI event wrapper — the event discriminator
+                            // follows at EVENT_PAYLOAD_OFFSET.
+                            if let Ok(ev) = resolve_event_default(&inner.accounts, &inner.data[EVENT_PAYLOAD_OFFSET..]) {
                                 program_events.push(ev);
                             }
                         }
@@ -746,9 +750,9 @@ pub fn instruction_parser(
                     // starts with the event tag. These are not real instructions and
                     // would fail discriminator matching, so filter them out.
                     {
-                        const EVENT_IX_TAG: [u8; 8] = (#event_ix_tag).to_le_bytes();
+                        const EVENT_IX_TAG: &[u8] = &[#(#event_ix_tag),*];
 
-                        if ix_update.data.len() >= 8 && ix_update.data[..8] == EVENT_IX_TAG {
+                        if ix_update.data.starts_with(EVENT_IX_TAG) {
                             return Err(ParseError::Filtered);
                         }
                     }

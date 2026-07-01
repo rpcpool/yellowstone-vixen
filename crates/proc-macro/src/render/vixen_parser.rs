@@ -2,7 +2,31 @@ use codama_nodes::{EventNode, RootNode};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-pub fn vixen_parser(idl: &RootNode, events: &[EventNode]) -> TokenStream {
+#[derive(Debug, Clone)]
+pub struct ParserConfig {
+    pub cpi_event: CpiEventConfig,
+}
+
+#[derive(Debug, Clone)]
+pub struct CpiEventConfig {
+    pub discriminator: Vec<u8>,
+    pub payload_offset: usize,
+}
+
+impl Default for ParserConfig {
+    fn default() -> Self {
+        let anchor_event_tag = super::ANCHOR_EVENT_IX_TAG.to_le_bytes();
+
+        Self {
+            cpi_event: CpiEventConfig {
+                discriminator: anchor_event_tag.to_vec(),
+                payload_offset: anchor_event_tag.len(),
+            },
+        }
+    }
+}
+
+pub fn vixen_parser(idl: &RootNode, events: &[EventNode], config: &ParserConfig) -> TokenStream {
     let program_mod_ident = format_ident!("{}", crate::utils::to_snake_case(&idl.program.name));
 
     let program_pubkey = crate::render::program_pubkey(&idl.program.public_key);
@@ -17,7 +41,12 @@ pub fn vixen_parser(idl: &RootNode, events: &[EventNode]) -> TokenStream {
     let has_instructions = !idl.program.instructions.is_empty();
 
     let instruction_parser = if has_instructions {
-        crate::render::instruction_parser(&idl.program.name, &idl.program.instructions, has_events)
+        crate::render::instruction_parser(
+            &idl.program.name,
+            &idl.program.instructions,
+            has_events,
+            &config.cpi_event,
+        )
     } else {
         quote! {}
     };
