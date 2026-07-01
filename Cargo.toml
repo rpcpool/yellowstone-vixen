@@ -97,8 +97,8 @@ quote = "1"
 zstd = "^0.13.0"
 bytemuck = "^1"
 tokio-util = "0.7"
-jetstreamer-firehose = "0.5"
-jetstreamer-utils = "0.5"
+jetstreamer-firehose = "0.6"
+jetstreamer-utils = "0.6"
 warp = "0.3"
 
 yellowstone-block-machine = { version = "0.4.0" }
@@ -106,7 +106,7 @@ yellowstone-fumarole-client = "0.4.0+solana.3"
 yellowstone-grpc-client = { version = "13.1" }
 yellowstone-grpc-proto = { version = "12.4", default-features = false }
 rdkafka = { version = "0.36", features = ["cmake-build", "ssl", "zstd"] }
-reqwest = { version = "0.12", features = ["json", "blocking", "stream"] }
+reqwest = { version = "0.13", features = ["json", "blocking", "stream"] }
 
 yellowstone-vixen = { path = "crates/runtime", version = "0.7.0" }
 yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.7.0" }

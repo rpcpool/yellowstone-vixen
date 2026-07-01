@@ -704,6 +704,7 @@ impl JetstreamSource {
         let result = firehose(
             config.threads as u64,
             config.sequential,
+            false,
             config.buffer_window_bytes,
             start_slot..end_slot,
             on_block,
