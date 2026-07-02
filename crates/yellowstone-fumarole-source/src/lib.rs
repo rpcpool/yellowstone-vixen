@@ -94,9 +94,15 @@ impl SourceTrait for YellowstoneFumaroleSource {
             ..Default::default()
         };
 
-        let mut fumarole_client = FumaroleClient::connect(self.config.clone().into())
-            .await
-            .expect("failing to connect to fumarole");
+        let mut fumarole_client = match FumaroleClient::connect(self.config.clone().into()).await {
+            Ok(client) => client,
+            Err(e) => {
+                let msg = format!("Failed to connect to fumarole: {e}");
+                tracing::error!(%msg, "Fumarole source connection failed");
+                let _ = status_tx.send(SourceExitStatus::Error(msg));
+                return Ok(());
+            },
+        };
 
         let mut subscribe_request = SubscribeRequest::from(filters);
 
@@ -104,14 +110,22 @@ impl SourceTrait for YellowstoneFumaroleSource {
             subscribe_request.commitment = Some(commitment_level as i32);
         }
 
-        let dragonsmouth_session = fumarole_client
+        let dragonsmouth_session = match fumarole_client
             .dragonsmouth_subscribe_with_config(
                 subscriber_name,
                 subscribe_request,
                 fumarole_subscribe_config,
             )
             .await
-            .expect("failing to subscribe to fumarole");
+        {
+            Ok(session) => session,
+            Err(e) => {
+                let msg = format!("Failed to subscribe to fumarole: {e}");
+                tracing::error!(%msg, "Fumarole source subscription failed");
+                let _ = status_tx.send(SourceExitStatus::Error(msg));
+                return Ok(());
+            },
+        };
 
         let DragonsmouthAdapterSession {
             sink: _,
@@ -142,5 +156,46 @@ impl SourceTrait for YellowstoneFumaroleSource {
 
         let _ = status_tx.send(exit_status);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use tokio::sync::{mpsc, oneshot};
+    use yellowstone_vixen::sources::SourceTrait;
+    use yellowstone_vixen_core::Filters;
+
+    use super::{FumaroleConfig, YellowstoneFumaroleSource};
+
+    #[test]
+    fn connect_reports_connection_errors_instead_of_panicking() {
+        let runtime = tokio::runtime::Runtime::new().expect("runtime should build");
+
+        runtime.block_on(async {
+            let source = YellowstoneFumaroleSource::new(
+                FumaroleConfig {
+                    endpoint: "http://127.0.0.1:9".to_string(),
+                    subscriber_name: "test-subscriber".to_string(),
+                    ..FumaroleConfig::default()
+                },
+                Filters::new(HashMap::new()),
+            );
+            let (tx, mut rx) = mpsc::channel(1);
+            let (status_tx, status_rx) = oneshot::channel();
+
+            source
+                .connect(tx, status_tx)
+                .await
+                .expect("connect should report connection failure through source status");
+
+            let status = status_rx.await.expect("source status should be sent");
+            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+                panic!("expected source error, got {status:?}");
+            };
+            assert!(msg.contains("Failed to connect to fumarole"));
+            assert!(rx.try_recv().is_err());
+        });
     }
 }
