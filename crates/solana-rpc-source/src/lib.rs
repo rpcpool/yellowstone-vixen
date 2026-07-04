@@ -162,6 +162,9 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
         let mut exit_status = SourceExitStatus::Completed;
 
+        // One task runs per (filter, owner) pair and the runtime treats a source
+        // `Error` as fatal, so the first failure wins: keeping later errors adds
+        // nothing, and updates already sent by sibling tasks stay in the buffer.
         while let Some(task_result) = tasks_set.join_next().await {
             match task_result {
                 Ok(Ok(())) => {},
@@ -226,6 +229,54 @@ mod tests {
                 .expect("connect should report task failure through source status");
 
             let status = status_rx.await.expect("source status should be sent");
+            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+                panic!("expected source error, got {status:?}");
+            };
+            assert!(msg.contains("Failed to get slot for source: solana-rpc"));
+            assert!(rx.try_recv().is_err());
+        });
+    }
+
+    #[test]
+    fn connect_with_multiple_filters_reports_single_error_status() {
+        let runtime = tokio::runtime::Runtime::new().expect("runtime should build");
+
+        runtime.block_on(async {
+            let filters = Filters::new(HashMap::from([
+                (
+                    "filter-a".to_string(),
+                    Prefilter::builder()
+                        .account_owners([[1_u8; 32]])
+                        .build()
+                        .expect("account owner filter should build"),
+                ),
+                (
+                    "filter-b".to_string(),
+                    Prefilter::builder()
+                        .account_owners([[2_u8; 32]])
+                        .build()
+                        .expect("account owner filter should build"),
+                ),
+            ]));
+            let source = SolanaAccountsRpcSource::new(
+                SolanaAccountsRpcConfig {
+                    endpoint: "http://127.0.0.1:9".to_string(),
+                    timeout: 1,
+                    commitment_level: Some(CommitmentLevel::Confirmed),
+                },
+                filters,
+            );
+            let (tx, mut rx) = mpsc::channel(1);
+            let (status_tx, status_rx) = oneshot::channel();
+
+            source
+                .connect(tx, status_tx)
+                .await
+                .expect("connect should report task failures through source status");
+
+            let status = status_rx
+                .await
+                .expect("source status should be sent exactly once");
             let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
                 panic!("expected source error, got {status:?}");
             };

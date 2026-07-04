@@ -119,10 +119,16 @@ impl SourceTrait for YellowstoneFumaroleSource {
             .await
         {
             Ok(session) => session,
-            Err(e) => {
-                let msg = format!("Failed to subscribe to fumarole: {e}");
-                tracing::error!(%msg, "Fumarole source subscription failed");
-                let _ = status_tx.send(SourceExitStatus::Error(msg));
+            Err(status) => {
+                tracing::error!(
+                    code = ?status.code(),
+                    message = status.message(),
+                    "Fumarole source subscription failed"
+                );
+                let _ = status_tx.send(SourceExitStatus::StreamError {
+                    code: status.code(),
+                    message: status.message().to_owned(),
+                });
                 return Ok(());
             },
         };
