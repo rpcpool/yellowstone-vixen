@@ -94,16 +94,12 @@ impl SourceTrait for SolanaAccountsRpcSource {
                     );
 
                     tasks_set.spawn(async move {
-                        let slot = client.get_slot().await;
-
-                        if let Err(e) = &slot {
-                            tracing::error!(
-                                "Failed to get slot: {} for source: solana-rpc, filter: {}",
-                                e,
-                                filter_id
-                            );
-                        }
-                        let slot = slot.unwrap();
+                        let slot = client.get_slot().await.map_err(|e| {
+                            format!(
+                                "Failed to get slot for source: solana-rpc, filter: {filter_id}: \
+                                 {e}"
+                            )
+                        })?;
 
                         let accounts = client
                             .get_program_accounts_with_config(
@@ -121,18 +117,14 @@ impl SourceTrait for SolanaAccountsRpcSource {
                                 },
                             )
                             .await
-                            .map_err(|e| VixenError::Io(std::io::Error::other(e.to_string())));
+                            .map_err(|e| {
+                                format!(
+                                    "Failed to get program accounts for source: solana-rpc, \
+                                     filter: {filter_id}: {e}"
+                                )
+                            })?;
 
-                        if let Err(e) = &accounts {
-                            tracing::error!(
-                                "Failed to get program accounts: {} for source: solana-rpc, \
-                                 filter: {}",
-                                e,
-                                filter_id
-                            );
-                        }
-
-                        for (acc_pubkey, account) in accounts.unwrap() {
+                        for (acc_pubkey, account) in accounts {
                             let update = SubscribeUpdate {
                                 filters: vec![filter_id.clone()],
                                 created_at: None,
@@ -155,21 +147,141 @@ impl SourceTrait for SolanaAccountsRpcSource {
                             let res = tx.send(Ok(update)).await;
 
                             if res.is_err() {
-                                tracing::error!(
+                                return Err(format!(
                                     "Failed to send update to buffer for source: solana-rpc, \
-                                     filter: {}",
-                                    filter_id
-                                );
+                                     filter: {filter_id}"
+                                ));
                             }
                         }
+
+                        Ok::<(), String>(())
                     });
                 }
             }
         }
 
-        tasks_set.join_all().await;
+        let mut exit_status = SourceExitStatus::Completed;
 
-        let _ = status_tx.send(SourceExitStatus::Completed);
+        // One task runs per (filter, owner) pair and the runtime treats a source
+        // `Error` as fatal, so the first failure wins: keeping later errors adds
+        // nothing, and updates already sent by sibling tasks stay in the buffer.
+        while let Some(task_result) = tasks_set.join_next().await {
+            match task_result {
+                Ok(Ok(())) => {},
+                Ok(Err(msg)) => {
+                    tracing::error!(%msg, "Solana RPC source task failed");
+
+                    if matches!(exit_status, SourceExitStatus::Completed) {
+                        exit_status = SourceExitStatus::Error(msg);
+                    }
+                },
+                Err(e) => {
+                    tracing::error!(err = %e, "Solana RPC source task panicked or was cancelled");
+
+                    if matches!(exit_status, SourceExitStatus::Completed) {
+                        exit_status = SourceExitStatus::Error(e.to_string());
+                    }
+                },
+            }
+        }
+
+        let _ = status_tx.send(exit_status);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use tokio::sync::{mpsc, oneshot};
+    use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel};
+    use yellowstone_vixen_core::{Filters, Prefilter};
+
+    use super::{SolanaAccountsRpcConfig, SolanaAccountsRpcSource};
+
+    #[test]
+    fn connect_reports_rpc_errors_instead_of_panicking() {
+        let runtime = tokio::runtime::Runtime::new().expect("runtime should build");
+
+        runtime.block_on(async {
+            let filters = Filters::new(HashMap::from([(
+                "test-filter".to_string(),
+                Prefilter::builder()
+                    .account_owners([[1_u8; 32]])
+                    .build()
+                    .expect("account owner filter should build"),
+            )]));
+            let source = SolanaAccountsRpcSource::new(
+                SolanaAccountsRpcConfig {
+                    endpoint: "http://127.0.0.1:9".to_string(),
+                    timeout: 1,
+                    commitment_level: Some(CommitmentLevel::Confirmed),
+                },
+                filters,
+            );
+            let (tx, mut rx) = mpsc::channel(1);
+            let (status_tx, status_rx) = oneshot::channel();
+
+            source
+                .connect(tx, status_tx)
+                .await
+                .expect("connect should report task failure through source status");
+
+            let status = status_rx.await.expect("source status should be sent");
+            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+                panic!("expected source error, got {status:?}");
+            };
+            assert!(msg.contains("Failed to get slot for source: solana-rpc"));
+            assert!(rx.try_recv().is_err());
+        });
+    }
+
+    #[test]
+    fn connect_with_multiple_filters_reports_single_error_status() {
+        let runtime = tokio::runtime::Runtime::new().expect("runtime should build");
+
+        runtime.block_on(async {
+            let filters = Filters::new(HashMap::from([
+                (
+                    "filter-a".to_string(),
+                    Prefilter::builder()
+                        .account_owners([[1_u8; 32]])
+                        .build()
+                        .expect("account owner filter should build"),
+                ),
+                (
+                    "filter-b".to_string(),
+                    Prefilter::builder()
+                        .account_owners([[2_u8; 32]])
+                        .build()
+                        .expect("account owner filter should build"),
+                ),
+            ]));
+            let source = SolanaAccountsRpcSource::new(
+                SolanaAccountsRpcConfig {
+                    endpoint: "http://127.0.0.1:9".to_string(),
+                    timeout: 1,
+                    commitment_level: Some(CommitmentLevel::Confirmed),
+                },
+                filters,
+            );
+            let (tx, mut rx) = mpsc::channel(1);
+            let (status_tx, status_rx) = oneshot::channel();
+
+            source
+                .connect(tx, status_tx)
+                .await
+                .expect("connect should report task failures through source status");
+
+            let status = status_rx
+                .await
+                .expect("source status should be sent exactly once");
+            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+                panic!("expected source error, got {status:?}");
+            };
+            assert!(msg.contains("Failed to get slot for source: solana-rpc"));
+            assert!(rx.try_recv().is_err());
+        });
     }
 }
