@@ -107,6 +107,7 @@ impl SingleInstructionPipeline {
     /// # Errors
     /// Returns an error if the inner pipeline fails.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+        let mut err = None;
         let ixs = InstructionUpdate::build_from_txn(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
 
@@ -119,15 +120,15 @@ impl SingleInstructionPipeline {
             match res {
                 Ok(()) => (),
                 Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
-                Err(e) => {
-                    let handled = e.handle::<InstructionUpdate>(&pipe.id());
-
-                    return Err(PipelineErrors::AlreadyHandled(handled));
-                },
+                Err(e) => err = Some(e.handle::<InstructionUpdate>(&pipe.id())),
             }
         }
 
-        Ok(())
+        if let Some(h) = err {
+            Err(PipelineErrors::AlreadyHandled(h))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -154,5 +155,141 @@ impl DynPipeline<TransactionUpdate> for SingleInstructionPipeline {
     ) -> std::pin::Pin<Box<dyn futures_util::Future<Output = Result<(), PipelineErrors>> + Send + 'h>>
     {
         Box::pin(SingleInstructionPipeline::handle(self, value))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        borrow::Cow,
+        sync::atomic::{AtomicUsize, Ordering},
+    };
+
+    use vixen_core::{
+        instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
+        TransactionUpdate,
+    };
+    use yellowstone_grpc_proto::{
+        geyser::SubscribeUpdateTransactionInfo,
+        solana::storage::confirmed_block::{
+            CompiledInstruction, Message, MessageHeader, Transaction, TransactionStatusMeta,
+        },
+    };
+
+    use super::{PipelineErrors, SingleInstructionPipeline};
+    use crate::handler::{BoxPipeline, Handler, HandlerResult, Pipeline};
+
+    static HANDLED: AtomicUsize = AtomicUsize::new(0);
+
+    #[derive(Debug, Clone, Copy)]
+    struct FailFirstIxParser;
+
+    impl Parser for FailFirstIxParser {
+        type Input = InstructionUpdate;
+        // `Parser::Output` must implement `prost::Message`; `()` is prost's empty
+        // message and is all this test needs (it only asserts parse success/failure).
+        type Output = ();
+
+        fn id(&self) -> Cow<'static, str> { "test::FailFirstIxParser".into() }
+
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+        async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
+            if value.data.first() == Some(&0) {
+                return Err(ParseError::Other("simulated unpack failure".into()));
+            }
+
+            Ok(())
+        }
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct CountingHandler;
+
+    impl Handler<(), InstructionUpdate> for CountingHandler {
+        async fn handle(&self, _value: &(), _raw: &InstructionUpdate) -> HandlerResult<()> {
+            HANDLED.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        }
+    }
+
+    fn sample_transaction(instructions: Vec<CompiledInstruction>) -> TransactionUpdate {
+        let program = [7u8; 32];
+        let payer = [8u8; 32];
+        let mint = [9u8; 32];
+
+        TransactionUpdate {
+            slot: 1,
+            transaction: Some(SubscribeUpdateTransactionInfo {
+                signature: vec![1; 64],
+                is_vote: false,
+                index: 0,
+                transaction: Some(Transaction {
+                    signatures: vec![vec![1; 64]],
+                    message: Some(Message {
+                        header: Some(MessageHeader {
+                            num_required_signatures: 1,
+                            num_readonly_signed_accounts: 0,
+                            num_readonly_unsigned_accounts: 0,
+                        }),
+                        account_keys: vec![program.to_vec(), payer.to_vec(), mint.to_vec()],
+                        recent_blockhash: vec![2; 32],
+                        instructions,
+                        versioned: false,
+                        address_table_lookups: vec![],
+                    }),
+                }),
+                meta: Some(TransactionStatusMeta {
+                    err: None,
+                    fee: 0,
+                    pre_balances: vec![0; 3],
+                    post_balances: vec![0; 3],
+                    inner_instructions: vec![],
+                    inner_instructions_none: false,
+                    log_messages: vec![],
+                    log_messages_none: false,
+                    pre_token_balances: vec![],
+                    post_token_balances: vec![],
+                    rewards: vec![],
+                    loaded_writable_addresses: vec![],
+                    loaded_readonly_addresses: vec![],
+                    return_data: None,
+                    return_data_none: true,
+                    compute_units_consumed: None,
+                    cost_units: None,
+                }),
+            }),
+        }
+    }
+
+    #[tokio::test]
+    async fn single_instruction_pipeline_keeps_iterating_after_parse_error() {
+        HANDLED.store(0, Ordering::Relaxed);
+
+        let txn = sample_transaction(vec![
+            CompiledInstruction {
+                program_id_index: 0,
+                accounts: vec![1, 2],
+                data: vec![0],
+            },
+            CompiledInstruction {
+                program_id_index: 0,
+                accounts: vec![1, 2],
+                data: vec![1],
+            },
+        ]);
+
+        let pipeline: BoxPipeline<'static, InstructionUpdate> =
+            Box::new(Pipeline::new(FailFirstIxParser, [CountingHandler]));
+        let single = SingleInstructionPipeline::new(pipeline);
+
+        let result = single.handle(&txn).await;
+
+        assert!(matches!(result, Err(PipelineErrors::AlreadyHandled(_))));
+        assert_eq!(
+            HANDLED.load(Ordering::Relaxed),
+            1,
+            "handler should still run for instructions after a parse failure"
+        );
     }
 }
