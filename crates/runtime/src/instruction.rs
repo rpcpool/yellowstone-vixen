@@ -176,8 +176,8 @@ mod tests {
         },
     };
 
-    use super::{SingleInstructionPipeline, PipelineErrors};
-    use crate::handler::{BoxPipeline, DynPipeline, Handler, HandlerResult, Pipeline};
+    use super::{PipelineErrors, SingleInstructionPipeline};
+    use crate::handler::{BoxPipeline, Handler, HandlerResult, Pipeline};
 
     static HANDLED: AtomicUsize = AtomicUsize::new(0);
 
@@ -186,7 +186,9 @@ mod tests {
 
     impl Parser for FailFirstIxParser {
         type Input = InstructionUpdate;
-        type Output = u8;
+        // `Parser::Output` must implement `prost::Message`; `()` is prost's empty
+        // message and is all this test needs (it only asserts parse success/failure).
+        type Output = ();
 
         fn id(&self) -> Cow<'static, str> { "test::FailFirstIxParser".into() }
 
@@ -197,15 +199,15 @@ mod tests {
                 return Err(ParseError::Other("simulated unpack failure".into()));
             }
 
-            Ok(1)
+            Ok(())
         }
     }
 
     #[derive(Debug, Clone, Copy)]
     struct CountingHandler;
 
-    impl Handler<u8, InstructionUpdate> for CountingHandler {
-        async fn handle(&self, _value: &u8, _raw: &InstructionUpdate) -> HandlerResult<()> {
+    impl Handler<(), InstructionUpdate> for CountingHandler {
+        async fn handle(&self, _value: &(), _raw: &InstructionUpdate) -> HandlerResult<()> {
             HANDLED.fetch_add(1, Ordering::Relaxed);
             Ok(())
         }
