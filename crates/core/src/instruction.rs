@@ -432,7 +432,10 @@ impl InstructionUpdate {
                 while i > 0 {
                     let parent_idx = i - 1;
                     let Some(height) = inner[parent_idx].1 else {
-                        // stack_height missing for old data
+                        // stack_height missing for old data: we can't reconstruct
+                        // nesting for this parent, so leave it flat and step back.
+                        // (Must decrement here, otherwise the loop spins forever.)
+                        i -= 1;
                         continue;
                     };
                     while inner
@@ -827,6 +830,173 @@ mod tests {
             ("3.2.4".to_owned(), "3.6".to_owned()),
             ("3.3".to_owned(), "3.7".to_owned()),
         ]);
+    }
+
+    #[test]
+    fn build_from_txn_terminates_when_inner_stack_heights_missing() {
+        // Regression test: inner instructions whose `stack_height` is `None`
+        // (older Solana data, or sources that don't populate it) must not send
+        // the CPI-nesting reconstruction into an infinite loop. Before the fix,
+        // a missing stack height on a non-last inner instruction (here: all of
+        // them) spun the `while i > 0` loop forever, pinning a worker at 100% CPU
+        // and eventually stalling the whole pipeline.
+        let txn = transaction_with_missing_inner_stack_heights();
+
+        let instructions =
+            InstructionUpdate::build_from_txn(&txn).expect("transaction should build");
+
+        // One outer instruction, and because no stack heights are available the
+        // three inner instructions can't be re-nested, so they stay flat.
+        assert_eq!(instructions.len(), 1);
+        assert_eq!(instructions[0].inner.len(), 3);
+        assert!(instructions[0].inner.iter().all(|i| i.inner.is_empty()));
+    }
+
+    #[test]
+    fn build_from_txn_nests_present_stack_heights_when_one_is_missing() {
+        use super::Pubkey;
+
+        // Companion to the all-`None` case above: with a mix of present and
+        // missing `stack_height`s the reconstruction must still terminate, nest
+        // the instructions whose heights are known, and leave the height-less
+        // one flat. Heights here are [Some(2), Some(3), None]: the depth-3
+        // instruction is a child of the depth-2 one, and the instruction with no
+        // height stays a sibling at the top of the inner list.
+        let txn = transaction_with_mixed_inner_stack_heights();
+
+        let instructions =
+            InstructionUpdate::build_from_txn(&txn).expect("transaction should build");
+
+        assert_eq!(instructions.len(), 1);
+
+        let inner = &instructions[0].inner;
+        assert_eq!(inner.len(), 2);
+
+        let depth_two: Pubkey = [3u8; 32].into();
+        let depth_three: Pubkey = [4u8; 32].into();
+        let no_height: Pubkey = [5u8; 32].into();
+
+        // The depth-3 instruction is nested under the depth-2 one.
+        assert_eq!(inner[0].program, depth_two);
+        assert_eq!(inner[0].inner.len(), 1);
+        assert_eq!(inner[0].inner[0].program, depth_three);
+
+        // The height-less instruction can't be placed, so it stays flat.
+        assert_eq!(inner[1].program, no_height);
+        assert!(inner[1].inner.is_empty());
+    }
+
+    fn transaction_with_missing_inner_stack_heights() -> TransactionUpdate {
+        TransactionUpdate {
+            slot: 1,
+            transaction: Some(SubscribeUpdateTransactionInfo {
+                signature: vec![9; 64],
+                is_vote: false,
+                transaction: Some(Transaction {
+                    signatures: vec![vec![9; 64]],
+                    message: Some(Message {
+                        header: Some(MessageHeader {
+                            num_required_signatures: 1,
+                            num_readonly_signed_accounts: 0,
+                            num_readonly_unsigned_accounts: 0,
+                        }),
+                        account_keys: (0..8).map(|byte| vec![byte; 32]).collect(),
+                        recent_blockhash: vec![7; 32],
+                        instructions: vec![compiled_instruction(0)],
+                        versioned: false,
+                        address_table_lookups: vec![],
+                    }),
+                }),
+                meta: Some(TransactionStatusMeta {
+                    err: None,
+                    fee: 0,
+                    pre_balances: vec![],
+                    post_balances: vec![],
+                    inner_instructions: vec![InnerInstructions {
+                        index: 0,
+                        instructions: vec![
+                            inner_instruction_opt(3, None),
+                            inner_instruction_opt(4, None),
+                            inner_instruction_opt(5, None),
+                        ],
+                    }],
+                    inner_instructions_none: false,
+                    log_messages: vec![],
+                    log_messages_none: false,
+                    pre_token_balances: vec![],
+                    post_token_balances: vec![],
+                    rewards: vec![],
+                    loaded_writable_addresses: vec![],
+                    loaded_readonly_addresses: vec![],
+                    return_data: None,
+                    return_data_none: true,
+                    compute_units_consumed: None,
+                    cost_units: None,
+                }),
+                index: 0,
+            }),
+        }
+    }
+
+    fn transaction_with_mixed_inner_stack_heights() -> TransactionUpdate {
+        TransactionUpdate {
+            slot: 1,
+            transaction: Some(SubscribeUpdateTransactionInfo {
+                signature: vec![9; 64],
+                is_vote: false,
+                transaction: Some(Transaction {
+                    signatures: vec![vec![9; 64]],
+                    message: Some(Message {
+                        header: Some(MessageHeader {
+                            num_required_signatures: 1,
+                            num_readonly_signed_accounts: 0,
+                            num_readonly_unsigned_accounts: 0,
+                        }),
+                        account_keys: (0..8).map(|byte| vec![byte; 32]).collect(),
+                        recent_blockhash: vec![7; 32],
+                        instructions: vec![compiled_instruction(0)],
+                        versioned: false,
+                        address_table_lookups: vec![],
+                    }),
+                }),
+                meta: Some(TransactionStatusMeta {
+                    err: None,
+                    fee: 0,
+                    pre_balances: vec![],
+                    post_balances: vec![],
+                    inner_instructions: vec![InnerInstructions {
+                        index: 0,
+                        instructions: vec![
+                            inner_instruction_opt(3, Some(2)),
+                            inner_instruction_opt(4, Some(3)),
+                            inner_instruction_opt(5, None),
+                        ],
+                    }],
+                    inner_instructions_none: false,
+                    log_messages: vec![],
+                    log_messages_none: false,
+                    pre_token_balances: vec![],
+                    post_token_balances: vec![],
+                    rewards: vec![],
+                    loaded_writable_addresses: vec![],
+                    loaded_readonly_addresses: vec![],
+                    return_data: None,
+                    return_data_none: true,
+                    compute_units_consumed: None,
+                    cost_units: None,
+                }),
+                index: 0,
+            }),
+        }
+    }
+
+    fn inner_instruction_opt(program_id_index: u32, stack_height: Option<u32>) -> InnerInstruction {
+        InnerInstruction {
+            program_id_index,
+            accounts: vec![],
+            data: vec![],
+            stack_height,
+        }
     }
 
     fn instruction(path: Vec<u32>, inner: Vec<InstructionUpdate>) -> InstructionUpdate {
