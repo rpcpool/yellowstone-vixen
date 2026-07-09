@@ -30,9 +30,10 @@ use crate::metrics;
 ///
 /// Dispatch is `O(instructions x parsers)`: every parser's `parse` runs on every
 /// node of the tree, cheaply rejecting foreign programs. For large parser sets
-/// the next lever is indexing parsers by program id, which requires parsers to
-/// declare their program in the `Parser` contract (today it lives only inside
-/// `parse`); deferred to a follow-up.
+/// the next lever is indexing parsers by program id via the existing
+/// [`ProgramParser::program_id`](vixen_core::ProgramParser::program_id), so each
+/// instruction only reaches the parser that owns its program; deferred to a
+/// follow-up.
 ///
 pub struct InstructionPipeline(Box<[BoxPipeline<'static, InstructionUpdate>]>);
 
