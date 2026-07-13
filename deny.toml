@@ -60,6 +60,11 @@ ignore = [
     # Both crates are already at the latest compatible releases; track until the
     # Solana/Agave runtime stack removes aquamarine or moves to a replacement.
     "RUSTSEC-2026-0173",
+    # crossbeam-epoch 0.9.18 is pulled transitively (crossbeam-deque / rayon in the
+    # build and Solana stack). The vulnerable fmt::Pointer impl only misbehaves when
+    # debug-formatting an Atomic/Shared holding an invalid pointer, which this
+    # workspace never does; 0.9.18 is the latest release on the pinned line.
+    "RUSTSEC-2026-0204",
 ]
 
 [licenses]

@@ -7,7 +7,7 @@ use vixen_core::{
 use crate::{
     config::VixenConfig,
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
-    instruction::SingleInstructionPipeline,
+    instruction::InstructionPipeline,
     sources::SourceTrait,
     util, Runtime,
 };
@@ -204,19 +204,30 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             buffer: buffer_cfg,
         } = config;
 
+        // Bundle every instruction parser into a single InstructionPipeline so
+        // the instruction tree is built once per transaction (one
+        // `build_from_txn`, which clones the transaction and rebuilds the CPI
+        // tree) and then fanned out to all parsers, instead of each parser
+        // rebuilding the whole tree independently (N clones + N rebuilds).
+        //
+        // Bundling collapses per-parser ids into one entry, so the collision
+        // checks below no longer see instruction ids. Warn on duplicates here to
+        // preserve the previous behavior; unlike the other pipeline kinds a
+        // duplicate instruction id is not fatal -- both parsers run.
+        {
+            let mut seen = std::collections::HashSet::new();
+            for id in instruction.iter().map(|ix| ix.id()) {
+                if !seen.insert(id.clone()) {
+                    tracing::warn!(parser = %id, "Duplicate instruction parser ID; both will run");
+                }
+            }
+        }
+
         let mut ixs = PipelineSet::new();
 
-        for ix in instruction {
-            let id = ix.id().into_owned();
-            let pre_existent_parser = ixs.insert(
-                id.clone(),
-                Box::new(SingleInstructionPipeline::new(ix))
-                    as BoxPipeline<'static, TransactionUpdate>,
-            );
-
-            if pre_existent_parser.is_some() {
-                tracing::warn!("Duplicate parser ID detected: {}", id);
-            }
+        if let Some(pipeline) = InstructionPipeline::new(instruction) {
+            let pipeline = Box::new(pipeline) as BoxPipeline<'static, TransactionUpdate>;
+            ixs.insert(pipeline.id().into_owned(), pipeline);
         }
 
         let account_len = account.len();
