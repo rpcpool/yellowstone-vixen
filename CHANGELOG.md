@@ -9,6 +9,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- `yellowstone-vixen` runtime buffer: replaced the topograph executor with a native crossbeam-channel worker pool. Behavioral change: peak outstanding work is now `jobs` total (queued + in-flight), tighter than the previous incidental ~2-3x buffering — revisit `jobs` if tuned for throughput. Public `Buffer` API unchanged.
 - `yellowstone-vixen-jetstream-source`: bumped `jetstreamer-firehose` and `jetstreamer-utils` from `0.2` to `0.5` to track upstream Anza releases.
 - **Breaking** for downstream struct-literal construction: `JetstreamSourceConfig` gained two new fields, `sequential: bool` (default `false`) and `buffer_window_bytes: Option<u64>` (default `None`), to expose the upstream `sequential` / ripget buffer-window controls. Both are `#[serde(default)]` and have clap defaults, so deserialized and CLI-built configs are unaffected; only direct struct-literal initialization needs updating.
 - Bumped `yellowstone-grpc-client` from `12` to `13.1` and `yellowstone-grpc-proto` from `12` to `12.4`, picking up the client's built-in auto-reconnect support introduced in v13.1.
