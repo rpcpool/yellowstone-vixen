@@ -150,13 +150,16 @@ impl Buffer {
             jobs,
             sources_channel_size: _,
         } = config;
-        // Default to the CPU count. `available_parallelism` is always >= 1, so
-        // `jobs` is a valid semaphore size.
-        let jobs = jobs.unwrap_or_else(|| {
-            std::thread::available_parallelism()
-                .map(std::num::NonZeroUsize::get)
-                .unwrap_or(1)
-        });
+        // Default to the CPU count, and clamp to at least 1: `jobs = 0` would
+        // build a 0-permit semaphore and park the producer forever on a permit
+        // that is never released. `available_parallelism` is always >= 1.
+        let jobs = jobs
+            .unwrap_or_else(|| {
+                std::thread::available_parallelism()
+                    .map(std::num::NonZeroUsize::get)
+                    .unwrap_or(1)
+            })
+            .max(1);
 
         let pipelines = Arc::new(pipelines);
 
@@ -188,7 +191,7 @@ impl Buffer {
 
             std::thread::spawn(move || {
                 while let Ok((permit, job)) = rx.recv() {
-                    if abort.load(Ordering::Relaxed) {
+                    if abort.load(Ordering::Acquire) {
                         // Discard queued work: dropping the permit frees its slot
                         // and the job is not processed.
                         drop(permit);
@@ -254,10 +257,16 @@ impl Buffer {
                 // site: the drain barrier below waits for permits to reach zero
                 // after tx is dropped, so a second acquirer or a cloned tx would
                 // break it silently.
-                let permit = Arc::clone(&sem)
-                    .acquire_owned()
-                    .await
-                    .expect("job semaphore is never closed");
+                //
+                // Keep watching stop while we wait: if every permit is held by a
+                // slow or hung handler, a stop still breaks us to the abort path
+                // instead of parking here until capacity frees.
+                let permit = tokio::select! {
+                    p = Arc::clone(&sem).acquire_owned() => {
+                        p.expect("job semaphore is never closed")
+                    },
+                    c = &mut stop_rx => break (Ok(c), false),
+                };
 
                 if tx.send((permit, Job(span, update))).is_err() {
                     // Bridge is gone (receiver dropped); nothing can drain, stop.
@@ -265,21 +274,26 @@ impl Buffer {
                 }
             };
 
+            if !drain {
+                // Error/stop: discard still-queued work. Set the flag BEFORE
+                // closing the channel below, so the bridge sees it while draining
+                // the remaining queue instead of spawning the backlog first.
+                // In-flight handlers are detached and left to finish.
+                abort.store(true, Ordering::Release);
+            }
+
             // No more jobs coming; once the channel drains `rx.recv()` errors and
             // the bridge exits. `tx` was the only producer, so after this drop no
             // further permit can be acquired, which the drain barrier below needs.
             drop(tx);
 
             if drain {
-                // Clean close: acquiring all `jobs` permits can only succeed once
-                // nothing is queued or in flight, so this blocks until fully
-                // drained. `jobs` is small, so the u32 cast never saturates.
+                // Clean close: wait for in-flight handlers to finish. Acquiring
+                // all `jobs` permits can only succeed once nothing is queued or in
+                // flight. This wait is deliberate; a handler that never returns
+                // holds it open. `jobs` is small, so the u32 cast never saturates.
                 let all_permits = u32::try_from(jobs).unwrap_or(u32::MAX);
                 let _ = Arc::clone(&sem).acquire_many_owned(all_permits).await;
-            } else {
-                // Error/stop: tell the bridge to drop queued work. In-flight
-                // handlers are detached and left to finish.
-                abort.store(true, Ordering::Relaxed);
             }
 
             // Join the bridge off the async worker so we never block the

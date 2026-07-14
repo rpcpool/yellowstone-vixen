@@ -541,6 +541,8 @@ async fn test_status_channel_dropped_before_send() {
 static BURST_HANDLED: AtomicUsize = AtomicUsize::new(0);
 static PANIC_SURVIVED: AtomicUsize = AtomicUsize::new(0);
 static SERIAL_HANDLED: AtomicUsize = AtomicUsize::new(0);
+static STOP_RESPONSIVE_HANDLED: AtomicUsize = AtomicUsize::new(0);
+static ZERO_JOBS_HANDLED: AtomicUsize = AtomicUsize::new(0);
 
 /// Emits `N` slot updates then signals `Completed`.
 #[derive(Debug)]
@@ -846,5 +848,110 @@ async fn edge_abort_discards_queued_and_returns_promptly() {
     assert!(
         completed <= usize::try_from(PRE).unwrap(),
         ">= {POST} post-error updates must be discarded; {completed} ran"
+    );
+}
+
+/// Sends two updates then a receiver-dropped signal to force shutdown. With
+/// jobs=1, the first update's handler holds the only permit, so the producer
+/// parks waiting for a permit for the second one when the stop arrives.
+#[derive(Debug)]
+struct MockStopUnderBackpressureSource;
+
+#[async_trait]
+impl SourceTrait for MockStopUnderBackpressureSource {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+
+        // Occupies the single permit for far longer than the shutdown budget.
+        let _ = tx.send(Ok(make_slot_update(0))).await;
+        // Makes the producer park on the permit acquire.
+        let _ = tx.send(Ok(make_slot_update(1))).await;
+
+        // Give the producer time to dequeue update 1 and park, then force stop.
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        signal_receiver_dropped(status_tx);
+        drop(tx);
+        Ok(())
+    }
+}
+
+/// Shutdown must stay responsive under backpressure: a stop has to break the
+/// producer out of a permit wait even when the only permit is held by a stuck
+/// handler, rather than blocking until that handler finishes.
+#[tokio::test]
+async fn edge_stop_is_responsive_while_waiting_for_a_permit() {
+    const HANDLER_SLEEP: Duration = Duration::from_secs(10);
+    const SHUTDOWN_BUDGET: Duration = Duration::from_secs(3);
+
+    STOP_RESPONSIVE_HANDLED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(1),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockStopUnderBackpressureSource>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &STOP_RESPONSIVE_HANDLED,
+            sleep: HANDLER_SLEEP,
+            panic_on_even_slot: false,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    // Must return well before the 10s handler frees the permit.
+    let result = tokio::time::timeout(SHUTDOWN_BUDGET, runtime.try_run_async())
+        .await
+        .expect("stop must be honored while the producer is waiting for a permit");
+
+    assert!(result.is_ok(), "forced shutdown should return cleanly");
+}
+
+/// jobs = 0 must not deadlock: it is clamped to 1, so every update is still
+/// processed. Without the clamp the producer parks forever on a 0-permit
+/// semaphore.
+#[tokio::test]
+async fn edge_zero_jobs_does_not_deadlock() {
+    const N: u64 = 10;
+    ZERO_JOBS_HANDLED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(0),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &ZERO_JOBS_HANDLED,
+            sleep: Duration::from_millis(1),
+            panic_on_even_slot: false,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    // Bounded so a 0-permit deadlock regression fails instead of hanging.
+    let result = tokio::time::timeout(Duration::from_secs(5), runtime.try_run_async())
+        .await
+        .expect("jobs=0 must not deadlock");
+
+    assert!(result.is_ok());
+    assert_eq!(
+        ZERO_JOBS_HANDLED.load(Ordering::Relaxed),
+        usize::try_from(N).unwrap(),
+        "every update must be processed when jobs is clamped from 0 to 1"
     );
 }
