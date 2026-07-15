@@ -1,0 +1,122 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.6.0",
+  "program": {
+    "kind": "programNode",
+    "name": "inlineStruct",
+    "publicKey": "11111111111111111111111111111111",
+    "version": "0.1.0",
+    "origin": "custom",
+    "docs": [],
+    "accounts": [],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "setMetadata",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "metadataName",
+            "docs": [],
+            "type": {
+              "kind": "structTypeNode",
+              "fields": [
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "len",
+                  "docs": [],
+                  "type": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                },
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "value",
+                  "docs": [],
+                  "type": {
+                    "kind": "fixedSizeTypeNode",
+                    "size": 25,
+                    "type": {
+                      "kind": "stringTypeNode",
+                      "encoding": "utf8"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "optionalMetadata",
+            "docs": [],
+            "type": {
+              "kind": "optionTypeNode",
+              "fixed": true,
+              "item": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "len",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "value",
+                    "docs": [],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 5,
+                      "type": {
+                        "kind": "stringTypeNode",
+                        "encoding": "utf8"
+                      }
+                    }
+                  }
+                ]
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "bytesTypeNode"
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "01",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "definedTypes": [],
+    "errors": [],
+    "pdas": [],
+    "events": []
+  },
+  "additionalPrograms": []
+}

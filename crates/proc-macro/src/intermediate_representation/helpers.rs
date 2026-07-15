@@ -31,7 +31,8 @@ impl FieldLikeNode for codama_nodes::InstructionArgumentNode {
 }
 
 ///
-/// Build IR fields from any field-like nodes, handling inline tuple definitions by materializing new messages for them.
+/// Build IR fields from any field-like nodes, handling inline tuple and struct
+/// definitions by materializing new messages for them.
 ///
 /// E.g. for a struct like:
 ///
@@ -107,6 +108,61 @@ pub fn build_fields_ir(
                 });
             },
 
+            // Inline struct => materialize a helper message and reference it directly.
+            // Codama permits structs to appear inline, while the protobuf IR needs
+            // every message-valued field to have a named message type.
+            codama_nodes::TypeNode::Struct(struct_type) => {
+                let struct_msg_name = format!(
+                    "{}{}",
+                    parent_name,
+                    crate::utils::to_pascal_case(&field_name)
+                );
+
+                materialize_struct_message(
+                    &struct_msg_name,
+                    struct_type,
+                    ir,
+                    tuple_msg_kind.clone(),
+                );
+
+                out.push(FieldIr {
+                    name: field_name,
+                    tag,
+                    label: LabelIr::Singular,
+                    field_type: FieldTypeIr::Message(struct_msg_name),
+                });
+            },
+
+            // Inline structs can also be nested inside Codama's fixed option
+            // wrapper, as in `Option<MetadataName>`.
+            codama_nodes::TypeNode::Option(option)
+                if matches!(&*option.item, codama_nodes::TypeNode::Struct(_)) =>
+            {
+                let codama_nodes::TypeNode::Struct(struct_type) = &*option.item else {
+                    unreachable!();
+                };
+
+                let struct_msg_name = format!(
+                    "{}{}",
+                    parent_name,
+                    crate::utils::to_pascal_case(&field_name)
+                );
+
+                materialize_struct_message(
+                    &struct_msg_name,
+                    struct_type,
+                    ir,
+                    tuple_msg_kind.clone(),
+                );
+
+                out.push(FieldIr {
+                    name: field_name,
+                    tag,
+                    label: LabelIr::Optional,
+                    field_type: FieldTypeIr::Message(struct_msg_name),
+                });
+            },
+
             //
             // Nested array (e.g. Vec<Vec<Route>>) => materialize a wrapper message
             // for the inner array since LabelIr can only represent one level of Vec.
@@ -169,6 +225,22 @@ pub fn build_fields_ir(
     }
 
     out
+}
+
+/// Materialize an inline Codama struct as a named helper message.
+fn materialize_struct_message(
+    struct_msg_name: &str,
+    struct_type: &codama_nodes::StructTypeNode,
+    ir: &mut SchemaIr,
+    type_kind: TypeKindIr,
+) {
+    let fields = build_fields_ir(struct_msg_name, &struct_type.fields, ir, type_kind.clone());
+
+    ir.push_unique_type(TypeIr {
+        name: struct_msg_name.to_string(),
+        fields,
+        kind: type_kind,
+    });
 }
 
 ///
