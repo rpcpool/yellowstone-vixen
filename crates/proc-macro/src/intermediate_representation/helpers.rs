@@ -124,19 +124,14 @@ pub fn materialize_type(
 
     match type_node {
         T::Struct(struct_type) => {
-            materialize_struct_message(base_name, struct_type, ir, kind.clone());
-            (
-                LabelIr::Singular,
-                FieldTypeIr::Message(base_name.to_string()),
-            )
+            let struct_name = materialize_struct_message(base_name, struct_type, ir, kind.clone());
+            (LabelIr::Singular, FieldTypeIr::Message(struct_name))
         },
 
-        // Keep the existing tuple representation: tuple fields are optional
-        // message fields in the generated Rust/protobuf model.
         T::Tuple(tuple) => {
             let tuple_name = format!("{}Tuple", base_name);
-            materialize_tuple_message(&tuple_name, tuple, ir, kind);
-            (LabelIr::Optional, FieldTypeIr::Message(tuple_name))
+            let tuple_name = materialize_tuple_message(&tuple_name, tuple, ir, kind);
+            (LabelIr::Singular, FieldTypeIr::Message(tuple_name))
         },
 
         T::Option(option) => {
@@ -151,9 +146,8 @@ pub fn materialize_type(
                 return (LabelIr::Optional, ir.resolve_field_type(inner_type));
             }
 
-            let wrapper_name = format!("{}Option", base_name);
-            ir.push_unique_type(TypeIr {
-                name: wrapper_name.clone(),
+            let wrapper_name = ir.push_unique_type(TypeIr {
+                name: format!("{}Option", base_name),
                 fields: vec![FieldIr {
                     name: "value".to_string(),
                     tag: 1,
@@ -186,9 +180,8 @@ pub fn materialize_type(
                 return (outer_label, ir.resolve_field_type(inner_type));
             }
 
-            let wrapper_name = format!("{}Inner", base_name);
-            ir.push_unique_type(TypeIr {
-                name: wrapper_name.clone(),
+            let wrapper_name = ir.push_unique_type(TypeIr {
+                name: format!("{}Inner", base_name),
                 fields: vec![FieldIr {
                     name: "items".to_string(),
                     tag: 1,
@@ -211,14 +204,14 @@ fn materialize_struct_message(
     struct_type: &codama_nodes::StructTypeNode,
     ir: &mut SchemaIr,
     type_kind: TypeKindIr,
-) {
+) -> String {
     let fields = build_fields_ir(struct_msg_name, &struct_type.fields, ir, type_kind.clone());
 
     ir.push_unique_type(TypeIr {
         name: struct_msg_name.to_string(),
         fields,
         kind: type_kind,
-    });
+    })
 }
 
 ///
@@ -246,7 +239,7 @@ fn materialize_tuple_message(
     tuple: &codama_nodes::TupleTypeNode,
     ir: &mut SchemaIr,
     kind: &TypeKindIr,
-) {
+) -> String {
     let mut fields = Vec::new();
 
     for (i, item) in tuple.items.iter().enumerate() {
@@ -272,7 +265,7 @@ fn materialize_tuple_message(
         name: tuple_msg_name.to_string(),
         fields,
         kind: kind.clone(),
-    });
+    })
 }
 
 pub fn map_type_with_label(type_node: &codama_nodes::TypeNode) -> (LabelIr, FieldTypeIr) {

@@ -224,18 +224,19 @@ pub fn ensure_schemas_registered(
     tracing::info!(url = %base_url, "Registering schemas with Schema Registry");
 
     for schema_def in schemas {
-        let schema_id = register_schema(&client, base_url, &schema_def.subject, schema_def.schema, config)
-            .or_else(|e| {
-                tracing::debug!(subject = %schema_def.subject, error = %e, "Registration failed, trying existing");
-                get_latest_schema_id_for_subject(&client, base_url, &schema_def.subject, config)
-                    .ok_or(e)
-            })
-            .map_err(|e| {
-                io::Error::other(format!(
-                    "No schema available for {}: {e}",
-                    schema_def.subject
-                ))
-            })?;
+        let schema_id = register_schema(
+            &client,
+            base_url,
+            &schema_def.subject,
+            schema_def.schema,
+            config,
+        )
+        .map_err(|e| {
+            io::Error::other(format!(
+                "Failed to register schema for {}: {e}",
+                schema_def.subject
+            ))
+        })?;
 
         tracing::debug!(subject = %schema_def.subject, schema_id, "Schema ready");
 
@@ -247,35 +248,45 @@ pub fn ensure_schemas_registered(
 
     Ok(registered)
 }
-
-fn get_latest_schema_id_for_subject(
-    client: &reqwest::blocking::Client,
-    base_url: &str,
-    subject: &str,
-    config: &KafkaSinkConfig,
-) -> Option<i32> {
-    let url = format!("{}/subjects/{}/versions/latest", base_url, subject);
-    let req = client.get(&url);
-    let req = config.apply_schema_registry_auth_if_configured(req);
-    let response = req.send().ok()?;
-
-    if response.status().is_success() {
-        #[derive(Deserialize)]
-        struct SchemaVersion {
-            id: i32,
-        }
-
-        let version: SchemaVersion = response.json().ok()?;
-
-        Some(version.id)
-    } else {
-        None
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn incompatible_schema_does_not_use_the_latest_schema_id() {
+        let mut server = mockito::Server::new();
+        let subject = "example-value";
+
+        server
+            .mock("GET", "/subjects")
+            .with_status(200)
+            .with_body("[]")
+            .create();
+        server
+            .mock("POST", "/subjects/example-value/versions")
+            .with_status(409)
+            .with_body(r#"{"error_code": 40901, "message": "Incompatible schema"}"#)
+            .create();
+        server
+            .mock("GET", "/subjects/example-value/versions/latest")
+            .with_status(200)
+            .with_body(r#"{"id": 42}"#)
+            .create();
+
+        let config = KafkaSinkConfig {
+            schema_registry_url: server.url(),
+            ..Default::default()
+        };
+        let schemas = [SchemaDefinition {
+            subject: subject.to_string(),
+            schema: "syntax = \"proto3\"; message Example {}",
+            message_index: 0,
+        }];
+
+        let error = ensure_schemas_registered(&config, &schemas).unwrap_err();
+
+        assert!(error.to_string().contains("Schema conflict (code 40901)"));
+    }
 
     #[test]
     fn schema_registry_auth_sends_basic_auth_header() {

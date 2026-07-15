@@ -224,6 +224,62 @@
                 "endian": "le"
               }
             }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "foo",
+            "docs": [],
+            "type": {
+              "kind": "optionTypeNode",
+              "fixed": false,
+              "item": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    {
+                      "kind": "structFieldTypeNode",
+                      "name": "code",
+                      "docs": [],
+                      "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 1
+                }
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "fooOption",
+            "docs": [],
+            "type": {
+              "kind": "structTypeNode",
+              "fields": [
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "code",
+                  "docs": [],
+                  "type": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                }
+              ]
+            }
           }
         ],
         "discriminators": [

@@ -125,17 +125,26 @@ pub struct OneofVariantIr {
 }
 
 impl SchemaIr {
-    pub fn push_unique_type(&mut self, msg: TypeIr) {
-        if let Some(existing) = self.types.iter().find(|existing| existing.name == msg.name) {
-            assert_eq!(
-                existing, &msg,
-                "conflicting IR type definitions for `{}`",
-                msg.name
-            );
-            return;
-        }
+    /// Insert a generated helper type, allocating a numeric suffix when its
+    /// requested name is already used by a different type.
+    pub fn push_unique_type(&mut self, mut msg: TypeIr) -> String {
+        let base_name = msg.name.clone();
+        let mut suffix = 2;
 
-        self.types.push(msg);
+        loop {
+            if let Some(existing) = self.types.iter().find(|existing| existing.name == msg.name) {
+                if existing == &msg {
+                    return msg.name;
+                }
+            } else if !self.type_aliases.contains_key(&msg.name) {
+                let name = msg.name.clone();
+                self.types.push(msg);
+                return name;
+            }
+
+            msg.name = format!("{base_name}{suffix}");
+            suffix += 1;
+        }
     }
 
     /// If `ft` is a `Message` reference to a type alias, return the aliased
@@ -205,17 +214,21 @@ mod tests {
     #[test]
     fn identical_type_definitions_are_deduplicated() {
         let mut ir = schema();
-        ir.push_unique_type(message("Shared", "value"));
-        ir.push_unique_type(message("Shared", "value"));
+        assert_eq!(ir.push_unique_type(message("Shared", "value")), "Shared");
+        assert_eq!(ir.push_unique_type(message("Shared", "value")), "Shared");
 
         assert_eq!(ir.types.len(), 1);
     }
 
     #[test]
-    #[should_panic(expected = "conflicting IR type definitions for `Shared`")]
-    fn conflicting_type_definitions_are_rejected() {
+    fn conflicting_type_definitions_get_unique_names() {
         let mut ir = schema();
-        ir.push_unique_type(message("Shared", "value"));
-        ir.push_unique_type(message("Shared", "other_value"));
+        assert_eq!(ir.push_unique_type(message("Shared", "value")), "Shared");
+        assert_eq!(
+            ir.push_unique_type(message("Shared", "other_value")),
+            "Shared2"
+        );
+
+        assert_eq!(ir.types.len(), 2);
     }
 }

@@ -51,3 +51,12 @@ pub fn check_protobuf_format(schema: &str) {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+/// Normalize whitespace that is irrelevant to the protobuf schema snapshots.
+pub fn normalize_protobuf_schema_for_snapshot(schema: &str) -> String {
+    schema
+        .split('\n')
+        .map(|line| line.trim_end_matches([' ', '\t']))
+        .collect::<Vec<_>>()
+        .join("\n")
+}

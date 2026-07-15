@@ -15,7 +15,9 @@ include_vixen_parser!("../idls/metaplex.json");
 fn check_protobuf_schema() {
     check_protobuf_format(token_metadata::PROTOBUF_SCHEMA);
 
-    insta::assert_snapshot!(token_metadata::PROTOBUF_SCHEMA);
+    insta::assert_snapshot!(vixen_test_utils::normalize_protobuf_schema_for_snapshot(
+        token_metadata::PROTOBUF_SCHEMA
+    ));
 }
 
 #[test]
