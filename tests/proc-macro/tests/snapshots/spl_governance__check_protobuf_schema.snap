@@ -1041,8 +1041,12 @@ message RelinquishTokenOwnerRecordLocksAccounts {
   repeated PublicKey remaining_accounts = 5;
 }
     
+message RelinquishTokenOwnerRecordLocksArgsLockIdsOption {
+  repeated uint32 value = 1;
+}
+    
 message RelinquishTokenOwnerRecordLocksArgs {
-  optional uint32 lock_ids = 1;
+  optional RelinquishTokenOwnerRecordLocksArgsLockIdsOption lock_ids = 1;
 }
     
 message RelinquishTokenOwnerRecordLocks {

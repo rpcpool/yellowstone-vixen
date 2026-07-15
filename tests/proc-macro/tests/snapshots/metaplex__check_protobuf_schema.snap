@@ -52,12 +52,16 @@ message AuthorizationData {
   Payload payload = 1;
 }
     
+message AssetDataCreatorsOption {
+  repeated Creator value = 1;
+}
+    
 message AssetData {
   string name = 1;
   string symbol = 2;
   string uri = 3;
   uint32 seller_fee_basis_points = 4;
-  optional Creator creators = 5;
+  optional AssetDataCreatorsOption creators = 5;
   bool primary_sale_happened = 6;
   bool is_mutable = 7;
   TokenStandard token_standard = 8;
@@ -78,12 +82,20 @@ message Creator {
   uint32 share = 3;
 }
     
+message DataCreatorsOption {
+  repeated Creator value = 1;
+}
+    
 message Data {
   string name = 1;
   string symbol = 2;
   string uri = 3;
   uint32 seller_fee_basis_points = 4;
-  optional Creator creators = 5;
+  optional DataCreatorsOption creators = 5;
+}
+    
+message DataV2CreatorsOption {
+  repeated Creator value = 1;
 }
     
 message DataV2 {
@@ -91,7 +103,7 @@ message DataV2 {
   string symbol = 2;
   string uri = 3;
   uint32 seller_fee_basis_points = 4;
-  optional Creator creators = 5;
+  optional DataV2CreatorsOption creators = 5;
   optional Collection collection = 6;
   optional Uses uses = 7;
 }

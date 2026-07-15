@@ -1446,8 +1446,12 @@ message UpdateMarketInformationAccounts {
   repeated PublicKey remaining_accounts = 3;
 }
     
+message UpdateMarketInformationArgsAssetUpdateParamsOption {
+  repeated UpdateAssetDataParams value = 1;
+}
+    
 message UpdateMarketInformationArgs {
-  optional UpdateAssetDataParams asset_update_params = 1;
+  optional UpdateMarketInformationArgsAssetUpdateParamsOption asset_update_params = 1;
   optional UpdateCapsParams update_cap_params = 2;
 }
     

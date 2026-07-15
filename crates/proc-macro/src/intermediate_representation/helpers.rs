@@ -89,142 +89,120 @@ pub fn build_fields_ir(
             }
         };
 
-        match field.r#type() {
-            // Inline tuple => materialize a new message and reference it as Optional
-            codama_nodes::TypeNode::Tuple(tuple) => {
-                let tuple_msg_name = format!(
-                    "{}{}Tuple",
-                    parent_name,
-                    crate::utils::to_pascal_case(&field_name)
-                );
+        let base_name = format!(
+            "{}{}",
+            parent_name,
+            crate::utils::to_pascal_case(&field_name)
+        );
+        let (label, field_type) = materialize_type(&base_name, field.r#type(), ir, &tuple_msg_kind);
 
-                materialize_tuple_message(&tuple_msg_name, tuple, ir, &tuple_msg_kind);
-
-                out.push(FieldIr {
-                    name: field_name,
-                    tag,
-                    label: LabelIr::Optional,
-                    field_type: FieldTypeIr::Message(tuple_msg_name),
-                });
-            },
-
-            // Inline struct => materialize a helper message and reference it directly.
-            // Codama permits structs to appear inline, while the protobuf IR needs
-            // every message-valued field to have a named message type.
-            codama_nodes::TypeNode::Struct(struct_type) => {
-                let struct_msg_name = format!(
-                    "{}{}",
-                    parent_name,
-                    crate::utils::to_pascal_case(&field_name)
-                );
-
-                materialize_struct_message(
-                    &struct_msg_name,
-                    struct_type,
-                    ir,
-                    tuple_msg_kind.clone(),
-                );
-
-                out.push(FieldIr {
-                    name: field_name,
-                    tag,
-                    label: LabelIr::Singular,
-                    field_type: FieldTypeIr::Message(struct_msg_name),
-                });
-            },
-
-            // Inline structs can also be nested inside Codama's fixed option
-            // wrapper, as in `Option<MetadataName>`.
-            codama_nodes::TypeNode::Option(option)
-                if matches!(&*option.item, codama_nodes::TypeNode::Struct(_)) =>
-            {
-                let codama_nodes::TypeNode::Struct(struct_type) = &*option.item else {
-                    unreachable!();
-                };
-
-                let struct_msg_name = format!(
-                    "{}{}",
-                    parent_name,
-                    crate::utils::to_pascal_case(&field_name)
-                );
-
-                materialize_struct_message(
-                    &struct_msg_name,
-                    struct_type,
-                    ir,
-                    tuple_msg_kind.clone(),
-                );
-
-                out.push(FieldIr {
-                    name: field_name,
-                    tag,
-                    label: LabelIr::Optional,
-                    field_type: FieldTypeIr::Message(struct_msg_name),
-                });
-            },
-
-            //
-            // Nested array (e.g. Vec<Vec<Route>>) => materialize a wrapper message
-            // for the inner array since LabelIr can only represent one level of Vec.
-            //
-            // E.g. `routes: Vec<Vec<Route>>` becomes:
-            //
-            // ```protobuf
-            //   message RoutesInner { repeated Route items = 1; }
-            //   repeated RoutesInner routes = N;
-            // ```
-            //
-            codama_nodes::TypeNode::Array(outer_array)
-                if matches!(&*outer_array.item, codama_nodes::TypeNode::Array(_)) =>
-            {
-                let wrapper_name = format!(
-                    "{}{}Inner",
-                    parent_name,
-                    crate::utils::to_pascal_case(&field_name)
-                );
-
-                let (inner_label, inner_type) = map_type_with_label(&outer_array.item);
-                let inner_type = ir.resolve_field_type(inner_type);
-
-                ir.push_unique_type(TypeIr {
-                    name: wrapper_name.clone(),
-                    fields: vec![FieldIr {
-                        name: "items".to_string(),
-                        tag: 1,
-                        label: inner_label,
-                        field_type: inner_type,
-                    }],
-                    kind: tuple_msg_kind.clone(),
-                });
-
-                let outer_label = match &outer_array.count {
-                    codama_nodes::CountNode::Fixed(fixed) => LabelIr::FixedArray(fixed.value),
-                    _ => LabelIr::Repeated,
-                };
-
-                out.push(FieldIr {
-                    name: field_name,
-                    tag,
-                    label: outer_label,
-                    field_type: FieldTypeIr::Message(wrapper_name),
-                });
-            },
-
-            other => {
-                let (label, field_type) = map_type_with_label(other);
-                let field_type = ir.resolve_field_type(field_type);
-
-                out.push(FieldIr {
-                    name: field_name,
-                    tag,
-                    label,
-                    field_type,
-                });
-            },
-        }
+        out.push(FieldIr {
+            name: field_name,
+            tag,
+            label,
+            field_type: ir.resolve_field_type(field_type),
+        });
     }
 
     out
+}
+
+/// Materialize a Codama type whenever its protobuf representation needs a
+/// named message. This is recursive so inline structs continue to work when
+/// they are nested in arrays, tuples, options, or combinations of wrappers.
+///
+/// Direct inline structs and options containing one keep the names emitted by
+/// the original implementation. Additional wrapper messages get suffixes to
+/// avoid reusing a name at a different nesting depth.
+pub fn materialize_type(
+    base_name: &str,
+    type_node: &codama_nodes::TypeNode,
+    ir: &mut SchemaIr,
+    kind: &TypeKindIr,
+) -> (LabelIr, FieldTypeIr) {
+    use codama_nodes::TypeNode as T;
+
+    match type_node {
+        T::Struct(struct_type) => {
+            materialize_struct_message(base_name, struct_type, ir, kind.clone());
+            (
+                LabelIr::Singular,
+                FieldTypeIr::Message(base_name.to_string()),
+            )
+        },
+
+        // Keep the existing tuple representation: tuple fields are optional
+        // message fields in the generated Rust/protobuf model.
+        T::Tuple(tuple) => {
+            let tuple_name = format!("{}Tuple", base_name);
+            materialize_tuple_message(&tuple_name, tuple, ir, kind);
+            (LabelIr::Optional, FieldTypeIr::Message(tuple_name))
+        },
+
+        T::Option(option) => {
+            let inner_base = if matches!(&*option.item, T::Struct(_)) {
+                base_name.to_string()
+            } else {
+                format!("{}Value", base_name)
+            };
+            let (inner_label, inner_type) = materialize_type(&inner_base, &option.item, ir, kind);
+
+            if matches!(inner_label, LabelIr::Singular) {
+                return (LabelIr::Optional, ir.resolve_field_type(inner_type));
+            }
+
+            let wrapper_name = format!("{}Option", base_name);
+            ir.push_unique_type(TypeIr {
+                name: wrapper_name.clone(),
+                fields: vec![FieldIr {
+                    name: "value".to_string(),
+                    tag: 1,
+                    label: inner_label,
+                    field_type: ir.resolve_field_type(inner_type),
+                }],
+                kind: kind.clone(),
+            });
+
+            (LabelIr::Optional, FieldTypeIr::Message(wrapper_name))
+        },
+
+        T::Array(array) => {
+            let outer_label = match &array.count {
+                codama_nodes::CountNode::Fixed(fixed) => LabelIr::FixedArray(fixed.value),
+                _ => LabelIr::Repeated,
+            };
+
+            // Array<struct> can use the field helper directly. More complex
+            // items get a distinct name so nested arrays do not collide with
+            // their enclosing wrapper.
+            let inner_base = if matches!(&*array.item, T::Struct(_)) {
+                base_name.to_string()
+            } else {
+                format!("{}Item", base_name)
+            };
+            let (inner_label, inner_type) = materialize_type(&inner_base, &array.item, ir, kind);
+
+            if matches!(inner_label, LabelIr::Singular) {
+                return (outer_label, ir.resolve_field_type(inner_type));
+            }
+
+            let wrapper_name = format!("{}Inner", base_name);
+            ir.push_unique_type(TypeIr {
+                name: wrapper_name.clone(),
+                fields: vec![FieldIr {
+                    name: "items".to_string(),
+                    tag: 1,
+                    label: inner_label,
+                    field_type: ir.resolve_field_type(inner_type),
+                }],
+                kind: kind.clone(),
+            });
+
+            (outer_label, FieldTypeIr::Message(wrapper_name))
+        },
+
+        other => (LabelIr::Singular, ir.resolve_field_type(map_type(other))),
+    }
 }
 
 /// Materialize an inline Codama struct as a named helper message.
@@ -275,35 +253,19 @@ fn materialize_tuple_message(
         let item_name = format!("item_{}", i);
         let tag = (i + 1) as u32;
 
-        match item {
-            // Nested tuple => recurse to materialize it first, then reference the message
-            codama_nodes::TypeNode::Tuple(inner_tuple) => {
-                let inner_msg_name = format!(
-                    "{}{}Tuple",
-                    tuple_msg_name,
-                    crate::utils::to_pascal_case(&item_name)
-                );
+        let item_base_name = format!(
+            "{}{}",
+            tuple_msg_name,
+            crate::utils::to_pascal_case(&item_name)
+        );
+        let (label, field_type) = materialize_type(&item_base_name, item, ir, kind);
 
-                materialize_tuple_message(&inner_msg_name, inner_tuple, ir, kind);
-
-                fields.push(FieldIr {
-                    name: item_name,
-                    tag,
-                    label: LabelIr::Optional,
-                    field_type: FieldTypeIr::Message(inner_msg_name),
-                });
-            },
-
-            other => {
-                let (label, field_type) = map_type_with_label(other);
-                fields.push(FieldIr {
-                    name: item_name,
-                    tag,
-                    label,
-                    field_type,
-                });
-            },
-        }
+        fields.push(FieldIr {
+            name: item_name,
+            tag,
+            label,
+            field_type: ir.resolve_field_type(field_type),
+        });
     }
 
     ir.push_unique_type(TypeIr {

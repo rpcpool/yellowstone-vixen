@@ -19,7 +19,7 @@ pub enum TypeKindIr {
     Helper,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeIr {
     pub name: String,
     pub fields: Vec<FieldIr>,
@@ -28,7 +28,7 @@ pub struct TypeIr {
     pub kind: TypeKindIr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FieldIr {
     pub name: String,
     pub tag: u32,
@@ -36,7 +36,7 @@ pub struct FieldIr {
     pub field_type: FieldTypeIr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LabelIr {
     Singular,
     Optional,
@@ -47,13 +47,13 @@ pub enum LabelIr {
     FixedArray(usize),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FieldTypeIr {
     Scalar(ScalarIr),
     Message(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ScalarIr {
     Bool,
 
@@ -125,10 +125,13 @@ pub struct OneofVariantIr {
 }
 
 impl SchemaIr {
-    pub fn has_type(&self, name: &str) -> bool { self.types.iter().any(|m| m.name == name) }
-
     pub fn push_unique_type(&mut self, msg: TypeIr) {
-        if self.has_type(&msg.name) {
+        if let Some(existing) = self.types.iter().find(|existing| existing.name == msg.name) {
+            assert_eq!(
+                existing, &msg,
+                "conflicting IR type definitions for `{}`",
+                msg.name
+            );
             return;
         }
 
@@ -171,5 +174,48 @@ impl SchemaIr {
             .filter(|t| top_level.contains(t.name.as_str()))
             .map(|t| t.name.clone())
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn schema() -> SchemaIr {
+        SchemaIr {
+            types: Vec::new(),
+            oneofs: Vec::new(),
+            type_aliases: std::collections::HashMap::new(),
+        }
+    }
+
+    fn message(name: &str, field_name: &str) -> TypeIr {
+        TypeIr {
+            name: name.to_string(),
+            fields: vec![FieldIr {
+                name: field_name.to_string(),
+                tag: 1,
+                label: LabelIr::Singular,
+                field_type: FieldTypeIr::Scalar(ScalarIr::U8),
+            }],
+            kind: TypeKindIr::Helper,
+        }
+    }
+
+    #[test]
+    fn identical_type_definitions_are_deduplicated() {
+        let mut ir = schema();
+        ir.push_unique_type(message("Shared", "value"));
+        ir.push_unique_type(message("Shared", "value"));
+
+        assert_eq!(ir.types.len(), 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "conflicting IR type definitions for `Shared`")]
+    fn conflicting_type_definitions_are_rejected() {
+        let mut ir = schema();
+        ir.push_unique_type(message("Shared", "value"));
+        ir.push_unique_type(message("Shared", "other_value"));
     }
 }

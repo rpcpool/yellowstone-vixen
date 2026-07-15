@@ -92,6 +92,138 @@
                 "endian": "le"
               }
             }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "arrayMetadata",
+            "docs": [],
+            "type": {
+              "kind": "arrayTypeNode",
+              "item": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "code",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "value",
+                    "docs": [],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 3,
+                      "type": {
+                        "kind": "stringTypeNode",
+                        "encoding": "utf8"
+                      }
+                    }
+                  }
+                ]
+              },
+              "count": {
+                "kind": "fixedCountNode",
+                "value": 2
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "tupleMetadata",
+            "docs": [],
+            "type": {
+              "kind": "tupleTypeNode",
+              "items": [
+                {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    {
+                      "kind": "structFieldTypeNode",
+                      "name": "code",
+                      "docs": [],
+                      "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "optionTypeNode",
+                    "fixed": false,
+                    "item": {
+                      "kind": "structTypeNode",
+                      "fields": [
+                        {
+                          "kind": "structFieldTypeNode",
+                          "name": "value",
+                          "docs": [],
+                          "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u16",
+                            "endian": "le"
+                          }
+                        }
+                      ]
+                    },
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  "count": {
+                    "kind": "fixedCountNode",
+                    "value": 2
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "optionalArrayMetadata",
+            "docs": [],
+            "type": {
+              "kind": "optionTypeNode",
+              "fixed": false,
+              "item": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    {
+                      "kind": "structFieldTypeNode",
+                      "name": "value",
+                      "docs": [],
+                      "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u32",
+                        "endian": "le"
+                      }
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 2
+                }
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
           }
         ],
         "discriminators": [
