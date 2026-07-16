@@ -5,6 +5,22 @@ use codama_nodes::{
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+fn decode_discriminator_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec<u8> {
+    match bytes.encoding {
+        codama_nodes::BytesEncoding::Base16 => {
+            let padded = crate::utils::pad_hex(&bytes.data);
+            hex::decode(&padded).expect("decode base16 discriminator")
+        },
+        codama_nodes::BytesEncoding::Base58 => bs58::decode(&bytes.data)
+            .into_vec()
+            .expect("decode base58 discriminator"),
+        codama_nodes::BytesEncoding::Base64 => STANDARD
+            .decode(&bytes.data)
+            .expect("decode base64 discriminator"),
+        codama_nodes::BytesEncoding::Utf8 => bytes.data.as_bytes().to_vec(),
+    }
+}
+
 ///
 /// Build the *account parser* for a program.
 ///
@@ -103,40 +119,58 @@ pub fn account_parser(
         let account_ident = format_ident!("{}", crate::utils::to_pascal_case(&account.name));
 
         Some(match discriminator {
-            // Handle 1 byte discriminators (simple programs like SPL Token)
+            // Handle constant discriminators.
             DiscriminatorNode::Constant(node) => {
                 let offset = node.offset;
 
-                // Skip if not a number
-                let ValueNode::Number(nn) = node.constant.value.as_ref() else {
-                    return None;
-                };
+                match node.constant.value.as_ref() {
+                    // Preserve numeric discriminator behavior for layouts that include the
+                    // discriminator in the account struct (for example SPL Governance).
+                    ValueNode::Number(nn) => {
+                        let Number::UnsignedInteger(value) = nn.number else {
+                            return None;
+                        };
 
-                // Skip if not an unsigned integer
-                let Number::UnsignedInteger(value) = nn.number else {
-                    return None;
-                };
+                        let value_u8 = value as u8;
 
-                let account_name = account_ident.to_string();
-
-                let value_u8 = value as u8;
-
-                quote! {
-                    if let Some(discriminator) = data.get(#offset) {
-                        if *discriminator == #value_u8 {
-                            match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
-                                Ok(parsed) => {
-                                    return Ok(#account_struct_ident {
-                                        account: #account_mod_ident::Account::#account_ident(parsed),
-                                    });
-                                }
-                                Err(e) => {
-                                    println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
-                                    return Err(ParseError::Other(e.into()));
+                        quote! {
+                            if let Some(discriminator) = data.get(#offset) {
+                                if *discriminator == #value_u8 {
+                                    match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
+                                        Ok(parsed) => {
+                                            return Ok(#account_struct_ident {
+                                                account: #account_mod_ident::Account::#account_ident(parsed),
+                                            });
+                                        }
+                                        Err(e) => return Err(ParseError::Other(e.into())),
+                                    }
                                 }
                             }
                         }
-                    }
+                    },
+
+                    // Byte discriminators are a prefix and are not part of the account struct.
+                    ValueNode::Bytes(bytes) => {
+                        let discriminator = decode_discriminator_bytes(bytes);
+                        let end = offset + discriminator.len();
+
+                        quote! {
+                            if let Some(slice) = data.get(#offset..#end) {
+                                if slice == &[#(#discriminator),*] {
+                                    match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
+                                        Ok(parsed) => {
+                                            return Ok(#account_struct_ident {
+                                                account: #account_mod_ident::Account::#account_ident(parsed),
+                                            });
+                                        }
+                                        Err(e) => return Err(ParseError::Other(e.into())),
+                                    }
+                                }
+                            }
+                        }
+                    },
+
+                    _ => return None,
                 }
             },
 
@@ -178,26 +212,9 @@ pub fn account_parser(
                 };
 
                 // Decode expected discriminator bytes
-                let discriminator: Vec<u8> = match bytes.encoding {
-                    codama_nodes::BytesEncoding::Base16 => {
-                        let padded = crate::utils::pad_hex(&bytes.data);
-
-                        hex::decode(&padded).expect("Failed to decode base16 (hex) bytes")
-                    },
-
-                    codama_nodes::BytesEncoding::Base58 => bs58::decode(&bytes.data)
-                        .into_vec()
-                        .expect("Failed to decode base58 bytes"),
-
-                    codama_nodes::BytesEncoding::Base64 => STANDARD
-                        .decode(&bytes.data)
-                        .expect("Failed to decode base64 bytes"),
-
-                    codama_nodes::BytesEncoding::Utf8 => bytes.data.as_bytes().to_vec(),
-                };
+                let discriminator = decode_discriminator_bytes(bytes);
 
                 let end = offset + size;
-                let account_name = account_ident.to_string();
 
                 // Empty discriminator (size 0) matches any data — skip the
                 // byte comparison and match unconditionally on data length.
@@ -216,10 +233,7 @@ pub fn account_parser(
                                         account: #account_mod_ident::Account::#account_ident(parsed),
                                     });
                                 }
-                                Err(e) => {
-                                    println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
-                                    return Err(ParseError::Other(e.into()));
-                                }
+                                Err(e) => return Err(ParseError::Other(e.into())),
                             }
                         }
                     }
@@ -230,8 +244,6 @@ pub fn account_parser(
             DiscriminatorNode::Size(node) => {
                 let size = node.size;
 
-                let account_name = account_ident.to_string();
-
                 quote! {
                     if data.len() == #size {
                         match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
@@ -240,11 +252,7 @@ pub fn account_parser(
                                     account: #account_mod_ident::Account::#account_ident(parsed),
                                 });
                             }
-                            Err(e) => {
-                                println!("[try_unpack] pubkey={}, {} deserialization FAILED: {}", pubkey_str, #account_name, e);
-
-                                return Err(ParseError::Other(e.into()));
-                            }
+                            Err(e) => return Err(ParseError::Other(e.into())),
                         }
                     }
                 }
@@ -320,18 +328,11 @@ pub fn account_parser(
 
         impl #account_struct_ident {
             pub fn try_unpack(data: &[u8]) -> ParseResult<Self> {
-                Self::try_unpack_inner(data, None)
+                Self::try_unpack_inner(data)
             }
 
-            fn try_unpack_inner(data: &[u8], pubkey: Option<&[u8]>) -> ParseResult<Self> {
-                let pubkey_str = pubkey
-                    .filter(|p| p.len() == 32)
-                    .map(|p| ::yellowstone_vixen_core::bs58::encode(p).into_string())
-                    .unwrap_or_else(|| "<unknown>".to_string());
-
+            fn try_unpack_inner(data: &[u8]) -> ParseResult<Self> {
                 #(#account_matches)*
-
-                println!("[try_unpack] pubkey={}, no discriminator matched, returning error", pubkey_str);
 
                 Err(ParseError::from(#parser_error_msg.to_owned()))
             }
@@ -359,16 +360,13 @@ pub fn account_parser(
                 let inner = acct
                     .account
                     .as_ref()
-                    .ok_or_else(|| {
-                        println!("[account_parser] account ref is None!");
-                        ParseError::from("Unable to unwrap account ref".to_owned())
-                    })?;
+                    .ok_or_else(|| ParseError::from("Unable to unwrap account ref".to_owned()))?;
 
                 if inner.owner != PROGRAM_ID {
                     return Err(ParseError::Filtered);
                 }
 
-                #account_struct_ident::try_unpack_inner(&inner.data, Some(&inner.pubkey))
+                #account_struct_ident::try_unpack_inner(&inner.data)
             }
         }
 
