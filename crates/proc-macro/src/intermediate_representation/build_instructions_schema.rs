@@ -1,8 +1,8 @@
 use codama_nodes::InstructionNode;
 
 use crate::intermediate_representation::{
-    helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofVariantIr, ScalarIr,
-    SchemaIr, TypeIr, TypeKindIr,
+    helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofVariantIr,
+    OptionEncodingIr, ScalarIr, SchemaIr, TypeIr, TypeKindIr,
 };
 
 ///
@@ -127,7 +127,7 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
             name: crate::utils::to_snake_case(&acct.name),
             tag: (i + 1) as u32,
             label: if acct.is_optional {
-                LabelIr::Optional
+                LabelIr::Optional(OptionEncodingIr::default())
             } else {
                 LabelIr::Singular
             },

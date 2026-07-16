@@ -10,7 +10,9 @@ include_vixen_parser!("../idls/spl_governance.json");
 fn check_protobuf_schema() {
     check_protobuf_format(spl_governance::PROTOBUF_SCHEMA);
 
-    insta::assert_snapshot!(spl_governance::PROTOBUF_SCHEMA);
+    insta::assert_snapshot!(vixen_test_utils::normalize_protobuf_schema_for_snapshot(
+        spl_governance::PROTOBUF_SCHEMA
+    ));
 }
 
 #[tokio::test]

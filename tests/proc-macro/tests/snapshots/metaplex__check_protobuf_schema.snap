@@ -10,54 +10,58 @@ package token_metadata;
 message PublicKey {
   bytes value = 1;
 }
-    
+
 message SetCollectionSizeArgs {
   uint64 size = 1;
 }
-    
+
 message CreateMasterEditionArgs {
   optional uint64 max_supply = 1;
 }
-    
+
 message MintNewEditionFromMasterEditionViaTokenArgs {
   uint64 edition = 1;
 }
-    
+
 message TransferOutOfEscrowArgs {
   uint64 amount = 1;
 }
-    
+
 message CreateMetadataAccountArgsV3 {
   DataV2 data = 1;
   bool is_mutable = 2;
   optional CollectionDetails collection_details = 3;
 }
-    
+
 message UpdateMetadataAccountArgsV2 {
   optional DataV2 data = 1;
   optional PublicKey update_authority = 2;
   optional bool primary_sale_happened = 3;
   optional bool is_mutable = 4;
 }
-    
+
 message ApproveUseAuthorityArgs {
   uint64 number_of_uses = 1;
 }
-    
+
 message UtilizeArgs {
   uint64 number_of_uses = 1;
 }
-    
+
 message AuthorizationData {
   Payload payload = 1;
 }
-    
+
+message AssetDataCreatorsOption {
+  repeated Creator value = 1;
+}
+
 message AssetData {
   string name = 1;
   string symbol = 2;
   string uri = 3;
   uint32 seller_fee_basis_points = 4;
-  optional Creator creators = 5;
+  optional AssetDataCreatorsOption creators = 5;
   bool primary_sale_happened = 6;
   bool is_mutable = 7;
   TokenStandard token_standard = 8;
@@ -66,220 +70,228 @@ message AssetData {
   optional CollectionDetails collection_details = 11;
   optional PublicKey rule_set = 12;
 }
-    
+
 message Collection {
   bool verified = 1;
   PublicKey key = 2;
 }
-    
+
 message Creator {
   PublicKey address = 1;
   bool verified = 2;
   uint32 share = 3;
 }
-    
+
+message DataCreatorsOption {
+  repeated Creator value = 1;
+}
+
 message Data {
   string name = 1;
   string symbol = 2;
   string uri = 3;
   uint32 seller_fee_basis_points = 4;
-  optional Creator creators = 5;
+  optional DataCreatorsOption creators = 5;
 }
-    
+
+message DataV2CreatorsOption {
+  repeated Creator value = 1;
+}
+
 message DataV2 {
   string name = 1;
   string symbol = 2;
   string uri = 3;
   uint32 seller_fee_basis_points = 4;
-  optional Creator creators = 5;
+  optional DataV2CreatorsOption creators = 5;
   optional Collection collection = 6;
   optional Uses uses = 7;
 }
-    
+
 message Reservation {
   PublicKey address = 1;
   uint64 spots_remaining = 2;
   uint64 total_spots = 3;
 }
-    
+
 message ReservationV1 {
   PublicKey address = 1;
   uint32 spots_remaining = 2;
   uint32 total_spots = 3;
 }
-    
+
 message SeedsVec {
   repeated bytes seeds = 1;
 }
-    
+
 message ProofInfo {
   repeated bytes proof = 1;
 }
-    
+
 message Payload {
   bytes map = 1;
 }
-    
+
 message Uses {
   UseMethod use_method = 1;
   uint64 remaining = 2;
   uint64 total = 3;
 }
-    
+
 message BurnArgsV1 {
   uint64 amount = 1;
 }
-    
+
 message DelegateArgsCollectionV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsSaleV1 {
   uint64 amount = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message DelegateArgsTransferV1 {
   uint64 amount = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message DelegateArgsDataV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsUtilityV1 {
   uint64 amount = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message DelegateArgsStakingV1 {
   uint64 amount = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message DelegateArgsStandardV1 {
   uint64 amount = 1;
 }
-    
+
 message DelegateArgsLockedTransferV1 {
   uint64 amount = 1;
   PublicKey locked_address = 2;
   optional AuthorizationData authorization_data = 3;
 }
-    
+
 message DelegateArgsProgrammableConfigV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsAuthorityItemV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsDataItemV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsCollectionItemV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsProgrammableConfigItemV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message DelegateArgsPrintDelegateV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message RevokeArgsCollectionV1 {
 }
-    
+
 message RevokeArgsSaleV1 {
 }
-    
+
 message RevokeArgsTransferV1 {
 }
-    
+
 message RevokeArgsDataV1 {
 }
-    
+
 message RevokeArgsUtilityV1 {
 }
-    
+
 message RevokeArgsStakingV1 {
 }
-    
+
 message RevokeArgsStandardV1 {
 }
-    
+
 message RevokeArgsLockedTransferV1 {
 }
-    
+
 message RevokeArgsProgrammableConfigV1 {
 }
-    
+
 message RevokeArgsMigrationV1 {
 }
-    
+
 message RevokeArgsAuthorityItemV1 {
 }
-    
+
 message RevokeArgsDataItemV1 {
 }
-    
+
 message RevokeArgsCollectionItemV1 {
 }
-    
+
 message RevokeArgsProgrammableConfigItemV1 {
 }
-    
+
 message RevokeArgsPrintDelegateV1 {
 }
-    
+
 message MetadataDelegateRoleAuthorityItem {
 }
-    
+
 message MetadataDelegateRoleCollection {
 }
-    
+
 message MetadataDelegateRoleUse {
 }
-    
+
 message MetadataDelegateRoleData {
 }
-    
+
 message MetadataDelegateRoleProgrammableConfig {
 }
-    
+
 message MetadataDelegateRoleDataItem {
 }
-    
+
 message MetadataDelegateRoleCollectionItem {
 }
-    
+
 message MetadataDelegateRoleProgrammableConfigItem {
 }
-    
+
 message HolderDelegateRolePrintDelegate {
 }
-    
+
 message CreateArgsV1 {
   AssetData asset_data = 1;
   optional uint32 decimals = 2;
   optional PrintSupply print_supply = 3;
 }
-    
+
 message MintArgsV1 {
   uint64 amount = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message TransferArgsV1 {
   uint64 amount = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message UpdateArgsV1 {
   optional PublicKey new_update_authority = 1;
   optional Data data = 2;
@@ -291,7 +303,7 @@ message UpdateArgsV1 {
   RuleSetToggle rule_set = 8;
   optional AuthorizationData authorization_data = 9;
 }
-    
+
 message UpdateArgsAsUpdateAuthorityV2 {
   optional PublicKey new_update_authority = 1;
   optional Data data = 2;
@@ -304,7 +316,7 @@ message UpdateArgsAsUpdateAuthorityV2 {
   optional TokenStandard token_standard = 9;
   optional AuthorizationData authorization_data = 10;
 }
-    
+
 message UpdateArgsAsAuthorityItemDelegateV2 {
   optional PublicKey new_update_authority = 1;
   optional bool primary_sale_happened = 2;
@@ -312,307 +324,307 @@ message UpdateArgsAsAuthorityItemDelegateV2 {
   optional TokenStandard token_standard = 4;
   optional AuthorizationData authorization_data = 5;
 }
-    
+
 message UpdateArgsAsCollectionDelegateV2 {
   CollectionToggle collection = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message UpdateArgsAsDataDelegateV2 {
   optional Data data = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message UpdateArgsAsProgrammableConfigDelegateV2 {
   RuleSetToggle rule_set = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message UpdateArgsAsDataItemDelegateV2 {
   optional Data data = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message UpdateArgsAsCollectionItemDelegateV2 {
   CollectionToggle collection = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message UpdateArgsAsProgrammableConfigItemDelegateV2 {
   RuleSetToggle rule_set = 1;
   optional AuthorizationData authorization_data = 2;
 }
-    
+
 message CollectionToggleNone {
 }
-    
+
 message CollectionToggleClear {
 }
-    
+
 message CollectionToggleSet {
   Collection item_0 = 1;
 }
-    
+
 message UsesToggleNone {
 }
-    
+
 message UsesToggleClear {
 }
-    
+
 message UsesToggleSet {
   Uses item_0 = 1;
 }
-    
+
 message CollectionDetailsToggleNone {
 }
-    
+
 message CollectionDetailsToggleClear {
 }
-    
+
 message CollectionDetailsToggleSet {
   CollectionDetails item_0 = 1;
 }
-    
+
 message RuleSetToggleNone {
 }
-    
+
 message RuleSetToggleClear {
 }
-    
+
 message RuleSetToggleSet {
   PublicKey item_0 = 1;
 }
-    
+
 message PrintArgsV1 {
   uint64 edition = 1;
 }
-    
+
 message PrintArgsV2 {
   uint64 edition = 1;
 }
-    
+
 message LockArgsV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message UnlockArgsV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message UseArgsV1 {
   optional AuthorizationData authorization_data = 1;
 }
-    
+
 message VerificationArgsCreatorV1 {
 }
-    
+
 message VerificationArgsCollectionV1 {
 }
-    
+
 message TokenStandardNonFungible {
 }
-    
+
 message TokenStandardFungibleAsset {
 }
-    
+
 message TokenStandardFungible {
 }
-    
+
 message TokenStandardNonFungibleEdition {
 }
-    
+
 message TokenStandardProgrammableNonFungible {
 }
-    
+
 message TokenStandardProgrammableNonFungibleEdition {
 }
-    
+
 message KeyUninitialized {
 }
-    
+
 message KeyEditionV1 {
 }
-    
+
 message KeyMasterEditionV1 {
 }
-    
+
 message KeyReservationListV1 {
 }
-    
+
 message KeyMetadataV1 {
 }
-    
+
 message KeyReservationListV2 {
 }
-    
+
 message KeyMasterEditionV2 {
 }
-    
+
 message KeyEditionMarker {
 }
-    
+
 message KeyUseAuthorityRecord {
 }
-    
+
 message KeyCollectionAuthorityRecord {
 }
-    
+
 message KeyTokenOwnedEscrow {
 }
-    
+
 message KeyTokenRecord {
 }
-    
+
 message KeyMetadataDelegate {
 }
-    
+
 message KeyEditionMarkerV2 {
 }
-    
+
 message KeyHolderDelegate {
 }
-    
+
 message CollectionDetailsV1 {
   uint64 size = 1;
 }
-    
+
 message CollectionDetailsV2 {
   bytes padding = 1;
 }
-    
+
 message EscrowAuthorityTokenOwner {
 }
-    
+
 message EscrowAuthorityCreator {
   PublicKey item_0 = 1;
 }
-    
+
 message PrintSupplyZero {
 }
-    
+
 message PrintSupplyLimited {
   uint64 item_0 = 1;
 }
-    
+
 message PrintSupplyUnlimited {
 }
-    
+
 message ProgrammableConfigV1 {
   optional PublicKey rule_set = 1;
 }
-    
+
 message MigrationTypeCollectionV1 {
 }
-    
+
 message MigrationTypeProgrammableV1 {
 }
-    
+
 message TokenStateUnlocked {
 }
-    
+
 message TokenStateLocked {
 }
-    
+
 message TokenStateListed {
 }
-    
+
 message TokenDelegateRoleSale {
 }
-    
+
 message TokenDelegateRoleTransfer {
 }
-    
+
 message TokenDelegateRoleUtility {
 }
-    
+
 message TokenDelegateRoleStaking {
 }
-    
+
 message TokenDelegateRoleStandard {
 }
-    
+
 message TokenDelegateRoleLockedTransfer {
 }
-    
+
 message TokenDelegateRoleMigration {
 }
-    
+
 message AuthorityTypeNone {
 }
-    
+
 message AuthorityTypeMetadata {
 }
-    
+
 message AuthorityTypeHolder {
 }
-    
+
 message AuthorityTypeMetadataDelegate {
 }
-    
+
 message AuthorityTypeTokenDelegate {
 }
-    
+
 message PayloadKeyAmount {
 }
-    
+
 message PayloadKeyAuthority {
 }
-    
+
 message PayloadKeyAuthoritySeeds {
 }
-    
+
 message PayloadKeyDelegate {
 }
-    
+
 message PayloadKeyDelegateSeeds {
 }
-    
+
 message PayloadKeyDestination {
 }
-    
+
 message PayloadKeyDestinationSeeds {
 }
-    
+
 message PayloadKeyHolder {
 }
-    
+
 message PayloadKeySource {
 }
-    
+
 message PayloadKeySourceSeeds {
 }
-    
+
 message PayloadTypePubkey {
   PublicKey item_0 = 1;
 }
-    
+
 message PayloadTypeSeeds {
   SeedsVec item_0 = 1;
 }
-    
+
 message PayloadTypeMerkleProof {
   ProofInfo item_0 = 1;
 }
-    
+
 message PayloadTypeNumber {
   uint64 item_0 = 1;
 }
-    
+
 message UseMethodBurn {
 }
-    
+
 message UseMethodMultiple {
 }
-    
+
 message UseMethodSingle {
 }
-    
+
 message CollectionAuthorityRecord {
   Key key = 1;
   uint32 bump = 2;
   optional PublicKey update_authority = 3;
 }
-    
+
 message MetadataDelegateRecord {
   Key key = 1;
   uint32 bump = 2;
@@ -620,7 +632,7 @@ message MetadataDelegateRecord {
   PublicKey delegate = 4;
   PublicKey update_authority = 5;
 }
-    
+
 message HolderDelegateRecord {
   Key key = 1;
   uint32 bump = 2;
@@ -628,36 +640,36 @@ message HolderDelegateRecord {
   PublicKey delegate = 4;
   PublicKey update_authority = 5;
 }
-    
+
 message Edition {
   Key key = 1;
   PublicKey parent = 2;
   uint64 edition = 3;
 }
-    
+
 message EditionMarker {
   Key key = 1;
   bytes ledger = 2;
 }
-    
+
 message EditionMarkerV2 {
   Key key = 1;
   bytes ledger = 2;
 }
-    
+
 message TokenOwnedEscrow {
   Key key = 1;
   PublicKey base_token = 2;
   EscrowAuthority authority = 3;
   uint32 bump = 4;
 }
-    
+
 message MasterEditionV2 {
   Key key = 1;
   uint64 supply = 2;
   optional uint64 max_supply = 3;
 }
-    
+
 message MasterEditionV1 {
   Key key = 1;
   uint64 supply = 2;
@@ -665,7 +677,7 @@ message MasterEditionV1 {
   PublicKey printing_mint = 4;
   PublicKey one_time_printing_authorization_mint = 5;
 }
-    
+
 message Metadata {
   Key key = 1;
   PublicKey update_authority = 2;
@@ -680,7 +692,7 @@ message Metadata {
   optional CollectionDetails collection_details = 11;
   optional ProgrammableConfig programmable_config = 12;
 }
-    
+
 message TokenRecord {
   Key key = 1;
   uint32 bump = 2;
@@ -690,7 +702,7 @@ message TokenRecord {
   optional TokenDelegateRole delegate_role = 6;
   optional PublicKey locked_transfer = 7;
 }
-    
+
 message ReservationListV2 {
   Key key = 1;
   PublicKey master_edition = 2;
@@ -699,20 +711,20 @@ message ReservationListV2 {
   uint64 total_reservation_spots = 5;
   uint64 current_reservation_spots = 6;
 }
-    
+
 message ReservationListV1 {
   Key key = 1;
   PublicKey master_edition = 2;
   optional uint64 supply_snapshot = 3;
   repeated ReservationV1 reservations = 4;
 }
-    
+
 message UseAuthorityRecord {
   Key key = 1;
   uint64 allowed_uses = 2;
   uint32 bump = 3;
 }
-    
+
 message TokenMetadataAccount {
   oneof account {
     CollectionAuthorityRecord collection_authority_record = 1;

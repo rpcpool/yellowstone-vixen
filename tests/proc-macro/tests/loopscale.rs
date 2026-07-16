@@ -15,7 +15,9 @@ include_vixen_parser!("../idls/loopscale.json");
 fn check_protobuf_schema() {
     check_protobuf_format(loopscale::PROTOBUF_SCHEMA);
 
-    insta::assert_snapshot!(loopscale::PROTOBUF_SCHEMA);
+    insta::assert_snapshot!(vixen_test_utils::normalize_protobuf_schema_for_snapshot(
+        loopscale::PROTOBUF_SCHEMA
+    ));
 }
 
 #[test]

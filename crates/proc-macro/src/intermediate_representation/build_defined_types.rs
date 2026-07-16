@@ -1,7 +1,7 @@
 use codama_nodes::{DefinedTypeNode, NestedTypeNode, TypeNode};
 
 use crate::intermediate_representation::{
-    helpers::{build_fields_ir, map_type_with_label},
+    helpers::{build_fields_ir, materialize_type},
     FieldIr, OneofIr, OneofVariantIr, SchemaIr, TypeIr, TypeKindIr,
 };
 
@@ -9,28 +9,66 @@ use crate::intermediate_representation::{
 ///
 /// In the IDL, `defined_types` are user-defined structs, enums, or tuples.
 pub fn build_defined_types(defined_types: &[DefinedTypeNode], ir: &mut SchemaIr) {
-    // First pass: register all type aliases (tuples and scalar aliases) so that
-    // forward references from struct fields resolve correctly regardless of order.
+    // Register every raw defined type before materializing anything. Fixed
+    // options and aliases can then resolve forward references safely.
+    for defined_type in defined_types {
+        let name = crate::utils::to_pascal_case(&defined_type.name);
+
+        ir.register_defined_type(name, defined_type.r#type.clone());
+    }
+
+    // Concrete user-defined types must keep their names even when generated
+    // helpers are emitted before the type itself.
+    ir.reserve_type_names(defined_types.iter().filter_map(|defined_type| {
+        let is_concrete = match &defined_type.r#type {
+            TypeNode::Struct(_) | TypeNode::Enum(_) => true,
+            TypeNode::Tuple(tuple) => tuple.items.len() != 1,
+            _ => false,
+        };
+
+        is_concrete.then(|| crate::utils::to_pascal_case(&defined_type.name))
+    }));
+
+    // Register aliases before materializing them. `materialize_type_alias`
+    // resolves nested aliases recursively, including forward references.
+    let mut alias_names = Vec::new();
+
     for defined_type in defined_types {
         let name = crate::utils::to_pascal_case(&defined_type.name);
 
         match &defined_type.r#type {
-            TypeNode::Tuple(tuple_type) => build_defined_type_tuple(&name, tuple_type, ir),
+            TypeNode::Tuple(tuple_type) if tuple_type.items.len() == 1 => {
+                ir.register_type_alias(
+                    name.clone(),
+                    tuple_type.items[0].clone(),
+                    format!("{name}Item0"),
+                );
+                alias_names.push(name);
+            },
+            TypeNode::Tuple(_) => {},
             other if !matches!(other, TypeNode::Struct(_) | TypeNode::Enum(_)) => {
-                let (_, field_type) = map_type_with_label(other);
-                ir.type_aliases.insert(name, field_type);
+                ir.register_type_alias(name.clone(), other.clone(), name.clone());
+                alias_names.push(name);
             },
             _ => {},
         }
     }
 
-    // Second pass: process structs and enums, which may reference the aliases above.
+    for name in alias_names {
+        ir.materialize_type_alias(&name);
+    }
+
+    // Process concrete types after aliases. They may reference any registered
+    // alias regardless of declaration order.
     for defined_type in defined_types {
         let name = crate::utils::to_pascal_case(&defined_type.name);
 
         match &defined_type.r#type {
             TypeNode::Struct(struct_type) => build_defined_type_struct(&name, struct_type, ir),
             TypeNode::Enum(enum_type) => build_defined_type_enum(&name, enum_type, ir),
+            TypeNode::Tuple(tuple_type) if tuple_type.items.len() != 1 => {
+                build_defined_type_tuple(&name, tuple_type, ir)
+            },
             _ => {},
         }
     }
@@ -98,19 +136,13 @@ fn build_defined_type_tuple(
     tuple_type_node: &codama_nodes::TupleTypeNode,
     ir: &mut SchemaIr,
 ) {
-    // Single-item tuples are inlined as their inner type (e.g. optionBool → bool).
-    if tuple_type_node.items.len() == 1 {
-        let (_label, field_type) = map_type_with_label(&tuple_type_node.items[0]);
-
-        ir.type_aliases.insert(name.to_string(), field_type);
-
-        return;
-    }
+    debug_assert_ne!(tuple_type_node.items.len(), 1);
 
     let mut fields = Vec::with_capacity(tuple_type_node.items.len());
 
     for (i, item) in tuple_type_node.items.iter().enumerate() {
-        let (label, field_type) = map_type_with_label(item);
+        let item_name = format!("{}Item{}", name, i);
+        let (label, field_type) = materialize_type(&item_name, item, ir, &TypeKindIr::Helper);
 
         fields.push(FieldIr {
             name: format!("item_{}", i),
@@ -170,10 +202,8 @@ fn build_defined_type_enum(name: &str, en: &codama_nodes::EnumTypeNode, ir: &mut
 
         let (variant_name, payload_fields) = build_enum_variant_payload(&enum_name, variant, ir);
 
-        let payload_name = format!("{}{}", enum_name, variant_name);
-
-        ir.types.push(TypeIr {
-            name: payload_name.clone(),
+        let payload_name = ir.push_unique_type(TypeIr {
+            name: format!("{}{}", enum_name, variant_name),
             fields: payload_fields,
             kind: TypeKindIr::Helper,
         });
@@ -214,13 +244,17 @@ fn build_enum_variant_payload(
 
         codama_nodes::EnumVariantTypeNode::Tuple(variant) => {
             let variant_name = crate::utils::to_pascal_case(&variant.name);
+            let payload_name = format!("{}{}", enum_name, variant_name);
 
             let tuple = match &variant.tuple {
                 NestedTypeNode::Value(tuple) => tuple,
                 _ => panic!("enum tuple variant payload must be NestedTypeNode::Value"),
             };
 
-            (variant_name, build_tuple_payload_fields(&tuple.items))
+            (
+                variant_name,
+                build_tuple_payload_fields(&payload_name, &tuple.items, ir),
+            )
         },
 
         codama_nodes::EnumVariantTypeNode::Struct(variant) => {
@@ -242,14 +276,24 @@ fn build_enum_variant_payload(
 }
 
 /// For tuple-variant payloads: generate item_0..item_n fields.
-fn build_tuple_payload_fields(items: &[codama_nodes::TypeNode]) -> Vec<FieldIr> {
+fn build_tuple_payload_fields(
+    parent_name: &str,
+    items: &[codama_nodes::TypeNode],
+    ir: &mut SchemaIr,
+) -> Vec<FieldIr> {
     let mut fields = Vec::with_capacity(items.len());
 
     for (j, item) in items.iter().enumerate() {
-        let (label, field_type) = map_type_with_label(item);
+        let item_name = format!("item_{}", j);
+        let item_base_name = format!(
+            "{}{}",
+            parent_name,
+            crate::utils::to_pascal_case(&item_name)
+        );
+        let (label, field_type) = materialize_type(&item_base_name, item, ir, &TypeKindIr::Helper);
 
         fields.push(FieldIr {
-            name: format!("item_{}", j),
+            name: item_name,
             tag: (j + 1) as u32,
             label,
             field_type,

@@ -1,0 +1,548 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.6.0",
+  "program": {
+    "kind": "programNode",
+    "name": "inlineStruct",
+    "publicKey": "11111111111111111111111111111111",
+    "version": "0.1.0",
+    "origin": "custom",
+    "docs": [],
+    "accounts": [],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "setMetadata",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "metadataName",
+            "docs": [],
+            "type": {
+              "kind": "structTypeNode",
+              "fields": [
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "len",
+                  "docs": [],
+                  "type": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                },
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "value",
+                  "docs": [],
+                  "type": {
+                    "kind": "fixedSizeTypeNode",
+                    "size": 25,
+                    "type": {
+                      "kind": "stringTypeNode",
+                      "encoding": "utf8"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "optionalMetadata",
+            "docs": [],
+            "type": {
+              "kind": "optionTypeNode",
+              "fixed": true,
+              "item": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "len",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "value",
+                    "docs": [],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 5,
+                      "type": {
+                        "kind": "stringTypeNode",
+                        "encoding": "utf8"
+                      }
+                    }
+                  }
+                ]
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "arrayMetadata",
+            "docs": [],
+            "type": {
+              "kind": "arrayTypeNode",
+              "item": {
+                "kind": "structTypeNode",
+                "fields": [
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "code",
+                    "docs": [],
+                    "type": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  {
+                    "kind": "structFieldTypeNode",
+                    "name": "value",
+                    "docs": [],
+                    "type": {
+                      "kind": "fixedSizeTypeNode",
+                      "size": 3,
+                      "type": {
+                        "kind": "stringTypeNode",
+                        "encoding": "utf8"
+                      }
+                    }
+                  }
+                ]
+              },
+              "count": {
+                "kind": "fixedCountNode",
+                "value": 2
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "tupleMetadata",
+            "docs": [],
+            "type": {
+              "kind": "tupleTypeNode",
+              "items": [
+                {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    {
+                      "kind": "structFieldTypeNode",
+                      "name": "code",
+                      "docs": [],
+                      "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "optionTypeNode",
+                    "fixed": false,
+                    "item": {
+                      "kind": "structTypeNode",
+                      "fields": [
+                        {
+                          "kind": "structFieldTypeNode",
+                          "name": "value",
+                          "docs": [],
+                          "type": {
+                            "kind": "numberTypeNode",
+                            "format": "u16",
+                            "endian": "le"
+                          }
+                        }
+                      ]
+                    },
+                    "prefix": {
+                      "kind": "numberTypeNode",
+                      "format": "u8",
+                      "endian": "le"
+                    }
+                  },
+                  "count": {
+                    "kind": "fixedCountNode",
+                    "value": 2
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "optionalArrayMetadata",
+            "docs": [],
+            "type": {
+              "kind": "optionTypeNode",
+              "fixed": false,
+              "item": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    {
+                      "kind": "structFieldTypeNode",
+                      "name": "value",
+                      "docs": [],
+                      "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u32",
+                        "endian": "le"
+                      }
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 2
+                }
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "foo",
+            "docs": [],
+            "type": {
+              "kind": "optionTypeNode",
+              "fixed": false,
+              "item": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "structTypeNode",
+                  "fields": [
+                    {
+                      "kind": "structFieldTypeNode",
+                      "name": "code",
+                      "docs": [],
+                      "type": {
+                        "kind": "numberTypeNode",
+                        "format": "u8",
+                        "endian": "le"
+                      }
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "fixedCountNode",
+                  "value": 1
+                }
+              },
+              "prefix": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "fooOption",
+            "docs": [],
+            "type": {
+              "kind": "structTypeNode",
+              "fields": [
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "code",
+                  "docs": [],
+                  "type": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "bytesTypeNode"
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "01",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "useDefinedAliases",
+        "docs": [],
+        "optionalAccountStrategy": "programId",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "definedOptional",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "definedOptional"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "definedTupleArray",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "definedTupleArray"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "definedNested",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "definedNested"
+            }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "firstAlias",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "firstAlias"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 0,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "bytesTypeNode"
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "02",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "definedTypes": [
+      {
+        "kind": "definedTypeNode",
+        "name": "definedOptional",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "code",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "definedTupleArray",
+        "docs": [],
+        "type": {
+          "kind": "arrayTypeNode",
+          "item": {
+            "kind": "tupleTypeNode",
+            "items": [
+              {
+                "kind": "numberTypeNode",
+                "format": "u16",
+                "endian": "le"
+              },
+              {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            ]
+          },
+          "count": {
+            "kind": "fixedCountNode",
+            "value": 2
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "definedNested",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "arrayTypeNode",
+            "item": {
+              "kind": "structTypeNode",
+              "fields": [
+                {
+                  "kind": "structFieldTypeNode",
+                  "name": "value",
+                  "docs": [],
+                  "type": {
+                    "kind": "numberTypeNode",
+                    "format": "u32",
+                    "endian": "le"
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "fixedCountNode",
+              "value": 2
+            }
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "foo",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "arrayTypeNode",
+            "item": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "count": {
+              "kind": "fixedCountNode",
+              "value": 2
+            }
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "fooOption",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "code",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "firstAlias",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "definedTypeLinkNode",
+            "name": "secondAlias"
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "secondAlias",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      }
+    ],
+    "errors": [],
+    "pdas": [],
+    "events": []
+  },
+  "additionalPrograms": []
+}

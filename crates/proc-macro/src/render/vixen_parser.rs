@@ -34,6 +34,21 @@ pub fn vixen_parser(idl: &RootNode, events: &[EventNode], config: &ParserConfig)
     let schema_ir = crate::intermediate_representation::build_schema_ir(idl, events);
 
     let schema_types = crate::render::rust_types_from_ir(&schema_ir);
+    let option_borsh_helpers = if schema_ir
+        .types
+        .iter()
+        .flat_map(|type_ir| &type_ir.fields)
+        .any(|field| {
+            matches!(
+                &field.label,
+                crate::intermediate_representation::LabelIr::Optional(encoding)
+                    if !encoding.uses_native_borsh()
+            )
+        }) {
+        option_borsh_helpers()
+    } else {
+        quote! {}
+    };
 
     let account_parser = crate::render::account_parser(&idl.program.name, &idl.program.accounts);
 
@@ -118,6 +133,8 @@ pub fn vixen_parser(idl: &RootNode, events: &[EventNode], config: &ParserConfig)
             use yellowstone_vixen_parser::prelude::*;
 
             pub use yellowstone_vixen_core::Pubkey;
+
+            #option_borsh_helpers
 
             /// Borsh: deserialize N fixed bytes into `Vec<u8>`.
             /// On-chain, fixed-size byte fields (pubkeys, u128, fixed arrays) have no
@@ -493,6 +510,446 @@ pub fn vixen_parser(idl: &RootNode, events: &[EventNode], config: &ParserConfig)
             #account_parser
             #instruction_parser
             #event_parser
+        }
+    }
+}
+
+fn option_borsh_helpers() -> TokenStream {
+    quote! {
+        fn borsh_deserialize_option_prefix<
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<bool, ::borsh::io::Error> {
+            let mut bytes = [0u8; PREFIX_BYTES];
+            reader.read_exact(&mut bytes)?;
+
+            let mut value = 0u128;
+            for (index, byte) in bytes.iter().enumerate() {
+                let shift = if BIG_ENDIAN {
+                    (PREFIX_BYTES - index - 1) * 8
+                } else {
+                    index * 8
+                };
+                value |= u128::from(*byte) << shift;
+            }
+
+            if value == 0 {
+                ::core::result::Result::Ok(false)
+            } else if value == PREFIX_ONE {
+                ::core::result::Result::Ok(true)
+            } else {
+                ::core::result::Result::Err(::borsh::io::Error::new(
+                    ::borsh::io::ErrorKind::InvalidData,
+                    "invalid Codama option prefix",
+                ))
+            }
+        }
+
+        fn borsh_serialize_option_prefix<
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            W: ::borsh::io::Write,
+        >(
+            is_some: bool,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            let value = if is_some { PREFIX_ONE } else { 0 };
+            let mut bytes = [0u8; PREFIX_BYTES];
+
+            for (index, byte) in bytes.iter_mut().enumerate() {
+                let shift = if BIG_ENDIAN {
+                    (PREFIX_BYTES - index - 1) * 8
+                } else {
+                    index * 8
+                };
+                *byte = ((value >> shift) & 0xff) as u8;
+            }
+
+            writer.write_all(&bytes)
+        }
+
+        fn borsh_deserialize_option_none_padding<
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            let mut padding = ::std::vec![0u8; NONE_PADDING];
+            reader.read_exact(&mut padding)?;
+
+            if padding.iter().all(|byte| *byte == 0) {
+                ::core::result::Result::Ok(())
+            } else {
+                ::core::result::Result::Err(::borsh::io::Error::new(
+                    ::borsh::io::ErrorKind::InvalidData,
+                    "fixed Codama option padding must be zero",
+                ))
+            }
+        }
+
+        fn borsh_serialize_option_none_padding<
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            writer.write_all(&::std::vec![0u8; NONE_PADDING])
+        }
+
+        fn borsh_deserialize_option<
+            T: ::borsh::BorshDeserialize,
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<T>, ::borsh::io::Error> {
+            if borsh_deserialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(reader)? {
+                ::core::result::Result::Ok(::core::option::Option::Some(
+                    <T as ::borsh::BorshDeserialize>::deserialize_reader(reader)?,
+                ))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_option<
+            T: ::borsh::BorshSerialize,
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<T>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(
+                value.is_some(),
+                writer,
+            )?;
+
+            match value {
+                ::core::option::Option::Some(value) => {
+                    <T as ::borsh::BorshSerialize>::serialize(value, writer)
+                }
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_option_fixed_bytes<
+            const BYTE_SIZE: usize,
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<Vec<u8>>, ::borsh::io::Error> {
+            if borsh_deserialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(reader)? {
+                let mut bytes = [0u8; BYTE_SIZE];
+                reader.read_exact(&mut bytes)?;
+                ::core::result::Result::Ok(::core::option::Option::Some(bytes.to_vec()))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_option_fixed_bytes<
+            const BYTE_SIZE: usize,
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<Vec<u8>>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(
+                value.is_some(),
+                writer,
+            )?;
+
+            match value {
+                ::core::option::Option::Some(value) if value.len() == BYTE_SIZE => {
+                    writer.write_all(value)
+                }
+                ::core::option::Option::Some(_) => ::core::result::Result::Err(
+                    ::borsh::io::Error::new(
+                        ::borsh::io::ErrorKind::InvalidInput,
+                        "invalid fixed-byte option length",
+                    ),
+                ),
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_option_f32_permissive<
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<f32>, ::borsh::io::Error> {
+            if borsh_deserialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(reader)? {
+                let mut bytes = [0u8; 4];
+                reader.read_exact(&mut bytes)?;
+                ::core::result::Result::Ok(::core::option::Option::Some(f32::from_le_bytes(bytes)))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_option_f32_permissive<
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<f32>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(
+                value.is_some(),
+                writer,
+            )?;
+
+            match value {
+                ::core::option::Option::Some(value) => writer.write_all(&value.to_le_bytes()),
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_option_f64_permissive<
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<f64>, ::borsh::io::Error> {
+            if borsh_deserialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(reader)? {
+                let mut bytes = [0u8; 8];
+                reader.read_exact(&mut bytes)?;
+                ::core::result::Result::Ok(::core::option::Option::Some(f64::from_le_bytes(bytes)))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_option_f64_permissive<
+            const PREFIX_BYTES: usize,
+            const PREFIX_ONE: u128,
+            const BIG_ENDIAN: bool,
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<f64>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_option_prefix::<PREFIX_BYTES, PREFIX_ONE, BIG_ENDIAN, _>(
+                value.is_some(),
+                writer,
+            )?;
+
+            match value {
+                ::core::option::Option::Some(value) => writer.write_all(&value.to_le_bytes()),
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_short_u16_option_prefix<R: ::borsh::io::Read>(
+            reader: &mut R,
+        ) -> ::core::result::Result<bool, ::borsh::io::Error> {
+            let mut byte = [0u8; 1];
+            reader.read_exact(&mut byte)?;
+
+            match byte[0] {
+                0 => ::core::result::Result::Ok(false),
+                1 => ::core::result::Result::Ok(true),
+                _ => ::core::result::Result::Err(::borsh::io::Error::new(
+                    ::borsh::io::ErrorKind::InvalidData,
+                    "invalid short_u16 Codama option prefix",
+                )),
+            }
+        }
+
+        fn borsh_serialize_short_u16_option_prefix<W: ::borsh::io::Write>(
+            is_some: bool,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            writer.write_all(&[u8::from(is_some)])
+        }
+
+        fn borsh_deserialize_short_u16_option<
+            T: ::borsh::BorshDeserialize,
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<T>, ::borsh::io::Error> {
+            if borsh_deserialize_short_u16_option_prefix(reader)? {
+                ::core::result::Result::Ok(::core::option::Option::Some(
+                    <T as ::borsh::BorshDeserialize>::deserialize_reader(reader)?,
+                ))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_short_u16_option<
+            T: ::borsh::BorshSerialize,
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<T>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_short_u16_option_prefix(value.is_some(), writer)?;
+
+            match value {
+                ::core::option::Option::Some(value) => {
+                    <T as ::borsh::BorshSerialize>::serialize(value, writer)
+                }
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_short_u16_option_fixed_bytes<
+            const BYTE_SIZE: usize,
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<Vec<u8>>, ::borsh::io::Error> {
+            if borsh_deserialize_short_u16_option_prefix(reader)? {
+                let mut bytes = [0u8; BYTE_SIZE];
+                reader.read_exact(&mut bytes)?;
+                ::core::result::Result::Ok(::core::option::Option::Some(bytes.to_vec()))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_short_u16_option_fixed_bytes<
+            const BYTE_SIZE: usize,
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<Vec<u8>>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_short_u16_option_prefix(value.is_some(), writer)?;
+
+            match value {
+                ::core::option::Option::Some(value) if value.len() == BYTE_SIZE => {
+                    writer.write_all(value)
+                }
+                ::core::option::Option::Some(_) => ::core::result::Result::Err(
+                    ::borsh::io::Error::new(
+                        ::borsh::io::ErrorKind::InvalidInput,
+                        "invalid fixed-byte option length",
+                    ),
+                ),
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_short_u16_option_f32_permissive<
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<f32>, ::borsh::io::Error> {
+            if borsh_deserialize_short_u16_option_prefix(reader)? {
+                let mut bytes = [0u8; 4];
+                reader.read_exact(&mut bytes)?;
+                ::core::result::Result::Ok(::core::option::Option::Some(f32::from_le_bytes(bytes)))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_short_u16_option_f32_permissive<
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<f32>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_short_u16_option_prefix(value.is_some(), writer)?;
+
+            match value {
+                ::core::option::Option::Some(value) => writer.write_all(&value.to_le_bytes()),
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
+        }
+
+        fn borsh_deserialize_short_u16_option_f64_permissive<
+            const NONE_PADDING: usize,
+            R: ::borsh::io::Read,
+        >(
+            reader: &mut R,
+        ) -> ::core::result::Result<::core::option::Option<f64>, ::borsh::io::Error> {
+            if borsh_deserialize_short_u16_option_prefix(reader)? {
+                let mut bytes = [0u8; 8];
+                reader.read_exact(&mut bytes)?;
+                ::core::result::Result::Ok(::core::option::Option::Some(f64::from_le_bytes(bytes)))
+            } else {
+                borsh_deserialize_option_none_padding::<NONE_PADDING, _>(reader)?;
+                ::core::result::Result::Ok(::core::option::Option::None)
+            }
+        }
+
+        fn borsh_serialize_short_u16_option_f64_permissive<
+            const NONE_PADDING: usize,
+            W: ::borsh::io::Write,
+        >(
+            value: &::core::option::Option<f64>,
+            writer: &mut W,
+        ) -> ::core::result::Result<(), ::borsh::io::Error> {
+            borsh_serialize_short_u16_option_prefix(value.is_some(), writer)?;
+
+            match value {
+                ::core::option::Option::Some(value) => writer.write_all(&value.to_le_bytes()),
+                ::core::option::Option::None => {
+                    borsh_serialize_option_none_padding::<NONE_PADDING, _>(writer)
+                }
+            }
         }
     }
 }
