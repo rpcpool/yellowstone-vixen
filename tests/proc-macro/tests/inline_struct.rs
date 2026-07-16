@@ -23,6 +23,18 @@ fn check_protobuf_schema() {
         .contains("message SetMetadataArgsOptionalArrayMetadataOption"));
     assert!(inline_struct::PROTOBUF_SCHEMA.contains("message SetMetadataArgsFooOption"));
     assert!(inline_struct::PROTOBUF_SCHEMA.contains("message SetMetadataArgsFooOption2"));
+    assert!(inline_struct::PROTOBUF_SCHEMA.contains("message DefinedOptional"));
+    assert!(inline_struct::PROTOBUF_SCHEMA.contains("message DefinedTupleArrayItemTuple"));
+    assert!(inline_struct::PROTOBUF_SCHEMA.contains("message DefinedNestedOption"));
+}
+
+#[test]
+fn wrapped_defined_types_preserve_their_labels() {
+    let args = inline_struct::instruction::UseDefinedAliasesArgs::default();
+
+    assert!(args.defined_optional.is_none());
+    assert!(args.defined_tuple_array.is_empty());
+    assert!(args.defined_nested.is_none());
 }
 
 #[test]

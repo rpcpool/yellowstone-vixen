@@ -1,8 +1,8 @@
 use codama_nodes::{DefinedTypeNode, NestedTypeNode, TypeNode};
 
 use crate::intermediate_representation::{
-    helpers::{build_fields_ir, map_type_with_label, materialize_type},
-    FieldIr, OneofIr, OneofVariantIr, SchemaIr, TypeIr, TypeKindIr,
+    helpers::{build_fields_ir, materialize_type},
+    FieldIr, OneofIr, OneofVariantIr, SchemaIr, TypeAliasIr, TypeIr, TypeKindIr,
 };
 
 /// Converts Codama `defined_types` into our internal Intermediate Representation (IR).
@@ -17,8 +17,9 @@ pub fn build_defined_types(defined_types: &[DefinedTypeNode], ir: &mut SchemaIr)
         match &defined_type.r#type {
             TypeNode::Tuple(tuple_type) => build_defined_type_tuple(&name, tuple_type, ir),
             other if !matches!(other, TypeNode::Struct(_) | TypeNode::Enum(_)) => {
-                let (_, field_type) = map_type_with_label(other);
-                ir.type_aliases.insert(name, field_type);
+                let (label, field_type) = materialize_type(&name, other, ir, &TypeKindIr::Helper);
+                ir.type_aliases
+                    .insert(name, TypeAliasIr { label, field_type });
             },
             _ => {},
         }
@@ -100,14 +101,15 @@ fn build_defined_type_tuple(
 ) {
     // Single-item tuples are inlined as their inner type (e.g. optionBool → bool).
     if tuple_type_node.items.len() == 1 {
-        let (_label, field_type) = materialize_type(
+        let (label, field_type) = materialize_type(
             &format!("{}Item0", name),
             &tuple_type_node.items[0],
             ir,
             &TypeKindIr::Helper,
         );
 
-        ir.type_aliases.insert(name.to_string(), field_type);
+        ir.type_aliases
+            .insert(name.to_string(), TypeAliasIr { label, field_type });
 
         return;
     }
@@ -272,7 +274,7 @@ fn build_tuple_payload_fields(
             name: item_name,
             tag: (j + 1) as u32,
             label,
-            field_type: ir.resolve_field_type(field_type),
+            field_type,
         });
     }
 

@@ -3,11 +3,14 @@ pub struct SchemaIr {
     pub types: Vec<TypeIr>,
     pub oneofs: Vec<OneofIr>,
 
-    /// Single-item tuple defined types are inlined as their inner type.
+    /// Defined types that are represented as a field rather than a message
+    /// are inlined as their field label and inner type.
     ///
     /// For example, `optionBool` (a tuple with one bool) becomes a direct
-    /// `bool` field instead of a wrapper struct with `item_0`.
-    pub type_aliases: std::collections::HashMap<String, FieldTypeIr>,
+    /// `bool` field instead of a wrapper struct with `item_0`. Keeping the
+    /// label is important for aliases such as `Option<InlineStruct>` and
+    /// `Array<Tuple>`.
+    pub type_aliases: std::collections::HashMap<String, TypeAliasIr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,6 +35,12 @@ pub struct TypeIr {
 pub struct FieldIr {
     pub name: String,
     pub tag: u32,
+    pub label: LabelIr,
+    pub field_type: FieldTypeIr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeAliasIr {
     pub label: LabelIr,
     pub field_type: FieldTypeIr,
 }
@@ -147,16 +156,39 @@ impl SchemaIr {
         }
     }
 
-    /// If `ft` is a `Message` reference to a type alias, return the aliased
-    /// type. Otherwise return `ft` unchanged.
-    pub fn resolve_field_type(&self, ft: FieldTypeIr) -> FieldTypeIr {
-        if let FieldTypeIr::Message(ref name) = ft
-            && let Some(aliased) = self.type_aliases.get(name)
-        {
-            return aliased.clone();
+    /// Resolve a direct reference to a defined type alias.
+    ///
+    /// The alias label must be returned together with its field type. Using
+    /// only the inner type loses the wire-level Option/Array wrapper and can
+    /// make generated code deserialize the wrong bytes.
+    pub fn resolve_field(&self, label: LabelIr, field_type: FieldTypeIr) -> (LabelIr, FieldTypeIr) {
+        if !matches!(label, LabelIr::Singular) {
+            return (label, field_type);
         }
 
-        ft
+        let mut current_type = field_type;
+        let mut seen = std::collections::HashSet::new();
+
+        loop {
+            let FieldTypeIr::Message(name) = &current_type else {
+                return (LabelIr::Singular, current_type);
+            };
+
+            let Some(alias) = self.type_aliases.get(name) else {
+                return (LabelIr::Singular, current_type);
+            };
+
+            // Malformed/cyclic aliases should not make macro expansion loop.
+            if !seen.insert(name.clone()) {
+                return (LabelIr::Singular, current_type);
+            }
+
+            if !matches!(alias.label, LabelIr::Singular) {
+                return (alias.label.clone(), alias.field_type.clone());
+            }
+
+            current_type = alias.field_type.clone();
+        }
     }
 
     /// Collect the set of top-level (defined type / helper / account) names

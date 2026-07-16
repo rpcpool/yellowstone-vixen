@@ -100,7 +100,7 @@ pub fn build_fields_ir(
             name: field_name,
             tag,
             label,
-            field_type: ir.resolve_field_type(field_type),
+            field_type,
         });
     }
 
@@ -143,7 +143,7 @@ pub fn materialize_type(
             let (inner_label, inner_type) = materialize_type(&inner_base, &option.item, ir, kind);
 
             if matches!(inner_label, LabelIr::Singular) {
-                return (LabelIr::Optional, ir.resolve_field_type(inner_type));
+                return (LabelIr::Optional, inner_type);
             }
 
             let wrapper_name = ir.push_unique_type(TypeIr {
@@ -152,7 +152,7 @@ pub fn materialize_type(
                     name: "value".to_string(),
                     tag: 1,
                     label: inner_label,
-                    field_type: ir.resolve_field_type(inner_type),
+                    field_type: inner_type,
                 }],
                 kind: kind.clone(),
             });
@@ -177,7 +177,7 @@ pub fn materialize_type(
             let (inner_label, inner_type) = materialize_type(&inner_base, &array.item, ir, kind);
 
             if matches!(inner_label, LabelIr::Singular) {
-                return (outer_label, ir.resolve_field_type(inner_type));
+                return (outer_label, inner_type);
             }
 
             let wrapper_name = ir.push_unique_type(TypeIr {
@@ -186,7 +186,7 @@ pub fn materialize_type(
                     name: "items".to_string(),
                     tag: 1,
                     label: inner_label,
-                    field_type: ir.resolve_field_type(inner_type),
+                    field_type: inner_type,
                 }],
                 kind: kind.clone(),
             });
@@ -194,7 +194,7 @@ pub fn materialize_type(
             (outer_label, FieldTypeIr::Message(wrapper_name))
         },
 
-        other => (LabelIr::Singular, ir.resolve_field_type(map_type(other))),
+        other => ir.resolve_field(LabelIr::Singular, map_type(other)),
     }
 }
 
@@ -257,7 +257,7 @@ fn materialize_tuple_message(
             name: item_name,
             tag,
             label,
-            field_type: ir.resolve_field_type(field_type),
+            field_type,
         });
     }
 
@@ -268,27 +268,9 @@ fn materialize_tuple_message(
     })
 }
 
-pub fn map_type_with_label(type_node: &codama_nodes::TypeNode) -> (LabelIr, FieldTypeIr) {
-    use codama_nodes::TypeNode as T;
-
-    match type_node {
-        T::Option(option) => (LabelIr::Optional, map_type(&option.item)),
-        T::Array(array) => {
-            let label = match &array.count {
-                codama_nodes::CountNode::Fixed(fixed) => LabelIr::FixedArray(fixed.value),
-                _ => LabelIr::Repeated,
-            };
-
-            (label, map_type(&array.item))
-        },
-        _ => (LabelIr::Singular, map_type(type_node)),
-    }
-}
-
 /// Map a single Codama type node to its IR scalar/message type.
 ///
-/// Does NOT handle wrappers like Option/Array (use `map_type_with_label` for that)
-/// or Tuple (handled by `materialize_tuple_message`).
+/// Wrappers like Option/Array and Tuple are handled by `materialize_type`.
 fn map_type(t: &codama_nodes::TypeNode) -> FieldTypeIr {
     use codama_nodes::{NumberFormat as NF, TypeNode as T};
 
