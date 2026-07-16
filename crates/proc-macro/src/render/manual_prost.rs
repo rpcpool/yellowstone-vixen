@@ -569,7 +569,7 @@ fn emit_prost_field_codegen(
         },
 
         // --- Optional message ---
-        (LabelIr::Optional, _) if is_message => {
+        (LabelIr::Optional(_), _) if is_message => {
             encode_stmts.push(quote! {
                 if let ::core::option::Option::Some(ref msg) = self.#fname {
                     ::prost::encoding::message::encode(#tag, msg, buf);
@@ -597,7 +597,7 @@ fn emit_prost_field_codegen(
         },
 
         // --- Optional pubkey (Pubkey ↔ PublicKeyProtoWrapper conversion) ---
-        (LabelIr::Optional, FieldTypeIr::Scalar(s)) if is_pubkey_scalar(s) => {
+        (LabelIr::Optional(_), FieldTypeIr::Scalar(s)) if is_pubkey_scalar(s) => {
             let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
             let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
 
@@ -639,7 +639,7 @@ fn emit_prost_field_codegen(
         },
 
         // --- Optional scalar (widened) ---
-        (LabelIr::Optional, FieldTypeIr::Scalar(s)) if needs_widening(s) => {
+        (LabelIr::Optional(_), FieldTypeIr::Scalar(s)) if needs_widening(s) => {
             let enc_mod = prost_encoding_mod(s);
             let wide_ty = widened_type(s);
             let native_ty = map_ir_type_to_native(&f.field_type, in_module);
@@ -676,7 +676,7 @@ fn emit_prost_field_codegen(
         },
 
         // --- Optional scalar (bytes conversion: u128/i128) ---
-        (LabelIr::Optional, FieldTypeIr::Scalar(s)) if needs_bytes_conversion(s) => {
+        (LabelIr::Optional(_), FieldTypeIr::Scalar(s)) if needs_bytes_conversion(s) => {
             let native_ty = bytes_native_type(s);
 
             encode_stmts.push(quote! {
@@ -717,7 +717,7 @@ fn emit_prost_field_codegen(
         },
 
         // --- Optional scalar (no widening) ---
-        (LabelIr::Optional, FieldTypeIr::Scalar(s)) => {
+        (LabelIr::Optional(_), FieldTypeIr::Scalar(s)) => {
             let enc_mod = prost_encoding_mod(s);
 
             encode_stmts.push(quote! {

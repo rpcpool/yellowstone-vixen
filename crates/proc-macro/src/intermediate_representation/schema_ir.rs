@@ -1,4 +1,8 @@
-#[derive(Debug, Clone)]
+use std::collections::{HashMap, HashSet};
+
+use codama_nodes::{NestedTypeNodeTrait, NumberFormat, TypeNode};
+
+#[derive(Debug, Clone, Default)]
 pub struct SchemaIr {
     pub types: Vec<TypeIr>,
     pub oneofs: Vec<OneofIr>,
@@ -10,7 +14,20 @@ pub struct SchemaIr {
     /// `bool` field instead of a wrapper struct with `item_0`. Keeping the
     /// label is important for aliases such as `Option<InlineStruct>` and
     /// `Array<Tuple>`.
-    pub type_aliases: std::collections::HashMap<String, TypeAliasIr>,
+    pub type_aliases: HashMap<String, TypeAliasIr>,
+
+    /// Raw aliases are registered before they are materialized so an alias may
+    /// safely refer to another alias declared later in the IDL.
+    type_alias_definitions: HashMap<String, TypeAliasDefinitionIr>,
+    defined_type_nodes: HashMap<String, TypeNode>,
+    reserved_type_names: HashSet<String>,
+    materializing_type_aliases: HashSet<String>,
+}
+
+#[derive(Debug, Clone)]
+struct TypeAliasDefinitionIr {
+    type_node: TypeNode,
+    base_name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,10 +62,55 @@ pub struct TypeAliasIr {
     pub field_type: FieldTypeIr,
 }
 
+/// The on-chain encoding for a Codama option. Rust's native Borsh `Option`
+/// only covers the default u8 prefix with no fixed-size None padding.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct OptionEncodingIr {
+    pub prefix: OptionPrefixIr,
+    /// Fixed Codama options write this many zero bytes after a None prefix.
+    pub none_padding: Option<usize>,
+}
+
+impl OptionEncodingIr {
+    pub fn uses_native_borsh(&self) -> bool {
+        self.prefix.is_default() && self.none_padding.is_none()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OptionPrefixIr {
+    FixedWidth {
+        byte_len: usize,
+        one_value: u128,
+        big_endian: bool,
+    },
+    ShortU16,
+}
+
+impl Default for OptionPrefixIr {
+    fn default() -> Self {
+        Self::FixedWidth {
+            byte_len: 1,
+            one_value: 1,
+            big_endian: false,
+        }
+    }
+}
+
+impl OptionPrefixIr {
+    pub fn is_default(&self) -> bool {
+        matches!(self, Self::FixedWidth {
+            byte_len: 1,
+            one_value: 1,
+            big_endian: false,
+        })
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LabelIr {
     Singular,
-    Optional,
+    Optional(OptionEncodingIr),
     Repeated,
     /// Fixed-count array (no length prefix on-chain). The value is the element count.
     /// Rendered as `Vec<T>` / `repeated` in proto for compatibility, but borsh
@@ -134,6 +196,116 @@ pub struct OneofVariantIr {
 }
 
 impl SchemaIr {
+    pub fn register_defined_type(&mut self, name: String, type_node: TypeNode) {
+        self.defined_type_nodes.insert(name, type_node);
+    }
+
+    pub fn reserve_type_names(&mut self, names: impl IntoIterator<Item = String>) {
+        self.reserved_type_names.extend(names);
+    }
+
+    pub fn register_type_alias(&mut self, name: String, type_node: TypeNode, base_name: String) {
+        self.type_alias_definitions
+            .insert(name, TypeAliasDefinitionIr {
+                type_node,
+                base_name,
+            });
+    }
+
+    pub fn has_type_alias_definition(&self, name: &str) -> bool {
+        self.type_alias_definitions.contains_key(name)
+    }
+
+    /// Materialize an alias on demand so aliases can reference aliases declared
+    /// later in an IDL. Nested wrappers remain explicit rather than being
+    /// flattened into an invalid Rust type.
+    pub fn materialize_type_alias(&mut self, name: &str) -> (LabelIr, FieldTypeIr) {
+        if let Some(alias) = self.type_aliases.get(name) {
+            return (alias.label.clone(), alias.field_type.clone());
+        }
+
+        if !self.materializing_type_aliases.insert(name.to_string()) {
+            panic!("cyclic defined type alias `{name}`");
+        }
+
+        let definition = self
+            .type_alias_definitions
+            .get(name)
+            .unwrap_or_else(|| panic!("unknown defined type alias `{name}`"))
+            .clone();
+        let (label, field_type) = crate::intermediate_representation::helpers::materialize_type(
+            &definition.base_name,
+            &definition.type_node,
+            self,
+            &TypeKindIr::Helper,
+        );
+
+        self.materializing_type_aliases.remove(name);
+        self.type_aliases.insert(name.to_string(), TypeAliasIr {
+            label: label.clone(),
+            field_type: field_type.clone(),
+        });
+
+        (label, field_type)
+    }
+
+    /// Returns the exact wire size of a fixed-size Codama type, if known.
+    /// Fixed options need this to consume the same number of bytes for `None`
+    /// as they do for `Some`.
+    pub fn fixed_size_of_type(&self, type_node: &TypeNode) -> Option<usize> {
+        self.fixed_size_of_type_inner(type_node, &mut HashSet::new())
+    }
+
+    fn fixed_size_of_type_inner(
+        &self,
+        type_node: &TypeNode,
+        visiting_links: &mut HashSet<String>,
+    ) -> Option<usize> {
+        use codama_nodes::{CountNode, DefaultValueStrategy, TypeNode as T};
+
+        match type_node {
+            T::Boolean(_) => Some(1),
+            T::PublicKey(_) => Some(32),
+            T::Number(number) => number_wire_size(number.format),
+            T::FixedSize(fixed) => Some(fixed.size),
+            T::Struct(struct_type) => struct_type
+                .fields
+                .iter()
+                .filter(|field| field.default_value_strategy != Some(DefaultValueStrategy::Omitted))
+                .try_fold(0usize, |size, field| {
+                    size.checked_add(self.fixed_size_of_type_inner(&field.r#type, visiting_links)?)
+                }),
+            T::Tuple(tuple) => tuple.items.iter().try_fold(0usize, |size, item| {
+                size.checked_add(self.fixed_size_of_type_inner(item, visiting_links)?)
+            }),
+            T::Array(array) => match &array.count {
+                CountNode::Fixed(count) => self
+                    .fixed_size_of_type_inner(&array.item, visiting_links)?
+                    .checked_mul(count.value),
+                _ => None,
+            },
+            T::Option(option) if option.fixed => {
+                option_prefix_wire_size(option.prefix.get_nested_type_node().format)?
+                    .checked_add(self.fixed_size_of_type_inner(&option.item, visiting_links)?)
+            },
+            T::Link(link) => {
+                let name = crate::utils::to_pascal_case(&link.name);
+
+                if !visiting_links.insert(name.clone()) {
+                    return None;
+                }
+
+                let result = self
+                    .defined_type_nodes
+                    .get(&name)
+                    .and_then(|node| self.fixed_size_of_type_inner(node, visiting_links));
+                visiting_links.remove(&name);
+                result
+            },
+            _ => None,
+        }
+    }
+
     /// Insert a generated helper type, allocating a numeric suffix when its
     /// requested name is already used by a different type.
     pub fn push_unique_type(&mut self, mut msg: TypeIr) -> String {
@@ -141,6 +313,12 @@ impl SchemaIr {
         let mut suffix = 2;
 
         loop {
+            if self.reserved_type_names.contains(&msg.name) {
+                msg.name = format!("{base_name}{suffix}");
+                suffix += 1;
+                continue;
+            }
+
             if let Some(existing) = self.types.iter().find(|existing| existing.name == msg.name) {
                 if existing == &msg {
                     return msg.name;
@@ -222,13 +400,7 @@ impl SchemaIr {
 mod tests {
     use super::*;
 
-    fn schema() -> SchemaIr {
-        SchemaIr {
-            types: Vec::new(),
-            oneofs: Vec::new(),
-            type_aliases: std::collections::HashMap::new(),
-        }
-    }
+    fn schema() -> SchemaIr { SchemaIr::default() }
 
     fn message(name: &str, field_name: &str) -> TypeIr {
         TypeIr {
@@ -262,5 +434,36 @@ mod tests {
         );
 
         assert_eq!(ir.types.len(), 2);
+    }
+
+    #[test]
+    fn reserved_type_names_force_helpers_to_use_a_suffix() {
+        let mut ir = schema();
+        ir.reserve_type_names(["FooOption".to_string()]);
+
+        assert_eq!(
+            ir.push_unique_type(message("FooOption", "value")),
+            "FooOption2"
+        );
+    }
+}
+
+fn number_wire_size(format: NumberFormat) -> Option<usize> {
+    match format {
+        NumberFormat::U8 | NumberFormat::I8 => Some(1),
+        NumberFormat::U16 | NumberFormat::I16 => Some(2),
+        NumberFormat::U32 | NumberFormat::I32 | NumberFormat::F32 => Some(4),
+        NumberFormat::U64 | NumberFormat::I64 | NumberFormat::F64 => Some(8),
+        NumberFormat::U128 | NumberFormat::I128 => Some(16),
+        NumberFormat::ShortU16 => None,
+    }
+}
+
+fn option_prefix_wire_size(format: NumberFormat) -> Option<usize> {
+    match format {
+        // Option presence is encoded as 0 or 1, both of which are a one-byte
+        // short_u16 value even though arbitrary short_u16 values are variable.
+        NumberFormat::ShortU16 => Some(1),
+        other => number_wire_size(other),
     }
 }

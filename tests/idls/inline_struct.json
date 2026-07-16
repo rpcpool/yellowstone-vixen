@@ -333,6 +333,15 @@
               "kind": "definedTypeLinkNode",
               "name": "definedNested"
             }
+          },
+          {
+            "kind": "instructionArgumentNode",
+            "name": "firstAlias",
+            "docs": [],
+            "type": {
+              "kind": "definedTypeLinkNode",
+              "name": "firstAlias"
+            }
           }
         ],
         "discriminators": [
@@ -439,6 +448,89 @@
               "kind": "fixedCountNode",
               "value": 2
             }
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "foo",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "arrayTypeNode",
+            "item": {
+              "kind": "numberTypeNode",
+              "format": "u8",
+              "endian": "le"
+            },
+            "count": {
+              "kind": "fixedCountNode",
+              "value": 2
+            }
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "fooOption",
+        "docs": [],
+        "type": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "code",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "firstAlias",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "definedTypeLinkNode",
+            "name": "secondAlias"
+          },
+          "prefix": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
+          }
+        }
+      },
+      {
+        "kind": "definedTypeNode",
+        "name": "secondAlias",
+        "docs": [],
+        "type": {
+          "kind": "optionTypeNode",
+          "fixed": false,
+          "item": {
+            "kind": "numberTypeNode",
+            "format": "u8",
+            "endian": "le"
           },
           "prefix": {
             "kind": "numberTypeNode",

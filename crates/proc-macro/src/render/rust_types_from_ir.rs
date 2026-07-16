@@ -5,7 +5,8 @@ use quote::{format_ident, quote};
 use syn::LitStr;
 
 use crate::intermediate_representation::{
-    FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr, ScalarIr, TypeIr, TypeKindIr,
+    FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr, OptionEncodingIr, OptionPrefixIr,
+    ScalarIr, TypeIr, TypeKindIr,
 };
 
 // Generated types derive `serde::Serialize`/`Deserialize` behind the `serde` feature flag.
@@ -522,18 +523,24 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
     // With native types, we no longer need widening borsh attrs — only fixed-bytes,
     // float, and fixed-array helpers remain.
     let borsh_attr = {
-        let fixed = fixed_bytes_borsh_attrs(&f.label, &f.field_type, path_prefix);
+        let option = option_borsh_attrs(&f.label, &f.field_type, path_prefix);
 
-        if !fixed.is_empty() {
-            fixed
+        if !option.is_empty() {
+            option
         } else {
-            let float = float_borsh_attrs(&f.label, &f.field_type, path_prefix);
+            let fixed = fixed_bytes_borsh_attrs(&f.label, &f.field_type, path_prefix);
 
-            if !float.is_empty() {
-                float
+            if !fixed.is_empty() {
+                fixed
             } else {
-                // For FixedArray, we always need a custom borsh attr (no length prefix).
-                fixed_array_default_borsh_attrs(&f.label, path_prefix)
+                let float = float_borsh_attrs(&f.label, &f.field_type, path_prefix);
+
+                if !float.is_empty() {
+                    float
+                } else {
+                    // For FixedArray, we always need a custom borsh attr (no length prefix).
+                    fixed_array_default_borsh_attrs(&f.label, path_prefix)
+                }
             }
         }
     };
@@ -566,12 +573,12 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
 
             quote! { #borsh_attr pub #name: #rust_type }
         },
-        (LabelIr::Optional, FieldTypeIr::Message(msg)) => {
+        (LabelIr::Optional(_), FieldTypeIr::Message(msg)) => {
             let ty = resolve_msg(msg);
 
-            quote! { pub #name: ::core::option::Option<#ty> }
+            quote! { #borsh_attr pub #name: ::core::option::Option<#ty> }
         },
-        (LabelIr::Optional, field_type) => {
+        (LabelIr::Optional(_), field_type) => {
             let rust_type = map_ir_type_to_native(field_type, in_module);
 
             quote! { #borsh_attr pub #name: ::core::option::Option<#rust_type> }
@@ -586,6 +593,138 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
 
             quote! { #borsh_attr pub #name: Vec<#rust_type> }
         },
+    }
+}
+
+/// Returns custom Borsh hooks for Codama options that do not use Rust Borsh's
+/// native u8-tag encoding. This includes non-u8 prefixes and fixed options,
+/// whose `None` representation includes zero padding for the item size.
+fn option_borsh_attrs(label: &LabelIr, field_type: &FieldTypeIr, path_prefix: &str) -> TokenStream {
+    let LabelIr::Optional(encoding) = label else {
+        return quote! {};
+    };
+
+    if encoding.uses_native_borsh() {
+        return quote! {};
+    }
+
+    let padding = encoding.none_padding.unwrap_or(0);
+    let (deserialize, serialize) = option_borsh_paths(encoding, field_type, path_prefix, padding);
+    let deserialize = LitStr::new(&deserialize, Span::call_site());
+    let serialize = LitStr::new(&serialize, Span::call_site());
+
+    quote! {
+        #[borsh(
+            deserialize_with = #deserialize,
+            serialize_with = #serialize
+        )]
+    }
+}
+
+fn option_borsh_paths(
+    encoding: &OptionEncodingIr,
+    field_type: &FieldTypeIr,
+    path_prefix: &str,
+    padding: usize,
+) -> (String, String) {
+    let names = match field_type {
+        FieldTypeIr::Scalar(ScalarIr::FixedBytes(size)) => {
+            return option_fixed_bytes_borsh_paths(encoding, *size, path_prefix, padding);
+        },
+        FieldTypeIr::Scalar(ScalarIr::Float) => {
+            return option_float_borsh_paths(encoding, "f32", path_prefix, padding);
+        },
+        FieldTypeIr::Scalar(ScalarIr::Double) => {
+            return option_float_borsh_paths(encoding, "f64", path_prefix, padding);
+        },
+        _ => ("borsh_deserialize_option", "borsh_serialize_option"),
+    };
+
+    match &encoding.prefix {
+        OptionPrefixIr::FixedWidth {
+            byte_len,
+            one_value,
+            big_endian,
+        } => (
+            format!(
+                "{path_prefix}{}::<_, {byte_len}, {one_value}, {big_endian}, {padding}, _>",
+                names.0
+            ),
+            format!(
+                "{path_prefix}{}::<_, {byte_len}, {one_value}, {big_endian}, {padding}, _>",
+                names.1
+            ),
+        ),
+        OptionPrefixIr::ShortU16 => (
+            format!("{path_prefix}borsh_deserialize_short_u16_option::<_, {padding}, _>"),
+            format!("{path_prefix}borsh_serialize_short_u16_option::<_, {padding}, _>"),
+        ),
+    }
+}
+
+fn option_fixed_bytes_borsh_paths(
+    encoding: &OptionEncodingIr,
+    size: usize,
+    path_prefix: &str,
+    padding: usize,
+) -> (String, String) {
+    match &encoding.prefix {
+        OptionPrefixIr::FixedWidth {
+            byte_len,
+            one_value,
+            big_endian,
+        } => (
+            format!(
+                "{path_prefix}borsh_deserialize_option_fixed_bytes::<{size}, {byte_len}, \
+                 {one_value}, {big_endian}, {padding}, _>"
+            ),
+            format!(
+                "{path_prefix}borsh_serialize_option_fixed_bytes::<{size}, {byte_len}, \
+                 {one_value}, {big_endian}, {padding}, _>"
+            ),
+        ),
+        OptionPrefixIr::ShortU16 => (
+            format!(
+                "{path_prefix}borsh_deserialize_short_u16_option_fixed_bytes::<{size}, {padding}, \
+                 _>"
+            ),
+            format!(
+                "{path_prefix}borsh_serialize_short_u16_option_fixed_bytes::<{size}, {padding}, _>"
+            ),
+        ),
+    }
+}
+
+fn option_float_borsh_paths(
+    encoding: &OptionEncodingIr,
+    suffix: &str,
+    path_prefix: &str,
+    padding: usize,
+) -> (String, String) {
+    match &encoding.prefix {
+        OptionPrefixIr::FixedWidth {
+            byte_len,
+            one_value,
+            big_endian,
+        } => (
+            format!(
+                "{path_prefix}borsh_deserialize_option_{suffix}_permissive::<{byte_len}, \
+                 {one_value}, {big_endian}, {padding}, _>"
+            ),
+            format!(
+                "{path_prefix}borsh_serialize_option_{suffix}_permissive::<{byte_len}, \
+                 {one_value}, {big_endian}, {padding}, _>"
+            ),
+        ),
+        OptionPrefixIr::ShortU16 => (
+            format!(
+                "{path_prefix}borsh_deserialize_short_u16_option_{suffix}_permissive::<{padding}, \
+                 _>"
+            ),
+            format!(
+                "{path_prefix}borsh_serialize_short_u16_option_{suffix}_permissive::<{padding}, _>"
+            ),
+        ),
     }
 }
 
@@ -646,7 +785,7 @@ fn fixed_bytes_borsh_attrs(
                 serialize_with = #serialize_path
             )]
         },
-        LabelIr::Optional => quote! {
+        LabelIr::Optional(_) => quote! {
             #[borsh(
                 deserialize_with = #deserialize_opt_path,
                 serialize_with = #serialize_opt_path
@@ -693,7 +832,7 @@ fn float_borsh_attrs(label: &LabelIr, field_type: &FieldTypeIr, path_prefix: &st
             format!("{path_prefix}borsh_deserialize_{suffix}_permissive"),
             format!("{path_prefix}borsh_serialize_{suffix}_permissive"),
         ),
-        LabelIr::Optional => (
+        LabelIr::Optional(_) => (
             format!("{path_prefix}borsh_deserialize_opt_{suffix}_permissive"),
             format!("{path_prefix}borsh_serialize_opt_{suffix}_permissive"),
         ),

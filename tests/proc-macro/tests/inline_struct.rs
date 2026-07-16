@@ -26,6 +26,9 @@ fn check_protobuf_schema() {
     assert!(inline_struct::PROTOBUF_SCHEMA.contains("message DefinedOptional"));
     assert!(inline_struct::PROTOBUF_SCHEMA.contains("message DefinedTupleArrayItemTuple"));
     assert!(inline_struct::PROTOBUF_SCHEMA.contains("message DefinedNestedOption"));
+    assert!(inline_struct::PROTOBUF_SCHEMA.contains("message FooOption"));
+    assert!(inline_struct::PROTOBUF_SCHEMA.contains("message FooOption2"));
+    assert!(inline_struct::PROTOBUF_SCHEMA.contains("message FirstAliasOption"));
 }
 
 #[test]
@@ -35,6 +38,23 @@ fn wrapped_defined_types_preserve_their_labels() {
     assert!(args.defined_optional.is_none());
     assert!(args.defined_tuple_array.is_empty());
     assert!(args.defined_nested.is_none());
+    assert!(args.first_alias.is_none());
+}
+
+#[test]
+fn generated_helpers_do_not_shadow_defined_types_or_forward_aliases() {
+    let nested_alias = inline_struct::FirstAliasOption { value: Some(7) };
+    let canonical_type = inline_struct::FooOption { code: 1 };
+    let generated_helper = inline_struct::FooOption2 { value: vec![2, 3] };
+
+    assert_eq!(
+        (
+            nested_alias.value,
+            canonical_type.code,
+            generated_helper.value
+        ),
+        (Some(7), 1, vec![2, 3]),
+    );
 }
 
 #[test]
@@ -104,14 +124,20 @@ fn nested_inline_structs_round_trip_borsh() {
 fn bare_tuple_deserializes_exact_borsh_wire() {
     use borsh::BorshDeserialize;
 
-    // The tuple begins with `code = 7`, rather than an Option discriminator.
+    // A fixed `None` option includes a tag plus zero padding matching its
+    // six-byte item. The tuple still begins with `code = 7`, not an option tag.
     let encoded = [
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, b'a',
-        b'a', b'a', 2, b'b', b'b', b'b', 7, 1, 8, 0, 0, 0, 0, 42,
-    ];
+        &[0u8][..],
+        &[0u8; 25][..],
+        &[0u8][..],
+        &[0u8; 6][..],
+        &[1, b'a', b'a', b'a', 2, b'b', b'b', b'b'][..],
+        &[7, 1, 8, 0, 0, 0, 0, 42][..],
+    ]
+    .concat();
     let decoded = inline_struct::instruction::SetMetadataArgs::try_from_slice(&encoded).unwrap();
 
-    assert_eq!(decoded, inline_struct::instruction::SetMetadataArgs {
+    let expected = inline_struct::instruction::SetMetadataArgs {
         metadata_name: inline_struct::SetMetadataArgsMetadataName {
             len: 0,
             value: vec![0; 25],
@@ -141,5 +167,8 @@ fn bare_tuple_deserializes_exact_borsh_wire() {
         optional_array_metadata: None,
         foo: None,
         foo_option: inline_struct::SetMetadataArgsFooOption2 { code: 42 },
-    });
+    };
+    let reencoded = borsh::to_vec(&expected).unwrap();
+
+    assert_eq!((decoded, reencoded), (expected, encoded));
 }

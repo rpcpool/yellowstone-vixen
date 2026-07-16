@@ -1,5 +1,6 @@
 use crate::intermediate_representation::{
-    FieldIr, FieldTypeIr, LabelIr, ScalarIr, SchemaIr, TypeIr, TypeKindIr,
+    FieldIr, FieldTypeIr, LabelIr, OptionEncodingIr, OptionPrefixIr, ScalarIr, SchemaIr, TypeIr,
+    TypeKindIr,
 };
 
 /// Common interface for field-like nodes from Codama (both struct fields and instruction arguments).
@@ -135,6 +136,7 @@ pub fn materialize_type(
         },
 
         T::Option(option) => {
+            let option_encoding = option_encoding(option, ir, base_name);
             let inner_base = if matches!(&*option.item, T::Struct(_)) {
                 base_name.to_string()
             } else {
@@ -143,7 +145,7 @@ pub fn materialize_type(
             let (inner_label, inner_type) = materialize_type(&inner_base, &option.item, ir, kind);
 
             if matches!(inner_label, LabelIr::Singular) {
-                return (LabelIr::Optional, inner_type);
+                return (LabelIr::Optional(option_encoding), inner_type);
             }
 
             let wrapper_name = ir.push_unique_type(TypeIr {
@@ -157,7 +159,10 @@ pub fn materialize_type(
                 kind: kind.clone(),
             });
 
-            (LabelIr::Optional, FieldTypeIr::Message(wrapper_name))
+            (
+                LabelIr::Optional(option_encoding),
+                FieldTypeIr::Message(wrapper_name),
+            )
         },
 
         T::Array(array) => {
@@ -194,7 +199,75 @@ pub fn materialize_type(
             (outer_label, FieldTypeIr::Message(wrapper_name))
         },
 
+        T::Link(link) => {
+            let name = crate::utils::to_pascal_case(&link.name);
+
+            if ir.has_type_alias_definition(&name) {
+                ir.materialize_type_alias(&name)
+            } else {
+                ir.resolve_field(LabelIr::Singular, FieldTypeIr::Message(name))
+            }
+        },
+
         other => ir.resolve_field(LabelIr::Singular, map_type(other)),
+    }
+}
+
+fn option_encoding(
+    option: &codama_nodes::OptionTypeNode,
+    ir: &SchemaIr,
+    base_name: &str,
+) -> OptionEncodingIr {
+    use codama_nodes::{Endian, NestedTypeNodeTrait, NumberFormat};
+
+    let prefix_type = option.prefix.get_nested_type_node();
+    let prefix = match prefix_type.format {
+        NumberFormat::ShortU16 => OptionPrefixIr::ShortU16,
+        NumberFormat::U8 | NumberFormat::I8 => OptionPrefixIr::FixedWidth {
+            byte_len: 1,
+            one_value: 1,
+            big_endian: false,
+        },
+        NumberFormat::U16 | NumberFormat::I16 => OptionPrefixIr::FixedWidth {
+            byte_len: 2,
+            one_value: 1,
+            big_endian: prefix_type.endian == Endian::Big,
+        },
+        NumberFormat::U32 | NumberFormat::I32 => OptionPrefixIr::FixedWidth {
+            byte_len: 4,
+            one_value: 1,
+            big_endian: prefix_type.endian == Endian::Big,
+        },
+        NumberFormat::U64 | NumberFormat::I64 => OptionPrefixIr::FixedWidth {
+            byte_len: 8,
+            one_value: 1,
+            big_endian: prefix_type.endian == Endian::Big,
+        },
+        NumberFormat::U128 | NumberFormat::I128 => OptionPrefixIr::FixedWidth {
+            byte_len: 16,
+            one_value: 1,
+            big_endian: prefix_type.endian == Endian::Big,
+        },
+        NumberFormat::F32 => OptionPrefixIr::FixedWidth {
+            byte_len: 4,
+            one_value: 1.0f32.to_bits() as u128,
+            big_endian: prefix_type.endian == Endian::Big,
+        },
+        NumberFormat::F64 => OptionPrefixIr::FixedWidth {
+            byte_len: 8,
+            one_value: 1.0f64.to_bits() as u128,
+            big_endian: prefix_type.endian == Endian::Big,
+        },
+    };
+
+    let none_padding = option.fixed.then(|| {
+        ir.fixed_size_of_type(&option.item)
+            .unwrap_or_else(|| panic!("fixed option `{base_name}` has a variable-size item"))
+    });
+
+    OptionEncodingIr {
+        prefix,
+        none_padding,
     }
 }
 

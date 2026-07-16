@@ -6,11 +6,7 @@ use crate::intermediate_representation::SchemaIr;
 ///
 /// Why use IR? So we can unify the parsing. Then we have one source of truth for both the .proto renderer and Rust code.
 pub fn build_schema_ir(idl: &RootNode, events: &[EventNode]) -> SchemaIr {
-    let mut ir = SchemaIr {
-        types: Vec::new(),
-        oneofs: Vec::new(),
-        type_aliases: std::collections::HashMap::new(),
-    };
+    let mut ir = SchemaIr::default();
 
     crate::intermediate_representation::build_defined_types(&idl.program.defined_types, &mut ir);
 

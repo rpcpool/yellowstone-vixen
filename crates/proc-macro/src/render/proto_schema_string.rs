@@ -216,9 +216,9 @@ fn render_type(out: &mut String, msg: &TypeIr, proto_name: &str, rename: &HashMa
     writeln!(out, "message {} {{", proto_name).unwrap();
 
     for field in &msg.fields {
-        let label = match field.label {
+        let label = match &field.label {
             LabelIr::Singular => "",
-            LabelIr::Optional => "optional ",
+            LabelIr::Optional(_) => "optional ",
             LabelIr::Repeated | LabelIr::FixedArray(_) => "repeated ",
         };
 
