@@ -396,6 +396,26 @@ impl SchemaIr {
     }
 }
 
+fn number_wire_size(format: NumberFormat) -> Option<usize> {
+    match format {
+        NumberFormat::U8 | NumberFormat::I8 => Some(1),
+        NumberFormat::U16 | NumberFormat::I16 => Some(2),
+        NumberFormat::U32 | NumberFormat::I32 | NumberFormat::F32 => Some(4),
+        NumberFormat::U64 | NumberFormat::I64 | NumberFormat::F64 => Some(8),
+        NumberFormat::U128 | NumberFormat::I128 => Some(16),
+        NumberFormat::ShortU16 => None,
+    }
+}
+
+fn option_prefix_wire_size(format: NumberFormat) -> Option<usize> {
+    match format {
+        // Option presence is encoded as 0 or 1, both of which are a one-byte
+        // short_u16 value even though arbitrary short_u16 values are variable.
+        NumberFormat::ShortU16 => Some(1),
+        other => number_wire_size(other),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -445,25 +465,5 @@ mod tests {
             ir.push_unique_type(message("FooOption", "value")),
             "FooOption2"
         );
-    }
-}
-
-fn number_wire_size(format: NumberFormat) -> Option<usize> {
-    match format {
-        NumberFormat::U8 | NumberFormat::I8 => Some(1),
-        NumberFormat::U16 | NumberFormat::I16 => Some(2),
-        NumberFormat::U32 | NumberFormat::I32 | NumberFormat::F32 => Some(4),
-        NumberFormat::U64 | NumberFormat::I64 | NumberFormat::F64 => Some(8),
-        NumberFormat::U128 | NumberFormat::I128 => Some(16),
-        NumberFormat::ShortU16 => None,
-    }
-}
-
-fn option_prefix_wire_size(format: NumberFormat) -> Option<usize> {
-    match format {
-        // Option presence is encoded as 0 or 1, both of which are a one-byte
-        // short_u16 value even though arbitrary short_u16 values are variable.
-        NumberFormat::ShortU16 => Some(1),
-        other => number_wire_size(other),
     }
 }
