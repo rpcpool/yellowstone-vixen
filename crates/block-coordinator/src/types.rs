@@ -189,29 +189,23 @@ impl fmt::Display for ColorSlot {
 }
 
 /// Account commitment configuration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub enum AccountCommitAt {
     /// Accounts flush when the slot is confirmed (same timing as instructions).
+    #[default]
     Confirmed,
     /// Accounts flush when the slot is finalized.
     Finalized,
 }
 
-impl Default for AccountCommitAt {
-    fn default() -> Self { Self::Confirmed }
-}
-
 /// How accounts are processed and output.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub enum AccountMode {
     /// Accounts in the same processed subscription. Commit triggered by a specific event.
     Processed { commit_at: AccountCommitAt },
     /// Separate finalized subscription, pass-through writes (no buffering).
+    #[default]
     FinalizedPassthrough,
-}
-
-impl Default for AccountMode {
-    fn default() -> Self { Self::FinalizedPassthrough }
 }
 
 /// An instruction slot ready for downstream consumption (e.g., Kafka write).
