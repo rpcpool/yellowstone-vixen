@@ -11,6 +11,7 @@ readme = "./../../README.md"
 [dependencies]
 async-trait = { workspace = true }
 clap = { workspace = true, features = ["env", "derive", "std"] }
+crossbeam-channel = { workspace = true }
 futures-channel = { workspace = true, features = ["sink"] }
 futures-util = { workspace = true, features = ["sink"] }
 opentelemetry = { workspace = true, features = ["metrics"], optional = true }
@@ -18,8 +19,7 @@ prometheus = { workspace = true, features = ["push"], optional = true }
 serde = { workspace = true, features = ["derive"] }
 smallvec = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
-crossbeam-channel = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal", "time"] }
 tracing = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
@@ -27,7 +27,7 @@ yellowstone-vixen-core = { workspace = true }
 
 [dev-dependencies]
 async-trait = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "test-util"] }
 yellowstone-grpc-proto = { workspace = true }
 
 [features]

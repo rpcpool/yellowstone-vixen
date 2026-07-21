@@ -362,4 +362,6 @@ impl<S: SourceTrait> Runtime<S> {
 }
 
 #[cfg(test)]
+mod load_tests;
+#[cfg(test)]
 mod runtime_tests;

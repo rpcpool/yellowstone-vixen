@@ -600,8 +600,7 @@ impl Handler<SlotUpdate, SlotUpdate> for CountingHandler {
     }
 }
 
-/// Large burst through a slow handler: backpressure must not drop, and the
-/// clean-close drain must wait for every in-flight handler.
+/// Slow handler, to actually exercise backpressure at this burst size.
 #[tokio::test]
 async fn edge_high_volume_drain_processes_every_update() {
     const N: u64 = 500;
@@ -624,8 +623,8 @@ async fn edge_high_volume_drain_processes_every_update() {
     );
 }
 
-/// Half the handlers panic; each runs as its own task, so panics isolate and
-/// the pool survives. The odd slots must all complete.
+/// Each handler runs as its own task, so a panic stays isolated and the pool
+/// survives.
 #[tokio::test]
 async fn edge_panicking_handler_does_not_kill_pool() {
     const N: u64 = 20; // slots 0..20 -> 10 even (panic), 10 odd (survive)
@@ -649,7 +648,6 @@ async fn edge_panicking_handler_does_not_kill_pool() {
     );
 }
 
-/// jobs=1: fully serialized, but still processes and drains every update.
 #[tokio::test]
 async fn edge_single_job_serializes_and_drains() {
     const N: u64 = 25;
@@ -678,6 +676,40 @@ async fn edge_single_job_serializes_and_drains() {
         usize::try_from(N).unwrap(),
         "jobs=1 must still process every update"
     );
+}
+
+/// Parks forever, like a handler blocked on a full channel whose reader
+/// stalled. Holds its job permit the whole time.
+#[derive(Debug, Clone, Copy)]
+struct WedgedHandler;
+
+impl Handler<SlotUpdate, SlotUpdate> for WedgedHandler {
+    async fn handle(&self, _: &SlotUpdate, _: &SlotUpdate) -> crate::HandlerResult<()> {
+        std::future::pending::<()>().await;
+        unreachable!("pending never resolves")
+    }
+}
+
+/// Holds its permit forever, so the drain barrier can't acquire them all; must
+/// give up at the ceiling instead of hanging.
+#[tokio::test]
+async fn edge_wedged_handler_does_not_hang_shutdown() {
+    const N: u64 = 2;
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [WedgedHandler]))
+        .try_build(default_test_config())
+        .unwrap();
+
+    // Fails by hanging if the barrier is unbounded; the outer timeout is the
+    // real assertion, sized well above the (test-shortened) drain ceiling.
+    let ran = tokio::time::timeout(Duration::from_secs(5), runtime.try_run_async()).await;
+
+    assert!(
+        ran.is_ok(),
+        "shutdown must not block on a handler that never returns"
+    );
+    assert!(ran.unwrap().is_ok(), "bounded drain is a clean shutdown");
 }
 
 static PROBE_IN_FLIGHT: AtomicUsize = AtomicUsize::new(0);
@@ -712,8 +744,7 @@ impl Handler<SlotUpdate, SlotUpdate> for ConcurrencyProbeHandler {
     }
 }
 
-/// Peak concurrent handlers must stay <= jobs, and exceed 1 so the bound is
-/// actually exercised.
+/// Peak must exceed 1, or the bound goes unexercised.
 #[tokio::test]
 async fn edge_concurrency_never_exceeds_jobs() {
     const N: u64 = 200;
@@ -806,9 +837,8 @@ impl<const PRE: u64, const POST: u64> SourceTrait for MockAbortAfterSource<PRE, 
     }
 }
 
-/// Abort is detached-finish: queued work is discarded and shutdown returns
-/// without waiting on in-flight handlers. Asserts only the deterministic
-/// contract (`completed <= PRE`), never cancelled-vs-unfinished timing.
+/// Asserts only the deterministic contract (`completed <= PRE`), never
+/// cancelled-vs-unfinished timing, which would be flaky.
 #[tokio::test]
 async fn edge_abort_discards_queued_and_returns_promptly() {
     const PRE: u64 = 3; // < JOBS, so the producer never blocks on a permit
@@ -883,9 +913,8 @@ impl SourceTrait for MockStopUnderBackpressureSource {
     }
 }
 
-/// Shutdown must stay responsive under backpressure: a stop has to break the
-/// producer out of a permit wait even when the only permit is held by a stuck
-/// handler, rather than blocking until that handler finishes.
+/// A stop must break the producer out of a permit wait even when a stuck
+/// handler holds the only permit.
 #[tokio::test]
 async fn edge_stop_is_responsive_while_waiting_for_a_permit() {
     const HANDLER_SLEEP: Duration = Duration::from_secs(10);
@@ -918,9 +947,7 @@ async fn edge_stop_is_responsive_while_waiting_for_a_permit() {
     assert!(result.is_ok(), "forced shutdown should return cleanly");
 }
 
-/// jobs = 0 must not deadlock: it is clamped to 1, so every update is still
-/// processed. Without the clamp the producer parks forever on a 0-permit
-/// semaphore.
+/// Clamped to 1: a 0-permit semaphore would park the producer forever.
 #[tokio::test]
 async fn edge_zero_jobs_does_not_deadlock() {
     const N: u64 = 10;
