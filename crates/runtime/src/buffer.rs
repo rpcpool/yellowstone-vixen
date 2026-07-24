@@ -291,7 +291,7 @@ impl Buffer {
 
             if !drain {
                 // Before the drop below, so the bridge discards the remaining
-                // queue instead of spawning it. In-flight handlers finish.
+                // queue instead of spawning it.
                 abort.store(true, Ordering::Release);
             }
 
@@ -299,9 +299,9 @@ impl Buffer {
             // permit count the drain barrier waits on.
             drop(tx);
 
-            if drain {
-                drain_in_flight(&sem, jobs, ACTIVE_DRAIN_CEILING).await;
-            }
+            // Waits on both paths: `try_run` drops the runtime once this
+            // returns, cancelling anything still running mid-write.
+            drain_in_flight(&sem, jobs, ACTIVE_DRAIN_CEILING).await;
 
             // Joined off the executor. Reported rather than ignored: a bridge
             // panic otherwise surfaces as an ordinary clean shutdown.

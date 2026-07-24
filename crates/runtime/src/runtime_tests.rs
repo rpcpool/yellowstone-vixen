@@ -982,3 +982,93 @@ async fn edge_zero_jobs_does_not_deadlock() {
         "every update must be processed when jobs is clamped from 0 to 1"
     );
 }
+
+static STOP_INFLIGHT_STARTED: AtomicUsize = AtomicUsize::new(0);
+static STOP_INFLIGHT_FINISHED: AtomicUsize = AtomicUsize::new(0);
+
+/// Counts entry and completion separately, so a cancelled handler is
+/// distinguishable from a completed one.
+#[derive(Debug, Clone, Copy)]
+struct StartFinishHandler {
+    sleep: Duration,
+}
+
+impl Handler<SlotUpdate, SlotUpdate> for StartFinishHandler {
+    async fn handle(&self, _: &SlotUpdate, _: &SlotUpdate) -> crate::HandlerResult<()> {
+        STOP_INFLIGHT_STARTED.fetch_add(1, Ordering::SeqCst);
+        tokio::time::sleep(self.sleep).await;
+        STOP_INFLIGHT_FINISHED.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+}
+
+/// Sends `N` updates, then stops while their handlers are still running.
+#[derive(Debug)]
+struct MockStopWithInFlightSource<const N: u64>;
+
+#[async_trait]
+impl<const N: u64> SourceTrait for MockStopWithInFlightSource<N> {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        for slot in 0..N {
+            let _ = tx.send(Ok(make_slot_update(slot))).await;
+        }
+
+        // Long enough for every handler to be parked in its sleep.
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        signal_receiver_dropped(status_tx);
+
+        // Keeps the channel open, so this is the stop path, not a clean close.
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        drop(tx);
+        Ok(())
+    }
+}
+
+/// A stop must not cut off handlers that already started: `try_run` drops the
+/// runtime once shutdown returns, so anything unfinished dies mid-write.
+#[tokio::test]
+async fn edge_stop_waits_for_in_flight_handlers() {
+    const N: u64 = 2;
+    const HANDLER_SLEEP: Duration = Duration::from_millis(60);
+
+    STOP_INFLIGHT_STARTED.store(0, Ordering::SeqCst);
+    STOP_INFLIGHT_FINISHED.store(0, Ordering::SeqCst);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(usize::try_from(N).unwrap()),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockStopWithInFlightSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [StartFinishHandler {
+            sleep: HANDLER_SLEEP,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    assert!(runtime.try_run_async().await.is_ok());
+
+    let started = STOP_INFLIGHT_STARTED.load(Ordering::SeqCst);
+    let finished = STOP_INFLIGHT_FINISHED.load(Ordering::SeqCst);
+
+    assert_eq!(
+        started,
+        usize::try_from(N).unwrap(),
+        "both handlers must have started before the stop"
+    );
+    assert_eq!(
+        finished, started,
+        "only {finished} of {started} handlers finished before shutdown returned"
+    );
+}
