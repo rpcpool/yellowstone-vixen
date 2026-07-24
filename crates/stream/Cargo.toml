@@ -25,7 +25,6 @@ serde = { workspace = true, features = ["derive"] }
 smallvec = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
-topograph = { workspace = true, features = ["tokio"] }
 tracing = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 yellowstone-vixen-core = { workspace = true }

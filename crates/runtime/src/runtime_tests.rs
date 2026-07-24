@@ -18,8 +18,6 @@ use crate::{
     Error, Handler, Pipeline, Runtime,
 };
 
-// ========== Test helpers ==========
-
 async fn wait_for_runtime_ready() { tokio::time::sleep(Duration::from_millis(50)).await; }
 
 async fn hold_channel_open_briefly() { tokio::time::sleep(Duration::from_millis(10)).await; }
@@ -115,8 +113,6 @@ fn assert_other_error(result: Result<(), Box<Error>>) {
     assert!(matches!(*result.unwrap_err(), Error::Other(_)));
 }
 
-// ========== Channel factory helpers ==========
-
 fn create_status_channel() -> (
     oneshot::Sender<SourceExitStatus>,
     oneshot::Receiver<SourceExitStatus>,
@@ -132,16 +128,12 @@ fn create_update_channel() -> (
     tokio::sync::mpsc::channel(1)
 }
 
-// ========== Action helpers ==========
-
 fn drop_receiver<T>(rx: T) { drop(rx); }
 
 async fn send_update_expecting_failure(tx: &Sender<Result<SubscribeUpdate, tonic::Status>>) {
     let result = tx.send(Ok(make_ping_update())).await;
     assert!(result.is_err(), "Send should fail when receiver dropped");
 }
-
-// ========== Assertion helpers ==========
 
 fn assert_receiver_dropped(status: &SourceExitStatus) {
     assert!(matches!(status, SourceExitStatus::ReceiverDropped));
@@ -194,8 +186,6 @@ fn assert_error_message(status: &SourceExitStatus, expected: &str) {
 fn assert_send_fails<T, E>(result: &Result<T, E>) {
     assert!(result.is_err());
 }
-
-// ========== Mock sources ==========
 
 #[derive(Debug)]
 struct MockStreamEndSource;
@@ -383,8 +373,6 @@ impl Handler<SlotUpdate, SlotUpdate> for SlowSlotHandler {
     }
 }
 
-// ========== Integration tests ==========
-
 #[tokio::test]
 async fn test_stream_end_returns_error() {
     let runtime = Runtime::<MockStreamEndSource>::builder()
@@ -451,8 +439,6 @@ async fn test_completed_source_drains_buffered_updates_before_returning() {
     );
 }
 
-// ========== Unit tests for SourceExitStatus ==========
-
 #[tokio::test]
 async fn test_source_exit_status_receiver_dropped() {
     let (tx, rx) = create_update_channel();
@@ -505,8 +491,6 @@ async fn test_source_exit_status_error_preserves_message() {
     assert_error_message(&status_rx.await.unwrap(), "connection timeout");
 }
 
-// ========== Unit tests for various gRPC error codes ==========
-
 #[tokio::test]
 async fn test_grpc_unavailable_error() {
     let (status_tx, status_rx) = create_status_channel();
@@ -542,8 +526,6 @@ async fn test_grpc_resource_exhausted_error() {
     assert_stream_error_code(&status_rx.await.unwrap(), tonic::Code::ResourceExhausted);
 }
 
-// ========== Edge case tests ==========
-
 #[tokio::test]
 async fn test_status_channel_dropped_before_send() {
     let (status_tx, status_rx) = create_status_channel();
@@ -551,4 +533,542 @@ async fn test_status_channel_dropped_before_send() {
     drop_receiver(status_rx);
 
     assert_send_fails(&status_tx.send(SourceExitStatus::StreamEnded));
+}
+
+// Buffer pool edge cases. Each test uses its own atomic counter so they stay
+// correct under parallel `cargo test`.
+
+static BURST_HANDLED: AtomicUsize = AtomicUsize::new(0);
+static PANIC_SURVIVED: AtomicUsize = AtomicUsize::new(0);
+static SERIAL_HANDLED: AtomicUsize = AtomicUsize::new(0);
+static STOP_RESPONSIVE_HANDLED: AtomicUsize = AtomicUsize::new(0);
+static ZERO_JOBS_HANDLED: AtomicUsize = AtomicUsize::new(0);
+
+/// Emits `N` slot updates then signals `Completed`.
+#[derive(Debug)]
+struct MockBurstSource<const N: u64>;
+
+#[async_trait]
+impl<const N: u64> SourceTrait for MockBurstSource<N> {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+        for slot in 0..N {
+            if tx.send(Ok(make_slot_update(slot))).await.is_err() {
+                signal_receiver_dropped(status_tx);
+                return Ok(());
+            }
+        }
+        signal_completed(status_tx);
+        drop(tx);
+        Ok(())
+    }
+}
+
+/// Bumps a counter; optionally panics on even slots or sleeps to force overlap.
+#[derive(Debug, Clone, Copy)]
+struct CountingHandler {
+    counter: &'static AtomicUsize,
+    sleep: Duration,
+    panic_on_even_slot: bool,
+}
+
+impl Handler<SlotUpdate, SlotUpdate> for CountingHandler {
+    async fn handle(
+        &self,
+        value: &SlotUpdate,
+        _raw_event: &SlotUpdate,
+    ) -> crate::HandlerResult<()> {
+        // assert! form (not `if c { panic!() }`) satisfies clippy::manual_assert.
+        assert!(
+            !(self.panic_on_even_slot && value.slot.is_multiple_of(2)),
+            "intentional handler panic on slot {}",
+            value.slot
+        );
+        if !self.sleep.is_zero() {
+            tokio::time::sleep(self.sleep).await;
+        }
+        self.counter.fetch_add(1, Ordering::Relaxed);
+        Ok(())
+    }
+}
+
+/// Slow handler, to actually exercise backpressure at this burst size.
+#[tokio::test]
+async fn edge_high_volume_drain_processes_every_update() {
+    const N: u64 = 500;
+    BURST_HANDLED.store(0, Ordering::Relaxed);
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &BURST_HANDLED,
+            sleep: Duration::from_millis(1),
+            panic_on_even_slot: false,
+        }]))
+        .try_build(default_test_config())
+        .unwrap();
+
+    assert!(runtime.try_run_async().await.is_ok());
+    assert_eq!(
+        BURST_HANDLED.load(Ordering::Relaxed),
+        usize::try_from(N).unwrap(),
+        "all {N} updates must be handled"
+    );
+}
+
+/// Each handler runs as its own task, so a panic stays isolated and the pool
+/// survives.
+#[tokio::test]
+async fn edge_panicking_handler_does_not_kill_pool() {
+    const N: u64 = 20; // slots 0..20 -> 10 even (panic), 10 odd (survive)
+    PANIC_SURVIVED.store(0, Ordering::Relaxed);
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &PANIC_SURVIVED,
+            sleep: Duration::from_millis(1),
+            panic_on_even_slot: true,
+        }]))
+        .try_build(default_test_config())
+        .unwrap();
+
+    // ~10 "task panicked" lines on stderr are expected.
+    assert!(runtime.try_run_async().await.is_ok());
+    assert_eq!(
+        PANIC_SURVIVED.load(Ordering::Relaxed),
+        10,
+        "odd-slot handlers must all run despite even-slot panics"
+    );
+}
+
+#[tokio::test]
+async fn edge_single_job_serializes_and_drains() {
+    const N: u64 = 25;
+    SERIAL_HANDLED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(1),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &SERIAL_HANDLED,
+            sleep: Duration::from_millis(1),
+            panic_on_even_slot: false,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    assert!(runtime.try_run_async().await.is_ok());
+    assert_eq!(
+        SERIAL_HANDLED.load(Ordering::Relaxed),
+        usize::try_from(N).unwrap(),
+        "jobs=1 must still process every update"
+    );
+}
+
+/// Parks forever, like a handler blocked on a full channel whose reader
+/// stalled. Holds its job permit the whole time.
+#[derive(Debug, Clone, Copy)]
+struct WedgedHandler;
+
+impl Handler<SlotUpdate, SlotUpdate> for WedgedHandler {
+    async fn handle(&self, _: &SlotUpdate, _: &SlotUpdate) -> crate::HandlerResult<()> {
+        std::future::pending::<()>().await;
+        unreachable!("pending never resolves")
+    }
+}
+
+/// Holds its permit forever, so the drain barrier can't acquire them all; must
+/// give up at the ceiling instead of hanging.
+#[tokio::test]
+async fn edge_wedged_handler_does_not_hang_shutdown() {
+    const N: u64 = 2;
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [WedgedHandler]))
+        .try_build(default_test_config())
+        .unwrap();
+
+    // Fails by hanging if the barrier is unbounded; the outer timeout is the
+    // real assertion, sized well above the (test-shortened) drain ceiling.
+    let ran = tokio::time::timeout(Duration::from_secs(5), runtime.try_run_async()).await;
+
+    assert!(
+        ran.is_ok(),
+        "shutdown must not block on a handler that never returns"
+    );
+    assert!(ran.unwrap().is_ok(), "bounded drain is a clean shutdown");
+}
+
+static PROBE_IN_FLIGHT: AtomicUsize = AtomicUsize::new(0);
+static PROBE_PEAK: AtomicUsize = AtomicUsize::new(0);
+static PROBE_HANDLED: AtomicUsize = AtomicUsize::new(0);
+
+/// Tracks how many copies of itself run at once, recording the peak.
+#[derive(Debug, Clone, Copy)]
+struct ConcurrencyProbeHandler {
+    in_flight: &'static AtomicUsize,
+    peak: &'static AtomicUsize,
+    handled: &'static AtomicUsize,
+}
+
+impl Handler<SlotUpdate, SlotUpdate> for ConcurrencyProbeHandler {
+    async fn handle(
+        &self,
+        value: &SlotUpdate,
+        _raw_event: &SlotUpdate,
+    ) -> crate::HandlerResult<()> {
+        // A handler only observes in-flight concurrency; peak in-flight <= jobs
+        // is the observable half of the queued+in-flight <= jobs bound.
+        let current = self.in_flight.fetch_add(1, Ordering::Relaxed) + 1;
+        self.peak.fetch_max(current, Ordering::Relaxed);
+
+        // Vary latency so handlers overlap.
+        tokio::time::sleep(Duration::from_millis(1 + value.slot % 5)).await;
+
+        self.in_flight.fetch_sub(1, Ordering::Relaxed);
+        self.handled.fetch_add(1, Ordering::Relaxed);
+        Ok(())
+    }
+}
+
+/// Peak must exceed 1, or the bound goes unexercised.
+#[tokio::test]
+async fn edge_concurrency_never_exceeds_jobs() {
+    const N: u64 = 200;
+    const JOBS: usize = 4;
+    PROBE_IN_FLIGHT.store(0, Ordering::Relaxed);
+    PROBE_PEAK.store(0, Ordering::Relaxed);
+    PROBE_HANDLED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(JOBS),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [ConcurrencyProbeHandler {
+            in_flight: &PROBE_IN_FLIGHT,
+            peak: &PROBE_PEAK,
+            handled: &PROBE_HANDLED,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    assert!(runtime.try_run_async().await.is_ok());
+
+    let peak = PROBE_PEAK.load(Ordering::Relaxed);
+    assert!(peak <= JOBS, "peak in-flight {peak} exceeded jobs={JOBS}");
+    assert!(
+        peak > 1,
+        "handlers never overlapped (peak {peak}); bound not exercised"
+    );
+    assert_eq!(
+        PROBE_HANDLED.load(Ordering::Relaxed),
+        usize::try_from(N).unwrap(),
+        "every update must still be processed"
+    );
+}
+
+static ABORT_COMPLETED: AtomicUsize = AtomicUsize::new(0);
+
+/// Sends `PRE` updates, a stream error, then `POST` more. The buffer breaks on
+/// the error and drops its receiver, so the `POST` updates are never read.
+/// `PRE` < jobs so the producer never blocks on a permit before the error.
+#[derive(Debug)]
+struct MockAbortAfterSource<const PRE: u64, const POST: u64>;
+
+#[async_trait]
+impl<const PRE: u64, const POST: u64> SourceTrait for MockAbortAfterSource<PRE, POST> {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        _status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+
+        for slot in 0..PRE {
+            if tx.send(Ok(make_slot_update(slot))).await.is_err() {
+                return Ok(());
+            }
+        }
+
+        // Trigger the abort path via a stream error.
+        if tx
+            .send(Err(tonic::Status::unavailable("aborting mid-burst")))
+            .await
+            .is_err()
+        {
+            return Ok(());
+        }
+
+        // Never read: the producer already broke on the error above.
+        for slot in PRE..PRE + POST {
+            if tx.send(Ok(make_slot_update(slot))).await.is_err() {
+                break;
+            }
+        }
+
+        // Keep the source alive briefly so the error surfaces via the buffer's
+        // `wait_for_stop` rather than a status-channel-closed race. The source
+        // task is detached, so this does not delay the shutdown return.
+        tokio::time::sleep(Duration::from_millis(300)).await;
+
+        Ok(())
+    }
+}
+
+/// Asserts only the deterministic contract (`completed <= PRE`), never
+/// cancelled-vs-unfinished timing, which would be flaky.
+#[tokio::test]
+async fn edge_abort_discards_queued_and_returns_promptly() {
+    const PRE: u64 = 3; // < JOBS, so the producer never blocks on a permit
+    const POST: u64 = 100;
+    const JOBS: usize = 4;
+    const HANDLER_SLEEP: Duration = Duration::from_secs(2);
+    const ABORT_BUDGET: Duration = Duration::from_millis(1000);
+
+    ABORT_COMPLETED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(JOBS),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockAbortAfterSource<PRE, POST>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &ABORT_COMPLETED,
+            sleep: HANDLER_SLEEP,
+            panic_on_even_slot: false,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    // Must return within budget, not block on the 2s handlers.
+    let result = tokio::time::timeout(ABORT_BUDGET, runtime.try_run_async())
+        .await
+        .expect("abort must return promptly, not wait for in-flight handlers");
+
+    assert!(result.is_err(), "a stream error must surface as an error");
+
+    // Only the PRE pre-error updates can ever run.
+    let completed = ABORT_COMPLETED.load(Ordering::Relaxed);
+    assert!(
+        completed <= usize::try_from(PRE).unwrap(),
+        ">= {POST} post-error updates must be discarded; {completed} ran"
+    );
+}
+
+/// Sends two updates then a receiver-dropped signal to force shutdown. With
+/// jobs=1, the first update's handler holds the only permit, so the producer
+/// parks waiting for a permit for the second one when the stop arrives.
+#[derive(Debug)]
+struct MockStopUnderBackpressureSource;
+
+#[async_trait]
+impl SourceTrait for MockStopUnderBackpressureSource {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+
+        // Occupies the single permit for far longer than the shutdown budget.
+        let _ = tx.send(Ok(make_slot_update(0))).await;
+        // Makes the producer park on the permit acquire.
+        let _ = tx.send(Ok(make_slot_update(1))).await;
+
+        // Give the producer time to dequeue update 1 and park, then force stop.
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        signal_receiver_dropped(status_tx);
+        drop(tx);
+        Ok(())
+    }
+}
+
+/// A stop must break the producer out of a permit wait even when a stuck
+/// handler holds the only permit.
+#[tokio::test]
+async fn edge_stop_is_responsive_while_waiting_for_a_permit() {
+    const HANDLER_SLEEP: Duration = Duration::from_secs(10);
+    const SHUTDOWN_BUDGET: Duration = Duration::from_secs(3);
+
+    STOP_RESPONSIVE_HANDLED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(1),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockStopUnderBackpressureSource>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &STOP_RESPONSIVE_HANDLED,
+            sleep: HANDLER_SLEEP,
+            panic_on_even_slot: false,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    // Must return well before the 10s handler frees the permit.
+    let result = tokio::time::timeout(SHUTDOWN_BUDGET, runtime.try_run_async())
+        .await
+        .expect("stop must be honored while the producer is waiting for a permit");
+
+    assert!(result.is_ok(), "forced shutdown should return cleanly");
+}
+
+/// Clamped to 1: a 0-permit semaphore would park the producer forever.
+#[tokio::test]
+async fn edge_zero_jobs_does_not_deadlock() {
+    const N: u64 = 10;
+    ZERO_JOBS_HANDLED.store(0, Ordering::Relaxed);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(0),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockBurstSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [CountingHandler {
+            counter: &ZERO_JOBS_HANDLED,
+            sleep: Duration::from_millis(1),
+            panic_on_even_slot: false,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    // Bounded so a 0-permit deadlock regression fails instead of hanging.
+    let result = tokio::time::timeout(Duration::from_secs(5), runtime.try_run_async())
+        .await
+        .expect("jobs=0 must not deadlock");
+
+    assert!(result.is_ok());
+    assert_eq!(
+        ZERO_JOBS_HANDLED.load(Ordering::Relaxed),
+        usize::try_from(N).unwrap(),
+        "every update must be processed when jobs is clamped from 0 to 1"
+    );
+}
+
+static STOP_INFLIGHT_STARTED: AtomicUsize = AtomicUsize::new(0);
+static STOP_INFLIGHT_FINISHED: AtomicUsize = AtomicUsize::new(0);
+
+/// Counts entry and completion separately, so a cancelled handler is
+/// distinguishable from a completed one.
+#[derive(Debug, Clone, Copy)]
+struct StartFinishHandler {
+    sleep: Duration,
+}
+
+impl Handler<SlotUpdate, SlotUpdate> for StartFinishHandler {
+    async fn handle(&self, _: &SlotUpdate, _: &SlotUpdate) -> crate::HandlerResult<()> {
+        STOP_INFLIGHT_STARTED.fetch_add(1, Ordering::SeqCst);
+        tokio::time::sleep(self.sleep).await;
+        STOP_INFLIGHT_FINISHED.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+}
+
+/// Sends `N` updates, then stops while their handlers are still running.
+#[derive(Debug)]
+struct MockStopWithInFlightSource<const N: u64>;
+
+#[async_trait]
+impl<const N: u64> SourceTrait for MockStopWithInFlightSource<N> {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        for slot in 0..N {
+            let _ = tx.send(Ok(make_slot_update(slot))).await;
+        }
+
+        // Long enough for every handler to be parked in its sleep.
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        signal_receiver_dropped(status_tx);
+
+        // Keeps the channel open, so this is the stop path, not a clean close.
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        drop(tx);
+        Ok(())
+    }
+}
+
+/// A stop must not cut off handlers that already started: `try_run` drops the
+/// runtime once shutdown returns, so anything unfinished dies mid-write.
+#[tokio::test]
+async fn edge_stop_waits_for_in_flight_handlers() {
+    const N: u64 = 2;
+    const HANDLER_SLEEP: Duration = Duration::from_millis(60);
+
+    STOP_INFLIGHT_STARTED.store(0, Ordering::SeqCst);
+    STOP_INFLIGHT_FINISHED.store(0, Ordering::SeqCst);
+
+    let config = VixenConfig {
+        source: NullConfig,
+        buffer: BufferConfig {
+            jobs: Some(usize::try_from(N).unwrap()),
+            ..BufferConfig::default()
+        },
+    };
+
+    let runtime = Runtime::<MockStopWithInFlightSource<N>>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [StartFinishHandler {
+            sleep: HANDLER_SLEEP,
+        }]))
+        .try_build(config)
+        .unwrap();
+
+    assert!(runtime.try_run_async().await.is_ok());
+
+    let started = STOP_INFLIGHT_STARTED.load(Ordering::SeqCst);
+    let finished = STOP_INFLIGHT_FINISHED.load(Ordering::SeqCst);
+
+    assert_eq!(
+        started,
+        usize::try_from(N).unwrap(),
+        "both handlers must have started before the stop"
+    );
+    assert_eq!(
+        finished, started,
+        "only {finished} of {started} handlers finished before shutdown returned"
+    );
 }
