@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-//! Protobuf definitions used by the `yellowstone-vixen` family of crates.
+//! Protobuf definitions used by the `shipstern` family of crates.
 
 pub extern crate prost;
 #[cfg(feature = "stream")]
@@ -11,17 +11,17 @@ pub extern crate tonic;
 #[cfg(feature = "stream")]
 pub extern crate tonic_reflection;
 
-mod vixen {
+mod shipstern {
     #[cfg(feature = "parser")]
     pub mod parser {
         #![allow(missing_docs)]
 
         pub mod token {
             #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.token.rs"));
+            include!(concat!(env!("OUT_DIR"), "/shipstern.parser.token.rs"));
 
             pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.token.bin"));
+                include_bytes!(concat!(env!("OUT_DIR"), "/shipstern.parser.token.bin"));
 
             /// Raw `.proto` schema text for the token parser.
             pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/token.proto");
@@ -38,10 +38,10 @@ mod vixen {
 
         pub mod bpf_loader {
             #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.rs"));
+            include!(concat!(env!("OUT_DIR"), "/shipstern.parser.bpf_loader.rs"));
 
             pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.bin"));
+                include_bytes!(concat!(env!("OUT_DIR"), "/shipstern.parser.bpf_loader.bin"));
 
             /// Raw `.proto` schema text for the BPF loader parser.
             pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/bpf_loader.proto");
@@ -60,12 +60,12 @@ mod vixen {
             #![allow(clippy::all)]
             include!(concat!(
                 env!("OUT_DIR"),
-                "/vixen.parser.token_extensions.rs"
+                "/shipstern.parser.token_extensions.rs"
             ));
 
             pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(
                 env!("OUT_DIR"),
-                "/vixen.parser.token_extensions.bin"
+                "/shipstern.parser.token_extensions.bin"
             ));
 
             /// Self-contained `.proto` schema text for the token extensions
@@ -92,17 +92,17 @@ mod vixen {
         #![allow(missing_docs)]
 
         //! Protobuf definitions for the `stream` feature of the
-        //! `yellowstone-vixen` crate.
+        //! `shipstern` crate.
 
-        tonic::include_proto!("vixen.stream");
+        tonic::include_proto!("shipstern.stream");
 
-        /// Compiled protobuf file descriptor set for the `vixen.stream`
+        /// Compiled protobuf file descriptor set for the `shipstern.stream`
         /// package.
         pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("stream_descriptor");
     }
 }
 
-pub use vixen::*;
+pub use shipstern::*;
 
 ///
 /// Non-regression tests to ensure that if token.proto or token_extensions.proto are updated, the dispatch message indices are also updated accordingly.

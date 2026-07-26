@@ -1,8 +1,8 @@
 [package]
-name = "yellowstone-vixen-yellowstone-fumarole-source"
+name = "shipstern-yellowstone-fumarole-source"
 version.workspace = true
 edition.workspace = true
-description = "Yellowstone Fumarole source for the Yellowstone Vixen"
+description = "Yellowstone Fumarole source for Shipstern"
 repository.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -14,8 +14,8 @@ async-trait = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
-yellowstone-vixen = { workspace = true }
-yellowstone-vixen-core = { workspace = true }
+shipstern = { workspace = true }
+shipstern-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-fumarole-client = { workspace = true, features = [
   "prometheus",

@@ -1,20 +1,20 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use tokio::sync::broadcast;
-use yellowstone_vixen::{
+use shipstern::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
     sources::SourceTrait,
     util,
 };
-use yellowstone_vixen_core::{
+use shipstern_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, Parser, ProgramParser, Pubkey,
     TransactionUpdate,
 };
-use yellowstone_vixen_proto::{
+use shipstern_proto::{
     prost::{Message, Name},
     prost_types::Any,
 };
+use tokio::sync::broadcast;
 
 use super::{
     config::StreamConfig,
@@ -22,15 +22,15 @@ use super::{
     Server,
 };
 
-/// An error thrown by the Vixen stream server builder.
+/// An error thrown by the Shipstern stream server builder.
 #[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
     /// Two program parsers were registered with the same program ID.
     #[error("Parser with duplicate ID {1:?} and duplicate program ID {0} registered")]
     DuplicateId(Pubkey, String),
-    /// An error occurred while building the underlying Vixen runtime.
-    #[error("Error building Vixen runtime")]
-    Runtime(#[from] yellowstone_vixen::builder::BuilderError),
+    /// An error occurred while building the underlying Shipstern runtime.
+    #[error("Error building Shipstern runtime")]
+    Runtime(#[from] shipstern::builder::BuilderError),
 }
 
 /// Marker type for the [`StreamBuilder`] type.
@@ -232,6 +232,9 @@ impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
     /// occurs.
     #[inline]
     pub fn build(self, config: StreamConfig<S::Config>) -> Server<'a, S> {
-        util::handle_fatal_msg(self.try_build(config), "Error building Vixen stream server")
+        util::handle_fatal_msg(
+            self.try_build(config),
+            "Error building Shipstern stream server",
+        )
     }
 }

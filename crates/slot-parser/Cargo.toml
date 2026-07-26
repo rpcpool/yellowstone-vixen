@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-slot-parser"
-description = "Vixen slot parser."
+name = "shipstern-slot-parser"
+description = "Shipstern slot parser."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,10 +11,10 @@ readme = "./../../README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yellowstone-vixen-core = { workspace = true }
+shipstern-core = { workspace = true }
 
 [dev-dependencies]
-yellowstone-vixen-mock = { workspace = true }
+shipstern-mock = { workspace = true }
 tokio.workspace = true
 
 [features]

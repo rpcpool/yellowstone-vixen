@@ -9,7 +9,7 @@
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-//! Vixen provides a simple API for requesting, parsing, and consuming data
+//! Shipstern provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
 use std::marker::PhantomData;
@@ -24,9 +24,9 @@ use crate::sources::SourceExitStatus;
 pub extern crate prometheus;
 #[cfg(feature = "prometheus")]
 pub mod metrics;
+pub extern crate shipstern_core;
 pub extern crate thiserror;
-pub extern crate yellowstone_vixen_core as vixen_core;
-pub use vixen_core::bs58;
+pub use shipstern_core::bs58;
 
 mod buffer;
 pub mod builder;
@@ -36,19 +36,19 @@ pub mod instruction;
 
 pub mod sources;
 
-/// Utility functions for the Vixen runtime.
+/// Utility functions for the Shipstern runtime.
 pub mod util;
 
 pub mod filter_pipeline;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
+pub use shipstern_core::CommitmentLevel;
 pub use util::*;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
-pub use yellowstone_vixen_core::CommitmentLevel;
 
 use crate::{builder::RuntimeBuilder, sources::SourceTrait};
 
-/// An error thrown by the Vixen runtime.
+/// An error thrown by the Shipstern runtime.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// A system I/O error.
@@ -77,7 +77,7 @@ pub enum Error {
     Other(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
 
-/// The main runtime for Vixen.
+/// The main runtime for Shipstern.
 #[derive(Debug)]
 pub struct Runtime<S: SourceTrait> {
     buffer: BufferConfig,
@@ -93,20 +93,20 @@ impl<S: SourceTrait> Runtime<S> {
     pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
 }
 impl<S: SourceTrait> Runtime<S> {
-    /// Create a new Tokio runtime and run the Vixen runtime within it,
+    /// Create a new Tokio runtime and run the Shipstern runtime within it,
     /// terminating the current process if the runtime crashes.
     ///
     /// For error handling, use the recoverable variant [`Self::try_run`].
     ///
     /// If you want to provide your own tokio Runtime because you need to run
-    /// async code outside of the Vixen runtime, use the [`Self::run_async`]
+    /// async code outside of the Shipstern runtime, use the [`Self::run_async`]
     /// method.
     ///
     /// # Example
     ///
     /// ```ignore
-    /// use yellowstone_vixen::Pipeline;
-    /// use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
+    /// use shipstern::Pipeline;
+    /// use shipstern_spl_token_parser::{AccountParser, InstructionParser};
     ///
     /// // MyHandler is a handler that implements the Handler trait
     /// // NOTE: The main function is not async
@@ -132,19 +132,19 @@ impl<S: SourceTrait> Runtime<S> {
             .block_on(self.try_run_async())
     }
 
-    /// Run the Vixen runtime asynchronously, terminating the current process
+    /// Run the Shipstern runtime asynchronously, terminating the current process
     /// if the runtime crashes.
     ///
     /// For error handling, use the recoverable variant [`Self::try_run_async`].
     ///
-    /// If you don't need to run any async code outside the Vixen runtime, you
+    /// If you don't need to run any async code outside the Shipstern runtime, you
     /// can use the [`Self::run`] method instead, which takes care of creating
     /// a tokio Runtime for you.
     ///
     /// # Example
     ///
     /// ```ignore
-    /// use yellowstone_vixen_parser::{
+    /// use shipstern_parser::{
     ///     token_extension_program::{
     ///         AccountParser as TokenExtensionProgramAccParser,
     ///         InstructionParser as TokenExtensionProgramIxParser,

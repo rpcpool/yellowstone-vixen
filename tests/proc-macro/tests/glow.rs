@@ -7,10 +7,10 @@
 // This IDL has no instructions — only accounts — so only AccountParser is
 // exercised here.
 
-use vixen_test_utils::check_protobuf_format;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::check_protobuf_format;
 
-include_vixen_parser!("../idls/glow.json");
+include_shipstern_parser!("../idls/glow.json");
 
 #[test]
 fn check_protobuf_schema() {

@@ -1,18 +1,18 @@
 [package]
-name = "yellowstone-vixen-example-filtered-pipeline"
+name = "shipstern-example-filtered-pipeline"
 description = "Example of filtered pipeline"
 publish = false
 edition.workspace = true
 license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+repository = "https://github.com/rpcpool/shipstern"
 
 [dependencies]
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 toml = { workspace = true }
 tracing = { workspace = true }
 rustls = { workspace = true }
-yellowstone-vixen = { workspace = true }
-yellowstone-vixen-spl-token-parser = { workspace = true }
+shipstern = { workspace = true }
+shipstern-spl-token-parser = { workspace = true }
 
-yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
-yellowstone-vixen-solana-rpc-source = { workspace = true }
+shipstern-yellowstone-grpc-source = { workspace = true }
+shipstern-solana-rpc-source = { workspace = true }

@@ -1,6 +1,6 @@
 # Proc-macro integration tests
 
-Integration tests for `yellowstone-vixen-proc-macro`. Each test module loads an IDL via `include_vixen_parser!` and exercises the generated code.
+Integration tests for `shipstern-proc-macro`. Each test module loads an IDL via `include_shipstern_parser!` and exercises the generated code.
 
 | Module | IDL | What it covers |
 |---|---|---|

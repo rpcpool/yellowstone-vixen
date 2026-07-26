@@ -1,17 +1,17 @@
 use std::borrow::Cow;
 
+use shipstern_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
+use shipstern_proc_macro::shipstern;
 use solana_program_error::ProgramError;
 use solana_program_pack::Pack;
 use spl_token_2022::{
     extension::{BaseStateWithExtensions, StateWithExtensions},
     state::{Account as SplAccount, AccountState, Mint as SplMint, Multisig as SplMultisig},
 };
-use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
-use yellowstone_vixen_proc_macro::vixen;
 
 use crate::Pubkey;
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct TokenExtensionState {
     #[hint(oneof = "account::Account", tags = "1, 2, 3")]
@@ -19,9 +19,9 @@ pub struct TokenExtensionState {
 }
 
 pub mod account {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Account {
         ExtendedTokenAccount(super::ExtendedTokenAccount),
@@ -30,7 +30,7 @@ pub mod account {
     }
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ExtensionData {
     /// `spl_token_2022::extension::ExtensionType` as i32
@@ -40,21 +40,21 @@ pub struct ExtensionData {
     pub data: Vec<u8>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ExtendedMint {
     pub base_account: Option<Mint>,
     pub extensions: Vec<ExtensionData>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ExtendedTokenAccount {
     pub base_account: Option<Account>,
     pub extensions: Vec<ExtensionData>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Mint {
     pub mint_authority: Option<Pubkey>,
@@ -64,7 +64,7 @@ pub struct Mint {
     pub freeze_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Account {
     pub mint: Pubkey,
@@ -79,7 +79,7 @@ pub struct Account {
     pub close_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Multisig {
     pub m: u32,
@@ -267,15 +267,15 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
+    fn program_id(&self) -> shipstern_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(test)]
 mod tests {
     use core::panic;
 
-    use yellowstone_vixen_core::Parser;
-    use yellowstone_vixen_mock::account_fixture;
+    use shipstern_core::Parser;
+    use shipstern_mock::account_fixture;
 
     use super::{account, AccountParser};
 

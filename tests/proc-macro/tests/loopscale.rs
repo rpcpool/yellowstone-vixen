@@ -6,18 +6,25 @@
 // retain unresolved `Message("PodU32CBPS")` references, causing E0412
 // ("cannot find type PodU32CBPS in this scope").
 
-use vixen_test_utils::check_protobuf_format;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::check_protobuf_format;
 
-include_vixen_parser!("../idls/loopscale.json");
+include_shipstern_parser!("../idls/loopscale.json");
 
 #[test]
 fn check_protobuf_schema() {
     check_protobuf_format(loopscale::PROTOBUF_SCHEMA);
 
-    insta::assert_snapshot!(vixen_test_utils::normalize_protobuf_schema_for_snapshot(
-        loopscale::PROTOBUF_SCHEMA
-    ));
+    #[cfg(feature = "program-events")]
+    insta::assert_snapshot!(
+        "check_protobuf_schema_program_events",
+        shipstern_test_utils::normalize_protobuf_schema_for_snapshot(loopscale::PROTOBUF_SCHEMA)
+    );
+
+    #[cfg(not(feature = "program-events"))]
+    insta::assert_snapshot!(
+        shipstern_test_utils::normalize_protobuf_schema_for_snapshot(loopscale::PROTOBUF_SCHEMA)
+    );
 }
 
 #[test]

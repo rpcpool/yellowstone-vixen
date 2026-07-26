@@ -18,34 +18,34 @@ serde = ["dep:serde"]
 # See tests/proc-macro/Cargo.toml for an explanation of why parser crates
 # must appear here as [dependencies] with `features = ["proto"]`.
 [dependencies]
-yellowstone-vixen-spl-token-parser = { path = "../../crates/spl-token-parser", features = [
+shipstern-spl-token-parser = { path = "../../crates/spl-token-parser", features = [
     "proto",
 ] }
-yellowstone-vixen-spl-token-extensions-parser = { path = "../../crates/spl-token-extensions-parser", features = [
+shipstern-spl-token-extensions-parser = { path = "../../crates/spl-token-extensions-parser", features = [
     "proto",
 ] }
-yellowstone-vixen-block-meta-parser = { path = "../../crates/block-meta-parser", features = [
+shipstern-block-meta-parser = { path = "../../crates/block-meta-parser", features = [
     "proto",
 ] }
-yellowstone-vixen-stake-pool-parser = { path = "../../crates/stake-pool-parser", features = [
+shipstern-stake-pool-parser = { path = "../../crates/stake-pool-parser", features = [
     "proto",
 ] }
 
 serde = { version = "^1.0.198", optional = true }
 
 [dev-dependencies]
-yellowstone-vixen-proc-macro = { path = "../../crates/proc-macro", features = [
+shipstern-proc-macro = { path = "../../crates/proc-macro", features = [
     "proto",
     "program-events",
 ] }
-yellowstone-vixen-mock = { path = "../../crates/mock" }
-vixen-test-utils = { path = "../common" }
+shipstern-mock = { path = "../../crates/mock" }
+shipstern-test-utils = { path = "../common" }
 
 # required by macro expansion
-yellowstone-vixen-parser = { path = "../../crates/parser" }
-yellowstone-vixen-core = { path = "../../crates/core", features = ["proto"] }
-yellowstone-vixen = { path = "../../crates/runtime" }
-yellowstone-vixen-kafka-sink = { path = "../../crates/kafka-sink" }
+shipstern-parser = { path = "../../crates/parser" }
+shipstern-core = { path = "../../crates/core", features = ["proto"] }
+shipstern = { path = "../../crates/runtime" }
+shipstern-kafka-sink = { path = "../../crates/kafka-sink" }
 
 base64 = "^0.22.1"
 hex = "^0.4.3"

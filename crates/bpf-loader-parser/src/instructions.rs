@@ -1,23 +1,23 @@
-pub use yellowstone_vixen_core::Pubkey;
-use yellowstone_vixen_proc_macro::vixen;
+pub use shipstern_core::Pubkey;
+use shipstern_proc_macro::shipstern;
 
 // ── Instruction accounts ───────────────────────────────────────────
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeBufferAccounts {
     pub buffer: Pubkey,
     pub authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WriteAccounts {
     pub buffer: Pubkey,
     pub authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DeployAccounts {
     pub payer: Pubkey,
@@ -30,7 +30,7 @@ pub struct DeployAccounts {
     pub authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpgradeAccounts {
     pub program_data: Pubkey,
@@ -42,7 +42,7 @@ pub struct UpgradeAccounts {
     pub authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetAuthorityAccounts {
     pub account: Pubkey,
@@ -50,7 +50,7 @@ pub struct SetAuthorityAccounts {
     pub new_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CloseAccounts {
     pub close_target: Pubkey,
@@ -59,7 +59,7 @@ pub struct CloseAccounts {
     pub program: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ExtendProgramAccounts {
     pub program_data: Pubkey,
@@ -68,7 +68,7 @@ pub struct ExtendProgramAccounts {
     pub payer: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetAuthorityCheckedAccounts {
     pub account: Pubkey,
@@ -78,20 +78,20 @@ pub struct SetAuthorityCheckedAccounts {
 
 // ── Instruction args ───────────────────────────────────────────────
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WriteArgs {
     pub offset: u32,
     pub bytes: Vec<u8>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DeployArgs {
     pub max_data_len: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ExtendProgramArgs {
     pub additional_bytes: u32,
@@ -100,60 +100,60 @@ pub struct ExtendProgramArgs {
 // ── Instruction wrappers ───────────────────────────────────────────
 
 pub mod instruction {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct InitializeBuffer {
         pub accounts: Option<super::InitializeBufferAccounts>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Write {
         pub accounts: Option<super::WriteAccounts>,
         pub args: Option<super::WriteArgs>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Deploy {
         pub accounts: Option<super::DeployAccounts>,
         pub args: Option<super::DeployArgs>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Upgrade {
         pub accounts: Option<super::UpgradeAccounts>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct SetAuthority {
         pub accounts: Option<super::SetAuthorityAccounts>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Close {
         pub accounts: Option<super::CloseAccounts>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct ExtendProgram {
         pub accounts: Option<super::ExtendProgramAccounts>,
         pub args: Option<super::ExtendProgramArgs>,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct SetAuthorityChecked {
         pub accounts: Option<super::SetAuthorityCheckedAccounts>,
     }
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
         InitializeBuffer(InitializeBuffer),
@@ -167,7 +167,7 @@ pub mod instruction {
     }
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct BpfLoaderProgram {
     #[hint(oneof = "instruction::Instruction", tags = "1, 2, 3, 4, 5, 6, 7, 8")]

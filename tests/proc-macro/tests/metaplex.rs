@@ -6,18 +6,20 @@
 // This IDL has no instructions — only accounts — so only AccountParser is
 // exercised here.
 
-use vixen_test_utils::check_protobuf_format;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::check_protobuf_format;
 
-include_vixen_parser!("../idls/metaplex.json");
+include_shipstern_parser!("../idls/metaplex.json");
 
 #[test]
 fn check_protobuf_schema() {
     check_protobuf_format(token_metadata::PROTOBUF_SCHEMA);
 
-    insta::assert_snapshot!(vixen_test_utils::normalize_protobuf_schema_for_snapshot(
-        token_metadata::PROTOBUF_SCHEMA
-    ));
+    insta::assert_snapshot!(
+        shipstern_test_utils::normalize_protobuf_schema_for_snapshot(
+            token_metadata::PROTOBUF_SCHEMA
+        )
+    );
 }
 
 #[test]

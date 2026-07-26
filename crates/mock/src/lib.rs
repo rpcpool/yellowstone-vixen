@@ -22,6 +22,11 @@ use std::{
 pub use futures;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use shipstern_core::{
+    instruction::{InstructionShared, InstructionUpdate},
+    log_messages::split_logs_by_outer_ix,
+    KeyBytes, ProgramParser,
+};
 use solana_client::{nonblocking::rpc_client::RpcClient, rpc_request::RpcRequest};
 use solana_rpc_client_api::client_error::Result as ClientResult;
 use solana_sdk::{account::Account, bs58, pubkey::Pubkey, signature::Signature};
@@ -31,11 +36,6 @@ use solana_transaction_status::{
     UiInnerInstructions, UiInstruction, UiMessage,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
-use yellowstone_vixen_core::{
-    instruction::{InstructionShared, InstructionUpdate},
-    log_messages::split_logs_by_outer_ix,
-    KeyBytes, ProgramParser,
-};
 
 const DEFAULT_RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
 
@@ -416,7 +416,7 @@ macro_rules! run_ix_parse {
             Ok(v) => Some(v),
 
             // Ignore filtered instructions, but panic on actual errors
-            Err(yellowstone_vixen_core::ParseError::Filtered) => None,
+            Err(shipstern_core::ParseError::Filtered) => None,
             Err(e) => panic!("parse error: {e:?}"),
         }
     };

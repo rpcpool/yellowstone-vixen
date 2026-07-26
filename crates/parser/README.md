@@ -1,12 +1,12 @@
-# Yellowstone Vixen Parser
+# Shipstern Parser
 
-This crate provides several account parsers, such as Token and TokenExtension. These parsers can be imported from this crate and used within yellowstone-vixen.
+This crate provides several account parsers, such as Token and TokenExtension. These parsers can be imported from this crate and used within shipstern.
 
 ## Installation
 
 ```bash
 
-cargo add yellowstone-vixen-parser
+cargo add shipstern-parser
 
 ```
 
@@ -18,8 +18,8 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, Pipeline};
-use yellowstone_vixen_parser::{
+use shipstern::Pipeline;
+use shipstern_parser::{
     token_extension_program::{
         AccountParser as TokenExtensionProgramAccParser,
         InstructionParser as TokenExtensionProgramIxParser,
@@ -39,12 +39,12 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::Runtime::builder()
+    shipstern::Runtime::builder()
         .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
         .account(Pipeline::new(TokenProgramAccParser, [Handler]))
         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
         .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
-        .metrics(vixen::metrics::Prometheus)
+        .metrics(shipstern::metrics::Prometheus)
         .build(config)
         .run();
 }

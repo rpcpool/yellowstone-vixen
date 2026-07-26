@@ -1,6 +1,6 @@
-use yellowstone_vixen_bpf_loader_parser::{account, AccountParser, BpfLoaderState};
-use yellowstone_vixen_core::{Parser, Pubkey};
-use yellowstone_vixen_mock::account_fixture;
+use shipstern_bpf_loader_parser::{account, AccountParser, BpfLoaderState};
+use shipstern_core::{Parser, Pubkey};
+use shipstern_mock::account_fixture;
 
 #[tokio::test]
 async fn parse_program_data_account() {

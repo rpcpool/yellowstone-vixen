@@ -1,11 +1,11 @@
-use yellowstone_vixen_core::instruction::InstructionUpdate;
-use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result};
-use yellowstone_vixen_proc_macro::vixen;
+use shipstern_core::instruction::InstructionUpdate;
+use shipstern_parser::{check_min_accounts_req, Error, Result};
+use shipstern_proc_macro::shipstern;
 
 use super::extension::decode_extension_ix_type;
 use crate::Pubkey;
 
-#[vixen(enumeration)]
+#[shipstern(enumeration)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum ExtensionWithCommonInstruction {
@@ -43,13 +43,13 @@ impl ExtensionWithCommonInstruction {
     }
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ExtInitializeAccounts {
     pub mint: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateAccounts {
     pub mint: Pubkey,
@@ -57,7 +57,7 @@ pub struct UpdateAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct EnableAccounts {
     pub account: Pubkey,
@@ -65,7 +65,7 @@ pub struct EnableAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DisableAccounts {
     pub account: Pubkey,
@@ -73,7 +73,7 @@ pub struct DisableAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CommonExtensionInstructions {
     #[hint(enumeration = "ExtensionWithCommonInstruction")]
@@ -87,33 +87,33 @@ pub struct CommonExtensionInstructions {
 }
 
 pub mod common_extension_instructions {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Initialize {
         pub accounts: super::ExtInitializeAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Update {
         pub accounts: super::UpdateAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Enable {
         pub accounts: super::EnableAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Disable {
         pub accounts: super::DisableAccounts,
     }
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
         Initialize(Initialize),

@@ -10,9 +10,9 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use yellowstone_vixen::Pipeline;
-use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
-use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
+use shipstern::Pipeline;
+use shipstern_spl_token_parser::{AccountParser, InstructionParser};
+use shipstern_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -24,8 +24,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
-    async fn handle(&self, value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> {
+impl<V: std::fmt::Debug + Sync, R: Sync> shipstern::Handler<V, R> for Logger {
+    async fn handle(&self, value: &V, _raw: &R) -> shipstern::HandlerResult<()> {
         println!("{value:?}");
         Ok(())
     }
@@ -41,7 +41,7 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    yellowstone_vixen::Runtime::<YellowstoneFumaroleSource>::builder()
+    shipstern::Runtime::<YellowstoneFumaroleSource>::builder()
         .instruction(Pipeline::new(InstructionParser, [Logger]))
         .account(Pipeline::new(AccountParser, [Logger]))
         .build(config)

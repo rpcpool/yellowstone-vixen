@@ -379,7 +379,7 @@ fn extract_discriminator_info(
 /// Example output:
 /// ```rust, ignore
 /// pub fn parse_swap_base_in(
-///     accounts: &[::yellowstone_vixen_core::Pubkey],
+///     accounts: &[::shipstern_core::Pubkey],
 ///     data: &[u8],
 /// ) -> ParseResult<Instructions> {
 ///     Ok(Instructions {
@@ -418,7 +418,7 @@ fn single_instruction_helper_fn(
             if account.is_optional {
                 quote! {
                     #field_name: accounts.get(#idx).and_then(|a| {
-                        if a == &::yellowstone_vixen_core::Pubkey::new(PROGRAM_ID) {
+                        if a == &::shipstern_core::Pubkey::new(PROGRAM_ID) {
                             None
                         } else {
                             Some(*a)
@@ -462,7 +462,7 @@ fn single_instruction_helper_fn(
 
     Some(quote! {
         pub fn #fn_ident(
-            accounts: &[::yellowstone_vixen_core::Pubkey],
+            accounts: &[::shipstern_core::Pubkey],
             data: &[u8],
         ) -> ParseResult<#wrapper_ident> {
             Ok(#wrapper_ident {
@@ -592,7 +592,7 @@ pub fn instruction_parser(
     program_name_camel: &CamelCaseString,
     instructions: &[codama_nodes::InstructionNode],
     has_events: bool,
-    cpi_event_config: &super::vixen_parser::CpiEventConfig,
+    cpi_event_config: &super::shipstern_parser::CpiEventConfig,
 ) -> TokenStream {
     let program_name = crate::utils::to_pascal_case(program_name_camel);
 
@@ -644,7 +644,7 @@ pub fn instruction_parser(
             pub struct InstructionParser;
 
             impl Parser for InstructionParser {
-                type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
+                type Input = ::shipstern_core::instruction::InstructionUpdate;
                 type Output = #output_ident;
 
                 fn id(&self) -> std::borrow::Cow<'static, str> {
@@ -660,7 +660,7 @@ pub fn instruction_parser(
 
                 async fn parse(
                     &self,
-                    ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
+                    ix_update: &::shipstern_core::instruction::InstructionUpdate,
                 ) -> ParseResult<Self::Output> {
                     if *ix_update.program != PROGRAM_ID {
                         return Err(ParseError::Filtered);
@@ -711,10 +711,10 @@ pub fn instruction_parser(
                 }
             }
 
-            impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
+            impl ::shipstern_core::ProgramParser for InstructionParser {
                 #[inline]
-                fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-                    yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
+                fn program_id(&self) -> shipstern_core::Pubkey {
+                    shipstern_core::Pubkey::new(PROGRAM_ID)
                 }
             }
         }
@@ -724,7 +724,7 @@ pub fn instruction_parser(
             pub struct InstructionParser;
 
             impl Parser for InstructionParser {
-                type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
+                type Input = ::shipstern_core::instruction::InstructionUpdate;
                 type Output = #wrapper_ident;
 
                 fn id(&self) -> std::borrow::Cow<'static, str> {
@@ -740,7 +740,7 @@ pub fn instruction_parser(
 
                 async fn parse(
                     &self,
-                    ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
+                    ix_update: &::shipstern_core::instruction::InstructionUpdate,
                 ) -> ParseResult<Self::Output> {
                     if *ix_update.program != PROGRAM_ID {
                         return Err(ParseError::Filtered);
@@ -765,10 +765,10 @@ pub fn instruction_parser(
                 }
             }
 
-            impl ::yellowstone_vixen_core::ProgramParser for InstructionParser {
+            impl ::shipstern_core::ProgramParser for InstructionParser {
                 #[inline]
-                fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-                    yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
+                fn program_id(&self) -> shipstern_core::Pubkey {
+                    shipstern_core::Pubkey::new(PROGRAM_ID)
                 }
             }
         }
@@ -793,9 +793,9 @@ pub fn instruction_parser(
         /// non-ambiguous instructions while overriding specific ones.
         ///
         pub fn resolve_instruction_default(
-            accounts: &[::yellowstone_vixen_core::Pubkey],
+            accounts: &[::shipstern_core::Pubkey],
             data: &[u8],
-            path: &::yellowstone_vixen_core::instruction::Path,
+            path: &::shipstern_core::instruction::Path,
         ) -> ParseResult<#wrapper_ident> {
             #(#match_arms)*
 
@@ -812,14 +812,14 @@ pub fn instruction_parser(
         /// (e.g. by account count or specific account values).
         ///
         /// Use with [`CustomInstructionParser`] to plug your resolver into the
-        /// Vixen parser pipeline.
+        /// Shipstern parser pipeline.
         ///
         pub trait InstructionResolver: Send + Sync + std::fmt::Debug + Copy + 'static {
             fn resolve(
                 &self,
-                accounts: &[::yellowstone_vixen_core::Pubkey],
+                accounts: &[::shipstern_core::Pubkey],
                 data: &[u8],
-                path: &::yellowstone_vixen_core::instruction::Path,
+                path: &::shipstern_core::instruction::Path,
             ) -> ParseResult<#wrapper_ident>;
         }
 
@@ -838,9 +838,9 @@ pub fn instruction_parser(
         /// impl program::InstructionResolver for MyResolver {
         ///     fn resolve(
         ///         &self,
-        ///         accounts: &[yellowstone_vixen_core::Pubkey],
+        ///         accounts: &[shipstern_core::Pubkey],
         ///         data: &[u8],
-        ///         path: &yellowstone_vixen_core::instruction::Path,
+        ///         path: &shipstern_core::instruction::Path,
         ///     ) -> ParseResult<program::Instructions> {
         ///         // Custom disambiguation logic here
         ///         program::resolve_instruction_default(accounts, data, path)
@@ -854,7 +854,7 @@ pub fn instruction_parser(
         pub struct CustomInstructionParser<R: InstructionResolver>(pub R);
 
         impl<R: InstructionResolver> Parser for CustomInstructionParser<R> {
-            type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
+            type Input = ::shipstern_core::instruction::InstructionUpdate;
             type Output = #wrapper_ident;
 
             fn id(&self) -> std::borrow::Cow<'static, str> {
@@ -870,7 +870,7 @@ pub fn instruction_parser(
 
             async fn parse(
                 &self,
-                ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
+                ix_update: &::shipstern_core::instruction::InstructionUpdate,
             ) -> ParseResult<Self::Output> {
                 if *ix_update.program != PROGRAM_ID {
                     return Err(ParseError::Filtered);
@@ -880,10 +880,10 @@ pub fn instruction_parser(
             }
         }
 
-        impl<R: InstructionResolver> ::yellowstone_vixen_core::ProgramParser for CustomInstructionParser<R> {
+        impl<R: InstructionResolver> ::shipstern_core::ProgramParser for CustomInstructionParser<R> {
             #[inline]
-            fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-                yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
+            fn program_id(&self) -> shipstern_core::Pubkey {
+                shipstern_core::Pubkey::new(PROGRAM_ID)
             }
         }
 

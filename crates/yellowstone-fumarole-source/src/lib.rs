@@ -3,6 +3,11 @@ use std::{collections::BTreeMap, num::NonZero};
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use clap::ValueEnum;
+use shipstern::{
+    sources::{SourceExitStatus, SourceTrait},
+    CommitmentLevel, Error as ShipsternError,
+};
+use shipstern_core::Filters;
 use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_fumarole_client::{
     DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig, DEFAULT_PARA_DATA_STREAMS,
@@ -12,11 +17,6 @@ use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::Status,
 };
-use yellowstone_vixen::{
-    sources::{SourceExitStatus, SourceTrait},
-    CommitmentLevel, Error as VixenError,
-};
-use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]
@@ -27,17 +27,17 @@ pub struct YellowstoneFumaroleSource {
 
 #[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
 #[serde(rename_all = "kebab-case")]
-pub enum VixenCompressionEncoding {
+pub enum ShipsternCompressionEncoding {
     Gzip,
     #[default]
     Zstd,
 }
 
-impl From<VixenCompressionEncoding> for CompressionEncoding {
-    fn from(val: VixenCompressionEncoding) -> Self {
+impl From<ShipsternCompressionEncoding> for CompressionEncoding {
+    fn from(val: ShipsternCompressionEncoding) -> Self {
         match val {
-            VixenCompressionEncoding::Gzip => CompressionEncoding::Gzip,
-            VixenCompressionEncoding::Zstd => CompressionEncoding::Zstd,
+            ShipsternCompressionEncoding::Gzip => CompressionEncoding::Gzip,
+            ShipsternCompressionEncoding::Zstd => CompressionEncoding::Zstd,
         }
     }
 }
@@ -56,7 +56,7 @@ pub struct FumaroleConfig {
     /// max incoming decoded message size in bytes
     pub max_decoding_message_size: Option<usize>,
     /// accepted compression encoding
-    pub accept_compression: Option<VixenCompressionEncoding>,
+    pub accept_compression: Option<ShipsternCompressionEncoding>,
 }
 
 impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfig {
@@ -85,7 +85,7 @@ impl SourceTrait for YellowstoneFumaroleSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-    ) -> Result<(), VixenError> {
+    ) -> Result<(), ShipsternError> {
         let filters = self.filters.clone();
         let subscriber_name = self.config.subscriber_name.clone();
 
@@ -169,9 +169,9 @@ impl SourceTrait for YellowstoneFumaroleSource {
 mod tests {
     use std::collections::HashMap;
 
+    use shipstern::sources::SourceTrait;
+    use shipstern_core::Filters;
     use tokio::sync::{mpsc, oneshot};
-    use yellowstone_vixen::sources::SourceTrait;
-    use yellowstone_vixen_core::Filters;
 
     use super::{FumaroleConfig, YellowstoneFumaroleSource};
 
@@ -197,7 +197,7 @@ mod tests {
                 .expect("connect should report connection failure through source status");
 
             let status = status_rx.await.expect("source status should be sent");
-            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+            let shipstern::sources::SourceExitStatus::Error(msg) = status else {
                 panic!("expected source error, got {status:?}");
             };
             assert!(msg.contains("Failed to connect to fumarole"));

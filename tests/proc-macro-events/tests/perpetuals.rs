@@ -1,12 +1,12 @@
 use prost::Message;
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::Parser;
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
+use shipstern_core::Parser;
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
 
 const EVENT_IX_TAG: [u8; 8] = 0x1d9a_cb51_2ea5_45e4_u64.to_le_bytes();
 
-include_vixen_parser!("../idls/perpetuals.json");
+include_shipstern_parser!("../idls/perpetuals.json");
 
 const BORROW_FROM_CUSTODY_TX: &str =
     "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj";
@@ -146,7 +146,7 @@ async fn proto_round_trip_anchor_event_output() {
 /// Reads the fixture JSON, finds the instruction whose data starts with
 /// `EVENT_IX_TAG`, and returns the bytes after the tag (disc + payload).
 fn load_cpi_event_payload_from_fixture() -> Vec<u8> {
-    use yellowstone_vixen_mock::SerializableInstructionUpdate;
+    use shipstern_mock::SerializableInstructionUpdate;
 
     fn find_event(ixs: &[SerializableInstructionUpdate]) -> Option<Vec<u8>> {
         for ix in ixs {
@@ -162,11 +162,11 @@ fn load_cpi_event_payload_from_fixture() -> Vec<u8> {
         None
     }
 
-    let path = yellowstone_vixen_mock::fixture_path(BORROW_FROM_CUSTODY_TX).unwrap();
+    let path = shipstern_mock::fixture_path(BORROW_FROM_CUSTODY_TX).unwrap();
     let data = std::fs::read(&path).unwrap();
-    let fixture = yellowstone_vixen_mock::read_instructions_fixture(&data).unwrap();
+    let fixture = shipstern_mock::read_instructions_fixture(&data).unwrap();
     let fixture = match fixture {
-        yellowstone_vixen_mock::FixtureData::Instructions(f) => f,
+        shipstern_mock::FixtureData::Instructions(f) => f,
         _ => panic!("expected instructions fixture"),
     };
 
@@ -249,11 +249,11 @@ fn resolve_events_from_logs_ignores_nested_foreign_program_data() {
 /// produce no false-positive log events.
 #[test]
 fn resolve_events_from_fixture_logs_returns_empty() {
-    let path = yellowstone_vixen_mock::fixture_path(BORROW_FROM_CUSTODY_TX).unwrap();
+    let path = shipstern_mock::fixture_path(BORROW_FROM_CUSTODY_TX).unwrap();
     let data = std::fs::read(&path).unwrap();
-    let fixture = yellowstone_vixen_mock::read_instructions_fixture(&data).unwrap();
+    let fixture = shipstern_mock::read_instructions_fixture(&data).unwrap();
     let fixture = match fixture {
-        yellowstone_vixen_mock::FixtureData::Instructions(f) => f,
+        shipstern_mock::FixtureData::Instructions(f) => f,
         _ => panic!("expected instructions fixture"),
     };
 

@@ -1,11 +1,11 @@
 use prost::Message;
 use prost_reflect::{DescriptorPool, DynamicMessage};
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::Parser;
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_core::Parser;
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
 
-include_vixen_parser!("../idls/squads_multisig_program.json");
+include_shipstern_parser!("../idls/squads_multisig_program.json");
 
 #[test]
 fn check_protobuf_schema() {
@@ -19,9 +19,9 @@ fn check_protobuf_schema() {
 ///
 /// The IDL defines a top-level type `vaultTransactionCreateArgs` and an
 /// instruction `vaultTransactionCreate` whose `args` field references it.
-/// The instruction-args wrapper struct that vixen synthesizes
+/// The instruction-args wrapper struct that shipstern synthesizes
 /// (`instruction::VaultTransactionCreateArgs`) collides with the top-level
-/// type's name. When this collision occurs, vixen used to emit:
+/// type's name. When this collision occurs, shipstern used to emit:
 ///
 /// - a *wrapper* Rust struct on the encoder side
 ///   (`instruction::VaultTransactionCreateArgs { args: super::VaultTransactionCreateArgs }`),

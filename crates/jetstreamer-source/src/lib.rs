@@ -6,17 +6,17 @@ use std::{
 use async_trait::async_trait;
 use futures_util::FutureExt;
 use jetstreamer_firehose::firehose::{firehose, BlockData, EntryData, OnErrorFn, TransactionData};
+use shipstern::{
+    sources::{SourceExitStatus, SourceTrait},
+    Error as ShipsternError,
+};
+use shipstern_core::Filters;
 use tokio::sync::{broadcast, mpsc, mpsc::Sender, oneshot};
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateBlock},
     solana::storage::confirmed_block::{BlockHeight, UnixTimestamp},
 };
-use yellowstone_vixen::{
-    sources::{SourceExitStatus, SourceTrait},
-    Error as VixenError,
-};
-use yellowstone_vixen_core::Filters;
 
 type SharedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -121,7 +121,7 @@ impl ProcessEnvConfig {
 /// ```rust, ignore
 /// fn main() -> anyhow::Result<()> {
 ///     // … parse CLI / config …
-///     unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
+///     unsafe { shipstern_jetstream_source::init_process_env(&config) };
 ///     tokio_main(config)
 /// }
 ///
@@ -135,7 +135,7 @@ pub unsafe fn init_process_env(config: &JetstreamSourceConfig) {
     unsafe { env_config.apply() };
 }
 
-struct VixenStreamHandler {
+struct ShipsternStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
     skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
     // Cache matching filters to avoid iteration per item
@@ -151,7 +151,7 @@ struct VixenStreamHandler {
     entry_buffer: Mutex<HashMap<u64, Vec<EntryData>>>,
 }
 
-impl VixenStreamHandler {
+impl ShipsternStreamHandler {
     fn new(
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
         skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
@@ -164,7 +164,7 @@ impl VixenStreamHandler {
             block_filters = block_matches.len(),
             transaction_filters = transaction_matches.len(),
             wants_entries,
-            "Initialized VixenStreamHandler with cached filters"
+            "Initialized ShipsternStreamHandler with cached filters"
         );
 
         Self {
@@ -550,7 +550,7 @@ impl SourceTrait for JetstreamSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-    ) -> Result<(), VixenError> {
+    ) -> Result<(), ShipsternError> {
         let config = self.config.clone();
         let filters = self.filters.clone();
 
@@ -653,7 +653,7 @@ impl JetstreamSource {
             "Starting Jetstream historical replay"
         );
 
-        let handler = Arc::new(VixenStreamHandler::new(
+        let handler = Arc::new(ShipsternStreamHandler::new(
             tx.clone(),
             config.possible_leader_skipped_tx.clone(),
             filters.clone(),
@@ -777,14 +777,14 @@ pub enum Error {
     EntryBufferPoisoned(String),
 }
 
-impl From<Error> for VixenError {
+impl From<Error> for ShipsternError {
     fn from(e: Error) -> Self {
         match e {
-            Error::Io(io_err) => VixenError::Io(io_err),
-            // VixenError only exposes an Io variant for generic errors.
+            Error::Io(io_err) => ShipsternError::Io(io_err),
+            // ShipsternError only exposes an Io variant for generic errors.
             // Wrap with `io::Error::other` but preserve the original error as
             // the source (via `Box<dyn Error>`) so callers can still downcast.
-            other => VixenError::Io(std::io::Error::other(other)),
+            other => ShipsternError::Io(std::io::Error::other(other)),
         }
     }
 }
@@ -930,7 +930,7 @@ slot-end = 2000
     async fn possible_leader_skipped_events_use_side_channel() {
         let (updates_tx, mut updates_rx) = mpsc::channel(4);
         let (skipped_tx, mut skipped_rx) = mpsc::channel(4);
-        let handler = VixenStreamHandler::new(
+        let handler = ShipsternStreamHandler::new(
             updates_tx,
             Some(skipped_tx),
             Filters::new(std::collections::HashMap::new()),
@@ -953,9 +953,9 @@ slot-end = 2000
     async fn buffered_entries_attach_to_block_when_include_entries_set() {
         use std::collections::HashMap as StdHashMap;
 
+        use shipstern_core::{BlockPrefilter, Prefilter};
         use solana_hash::Hash;
         use solana_runtime::bank::KeyedRewardsAndNumPartitions;
-        use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
 
         let mut prefilters = StdHashMap::new();
         prefilters.insert("block-with-entries".to_string(), Prefilter {
@@ -973,7 +973,7 @@ slot-end = 2000
         let filters = Filters::new(prefilters);
 
         let (updates_tx, mut updates_rx) = mpsc::channel(4);
-        let handler = VixenStreamHandler::new(updates_tx, None, filters);
+        let handler = ShipsternStreamHandler::new(updates_tx, None, filters);
         assert!(handler.wants_entries, "filter requested entries");
 
         for entry_index in 0..3 {
@@ -1078,7 +1078,7 @@ slot-end = 2000
     async fn process_entry_returns_error_when_buffer_mutex_poisoned() {
         use std::collections::HashMap as StdHashMap;
 
-        use yellowstone_vixen_core::{BlockPrefilter, Prefilter};
+        use shipstern_core::{BlockPrefilter, Prefilter};
 
         let mut prefilters = StdHashMap::new();
         prefilters.insert("wants-entries".to_string(), Prefilter {
@@ -1096,7 +1096,7 @@ slot-end = 2000
         let filters = Filters::new(prefilters);
 
         let (updates_tx, _updates_rx) = mpsc::channel(4);
-        let handler = Arc::new(VixenStreamHandler::new(updates_tx, None, filters));
+        let handler = Arc::new(ShipsternStreamHandler::new(updates_tx, None, filters));
 
         // Poison the mutex by panicking while holding the lock on a worker
         // thread. After the join, any subsequent `.lock()` returns Err.
@@ -1131,7 +1131,7 @@ slot-end = 2000
     #[tokio::test]
     async fn entries_are_not_buffered_when_no_filter_requests_them() {
         let (updates_tx, _updates_rx) = mpsc::channel(4);
-        let handler = VixenStreamHandler::new(
+        let handler = ShipsternStreamHandler::new(
             updates_tx,
             None,
             Filters::new(std::collections::HashMap::new()),

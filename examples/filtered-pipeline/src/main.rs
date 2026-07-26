@@ -10,13 +10,12 @@
 use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
-use yellowstone_vixen::{
-    self as vixen,
+use shipstern::{
     filter_pipeline::FilterPipeline,
-    vixen_core::{instruction::InstructionUpdate, KeyBytes, Prefilter},
+    shipstern_core::{instruction::InstructionUpdate, KeyBytes, Prefilter},
 };
-use yellowstone_vixen_spl_token_parser::InstructionParser;
-use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
+use shipstern_spl_token_parser::InstructionParser;
+use shipstern_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -28,8 +27,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger {
-    async fn handle(&self, value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
+impl<V: std::fmt::Debug + Sync> shipstern::Handler<V, InstructionUpdate> for Logger {
+    async fn handle(&self, value: &V, input: &InstructionUpdate) -> shipstern::HandlerResult<()> {
         println!("ix {:?} - {value:?}", input.path);
         Ok(())
     }
@@ -44,7 +43,7 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::Runtime::<YellowstoneGrpcSource>::builder()
+    shipstern::Runtime::<YellowstoneGrpcSource>::builder()
         .instruction(FilterPipeline::new(
             InstructionParser,
             [Logger],

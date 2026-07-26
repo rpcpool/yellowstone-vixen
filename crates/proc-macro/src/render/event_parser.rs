@@ -88,7 +88,7 @@ pub fn event_parser(
                     && (line.ends_with(" success") || line.contains(" failed:"))
             }
 
-            let target_program = ::yellowstone_vixen_core::Pubkey::new(PROGRAM_ID).to_string();
+            let target_program = ::shipstern_core::Pubkey::new(PROGRAM_ID).to_string();
             let mut invocation_stack = Vec::<String>::new();
             let mut events = Vec::new();
 
@@ -111,8 +111,8 @@ pub fn event_parser(
                     continue;
                 }
 
-                let Some(decoded) = yellowstone_vixen_parser::base64::Engine::decode(
-                    &yellowstone_vixen_parser::base64::engine::general_purpose::STANDARD,
+                let Some(decoded) = shipstern_parser::base64::Engine::decode(
+                    &shipstern_parser::base64::engine::general_purpose::STANDARD,
                     encoded.trim(),
                 ).ok() else {
                     continue;
@@ -136,7 +136,7 @@ pub fn event_parser(
         /// Default event resolution using discriminator matching.
         ///
         pub fn resolve_event_default(
-            accounts: &[::yellowstone_vixen_core::Pubkey],
+            accounts: &[::shipstern_core::Pubkey],
             data: &[u8],
         ) -> ParseResult<#wrapper_ident> {
             #(#match_arms)*
@@ -306,7 +306,7 @@ fn single_event_helper_fn(
 
     Some(quote! {
         pub fn #fn_ident(
-            accounts: &[::yellowstone_vixen_core::Pubkey],
+            accounts: &[::shipstern_core::Pubkey],
             data: &[u8],
         ) -> ParseResult<#wrapper_ident> {
             Ok(#wrapper_ident {

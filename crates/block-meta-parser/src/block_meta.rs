@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
+use shipstern_core::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey};
+use shipstern_proc_macro::shipstern;
 use yellowstone_grpc_proto::geyser::SubscribeUpdateBlockMeta;
-use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey};
-use yellowstone_vixen_proc_macro::vixen;
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Reward {
     pub pubkey: String,
@@ -14,14 +14,14 @@ pub struct Reward {
     pub commission: String,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Rewards {
     pub rewards: Vec<Reward>,
     pub num_partitions: ::core::option::Option<u64>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct BlockMetaUpdate {
     pub slot: u64,

@@ -1,18 +1,18 @@
 //! gRPC server for streaming parsed Yellowstone updates.
 //!
-//! See [this simple example][ex1] for a basic example of how to use the Vixen
+//! See [this simple example][ex1] for a basic example of how to use the Shipstern
 //! stream server, or [a more complex example][ex2] that serves parsed data
-//! from Solana programs using pre-packaged Vixen parsers.
+//! from Solana programs using pre-packaged Shipstern parsers.
 //!
-//! [ex1]: https://github.com/rpcpool/yellowstone-vixen/blob/main/examples/stream/src/main.rs
-//! [ex2]: https://github.com/rpcpool/yellowstone-vixen/blob/main/examples/stream-parser/src/main.rs
+//! [ex1]: https://github.com/rpcpool/shipstern/blob/main/examples/stream/src/main.rs
+//! [ex2]: https://github.com/rpcpool/shipstern/blob/main/examples/stream-parser/src/main.rs
 
 use std::fmt;
 
 use config::GrpcConfig;
 use grpc::Channels;
+use shipstern::{sources::SourceTrait, util, Runtime};
 use tracing::info;
-use yellowstone_vixen::{sources::SourceTrait, util, Runtime};
 
 mod builder;
 pub mod config;
@@ -20,15 +20,15 @@ mod grpc;
 
 pub use builder::*;
 
-/// An error thrown by the Vixen stream server.
+/// An error thrown by the Shipstern stream server.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// A gRPC transport error.
     #[error("Stream server error")]
     Grpc(#[from] grpc::Error),
-    /// An error thrown by the Vixen runtime.
-    #[error("Vixen client runtime error")]
-    Runtime(#[from] yellowstone_vixen::Error),
+    /// An error thrown by the Shipstern runtime.
+    #[error("Shipstern client runtime error")]
+    Runtime(#[from] shipstern::Error),
 }
 
 impl From<std::io::Error> for Error {
@@ -36,7 +36,7 @@ impl From<std::io::Error> for Error {
     fn from(value: std::io::Error) -> Self { Self::Runtime(value.into()) }
 }
 
-/// A Vixen program stream server.
+/// A Shipstern program stream server.
 pub struct Server<'a, S: SourceTrait> {
     grpc_cfg: GrpcConfig,
     desc_sets: Vec<&'a [u8]>,
@@ -67,26 +67,26 @@ impl<S: SourceTrait> Server<'_, S> {
 }
 
 impl<S: SourceTrait> Server<'_, S> {
-    /// Create a new Tokio runtime and run the Vixen stream server within it,
+    /// Create a new Tokio runtime and run the Shipstern stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     ///
     /// For error handling, use the recoverable variant [`Self::try_run`].
     ///
     /// If you want to provide your own tokio Runtime because you need to run
-    /// async code outside of the Vixen stream server, use the [`Self::run_async`]
+    /// async code outside of the Shipstern stream server, use the [`Self::run_async`]
     /// method.
     ///
     /// # Example
     ///
     /// ```ignore
-    /// use yellowstone_vixen::stream;
-    /// use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
-    /// use yellowstone_vixen_meteora_parser::{
+    /// use shipstern::stream;
+    /// use shipstern_yellowstone_grpc_source::YellowstoneGrpcSource;
+    /// use shipstern_meteora_parser::{
     ///     accounts_parser::AccountParser as MeteoraAccParser,
     ///     instructions_parser::InstructionParser as MeteoraIxParser,
     ///     proto_def::DESCRIPTOR_SET as METEORA_DESCRIPTOR_SET,
     /// };
-    /// use yellowstone_vixen_pumpfun_parser::{
+    /// use shipstern_pumpfun_parser::{
     ///     accounts_parser::AccountParser as PumpfunAccParser,
     ///     instructions_parser::InstructionParser as PumpfunIxParser,
     ///     proto_def::DESCRIPTOR_SET as PUMP_DESCRIPTOR_SET,
@@ -118,26 +118,26 @@ impl<S: SourceTrait> Server<'_, S> {
             .block_on(self.try_run_async())
     }
 
-    /// Run the Vixen stream server asynchronously, terminating the current process
+    /// Run the Shipstern stream server asynchronously, terminating the current process
     /// if the runtime or gRPC server crash.
     ///
     /// For error handling, use the recoverable variant [`Self::try_run_async`].
     ///
-    /// If you don't need to run any async code outside the Vixen stream server, you
+    /// If you don't need to run any async code outside the Shipstern stream server, you
     /// can use the [`Self::run`] method instead, which takes care of creating
     /// a tokio Runtime for you.
     ///
     /// # Example
     ///
     /// ```ignore
-    /// use yellowstone_vixen::stream;
-    /// use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
-    /// use yellowstone_vixen_meteora_parser::{
+    /// use shipstern::stream;
+    /// use shipstern_yellowstone_grpc_source::YellowstoneGrpcSource;
+    /// use shipstern_meteora_parser::{
     ///     accounts_parser::AccountParser as MeteoraAccParser,
     ///     instructions_parser::InstructionParser as MeteoraIxParser,
     ///     proto_def::DESCRIPTOR_SET as METEORA_DESCRIPTOR_SET,
     /// };
-    /// use yellowstone_vixen_pumpfun_parser::{
+    /// use shipstern_pumpfun_parser::{
     ///     accounts_parser::AccountParser as PumpfunAccParser,
     ///     instructions_parser::InstructionParser as PumpfunIxParser,
     ///     proto_def::DESCRIPTOR_SET as PUMP_DESCRIPTOR_SET,

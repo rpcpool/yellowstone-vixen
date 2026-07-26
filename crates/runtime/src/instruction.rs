@@ -3,7 +3,7 @@
 
 use std::fmt::{self, Debug};
 
-use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
+use shipstern_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
 
 use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
 #[cfg(feature = "prometheus")]
@@ -31,7 +31,7 @@ use crate::metrics;
 /// Dispatch is `O(instructions x parsers)`: every parser's `parse` runs on every
 /// node of the tree, cheaply rejecting foreign programs. For large parser sets
 /// the next lever is indexing parsers by program id via the existing
-/// [`ProgramParser::program_id`](vixen_core::ProgramParser::program_id), so each
+/// [`ProgramParser::program_id`](shipstern_core::ProgramParser::program_id), so each
 /// instruction only reaches the parser that owns its program; deferred to a
 /// follow-up.
 ///
@@ -106,7 +106,7 @@ impl ParserId for InstructionPipeline {
 }
 
 impl GetPrefilter for InstructionPipeline {
-    fn prefilter(&self) -> vixen_core::Prefilter {
+    fn prefilter(&self) -> shipstern_core::Prefilter {
         self.0.iter().map(GetPrefilter::prefilter).collect()
     }
 }
@@ -172,7 +172,7 @@ impl ParserId for SingleInstructionPipeline {
 }
 
 impl GetPrefilter for SingleInstructionPipeline {
-    fn prefilter(&self) -> vixen_core::Prefilter { self.0.prefilter() }
+    fn prefilter(&self) -> shipstern_core::Prefilter { self.0.prefilter() }
 }
 
 impl Debug for SingleInstructionPipeline {
@@ -200,7 +200,7 @@ mod tests {
         sync::atomic::{AtomicUsize, Ordering},
     };
 
-    use vixen_core::{
+    use shipstern_core::{
         instruction::InstructionUpdate, GetPrefilter, ParseError, ParseResult, Parser, Prefilter,
         Pubkey, TransactionUpdate,
     };

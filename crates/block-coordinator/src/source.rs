@@ -1,13 +1,19 @@
-//! CoordinatorSource — transparent tap between geyser stream and Vixen Runtime.
+//! CoordinatorSource — transparent tap between geyser stream and Shipstern Runtime.
 //!
-//! Implements Vixen's `SourceTrait` to forward raw geyser events to the coordinator
-//! while also forwarding transaction events to the Vixen Runtime.
+//! Implements Shipstern's `SourceTrait` to forward raw geyser events to the coordinator
+//! while also forwarding transaction events to the Shipstern Runtime.
 //!
 
 use std::{path::PathBuf, time::Duration};
 
 use async_trait::async_trait;
 use futures_util::StreamExt;
+use shipstern::{
+    sources::{SourceExitStatus, SourceTrait},
+    Error as ShipsternError,
+};
+use shipstern_core::{CommitmentLevel, Filters};
+use shipstern_yellowstone_grpc_source::YellowstoneGrpcConfig;
 use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
@@ -17,12 +23,6 @@ use yellowstone_grpc_proto::{
     },
     tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{
-    sources::{SourceExitStatus, SourceTrait},
-    Error as VixenError,
-};
-use yellowstone_vixen_core::{CommitmentLevel, Filters};
-use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
 use crate::{fixtures::FixtureWriter, types::CoordinatorInput};
 
@@ -110,11 +110,11 @@ impl CoordinatorSubscription for SubscribeRequest {
     }
 }
 
-/// Vixen source that taps the geyser stream for the coordinator.
+/// Shipstern source that taps the geyser stream for the coordinator.
 ///
 /// On each `SubscribeUpdate`:
 /// 1. Forward the raw event to the coordinator (clone for BlockSM-relevant events)
-/// 2. Forward Account/Transaction events to the Vixen Runtime (move, no clone)
+/// 2. Forward Account/Transaction events to the Shipstern Runtime (move, no clone)
 #[derive(Debug)]
 pub struct CoordinatorSource {
     config: CoordinatorSourceConfig,
@@ -131,9 +131,9 @@ impl SourceTrait for CoordinatorSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-    ) -> Result<(), VixenError> {
+    ) -> Result<(), ShipsternError> {
         let coordinator_tx = self.config.coordinator_input_tx.as_ref().ok_or_else(|| {
-            VixenError::Io(std::io::Error::other(
+            ShipsternError::Io(std::io::Error::other(
                 "coordinator_input_tx must be set before connect",
             ))
         })?;
@@ -141,7 +141,7 @@ impl SourceTrait for CoordinatorSource {
         let mut fixture_writer = match (&self.config.fixture_path, self.config.fixture_slots) {
             (Some(path), Some(slots)) => {
                 tracing::info!(?path, slots, "Fixture capture enabled");
-                Some(FixtureWriter::new(path, slots).map_err(VixenError::Io)?)
+                Some(FixtureWriter::new(path, slots).map_err(ShipsternError::Io)?)
             },
             _ => None,
         };

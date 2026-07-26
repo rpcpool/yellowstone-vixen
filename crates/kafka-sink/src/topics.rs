@@ -48,7 +48,7 @@ fn read_last_slot_from_topic(
 
     client_config
         .set("bootstrap.servers", &config.brokers)
-        .set("group.id", "vixen-startup-reader")
+        .set("group.id", "shipstern-startup-reader")
         .set("enable.auto.commit", "false")
         .set("isolation.level", "read_committed"); // read only committed kafka transactions
 

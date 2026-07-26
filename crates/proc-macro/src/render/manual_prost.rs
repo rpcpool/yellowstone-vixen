@@ -396,7 +396,7 @@ fn emit_prost_field_codegen(
         // --- Singular pubkey (Pubkey ↔ PublicKeyProtoWrapper conversion) ---
         (LabelIr::Singular, FieldTypeIr::Scalar(s)) if is_pubkey_scalar(s) => {
             let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
-            let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
+            let wrapper_ty = quote!(shipstern_core::PublicKeyProtoWrapper);
 
             encode_stmts.push(quote! {
                 {
@@ -599,7 +599,7 @@ fn emit_prost_field_codegen(
         // --- Optional pubkey (Pubkey ↔ PublicKeyProtoWrapper conversion) ---
         (LabelIr::Optional(_), FieldTypeIr::Scalar(s)) if is_pubkey_scalar(s) => {
             let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
-            let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
+            let wrapper_ty = quote!(shipstern_core::PublicKeyProtoWrapper);
 
             encode_stmts.push(quote! {
                 if let ::core::option::Option::Some(ref pk) = self.#fname {
@@ -774,7 +774,7 @@ fn emit_prost_field_codegen(
             if is_pubkey_scalar(s) =>
         {
             let pubkey_ty = map_ir_type_to_native(&f.field_type, in_module);
-            let wrapper_ty = quote!(yellowstone_vixen_core::PublicKeyProtoWrapper);
+            let wrapper_ty = quote!(shipstern_core::PublicKeyProtoWrapper);
 
             encode_stmts.push(quote! {
                 for pk in &self.#fname {

@@ -1,9 +1,9 @@
 [package]
-name = "vixen-test-utils"
+name = "shipstern-test-utils"
 version = "0.0.0"
 edition = "2024"
 publish = false
 
 [dependencies]
-yellowstone-vixen-core = { workspace = true }
+shipstern-core = { workspace = true }
 tempfile = "3"

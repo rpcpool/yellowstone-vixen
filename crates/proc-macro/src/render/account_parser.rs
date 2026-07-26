@@ -371,10 +371,10 @@ pub fn account_parser(
         }
 
         // Implement the trait for Mock
-        impl ::yellowstone_vixen_core::ProgramParser for AccountParser {
+        impl ::shipstern_core::ProgramParser for AccountParser {
             #[inline]
-            fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-                yellowstone_vixen_core::Pubkey::new(PROGRAM_ID)
+            fn program_id(&self) -> shipstern_core::Pubkey {
+                shipstern_core::Pubkey::new(PROGRAM_ID)
             }
         }
     }

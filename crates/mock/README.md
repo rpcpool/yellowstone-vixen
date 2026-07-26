@@ -1,6 +1,6 @@
-# Yellowstone Vixen Mock
+# Shipstern Mock
 
-Yellowstone Vixen Mock provides tools for testing Vixen parsers without needing a live Solana node.
+Shipstern Mock provides tools for testing Shipstern parsers without needing a live Solana node.
 It supports offline fixtures, account replay, and instruction replay — helping you validate parsing logic quickly and reliably using devnet data.
 
 ## Features
@@ -20,7 +20,7 @@ This ensures safe and reproducible testing environments.
 ## Installation
 
 ```
-cargo add yellowstone-vixen-mock
+cargo add shipstern-mock
 ```
 
 Example Usage
@@ -28,8 +28,8 @@ Example Usage
 ```rust
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{account_fixture, tx_fixture};
-    use yellowstone_vixen_parser::{
+    use shipstern_mock::{account_fixture, tx_fixture};
+    use shipstern_parser::{
         token_extension_program::InstructionParser as TokenExtensionProgramIxParser,
         token_program::{AccountParser as TokenProgramAccParser, TokenProgramState},
     };

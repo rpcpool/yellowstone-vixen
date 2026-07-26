@@ -1,7 +1,7 @@
-//! Kafka sink builder that accepts Vixen parsers as configuration.
+//! Kafka sink builder that accepts Shipstern parsers as configuration.
 //!
-//! This module provides a clean API for configuring kafka-sink with Vixen parsers.
-//! Users pass their Vixen parser implementations, and kafka-sink handles the rest.
+//! This module provides a clean API for configuring kafka-sink with Shipstern parsers.
+//! Users pass their Shipstern parser implementations, and kafka-sink handles the rest.
 //!
 //! All parsed outputs are serialized using protobuf (prost::Message::encode).
 
@@ -13,7 +13,7 @@ use std::{
 };
 
 use prost::Message;
-use yellowstone_vixen_core::{
+use shipstern_core::{
     bs58,
     instruction::{InstructionUpdate, Path},
     AccountUpdate, ParseError, Parser, ProgramParser, Pubkey,
@@ -756,12 +756,12 @@ mod tests {
     };
 
     use prost::Message;
-    use yellowstone_vixen_core::{
+    use shipstern_core::{
         instruction::{AccountKeys, InstructionShared, InstructionUpdate, Path},
         ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
     };
     #[cfg(feature = "experimental-account-parser")]
-    use yellowstone_vixen_core::{AccountUpdate, AccountUpdateInfo};
+    use shipstern_core::{AccountUpdate, AccountUpdateInfo};
 
     use super::KafkaSinkBuilder;
     #[cfg(feature = "experimental-account-parser")]
@@ -1024,16 +1024,16 @@ mod tests {
         assert_eq!(event.slot, 100);
         assert_eq!(
             event.signature,
-            yellowstone_vixen_core::bs58::encode(b"sig").into_string()
+            shipstern_core::bs58::encode(b"sig").into_string()
         );
         assert_eq!(event.ix_index, "1");
         assert_eq!(
             event.program_id,
-            yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
+            shipstern_core::bs58::encode([1_u8; 32]).into_string()
         );
         assert_eq!(
             event.data,
-            yellowstone_vixen_core::bs58::encode([1_u8, 2, 3]).into_string()
+            shipstern_core::bs58::encode([1_u8, 2, 3]).into_string()
         );
         assert_eq!(
             record
@@ -1043,7 +1043,7 @@ mod tests {
                 .map(|header| header.value.as_str()),
             Some("7")
         );
-        let expected_fee_payer = yellowstone_vixen_core::bs58::encode([4_u8; 32]).into_string();
+        let expected_fee_payer = shipstern_core::bs58::encode([4_u8; 32]).into_string();
         assert_eq!(
             record
                 .headers
@@ -1089,7 +1089,7 @@ mod tests {
                 .map(|header| header.value.as_str()),
             Some("7")
         );
-        let expected_fee_payer = yellowstone_vixen_core::bs58::encode([4_u8; 32]).into_string();
+        let expected_fee_payer = shipstern_core::bs58::encode([4_u8; 32]).into_string();
         assert_eq!(
             record
                 .headers
@@ -1132,7 +1132,7 @@ mod tests {
                 .map(|header| header.value.as_str()),
             Some("3.7")
         );
-        let sig_str = yellowstone_vixen_core::bs58::encode(b"sig").into_string();
+        let sig_str = shipstern_core::bs58::encode(b"sig").into_string();
         assert_eq!(record.key, format!("100:{sig_str}:3.7"));
         assert_eq!(
             *seen_path.lock().expect("path recorder mutex poisoned"),
@@ -1176,7 +1176,7 @@ mod tests {
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected fallback record");
-        let pubkey = yellowstone_vixen_core::bs58::encode([2_u8; 32]).into_string();
+        let pubkey = shipstern_core::bs58::encode([2_u8; 32]).into_string();
 
         assert_eq!(record.topic, "failed.test.accounts");
         assert_eq!(record.key, format!("100:{pubkey}:11"));
@@ -1189,11 +1189,11 @@ mod tests {
         assert_eq!(event.write_version, 11);
         assert_eq!(
             event.owner,
-            yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
+            shipstern_core::bs58::encode([1_u8; 32]).into_string()
         );
         assert_eq!(
             event.data,
-            yellowstone_vixen_core::bs58::encode([9_u8, 8, 7]).into_string()
+            shipstern_core::bs58::encode([9_u8, 8, 7]).into_string()
         );
     }
 
@@ -1214,7 +1214,7 @@ mod tests {
         let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
 
         let record = record.expect("expected decoded record");
-        let pubkey = yellowstone_vixen_core::bs58::encode([2_u8; 32]).into_string();
+        let pubkey = shipstern_core::bs58::encode([2_u8; 32]).into_string();
 
         assert_eq!(record.topic, "test.accounts");
         assert_eq!(record.key, format!("100:{pubkey}:11"));

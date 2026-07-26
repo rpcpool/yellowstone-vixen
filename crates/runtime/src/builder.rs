@@ -1,11 +1,11 @@
-//! Builder types for the Vixen runtime and stream server.
-use vixen_core::{
+//! Builder types for the Shipstern runtime and stream server.
+use shipstern_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, BlockUpdate, SlotUpdate,
     TransactionUpdate,
 };
 
 use crate::{
-    config::VixenConfig,
+    config::ShipsternConfig,
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
     instruction::InstructionPipeline,
     sources::SourceTrait,
@@ -18,7 +18,7 @@ pub trait BuilderKind: Default {
     type Error: std::error::Error;
 }
 
-/// An error thrown by the Vixen runtime builder.
+/// An error thrown by the Shipstern runtime builder.
 #[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
     /// Two account pipelines were registered with the same parser ID.
@@ -183,7 +183,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
     /// invalid.
     /// # Panics
     /// Only panics if the prometheus metrics registry is not set.
-    pub fn try_build(self, config: VixenConfig<S::Config>) -> Result<Runtime<S>, BuilderError> {
+    pub fn try_build(self, config: ShipsternConfig<S::Config>) -> Result<Runtime<S>, BuilderError> {
         let Self {
             err,
             account,
@@ -199,7 +199,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
         } = self;
         let () = err?;
 
-        let VixenConfig {
+        let ShipsternConfig {
             source: source_cfg,
             buffer: buffer_cfg,
         } = config;
@@ -280,7 +280,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
     /// occurs.
     #[inline]
     #[must_use]
-    pub fn build(self, config: VixenConfig<S::Config>) -> Runtime<S> {
-        util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
+    pub fn build(self, config: ShipsternConfig<S::Config>) -> Runtime<S> {
+        util::handle_fatal_msg(self.try_build(config), "Error building Shipstern runtime")
     }
 }

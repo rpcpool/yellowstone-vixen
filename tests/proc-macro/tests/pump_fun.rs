@@ -1,14 +1,21 @@
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::{Parser, Pubkey};
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_core::{Parser, Pubkey};
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
 
-include_vixen_parser!("../idls/pump_fun.json");
+include_shipstern_parser!("../idls/pump_fun.json");
 
 #[test]
 fn check_protobuf_schema() {
     check_protobuf_format(pump_fun::PROTOBUF_SCHEMA);
 
+    #[cfg(feature = "program-events")]
+    insta::assert_snapshot!(
+        "check_protobuf_schema_program_events",
+        pump_fun::PROTOBUF_SCHEMA
+    );
+
+    #[cfg(not(feature = "program-events"))]
     insta::assert_snapshot!(pump_fun::PROTOBUF_SCHEMA);
 }
 
@@ -24,6 +31,11 @@ async fn parse_sell_ix() {
     let (sell_accounts, sell_args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
+            #[cfg(feature = "program-events")]
+            Some(pump_fun::Instructions {
+                instruction: pump_fun::instruction::Instruction::Sell { accounts, args },
+            }) => Some((accounts, args)),
+            #[cfg(not(feature = "program-events"))]
             pump_fun::instruction::Instruction::Sell { accounts, args } => Some((accounts, args)),
             _ => None,
         })
@@ -69,6 +81,11 @@ async fn parse_buy_ix() {
     let (buy_accounts, buy_args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
+            #[cfg(feature = "program-events")]
+            Some(pump_fun::Instructions {
+                instruction: pump_fun::instruction::Instruction::Buy { accounts, args },
+            }) => Some((accounts, args)),
+            #[cfg(not(feature = "program-events"))]
             pump_fun::instruction::Instruction::Buy { accounts, args } => Some((accounts, args)),
             _ => None,
         })

@@ -3,31 +3,31 @@ use std::time::Duration;
 use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::StreamExt;
+use shipstern::{
+    sources::{SourceExitStatus, SourceTrait},
+    CommitmentLevel, Error as ShipsternError,
+};
+use shipstern_core::Filters;
 use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig};
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{
-    sources::{SourceExitStatus, SourceTrait},
-    CommitmentLevel, Error as VixenError,
-};
-use yellowstone_vixen_core::Filters;
 
 #[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
 #[serde(rename_all = "kebab-case")]
-pub enum VixenCompressionEncoding {
+pub enum ShipsternCompressionEncoding {
     Gzip,
     #[default]
     Zstd,
 }
 
-impl From<VixenCompressionEncoding> for CompressionEncoding {
-    fn from(val: VixenCompressionEncoding) -> Self {
+impl From<ShipsternCompressionEncoding> for CompressionEncoding {
+    fn from(val: ShipsternCompressionEncoding) -> Self {
         match val {
-            VixenCompressionEncoding::Gzip => CompressionEncoding::Gzip,
-            VixenCompressionEncoding::Zstd => CompressionEncoding::Zstd,
+            ShipsternCompressionEncoding::Gzip => CompressionEncoding::Gzip,
+            ShipsternCompressionEncoding::Zstd => CompressionEncoding::Zstd,
         }
     }
 }
@@ -66,7 +66,7 @@ pub struct YellowstoneGrpcConfig {
     pub max_decoding_message_size: Option<usize>,
 
     #[arg(long, env)]
-    pub accept_compression: Option<VixenCompressionEncoding>,
+    pub accept_compression: Option<ShipsternCompressionEncoding>,
 
     /// Enable the client's built-in auto-reconnect on the gRPC stream.
     ///
@@ -159,7 +159,7 @@ impl SourceTrait for YellowstoneGrpcSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-    ) -> Result<(), VixenError> {
+    ) -> Result<(), ShipsternError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
         let timeout = Duration::from_secs(config.timeout);

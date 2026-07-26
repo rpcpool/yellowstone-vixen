@@ -1,11 +1,11 @@
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::{Parser, Pubkey};
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_core::{Parser, Pubkey};
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
 
 // This IDL have non-even length hex strings for discriminators, which caused `hex::decode` to fail before we added padding logic. This test ensures that the padding logic works correctly.
 
-include_vixen_parser!("../idls/raydium_amm_v4_with_swapv2.json");
+include_shipstern_parser!("../idls/raydium_amm_v4_with_swapv2.json");
 
 #[test]
 fn check_protobuf_schema() {
@@ -26,7 +26,7 @@ fn check_protobuf_schema() {
 ///
 #[tokio::test]
 async fn parse_swap_base_in_with_custom_resolver() {
-    use yellowstone_vixen_core::ParseError;
+    use shipstern_core::ParseError;
 
     #[derive(Debug, Copy, Clone)]
     struct RaydiumResolver;
@@ -36,7 +36,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
             &self,
             accounts: &[Pubkey],
             data: &[u8],
-            path: &yellowstone_vixen_core::instruction::Path,
+            path: &shipstern_core::instruction::Path,
         ) -> Result<raydium_amm::Instructions, ParseError> {
             // SwapBaseIn discriminator is 0x09 — both variants share it.
             // Disambiguate by account count.

@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to Yellowstone Vixen! This guide will help you get started with setting up your development environment and contributing code.
+Thank you for your interest in contributing to Shipstern! This guide will help you get started with setting up your development environment and contributing code.
 
 ## Table of Contents
 
@@ -20,8 +20,8 @@ To contribute to this project, you'll need to have Rust installed on your machin
 1. **Clone the Repository**
 
    ```sh
-   git clone https://github.com/rpcpool/yellowstone-vixen.git
-   cd yellowstone-vixen
+   git clone https://github.com/rpcpool/shipstern.git
+   cd shipstern
    ```
 
 2. **Install Rust and Set the Toolchain**

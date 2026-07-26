@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use spl_token::instruction::TokenInstruction as SplTokenInstruction;
-use yellowstone_vixen_core::{
+use shipstern_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
-use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result, ResultExt};
+use shipstern_parser::{check_min_accounts_req, Error, Result, ResultExt};
+use spl_token::instruction::TokenInstruction as SplTokenInstruction;
 
 use crate::Pubkey;
 
-fn pk(key: &yellowstone_vixen_core::Pubkey) -> Pubkey { Pubkey::new(key.0) }
+fn pk(key: &shipstern_core::Pubkey) -> Pubkey { Pubkey::new(key.0) }
 
 fn pk_from_key(key: &spl_token::solana_program::pubkey::Pubkey) -> Pubkey {
     Pubkey::new(key.to_bytes())
@@ -19,7 +19,7 @@ const UNWRAP_LAMPORTS_TAG: u8 = 45;
 const BATCH_TAG: u8 = 255;
 const MAX_BATCH_DEPTH: usize = 8;
 
-fn pks(keys: &[yellowstone_vixen_core::Pubkey]) -> Vec<Pubkey> { keys.iter().map(pk).collect() }
+fn pks(keys: &[shipstern_core::Pubkey]) -> Vec<Pubkey> { keys.iter().map(pk).collect() }
 
 fn invalid_data(message: &'static str) -> Error { Error::new(message) }
 
@@ -64,7 +64,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> shipstern_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[inline]
@@ -650,7 +650,7 @@ impl InstructionParser {
 mod tests {
     use std::ops::Mul;
 
-    use yellowstone_vixen_mock::tx_fixture;
+    use shipstern_mock::tx_fixture;
 
     use super::*;
 

@@ -1,33 +1,31 @@
 use std::borrow::Cow;
 
+use shipstern_core::{AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser};
+use shipstern_proc_macro::shipstern;
 use solana_loader_v3_interface::state::UpgradeableLoaderState;
-use yellowstone_vixen_core::{
-    AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
-};
-use yellowstone_vixen_proc_macro::vixen;
 
 use crate::Pubkey;
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Buffer {
     pub authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Program {
     pub programdata_address: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ProgramData {
     pub slot: u64,
     pub upgrade_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct BpfLoaderState {
     #[hint(oneof = "account::State", tags = "1, 2, 3")]
@@ -35,9 +33,9 @@ pub struct BpfLoaderState {
 }
 
 pub mod account {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum State {
         Buffer(super::Buffer),
@@ -103,7 +101,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+    fn program_id(&self) -> shipstern_core::Pubkey {
         solana_sdk_ids::bpf_loader_upgradeable::ID.to_bytes().into()
     }
 }

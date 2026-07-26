@@ -1,4 +1,4 @@
-//! Configuration types for the Vixen runtime.
+//! Configuration types for the Shipstern runtime.
 use clap::Args;
 use serde::Deserialize;
 /// A helper trait for types that may or may not have a default value,
@@ -13,9 +13,9 @@ impl<T: Default> MaybeDefault for T {
     fn default_opt() -> Option<Self> { Some(Self::default()) }
 }
 
-/// Root configuration for [the Vixen runtime](crate::Runtime).
+/// Root configuration for [the Shipstern runtime](crate::Runtime).
 #[derive(Debug, Args)]
-pub struct VixenConfig<S>
+pub struct ShipsternConfig<S>
 where S: Args
 {
     /// The source configuration.
@@ -27,7 +27,7 @@ where S: Args
     pub buffer: BufferConfig,
 }
 
-impl<'de, S> Deserialize<'de> for VixenConfig<S>
+impl<'de, S> Deserialize<'de> for ShipsternConfig<S>
 where S: Args + Deserialize<'de>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

@@ -2,20 +2,18 @@ use std::time::Instant;
 
 use anyhow::Result;
 use clap::Parser as _;
-use tracing::info;
-use yellowstone_vixen::{
-    config::{BufferConfig, VixenConfig},
+use shipstern::{
+    config::{BufferConfig, ShipsternConfig},
     Handler, HandlerResult, Pipeline, Runtime,
 };
-use yellowstone_vixen_core::{instruction::InstructionUpdate, ParserId};
-use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
-use yellowstone_vixen_spl_token_parser::{
-    instruction::Instruction, InstructionParser, TokenProgram,
-};
+use shipstern_core::{instruction::InstructionUpdate, ParserId};
+use shipstern_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
+use shipstern_spl_token_parser::{instruction::Instruction, InstructionParser, TokenProgram};
+use tracing::info;
 
-fn pk(pubkey: &yellowstone_vixen_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
+fn pk(pubkey: &shipstern_spl_token_parser::Pubkey) -> String { pubkey.to_string() }
 
-fn pk_opt(pubkey: &Option<yellowstone_vixen_spl_token_parser::Pubkey>) -> String {
+fn pk_opt(pubkey: &Option<shipstern_spl_token_parser::Pubkey>) -> String {
     match pubkey {
         Some(p) => p.to_string(),
         None => "None".to_string(),
@@ -193,7 +191,7 @@ fn main() -> Result<()> {
 
     // SAFETY: Called from main() before the Tokio runtime is created.
     // This binary must not spawn any other threads before this point.
-    unsafe { yellowstone_vixen_jetstream_source::init_process_env(&config) };
+    unsafe { shipstern_jetstream_source::init_process_env(&config) };
 
     tokio::runtime::Runtime::new()?.block_on(run(config))
 }
@@ -215,22 +213,22 @@ async fn run(config: JetstreamSourceConfig) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to resolve slot range: {}", e))?;
     info!(start_slot, end_slot, "Resolved slot range");
 
-    let vixen_config = VixenConfig {
+    let shipstern_config = ShipsternConfig {
         source: config,
         buffer: BufferConfig::default(),
     };
 
-    info!("Building Vixen runtime with SPL Token instruction parser");
+    info!("Building Shipstern runtime with SPL Token instruction parser");
     let pipeline = Pipeline::new(InstructionParser, [TokenInstructionLogger]);
     info!("Created pipeline with ID: {}", pipeline.id());
 
     let runtime = Runtime::<JetstreamSource>::builder()
         .instruction(pipeline)
-        .build(vixen_config);
+        .build(shipstern_config);
 
     let start_time = Instant::now();
 
-    info!("Starting Vixen runtime...");
+    info!("Starting Shipstern runtime...");
     runtime.try_run_async().await?;
 
     let processing_time = start_time.elapsed().as_secs_f64();

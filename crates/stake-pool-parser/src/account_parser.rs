@@ -1,13 +1,11 @@
+use shipstern_core::{AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser};
+use shipstern_proc_macro::shipstern;
 use spl_stake_pool::{
     solana_program::{borsh1::try_from_slice_unchecked, program_error},
     state::{StakePool, ValidatorList},
 };
-use yellowstone_vixen_core::{
-    AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
-};
-use yellowstone_vixen_proc_macro::vixen;
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SplStakePoolProgramState {
     #[hint(oneof = "spl_stake_pool_program_state::State", tags = "1, 2")]
@@ -15,9 +13,9 @@ pub struct SplStakePoolProgramState {
 }
 
 pub mod spl_stake_pool_program_state {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum State {
         StakePool(super::StakePoolAccount),
@@ -25,7 +23,7 @@ pub mod spl_stake_pool_program_state {
     }
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct StakePoolAccount {
     /// First byte discriminator (1)
@@ -35,7 +33,7 @@ pub struct StakePoolAccount {
     pub data: Vec<u8>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ValidatorListAccount {
     /// First byte discriminator (2)
@@ -126,5 +124,5 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_stake_pool::ID.to_bytes().into() }
+    fn program_id(&self) -> shipstern_core::Pubkey { spl_stake_pool::ID.to_bytes().into() }
 }

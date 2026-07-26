@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-core"
-description = "Core types for Vixen"
+name = "shipstern-core"
+description = "Core types for Shipstern"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,7 +12,7 @@ readme = "./../../README.md"
 bs58.workspace = true
 thiserror.workspace = true
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-vixen-proto = { workspace = true, optional = true }
+shipstern-proto = { workspace = true, optional = true }
 borsh = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
@@ -20,4 +20,4 @@ prost = { workspace = true, optional = true }
 prost-types = { workspace = true, optional = true }
 
 [features]
-proto = ["dep:yellowstone-vixen-proto", "dep:prost", "dep:prost-types"]
+proto = ["dep:shipstern-proto", "dep:prost", "dep:prost-types"]

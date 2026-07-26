@@ -5,15 +5,15 @@ use std::{
 };
 
 use async_trait::async_trait;
+use shipstern_core::{ParseResult, Parser, Prefilter, SlotUpdate};
 use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateSlot},
     tonic,
 };
-use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, SlotUpdate};
 
 use crate::{
-    config::{BufferConfig, NullConfig, VixenConfig},
+    config::{BufferConfig, NullConfig, ShipsternConfig},
     sources::{SourceExitStatus, SourceTrait},
     Error, Handler, Pipeline, Runtime,
 };
@@ -77,8 +77,8 @@ fn make_slot_update(slot: u64) -> SubscribeUpdate {
     }
 }
 
-fn default_test_config() -> VixenConfig<NullConfig> {
-    VixenConfig {
+fn default_test_config() -> ShipsternConfig<NullConfig> {
+    ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig::default(),
     }
@@ -194,7 +194,7 @@ struct MockStreamEndSource;
 impl SourceTrait for MockStreamEndSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -216,7 +216,7 @@ struct MockStreamErrorSource;
 impl SourceTrait for MockStreamErrorSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -240,7 +240,7 @@ struct MockSourceExitStreamErrorSource;
 impl SourceTrait for MockSourceExitStreamErrorSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -266,7 +266,7 @@ struct MockErrorSource;
 impl SourceTrait for MockErrorSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -290,7 +290,7 @@ struct MockStreamEndWithUpdatesSource {
 impl SourceTrait for MockStreamEndWithUpdatesSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self { updates_to_send: 5 } }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self { updates_to_send: 5 } }
 
     async fn connect(
         &self,
@@ -322,7 +322,7 @@ struct MockCompletedWithUpdatesSource {
 impl SourceTrait for MockCompletedWithUpdatesSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self { updates_to_send: 3 } }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self { updates_to_send: 3 } }
 
     async fn connect(
         &self,
@@ -552,7 +552,7 @@ struct MockBurstSource<const N: u64>;
 impl<const N: u64> SourceTrait for MockBurstSource<N> {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -653,7 +653,7 @@ async fn edge_single_job_serializes_and_drains() {
     const N: u64 = 25;
     SERIAL_HANDLED.store(0, Ordering::Relaxed);
 
-    let config = VixenConfig {
+    let config = ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(1),
@@ -753,7 +753,7 @@ async fn edge_concurrency_never_exceeds_jobs() {
     PROBE_PEAK.store(0, Ordering::Relaxed);
     PROBE_HANDLED.store(0, Ordering::Relaxed);
 
-    let config = VixenConfig {
+    let config = ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(JOBS),
@@ -797,7 +797,7 @@ struct MockAbortAfterSource<const PRE: u64, const POST: u64>;
 impl<const PRE: u64, const POST: u64> SourceTrait for MockAbortAfterSource<PRE, POST> {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -849,7 +849,7 @@ async fn edge_abort_discards_queued_and_returns_promptly() {
 
     ABORT_COMPLETED.store(0, Ordering::Relaxed);
 
-    let config = VixenConfig {
+    let config = ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(JOBS),
@@ -891,7 +891,7 @@ struct MockStopUnderBackpressureSource;
 impl SourceTrait for MockStopUnderBackpressureSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -922,7 +922,7 @@ async fn edge_stop_is_responsive_while_waiting_for_a_permit() {
 
     STOP_RESPONSIVE_HANDLED.store(0, Ordering::Relaxed);
 
-    let config = VixenConfig {
+    let config = ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(1),
@@ -953,7 +953,7 @@ async fn edge_zero_jobs_does_not_deadlock() {
     const N: u64 = 10;
     ZERO_JOBS_HANDLED.store(0, Ordering::Relaxed);
 
-    let config = VixenConfig {
+    let config = ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(0),
@@ -1010,7 +1010,7 @@ struct MockStopWithInFlightSource<const N: u64>;
 impl<const N: u64> SourceTrait for MockStopWithInFlightSource<N> {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -1042,7 +1042,7 @@ async fn edge_stop_waits_for_in_flight_handlers() {
     STOP_INFLIGHT_STARTED.store(0, Ordering::SeqCst);
     STOP_INFLIGHT_FINISHED.store(0, Ordering::SeqCst);
 
-    let config = VixenConfig {
+    let config = ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(usize::try_from(N).unwrap()),

@@ -1,12 +1,19 @@
-use vixen_test_utils::check_protobuf_format;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::check_protobuf_format;
 
-include_vixen_parser!("../idls/dynamic_bonding_curve.json");
+include_shipstern_parser!("../idls/dynamic_bonding_curve.json");
 
 #[test]
 fn check_protobuf_schema() {
     check_protobuf_format(dynamic_bonding_curve::PROTOBUF_SCHEMA);
 
+    #[cfg(feature = "program-events")]
+    insta::assert_snapshot!(
+        "check_protobuf_schema_program_events",
+        dynamic_bonding_curve::PROTOBUF_SCHEMA
+    );
+
+    #[cfg(not(feature = "program-events"))]
     insta::assert_snapshot!(dynamic_bonding_curve::PROTOBUF_SCHEMA);
 }
 

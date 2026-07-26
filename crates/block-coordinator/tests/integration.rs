@@ -197,6 +197,10 @@
 
 use std::time::Duration;
 
+use shipstern_block_coordinator::{
+    AccountCommitAt, AccountSlot, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
+    CoordinatorMessage, InstructionRecordSortKey, InstructionSlot,
+};
 use solana_hash::Hash;
 use tokio::sync::mpsc;
 use yellowstone_grpc_proto::{
@@ -205,10 +209,6 @@ use yellowstone_grpc_proto::{
         SubscribeUpdateEntry, SubscribeUpdateSlot,
     },
     prelude::{BlockHeight, UnixTimestamp},
-};
-use yellowstone_vixen_block_coordinator::{
-    AccountCommitAt, AccountSlot, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
-    CoordinatorMessage, InstructionRecordSortKey, InstructionSlot,
 };
 
 // =============================================================================
@@ -1022,7 +1022,7 @@ async fn account_gate_blocks_flush_until_account_count_received() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            key: shipstern_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
             record: "acct1".to_string(),
         })
         .await
@@ -1031,7 +1031,7 @@ async fn account_gate_blocks_flush_until_account_count_received() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
+            key: shipstern_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
             record: "acct2".to_string(),
         })
         .await
@@ -1068,7 +1068,7 @@ async fn account_only_mode_flushes_without_transaction_parsed_messages() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            key: shipstern_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
             record: "acct1".to_string(),
         })
         .await
@@ -1124,7 +1124,7 @@ async fn account_event_after_confirmed_is_warn_not_error() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            key: shipstern_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
             record: "acct1".to_string(),
         })
         .await
@@ -1153,7 +1153,7 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            key: shipstern_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
             record: "acct1".to_string(),
         })
         .await
@@ -1162,7 +1162,7 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
+            key: shipstern_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
             record: "acct2".to_string(),
         })
         .await

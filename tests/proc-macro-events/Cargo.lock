@@ -362,7 +362,7 @@ dependencies = [
  "pin-project-lite",
  "serde_core",
  "sync_wrapper",
- "tower 0.5.3",
+ "tower",
  "tower-layer",
  "tower-service",
 ]
@@ -430,7 +430,7 @@ version = "0.72.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "993776b509cfb49c750f11b8f07a46fa23e0a1386ffc01fb1e7d343efc387895"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "cexpr",
  "clang-sys",
  "itertools 0.12.1",
@@ -441,12 +441,6 @@ dependencies = [
  "shlex",
  "syn 2.0.117",
 ]
-
-[[package]]
-name = "bitflags"
-version = "1.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
@@ -1021,19 +1015,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crossbeam"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1137cd7e7fc0fb5d3c5a8678be38ec56e819125d8d7907411fe24ccb943faca8"
-dependencies = [
- "crossbeam-channel",
- "crossbeam-deque",
- "crossbeam-epoch",
- "crossbeam-queue",
- "crossbeam-utils",
-]
-
-[[package]]
 name = "crossbeam-channel"
 version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1057,15 +1038,6 @@ name = "crossbeam-epoch"
 version = "0.9.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
-dependencies = [
- "crossbeam-utils",
-]
-
-[[package]]
-name = "crossbeam-queue"
-version = "0.3.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f58bbc28f91df819d0aa2a2c00cd19754769c2fad90579b3592b1c9ba7a3115"
 dependencies = [
  "crossbeam-utils",
 ]
@@ -1222,7 +1194,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "lock_api",
  "once_cell",
- "parking_lot_core 0.9.12",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -1339,26 +1311,6 @@ name = "displaydoc"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "dispose"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "425462ba555fb628fbb7d9750d52f01fc9132d855996f34f02b7164b1b62860f"
-dependencies = [
- "dispose-derive",
-]
-
-[[package]]
-name = "dispose-derive"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c32e3e8ab1b6ee2e06418f40f94f315d82b35157eb1d2322a6e20a4b15106b84"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1846,7 +1798,7 @@ dependencies = [
  "futures-timer",
  "no-std-compat",
  "nonzero_ext",
- "parking_lot 0.12.5",
+ "parking_lot",
  "portable-atomic",
  "quanta",
  "rand 0.8.5",
@@ -2269,15 +2221,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "instant"
-version = "0.1.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
 name = "ipnet"
 version = "2.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2645,7 +2588,7 @@ version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74523f3a35e05aba87a1d978330aef40f67b0304ac79c1c00b294c9830543db6"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "cfg-if",
  "cfg_aliases",
  "libc",
@@ -2851,7 +2794,7 @@ version = "0.10.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77823a27f0babb03091cb9ed9ef80af3b39dbc82f97e8fa530374b7dafd87a45"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "cfg-if",
  "foreign-types",
  "libc",
@@ -2896,37 +2839,12 @@ checksum = "f38d5652c16fde515bb1ecef450ab0f6a219d619a7274976324d5e377f7dceba"
 
 [[package]]
 name = "parking_lot"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
-dependencies = [
- "instant",
- "lock_api",
- "parking_lot_core 0.8.6",
-]
-
-[[package]]
-name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
 dependencies = [
  "lock_api",
- "parking_lot_core 0.9.12",
-]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a2cfe6f0ad2bfc16aefa463b497d5c7a5ecd44a23efa72aa342d90177356dc"
-dependencies = [
- "cfg-if",
- "instant",
- "libc",
- "redox_syscall 0.2.16",
- "smallvec",
- "winapi",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -2937,7 +2855,7 @@ checksum = "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1"
 dependencies = [
  "cfg-if",
  "libc",
- "redox_syscall 0.5.18",
+ "redox_syscall",
  "smallvec",
  "windows-link",
 ]
@@ -3122,18 +3040,18 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "shipstern",
+ "shipstern-block-meta-parser",
+ "shipstern-core",
+ "shipstern-kafka-sink",
+ "shipstern-mock",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "shipstern-spl-token-extensions-parser",
+ "shipstern-spl-token-parser",
+ "shipstern-stake-pool-parser",
+ "shipstern-test-utils",
  "tokio",
- "vixen-test-utils",
- "yellowstone-vixen",
- "yellowstone-vixen-block-meta-parser",
- "yellowstone-vixen-core",
- "yellowstone-vixen-kafka-sink",
- "yellowstone-vixen-mock",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-spl-token-extensions-parser",
- "yellowstone-vixen-spl-token-parser",
- "yellowstone-vixen-stake-pool-parser",
 ]
 
 [[package]]
@@ -3277,7 +3195,7 @@ version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c3a14896dfa883796f1cb410461aef38810ea05f2b2c33c5aded3649095fdad"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "memchr",
  "unicase",
 ]
@@ -3497,7 +3415,7 @@ version = "11.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "498cd0dc59d73224351ee52a95fee0f1a617a2eae0e7d9d720cc622c73a54186"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
 ]
 
 [[package]]
@@ -3555,20 +3473,11 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
-dependencies = [
- "bitflags 1.3.2",
-]
-
-[[package]]
-name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
 ]
 
 [[package]]
@@ -3637,7 +3546,7 @@ dependencies = [
  "tokio-native-tls",
  "tokio-rustls",
  "tokio-util",
- "tower 0.5.3",
+ "tower",
  "tower-http",
  "tower-service",
  "url",
@@ -3723,7 +3632,7 @@ version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "errno",
  "libc",
  "linux-raw-sys",
@@ -3861,7 +3770,7 @@ version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7f4bc775c73d9a02cde8bf7b2ec4c9d12743edf609006c7facc23998404cd1d"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "core-foundation 0.10.1",
  "core-foundation-sys",
  "libc",
@@ -4047,6 +3956,228 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "shipstern"
+version = "0.7.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "crossbeam-channel",
+ "futures-channel",
+ "futures-util",
+ "serde",
+ "shipstern-core",
+ "smallvec",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-block-coordinator"
+version = "0.7.0"
+dependencies = [
+ "async-trait",
+ "bs58",
+ "clap",
+ "futures-util",
+ "prost",
+ "serde",
+ "shipstern",
+ "shipstern-core",
+ "shipstern-yellowstone-grpc-source",
+ "smallvec",
+ "solana-clock 3.0.1",
+ "solana-commitment-config",
+ "solana-hash 3.1.0",
+ "tokio",
+ "tracing",
+ "yellowstone-block-machine",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-block-meta-parser"
+version = "0.7.0"
+dependencies = [
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-proc-macro",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-core"
+version = "0.7.0"
+dependencies = [
+ "borsh 1.6.1",
+ "bs58",
+ "clap",
+ "prost",
+ "prost-types",
+ "serde",
+ "shipstern-proto",
+ "thiserror 1.0.69",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-kafka-sink"
+version = "0.7.0"
+dependencies = [
+ "futures",
+ "prost",
+ "rdkafka",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "shipstern",
+ "shipstern-block-coordinator",
+ "shipstern-core",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "shipstern-mock"
+version = "0.7.0"
+dependencies = [
+ "futures",
+ "regex",
+ "serde",
+ "serde_json",
+ "shipstern-core",
+ "solana-client",
+ "solana-rpc-client-api",
+ "solana-sdk",
+ "solana-transaction-status",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-parser"
+version = "0.7.0"
+dependencies = [
+ "base64 0.22.1",
+ "bs58",
+ "shipstern-core",
+ "shipstern-proto",
+ "solana-program-option 3.1.0",
+ "solana-pubkey 3.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-proc-macro"
+version = "0.7.0"
+dependencies = [
+ "base64 0.22.1",
+ "bs58",
+ "codama-nodes",
+ "hex",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "shipstern-core",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "shipstern-proto"
+version = "0.7.0"
+dependencies = [
+ "prost",
+ "protobuf-src",
+ "tonic-prost-build",
+]
+
+[[package]]
+name = "shipstern-spl-token-extensions-parser"
+version = "0.7.0"
+dependencies = [
+ "borsh 1.6.1",
+ "bs58",
+ "bytemuck",
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "shipstern-proto",
+ "shipstern-spl-token-parser",
+ "solana-program-error 3.0.0",
+ "solana-program-pack 3.1.0",
+ "spl-pod 0.7.2",
+ "spl-token-2022 10.0.0",
+ "spl-token-group-interface 0.7.1",
+ "spl-token-metadata-interface 0.8.0",
+ "spl-type-length-value 0.9.1",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-spl-token-parser"
+version = "0.7.0"
+dependencies = [
+ "bs58",
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "shipstern-proto",
+ "solana-program-error 3.0.0",
+ "spl-pod 0.7.2",
+ "spl-token 9.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-stake-pool-parser"
+version = "0.7.0"
+dependencies = [
+ "borsh 1.6.1",
+ "bs58",
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "spl-pod 0.7.2",
+ "spl-stake-pool",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-test-utils"
+version = "0.0.0"
+dependencies = [
+ "shipstern-core",
+ "tempfile",
+]
+
+[[package]]
+name = "shipstern-yellowstone-grpc-source"
+version = "0.7.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "futures-util",
+ "serde",
+ "shipstern",
+ "shipstern-core",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
 ]
 
 [[package]]
@@ -4309,7 +4440,7 @@ version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d52e52720efe60465b052b9e7445a01c17550666beec855cce66f44766697bc2"
 dependencies = [
- "parking_lot 0.12.5",
+ "parking_lot",
 ]
 
 [[package]]
@@ -4318,7 +4449,7 @@ version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "085db4906d89324cef2a30840d59eaecf3d4231c560ec7c9f6614a93c652f501"
 dependencies = [
- "parking_lot 0.12.5",
+ "parking_lot",
 ]
 
 [[package]]
@@ -4964,7 +5095,7 @@ version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0e85a6fad5c2d0c4f5b91d34b8ca47118fc593af706e523cdbedf846a954f57"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "solana-account-info 2.3.0",
  "solana-instruction 2.3.3",
  "solana-program-error 2.2.2",
@@ -4981,7 +5112,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ddf67876c541aa1e21ee1acae35c95c6fbc61119814bfef70579317a5e26955"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "solana-account-info 3.1.1",
  "solana-instruction 3.3.0",
  "solana-instruction-error",
@@ -5303,7 +5434,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6edf2f25743c95229ac0fdc32f8f5893ef738dbf332c669e9861d33ddb0f469d"
 dependencies = [
  "bincode",
- "bitflags 2.11.0",
+ "bitflags",
  "cfg_eval",
  "serde",
  "serde_derive",
@@ -7650,7 +7781,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a13f3d0daba03132c0aa9767f98351b3488edc2c100cda2d2ec2b04f3d8d3c8b"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "core-foundation 0.9.4",
  "system-configuration-sys",
 ]
@@ -7802,7 +7933,7 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot 0.12.5",
+ "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
@@ -7989,7 +8120,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tokio-stream",
- "tower 0.5.3",
+ "tower",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -8049,38 +8180,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "topograph"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe4ea92bd6b8d73d7987848398691db79e81e6f77f1f56e959ebcee077adebf3"
-dependencies = [
- "crossbeam",
- "dispose",
- "futures-util",
- "log",
- "num_cpus",
- "parking_lot 0.11.2",
- "pin-project",
- "thiserror 1.0.69",
- "tokio",
-]
-
-[[package]]
-name = "tower"
-version = "0.4.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
-dependencies = [
- "futures-core",
- "futures-util",
- "pin-project",
- "pin-project-lite",
- "tower-layer",
- "tower-service",
- "tracing",
-]
-
-[[package]]
 name = "tower"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8106,7 +8205,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4e6559d53cc268e5031cd8429d05415bc4cb4aefc4aa5d6cc35fbf5b924a1f8"
 dependencies = [
  "async-compression",
- "bitflags 2.11.0",
+ "bitflags",
  "bytes",
  "futures-core",
  "futures-util",
@@ -8117,7 +8216,7 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-util",
- "tower 0.5.3",
+ "tower",
  "tower-layer",
  "tower-service",
 ]
@@ -8344,14 +8443,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
-name = "vixen-test-utils"
-version = "0.0.0"
-dependencies = [
- "tempfile",
- "yellowstone-vixen-core",
-]
-
-[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8506,7 +8597,7 @@ version = "0.244.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47b807c72e1bac69382b3a6fb3dbe8ea4c0ed87ff5629b8685ae6b9a611028fe"
 dependencies = [
- "bitflags 2.11.0",
+ "bitflags",
  "hashbrown 0.15.2",
  "indexmap",
  "semver",
@@ -8957,7 +9048,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d66ea20e9553b30172b5e831994e35fbde2d165325bec84fc43dbf6f4eb9cb2"
 dependencies = [
  "anyhow",
- "bitflags 2.11.0",
+ "bitflags",
  "indexmap",
  "log",
  "serde",
@@ -9037,248 +9128,41 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-grpc-client"
-version = "12.2.0"
+version = "13.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32b250b0ed11fb0fb11b80e89599e6f5a77640bce3dafe26ffb8022cdfc6c49e"
+checksum = "522f732c75365ae8e7c1d4607f33fa7acb163389f00debfa773ed2e7566cc94b"
 dependencies = [
+ "arc-swap",
  "bytes",
  "futures",
+ "hyper",
  "hyper-util",
+ "log",
+ "pin-project",
  "thiserror 2.0.18",
  "tokio",
  "tonic",
  "tonic-health",
- "tower 0.4.13",
+ "tower",
  "yellowstone-grpc-proto",
 ]
 
 [[package]]
 name = "yellowstone-grpc-proto"
-version = "12.1.0"
+version = "12.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab52445da59c3e710dd2128e3e49598cfa45c8ba7f30feb608cafbd404e5e8cf"
+checksum = "c91071690a2b0a078a4712ecca7be37aa929b474a74f4f269c61582f8e2a6139"
 dependencies = [
  "anyhow",
  "prost",
  "prost-types",
  "protoc-bin-vendored",
+ "siphasher 1.0.2",
+ "solana-pubkey 4.1.0",
+ "thiserror 2.0.18",
  "tonic",
  "tonic-prost",
  "tonic-prost-build",
-]
-
-[[package]]
-name = "yellowstone-vixen"
-version = "0.6.2"
-dependencies = [
- "async-trait",
- "clap",
- "futures-channel",
- "futures-util",
- "serde",
- "smallvec",
- "thiserror 1.0.69",
- "tokio",
- "topograph",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-block-coordinator"
-version = "0.6.2"
-dependencies = [
- "async-trait",
- "bs58",
- "clap",
- "futures-util",
- "prost",
- "serde",
- "smallvec",
- "solana-clock 3.0.1",
- "solana-commitment-config",
- "solana-hash 3.1.0",
- "tokio",
- "tracing",
- "yellowstone-block-machine",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
- "yellowstone-vixen-yellowstone-grpc-source",
-]
-
-[[package]]
-name = "yellowstone-vixen-block-meta-parser"
-version = "0.6.2"
-dependencies = [
- "prost",
- "prost-types",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-core",
- "yellowstone-vixen-proc-macro",
-]
-
-[[package]]
-name = "yellowstone-vixen-core"
-version = "0.6.2"
-dependencies = [
- "borsh 1.6.1",
- "bs58",
- "clap",
- "prost",
- "prost-types",
- "serde",
- "thiserror 1.0.69",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-proto",
-]
-
-[[package]]
-name = "yellowstone-vixen-kafka-sink"
-version = "0.6.2"
-dependencies = [
- "futures",
- "prost",
- "rdkafka",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
- "tracing",
- "yellowstone-vixen",
- "yellowstone-vixen-block-coordinator",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-mock"
-version = "0.6.2"
-dependencies = [
- "futures",
- "regex",
- "serde",
- "serde_json",
- "solana-client",
- "solana-rpc-client-api",
- "solana-sdk",
- "solana-transaction-status",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-parser"
-version = "0.6.2"
-dependencies = [
- "base64 0.22.1",
- "bs58",
- "solana-program-option 3.1.0",
- "solana-pubkey 3.0.0",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-proto",
-]
-
-[[package]]
-name = "yellowstone-vixen-proc-macro"
-version = "0.6.2"
-dependencies = [
- "base64 0.22.1",
- "bs58",
- "codama-nodes",
- "hex",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "syn 2.0.117",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-proto"
-version = "0.6.2"
-dependencies = [
- "prost",
- "protobuf-src",
- "tonic-prost-build",
-]
-
-[[package]]
-name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.6.2"
-dependencies = [
- "borsh 1.6.1",
- "bs58",
- "bytemuck",
- "prost",
- "prost-types",
- "solana-program-error 3.0.0",
- "solana-program-pack 3.1.0",
- "spl-pod 0.7.2",
- "spl-token-2022 10.0.0",
- "spl-token-group-interface 0.7.1",
- "spl-token-metadata-interface 0.8.0",
- "spl-type-length-value 0.9.1",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-proto",
- "yellowstone-vixen-spl-token-parser",
-]
-
-[[package]]
-name = "yellowstone-vixen-spl-token-parser"
-version = "0.6.2"
-dependencies = [
- "bs58",
- "prost",
- "prost-types",
- "solana-program-error 3.0.0",
- "spl-pod 0.7.2",
- "spl-token 9.0.0",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-proto",
-]
-
-[[package]]
-name = "yellowstone-vixen-stake-pool-parser"
-version = "0.6.2"
-dependencies = [
- "borsh 1.6.1",
- "bs58",
- "prost",
- "prost-types",
- "spl-pod 0.7.2",
- "spl-stake-pool",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
-]
-
-[[package]]
-name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.6.2"
-dependencies = [
- "async-trait",
- "clap",
- "futures-util",
- "serde",
- "tokio",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
 ]
 
 [[package]]

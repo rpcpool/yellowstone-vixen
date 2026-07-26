@@ -1,7 +1,7 @@
 [package]
-name = "yellowstone-vixen-jetstream-source"
+name = "shipstern-jetstream-source"
 version.workspace = true
-description = "Jetstream source for the Yellowstone Vixen"
+description = "Jetstream source for Shipstern"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,8 +13,8 @@ async-trait = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
-yellowstone-vixen = { workspace = true }
-yellowstone-vixen-core = { workspace = true }
+shipstern = { workspace = true }
+shipstern-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

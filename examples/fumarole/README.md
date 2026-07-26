@@ -2,7 +2,7 @@
 
 This example demonstrates how to consume Solana Geyser updates from the
 [Yellowstone Fumarole](https://github.com/rpcpool/yellowstone-fumarole) service
-using the `YellowstoneFumaroleSource` integration for Yellowstone Vixen.
+using the `YellowstoneFumaroleSource` integration for Shipstern.
 
 It wires two simple pipelines (SPL Token account + instruction) and logs parsed
 values to stdout.
@@ -15,7 +15,7 @@ values to stdout.
 
 ## Create a persistent subscriber (required)
 
-Fumarole uses _persistent subscribers_ to provide reliable/resumable streams. Before running this example, create a subscriber using the **Fumarole CLI** (`fume`) and then set that same name in Vixen config as `subscriber-name`.
+Fumarole uses _persistent subscribers_ to provide reliable/resumable streams. Before running this example, create a subscriber using the **Fumarole CLI** (`fume`) and then set that same name in Shipstern config as `subscriber-name`.
 
 1. Install the CLI:
 
@@ -42,7 +42,7 @@ fume test-config
 fume create --name my_consumer_group
 ```
 
-That `--name` value (`my_consumer_group`) is what you will set as `subscriber-name` in the Vixen
+That `--name` value (`my_consumer_group`) is what you will set as `subscriber-name` in the Shipstern
 TOML config below.
 
 ## Run the example
@@ -69,7 +69,7 @@ subscriber-name = "my_consumer_group" # required
 2. Run:
 
 ```bash
-cargo run -p yellowstone-vixen-example-fumarole -- --config ./Vixen.toml
+cargo run -p shipstern-example-fumarole -- --config ./Shipstern.toml
 ```
 
 ## What the example does
@@ -77,16 +77,16 @@ cargo run -p yellowstone-vixen-example-fumarole -- --config ./Vixen.toml
 The entrypoint is `examples/fumarole/src/main.rs`:
 
 - Reads a TOML config file from `--config`.
-- Builds a Vixen runtime using `Runtime::<YellowstoneFumaroleSource>`.
+- Builds a Shipstern runtime using `Runtime::<YellowstoneFumaroleSource>`.
 - Registers:
-  - an instruction pipeline using `yellowstone_vixen_spl_token_parser::InstructionParser`
-  - an account pipeline using `yellowstone_vixen_spl_token_parser::AccountParser`
+  - an instruction pipeline using `shipstern_spl_token_parser::InstructionParser`
+  - an account pipeline using `shipstern_spl_token_parser::AccountParser`
 - Logs parsed updates to stdout via a simple `Logger` handler.
 
 ## Source configuration options (Fumarole)
 
 The `[source]` table is deserialized into
-`yellowstone_vixen_yellowstone_fumarole_source::FumaroleConfig`.
+`shipstern_yellowstone_fumarole_source::FumaroleConfig`.
 
 All keys are `kebab-case`.
 
@@ -109,5 +109,5 @@ All keys are `kebab-case`.
 
 In the current `YellowstoneFumaroleSource` implementation, these are **declared
 but not wired** (the source does not start a push loop itself). If you want
-metrics, use Vixen runtime metrics (see `examples/prometheus`) and push them
+metrics, use Shipstern runtime metrics (see `examples/prometheus`) and push them
 from your app.

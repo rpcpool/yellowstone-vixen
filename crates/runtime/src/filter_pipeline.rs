@@ -3,8 +3,8 @@
 use std::{borrow::Cow, fmt::Debug};
 
 use futures_util::{Future, StreamExt};
+use shipstern_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 use smallvec::SmallVec;
-use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 
 use crate::{
     handler::{DynPipeline, PipelineErrors},
@@ -42,7 +42,7 @@ impl<P: Parser, H> FilterPipeline<P, H> {
     ///
     /// ```rust, ignore
     ///
-    ///    vixen::Runtime::builder()
+    ///    shipstern::Runtime::builder()
     ///        .source(YellowstoneGrpcSource::new())
     ///        .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
     ///        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()

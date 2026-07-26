@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-block-meta-parser"
-description = "Vixen block meta parser."
+name = "shipstern-block-meta-parser"
+description = "Shipstern block meta parser."
 readme = "./../../README.md"
 version.workspace = true
 edition.workspace = true
@@ -12,15 +12,15 @@ authors.workspace = true
 
 [dependencies]
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-vixen-core = { workspace = true }
-yellowstone-vixen-proc-macro = { workspace = true }
+shipstern-core = { workspace = true }
+shipstern-proc-macro = { workspace = true }
 prost = { workspace = true, optional = true }
 prost-types = { workspace = true, optional = true }
 
 [dev-dependencies]
-yellowstone-vixen-mock = { workspace = true }
+shipstern-mock = { workspace = true }
 tokio.workspace = true
 
 [features]
 default = []
-proto = ["dep:prost", "dep:prost-types", "yellowstone-vixen-core/proto", "yellowstone-vixen-proc-macro/proto"]
+proto = ["dep:prost", "dep:prost-types", "shipstern-core/proto", "shipstern-proc-macro/proto"]
