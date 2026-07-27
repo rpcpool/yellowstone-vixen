@@ -269,6 +269,13 @@ mod wire_compat_tests {
             let found =
                 package_decl(text).unwrap_or_else(|| panic!("{file} has no `package` declaration"));
 
+            assert!(
+                !found.starts_with("shipstern"),
+                "{file} declares `package {found};` — the crate is named shipstern, but the \
+                 protobuf package is the WIRE CONTRACT and stays `vixen.*`. A project-wide rename \
+                 has caught this file; revert it (see the module docs above)",
+            );
+
             assert_eq!(
                 found, expected,
                 "{file} must declare `package {expected};` — this is the public wire contract \
@@ -294,6 +301,14 @@ mod stream_wire_compat_tests {
     fn stream_service_path_is_stable() {
         let set = crate::prost_types::FileDescriptorSet::decode(crate::stream::DESCRIPTOR_SET)
             .expect("stream DESCRIPTOR_SET should decode as a FileDescriptorSet");
+
+        let packages: Vec<&str> = set.file.iter().map(|f| f.package()).collect();
+
+        assert!(
+            !packages.iter().any(|p| p.starts_with("shipstern")),
+            "descriptor set contains a shipstern.* package {packages:?} — the crate is named \
+             shipstern, but the protobuf package is the WIRE CONTRACT and stays `vixen.*`",
+        );
 
         let file = set
             .file
