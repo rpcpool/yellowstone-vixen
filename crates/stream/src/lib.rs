@@ -4,8 +4,8 @@
 //! stream server, or [a more complex example][ex2] that serves parsed data
 //! from Solana programs using pre-packaged Shipstern parsers.
 //!
-//! [ex1]: https://github.com/rpcpool/shipstern/blob/main/examples/stream/src/main.rs
-//! [ex2]: https://github.com/rpcpool/shipstern/blob/main/examples/stream-parser/src/main.rs
+//! [ex1]: https://github.com/solana-rpc/shipstern/blob/main/examples/stream/src/main.rs
+//! [ex2]: https://github.com/solana-rpc/shipstern/blob/main/examples/stream-parser/src/main.rs
 
 use std::fmt;
 

@@ -13,7 +13,7 @@ authors = ["Triton One", "ABK-Labs", "Jupiter Exchange"]
 edition = "2024"
 license = "MIT"
 version = "0.7.0"
-repository = "https://github.com/rpcpool/shipstern"
+repository = "https://github.com/solana-rpc/shipstern"
 publish = false
 
 [workspace.dependencies]

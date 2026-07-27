@@ -107,8 +107,8 @@ sudo docker-compose up
 
 | Address                                       | Public Name          | Parser                                                                                                                                      |
 | --------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` | **Token Program**    | [shipstern-spl-token-parser](https://github.com/rpcpool/shipstern/tree/main/crates/spl-token-parser)                        |
-| `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` | **Token Extensions** | [shipstern-spl-token-extensions-parser](https://github.com/rpcpool/shipstern/tree/main/crates/spl-token-extensions-program) |
+| `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` | **Token Program**    | [shipstern-spl-token-parser](https://github.com/solana-rpc/shipstern/tree/main/crates/spl-token-parser)                        |
+| `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` | **Token Extensions** | [shipstern-spl-token-extensions-parser](https://github.com/solana-rpc/shipstern/tree/main/crates/spl-token-extensions-program) |
 
 ### Codegen Macro
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-package shipstern.stream;
+package vixen.stream;
 
 // The `ProgramStreams` service allows clients to subscribe to a stream of
 // updates for a given program ID.

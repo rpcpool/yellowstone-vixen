@@ -4,7 +4,7 @@ description = "Example of configuring fumarole source"
 publish = false
 edition.workspace = true
 license = "MIT"
-repository = "https://github.com/rpcpool/shipstern"
+repository = "https://github.com/solana-rpc/shipstern"
 
 [dependencies]
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }

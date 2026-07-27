@@ -13,7 +13,7 @@ Shipstern introduces a flexible `Source` system that allows you to connect to va
 
 ## How It Works
 
-The [`Source`](https://github.com/rpcpool/shipstern/blob/main/crates/runtime/src/sources.rs) trait provides a standardized way to:
+The [`Source`](https://github.com/solana-rpc/shipstern/blob/main/crates/runtime/src/sources.rs) trait provides a standardized way to:
 - Connect to external data sources
 - Stream updates through a channel to the Shipstern runtime for processing
 - Configure filters for data processing
@@ -119,6 +119,6 @@ We welcome contributions to expand the ecosystem of sources! When creating a new
 
 ## Support
 
-If you need help or have questions, please open an issue on [GitHub](https://github.com/rpcpool/shipstern) or also check other sources implementations in the repository.
+If you need help or have questions, please open an issue on [GitHub](https://github.com/solana-rpc/shipstern) or also check other sources implementations in the repository.
 
 ---

@@ -1,7 +1,7 @@
 # Generate a Shipstern Parser with Codama
 ### How-to generate Shipstern parser with Codama
 
-This guide walks you through generating a [Shipstern](https://github.com/rpcpool/shipstern) Parser using [Codama](https://github.com/abklabs/codama), a tool for rendering Rust SDKs and parser implementations from IDLs.
+This guide walks you through generating a [Shipstern](https://github.com/solana-rpc/shipstern) Parser using [Codama](https://github.com/abklabs/codama), a tool for rendering Rust SDKs and parser implementations from IDLs.
 
 Shipstern is a framework for building real-time program data pipelines in Rust. This guide helps you scaffold a parser that can be used in the Shipstern runtime to decode and process Solana program data.
 

@@ -4,7 +4,7 @@ description = "Example of using Jetstream source with Shipstern"
 publish = false
 edition.workspace = true
 license = "MIT"
-repository = "https://github.com/rpcpool/shipstern"
+repository = "https://github.com/solana-rpc/shipstern"
 
 [dependencies]
 anyhow = "1.0"

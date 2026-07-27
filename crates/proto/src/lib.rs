@@ -18,10 +18,10 @@ mod shipstern {
 
         pub mod token {
             #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/shipstern.parser.token.rs"));
+            include!(concat!(env!("OUT_DIR"), "/vixen.parser.token.rs"));
 
             pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/shipstern.parser.token.bin"));
+                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.token.bin"));
 
             /// Raw `.proto` schema text for the token parser.
             pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/token.proto");
@@ -38,10 +38,10 @@ mod shipstern {
 
         pub mod bpf_loader {
             #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/shipstern.parser.bpf_loader.rs"));
+            include!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.rs"));
 
             pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/shipstern.parser.bpf_loader.bin"));
+                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.bin"));
 
             /// Raw `.proto` schema text for the BPF loader parser.
             pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/bpf_loader.proto");
@@ -60,12 +60,12 @@ mod shipstern {
             #![allow(clippy::all)]
             include!(concat!(
                 env!("OUT_DIR"),
-                "/shipstern.parser.token_extensions.rs"
+                "/vixen.parser.token_extensions.rs"
             ));
 
             pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(
                 env!("OUT_DIR"),
-                "/shipstern.parser.token_extensions.bin"
+                "/vixen.parser.token_extensions.bin"
             ));
 
             /// Self-contained `.proto` schema text for the token extensions
@@ -94,9 +94,9 @@ mod shipstern {
         //! Protobuf definitions for the `stream` feature of the
         //! `shipstern` crate.
 
-        tonic::include_proto!("shipstern.stream");
+        tonic::include_proto!("vixen.stream");
 
-        /// Compiled protobuf file descriptor set for the `shipstern.stream`
+        /// Compiled protobuf file descriptor set for the `vixen.stream`
         /// package.
         pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("stream_descriptor");
     }
@@ -204,6 +204,112 @@ mod dispatch_index_tests {
             "INSTRUCTION_DISPATCH_MESSAGE_INDEX ({instruction_idx}) should point to \
              TokenExtensionProgram, found {}",
             messages[instruction_idx],
+        );
+    }
+}
+
+///
+/// Wire-compatibility guards for the protobuf `package` declarations.
+///
+/// These strings are part of the public wire contract, not an internal naming
+/// detail. The package determines the gRPC method path
+/// (`/vixen.stream.ProgramStreams/Subscribe`) and the `google.protobuf.Any`
+/// type URLs carried in `SubscribeUpdate.parsed`
+/// (`type.googleapis.com/vixen.parser.token.TokenAccount`).
+///
+/// Renaming a package breaks every deployed consumer: the gRPC path starts
+/// returning `UNIMPLEMENTED`, and `Any` type URLs stop matching *without*
+/// erroring, so the failure is silent. A project-wide find-and-replace will
+/// happily rewrite these, and nothing else in the test suite notices.
+///
+/// Example output when a rename slips through:
+///
+/// ```rust, ignore
+/// assertion `left == right` failed: token.proto must declare `package vixen.parser.token;`
+///   left: "shipstern.parser.token"
+///  right: "vixen.parser.token"
+/// ```
+///
+#[cfg(all(test, feature = "parser"))]
+mod wire_compat_tests {
+    /// Extract the `package` declaration from `.proto` source text.
+    fn package_decl(proto_text: &str) -> Option<&str> {
+        for line in proto_text.lines() {
+            let Some(rest) = line.trim().strip_prefix("package ") else {
+                continue;
+            };
+
+            return rest.split(';').next().map(str::trim);
+        }
+
+        None
+    }
+
+    #[test]
+    fn parser_proto_packages_are_stable() {
+        let cases = [
+            (
+                "token.proto",
+                include_str!("../proto/token.proto"),
+                "vixen.parser.token",
+            ),
+            (
+                "bpf_loader.proto",
+                include_str!("../proto/bpf_loader.proto"),
+                "vixen.parser.bpf_loader",
+            ),
+            (
+                "token_extensions.proto",
+                include_str!("../proto/token_extensions.proto"),
+                "vixen.parser.token_extensions",
+            ),
+        ];
+
+        for (file, text, expected) in cases {
+            let found =
+                package_decl(text).unwrap_or_else(|| panic!("{file} has no `package` declaration"));
+
+            assert_eq!(
+                found, expected,
+                "{file} must declare `package {expected};` — this is the public wire contract \
+                 (gRPC method paths and `Any` type URLs), so renaming it silently breaks deployed \
+                 consumers",
+            );
+        }
+    }
+}
+
+///
+/// Wire-compatibility guard for the `stream` gRPC service path.
+///
+/// Decodes the compiled descriptor set rather than the `.proto` text, so this
+/// asserts what the generated server actually serves. See
+/// [`wire_compat_tests`] for why the package string is load-bearing.
+///
+#[cfg(all(test, feature = "stream"))]
+mod stream_wire_compat_tests {
+    use crate::prost::Message as _;
+
+    #[test]
+    fn stream_service_path_is_stable() {
+        let set = crate::prost_types::FileDescriptorSet::decode(crate::stream::DESCRIPTOR_SET)
+            .expect("stream DESCRIPTOR_SET should decode as a FileDescriptorSet");
+
+        let file = set
+            .file
+            .iter()
+            .find(|f| f.package() == "vixen.stream")
+            .expect(
+                "descriptor set must contain a file with `package vixen.stream` — the gRPC method \
+                 path depends on it",
+            );
+
+        let service_names: Vec<&str> = file.service.iter().map(|s| s.name()).collect();
+
+        assert!(
+            service_names.contains(&"ProgramStreams"),
+            "vixen.stream must expose the `ProgramStreams` service (wire path \
+             /vixen.stream.ProgramStreams/Subscribe), found {service_names:?}",
         );
     }
 }

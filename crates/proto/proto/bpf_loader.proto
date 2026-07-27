@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package shipstern.parser.bpf_loader;
+package vixen.parser.bpf_loader;
 
 message PublicKey {
   bytes value = 1;

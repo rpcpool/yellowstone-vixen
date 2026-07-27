@@ -20,7 +20,7 @@ To contribute to this project, you'll need to have Rust installed on your machin
 1. **Clone the Repository**
 
    ```sh
-   git clone https://github.com/rpcpool/shipstern.git
+   git clone https://github.com/solana-rpc/shipstern.git
    cd shipstern
    ```
 
