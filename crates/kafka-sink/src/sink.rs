@@ -603,6 +603,10 @@ impl KafkaSink {
         let mut had_error = false;
 
         for parser in &self.account_parsers {
+            if parser.program_id().0.as_slice() != inner.owner.as_slice() {
+                continue;
+            }
+
             match parser.try_parse(acct).await {
                 ParseOutcome::Parsed(parsed) => {
                     return (
@@ -852,6 +856,7 @@ mod tests {
     struct TestAccountParser {
         program_id: Pubkey,
         outcome: TestAccountOutcome,
+        calls: Arc<AtomicUsize>,
     }
 
     #[cfg(feature = "experimental-account-parser")]
@@ -871,6 +876,8 @@ mod tests {
         fn prefilter(&self) -> Prefilter { Prefilter::default() }
 
         async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
+            self.calls.fetch_add(1, Ordering::Relaxed);
+
             let owner = value
                 .account
                 .as_ref()
@@ -924,7 +931,7 @@ mod tests {
                 txn_signature: None,
                 write_version: 11,
                 pubkey: vec![2_u8; 32],
-                data: vec![9_u8, 8, 7].into(),
+                data: vec![9_u8, 8, 7],
                 executable: false,
                 lamports: 1,
                 owner: owner.0.to_vec(),
@@ -1146,6 +1153,7 @@ mod tests {
         let parser = TestAccountParser {
             program_id: [1; 32].into(),
             outcome: TestAccountOutcome::Filtered,
+            calls: Arc::new(AtomicUsize::new(0)),
         };
 
         let sink = KafkaSinkBuilder::new()
@@ -1165,6 +1173,7 @@ mod tests {
         let parser = TestAccountParser {
             program_id: [1; 32].into(),
             outcome: TestAccountOutcome::Error,
+            calls: Arc::new(AtomicUsize::new(0)),
         };
 
         let sink = KafkaSinkBuilder::new()
@@ -1203,6 +1212,7 @@ mod tests {
         let parser = TestAccountParser {
             program_id: [1; 32].into(),
             outcome: TestAccountOutcome::Parsed,
+            calls: Arc::new(AtomicUsize::new(0)),
         };
 
         let sink = KafkaSinkBuilder::new()
@@ -1224,5 +1234,30 @@ mod tests {
             .headers
             .iter()
             .any(|header| { header.key == "write_version" && header.value == "11" }));
+    }
+
+    #[cfg(feature = "experimental-account-parser")]
+    #[test]
+    fn unrelated_account_does_not_invoke_parser_or_route_to_fallback_topic() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let parser = TestAccountParser {
+            program_id: [1; 32].into(),
+            outcome: TestAccountOutcome::Error,
+            calls: Arc::clone(&calls),
+        };
+
+        let sink = KafkaSinkBuilder::new()
+            .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
+            .build();
+
+        let acct = account_with_owner([9; 32].into());
+        let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
+
+        assert!(record.is_none(), "unrelated account must not emit a record");
+        assert!(
+            !had_error,
+            "unrelated account must not count as a parse error"
+        );
+        assert_eq!(calls.load(Ordering::Relaxed), 0);
     }
 }
