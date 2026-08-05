@@ -87,6 +87,9 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --lib --tests
 
+      - name: Run experimental account parser tests
+        run: cargo test -p yellowstone-vixen-kafka-sink --features experimental-account-parser --lib --tests
+
   test-events:
     runs-on: ubuntu-24.04
     steps:
@@ -151,3 +154,6 @@ jobs:
 
       - name: Run clippy
         run: cargo clippy --all-targets --tests --no-deps -- -Dwarnings
+
+      - name: Run experimental account parser clippy
+        run: cargo clippy -p yellowstone-vixen-kafka-sink --features experimental-account-parser --all-targets --tests --no-deps -- -Dwarnings

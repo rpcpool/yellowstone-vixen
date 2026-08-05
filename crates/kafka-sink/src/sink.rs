@@ -583,7 +583,8 @@ impl KafkaSink {
 
     /// Parse an account update and prepare a Kafka record.
     ///
-    /// Tries each registered account parser. On match, builds a decoded account record.
+    /// Tries each registered account parser associated with the account owner. On match, builds a
+    /// decoded account record.
     /// On `Error`, checks if that parser has a fallback_topic.
     /// Returns the record (if any) and a `had_error` flag.
     pub async fn parse_account(
