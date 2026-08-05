@@ -87,6 +87,9 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --lib --tests
 
+      - name: Run experimental account parser tests
+        run: cargo test -p yellowstone-vixen-kafka-sink --features experimental-account-parser --lib --tests
+
   test-events:
     runs-on: ubuntu-24.04
     steps:
@@ -150,4 +153,4 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
 
       - name: Run clippy
-        run: cargo clippy --all-targets --tests --no-deps -- -Dwarnings
+        run: cargo clippy --all-targets --tests --no-deps --features yellowstone-vixen-kafka-sink/experimental-account-parser -- -Dwarnings
