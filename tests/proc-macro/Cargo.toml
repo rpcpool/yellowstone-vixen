@@ -6,7 +6,6 @@ publish = false
 
 [features]
 default = ["serde"]
-program-events = ["shipstern-proc-macro/program-events"]
 serde = ["dep:serde"]
 
 # Workspace feature-unification workaround

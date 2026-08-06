@@ -10,13 +10,6 @@ include_shipstern_parser!("../idls/perpetuals.json");
 fn check_protobuf_schema() {
     check_protobuf_format(perpetuals::PROTOBUF_SCHEMA);
 
-    #[cfg(feature = "program-events")]
-    insta::assert_snapshot!(
-        "check_protobuf_schema_program_events",
-        perpetuals::PROTOBUF_SCHEMA
-    );
-
-    #[cfg(not(feature = "program-events"))]
     insta::assert_snapshot!(perpetuals::PROTOBUF_SCHEMA);
 }
 
@@ -262,15 +255,6 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         let (decrease_accounts, decrease_args) = ixs
             .iter()
             .find_map(|ix| match &ix.as_ref()?.instruction {
-                #[cfg(feature = "program-events")]
-                Some(perpetuals::Instructions {
-                    instruction:
-                        perpetuals::instruction::Instruction::DecreasePositionWithTpsl {
-                            accounts,
-                            args,
-                        },
-                }) => Some((accounts, args)),
-                #[cfg(not(feature = "program-events"))]
                 perpetuals::instruction::Instruction::DecreasePositionWithTpsl {
                     accounts,
                     args,
@@ -310,25 +294,15 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
     }
 
     {
-        let (close_accounts, close_args) =
-            ixs.iter()
-                .find_map(|ix| match &ix.as_ref()?.instruction {
-                    #[cfg(feature = "program-events")]
-                    Some(perpetuals::Instructions {
-                        instruction:
-                            perpetuals::instruction::Instruction::ClosePositionRequest2 {
-                                accounts,
-                                args,
-                            },
-                    }) => Some((accounts, args)),
-                    #[cfg(not(feature = "program-events"))]
-                    perpetuals::instruction::Instruction::ClosePositionRequest2 {
-                        accounts,
-                        args,
-                    } => Some((accounts, args)),
-                    _ => None,
-                })
-                .expect("no close position request 2 ix found");
+        let (close_accounts, close_args) = ixs
+            .iter()
+            .find_map(|ix| match &ix.as_ref()?.instruction {
+                perpetuals::instruction::Instruction::ClosePositionRequest2 { accounts, args } => {
+                    Some((accounts, args))
+                },
+                _ => None,
+            })
+            .expect("no close position request 2 ix found");
 
         assert_eq!(
             close_accounts,
@@ -368,12 +342,6 @@ async fn parse_borrow_from_custody_ix() {
     let (borrow_accounts, borrow_args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
-            #[cfg(feature = "program-events")]
-            Some(perpetuals::Instructions {
-                instruction:
-                    perpetuals::instruction::Instruction::BorrowFromCustody { accounts, args },
-            }) => Some((accounts, args)),
-            #[cfg(not(feature = "program-events"))]
             perpetuals::instruction::Instruction::BorrowFromCustody { accounts, args } => {
                 Some((accounts, args))
             },

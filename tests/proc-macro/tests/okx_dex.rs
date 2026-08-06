@@ -9,13 +9,6 @@ include_shipstern_parser!("../idls/okx_labs1.json");
 fn check_protobuf_schema() {
     check_protobuf_format(dex_solana::PROTOBUF_SCHEMA);
 
-    #[cfg(feature = "program-events")]
-    insta::assert_snapshot!(
-        "check_protobuf_schema_program_events",
-        dex_solana::PROTOBUF_SCHEMA
-    );
-
-    #[cfg(not(feature = "program-events"))]
     insta::assert_snapshot!(dex_solana::PROTOBUF_SCHEMA);
 }
 
@@ -31,11 +24,6 @@ async fn parse_swap_v3_ix() {
     let (accounts, args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
-            #[cfg(feature = "program-events")]
-            Some(dex_solana::Instructions {
-                instruction: dex_solana::instruction::Instruction::SwapV3 { accounts, args },
-            }) => Some((accounts, args)),
-            #[cfg(not(feature = "program-events"))]
             dex_solana::instruction::Instruction::SwapV3 { accounts, args } => {
                 Some((accounts, args))
             },

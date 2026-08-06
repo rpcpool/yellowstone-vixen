@@ -15,13 +15,6 @@ include_shipstern_parser!("../idls/loopscale.json");
 fn check_protobuf_schema() {
     check_protobuf_format(loopscale::PROTOBUF_SCHEMA);
 
-    #[cfg(feature = "program-events")]
-    insta::assert_snapshot!(
-        "check_protobuf_schema_program_events",
-        shipstern_test_utils::normalize_protobuf_schema_for_snapshot(loopscale::PROTOBUF_SCHEMA)
-    );
-
-    #[cfg(not(feature = "program-events"))]
     insta::assert_snapshot!(
         shipstern_test_utils::normalize_protobuf_schema_for_snapshot(loopscale::PROTOBUF_SCHEMA)
     );
