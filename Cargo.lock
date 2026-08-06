@@ -6823,6 +6823,7 @@ dependencies = [
  "opentelemetry 0.24.0",
  "prometheus",
  "serde",
+ "serde_json",
  "shipstern-core",
  "smallvec",
  "thiserror 1.0.69",

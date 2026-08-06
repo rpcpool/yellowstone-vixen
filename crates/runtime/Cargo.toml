@@ -27,6 +27,7 @@ shipstern-core = { workspace = true }
 
 [dev-dependencies]
 async-trait = { workspace = true }
+serde_json = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "test-util"] }
 yellowstone-grpc-proto = { workspace = true }
 
