@@ -163,4 +163,4 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
 
       - name: Run clippy
-        run: cargo clippy --all-targets --tests --no-deps --features yellowstone-vixen-kafka-sink/experimental-account-parser -- -Dwarnings
+        run: cargo clippy --all-targets --tests --no-deps --features shipstern-kafka-sink/experimental-account-parser -- -Dwarnings
