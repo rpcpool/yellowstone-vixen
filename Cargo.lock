@@ -6813,7 +6813,7 @@ checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
 name = "shipstern"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -6834,7 +6834,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-block-coordinator"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "bs58",
@@ -6858,7 +6858,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-block-meta-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -6871,7 +6871,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-bpf-loader-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "bincode",
  "prost 0.14.1",
@@ -6887,7 +6887,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-core"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -7013,7 +7013,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-jetstream-source"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "bincode",
@@ -7045,7 +7045,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-kafka-sink"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "futures 0.3.31",
  "mockito",
@@ -7064,7 +7064,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-mock"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "futures 0.3.31",
  "regex",
@@ -7080,7 +7080,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -7095,7 +7095,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-proc-macro"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -7112,7 +7112,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-proto"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -7125,7 +7125,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-slot-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "shipstern-core",
  "shipstern-mock",
@@ -7134,7 +7134,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-solana-rpc-source"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -7152,7 +7152,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-solana-snapshot-source"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "agave-snapshots",
  "async-trait",
@@ -7179,7 +7179,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-spl-token-extensions-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -7205,7 +7205,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-spl-token-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "bs58",
  "bytemuck",
@@ -7228,7 +7228,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-stake-pool-parser"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
@@ -7247,7 +7247,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-stream"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -7278,7 +7278,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-yellowstone-fumarole-source"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "bytesize 2.3.1",
@@ -7297,7 +7297,7 @@ dependencies = [
 
 [[package]]
 name = "shipstern-yellowstone-grpc-source"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
