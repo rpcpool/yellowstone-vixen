@@ -156,6 +156,16 @@ struct Opts {
     /// Emit a firehose progress stats line every N slots (0 disables)
     #[arg(long, default_value = "10000")]
     stats_interval_slots: u64,
+
+    /// Single firehose worker thread with parallel ripget downloads.
+    /// `--threads` then configures ripget range concurrency.
+    #[arg(long)]
+    sequential: bool,
+
+    /// Ripget hot/cold window in bytes for sequential mode. Defaults to a
+    /// bounded value when unset; see JetstreamSourceConfig::buffer_window_bytes.
+    #[arg(long)]
+    buffer_window_bytes: Option<u64>,
 }
 
 /// Entry point: set env vars while the process is still single-threaded,
@@ -184,8 +194,8 @@ fn main() -> Result<()> {
         network: "mainnet".to_string(),
         compact_index_base_url: "https://files.old-faithful.net".to_string(),
         network_capacity_mb: 100000,
-        sequential: false,
-        buffer_window_bytes: None,
+        sequential: opts.sequential,
+        buffer_window_bytes: opts.buffer_window_bytes,
         stats_interval_slots: opts.stats_interval_slots,
         possible_leader_skipped_tx: None,
         shutdown_signal_tx: None,
