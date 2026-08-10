@@ -162,6 +162,11 @@ struct Opts {
     #[arg(long)]
     sequential: bool,
 
+    /// Replay epochs from newest to oldest. Slots within an epoch still
+    /// arrive in ascending order. Implies sequential mode upstream.
+    #[arg(long)]
+    reverse: bool,
+
     /// Ripget hot/cold window in bytes for sequential mode. Defaults to a
     /// bounded value when unset; see JetstreamSourceConfig::buffer_window_bytes.
     #[arg(long)]
@@ -195,6 +200,7 @@ fn main() -> Result<()> {
         compact_index_base_url: "https://files.old-faithful.net".to_string(),
         network_capacity_mb: 100000,
         sequential: opts.sequential,
+        reverse: opts.reverse,
         buffer_window_bytes: opts.buffer_window_bytes,
         stats_interval_slots: opts.stats_interval_slots,
         possible_leader_skipped_tx: None,

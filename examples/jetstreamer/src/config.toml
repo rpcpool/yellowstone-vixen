@@ -11,10 +11,14 @@ network-capacity-mb = 1000
 # parallel firehose workers; when enabled, it controls ripget concurrency.
 # sequential = false
 
-# Optional: ripget hot/cold window in bytes; only used when sequential is
-# enabled. Defaults to 256 MiB. Upstream's own default (min(4 GiB, 15% of RAM))
-# can be too large to download inside its 180s header-read timeout and hang the
-# run. Raise on a fast link.
+# Optional: replay epochs newest-to-oldest (slots within an epoch stay
+# ascending). Implies sequential mode upstream.
+# reverse = false
+
+# Optional: ripget hot/cold window in bytes; only used when sequential or
+# reverse is enabled. Defaults to 256 MiB. Upstream's own default
+# (min(4 GiB, 15% of RAM)) can be too large to download inside its 180s
+# header-read timeout and hang the run. Raise on a fast link.
 # buffer-window-bytes = 1073741824
 
 [filters]
