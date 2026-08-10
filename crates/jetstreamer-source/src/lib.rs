@@ -444,8 +444,9 @@ pub struct JetstreamSourceConfig {
     pub sequential: bool,
 
     /// Ripget hot/cold window size in bytes when `sequential` is enabled.
-    /// Ignored when `sequential` is `false`. `None` uses the upstream
-    /// default (`min(4 GiB, 15% of available RAM)`).
+    /// Ignored otherwise. `None` falls back to
+    /// [`DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES`]; set it explicitly for a
+    /// larger window on a fast link.
     #[arg(long, env)]
     #[serde(default)]
     pub buffer_window_bytes: Option<u64>,
@@ -476,6 +477,42 @@ pub struct JetstreamSourceConfig {
 }
 
 fn default_stats_interval_slots() -> u64 { 10_000 }
+
+/// Ripget window used in sequential mode when the caller sets none.
+///
+/// Ripget fills the whole window before yielding the first block, and that
+/// fill must finish inside upstream's fixed 180s `read_raw_header` timeout.
+/// Upstream's default is `min(4 GiB, 15% of available RAM)`, which on a
+/// high-RAM host cannot download in time, so the run times out and retries
+/// without ever emitting a slot.
+///
+/// Measured against files.old-faithful.net at ~7 MiB/s, same 5-slot range:
+///
+/// ```text, ignore
+///    64 MiB ->   9.5s
+///   256 MiB ->  33.6s
+///     1 GiB -> 145.6s
+///   2.4 GiB -> never completes (180s timeout)
+/// ```
+pub const DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES: u64 = 256 * 1024 * 1024;
+
+/// Resolve the ripget window handed to `firehose()`.
+///
+/// An explicit `configured` value is returned as-is; the default only applies
+/// in sequential mode, where upstream would otherwise use its RAM-derived one.
+/// Upstream discards a window below 2 (`filter(|v| *v >= 2)`), so an explicit
+/// value wins only for `>= 2`.
+///
+/// Example output:
+///
+/// ```text, ignore
+/// (seq: false, cfg: None)       -> None
+/// (seq: true,  cfg: None)       -> Some(268435456)
+/// (seq: true,  cfg: Some(4096)) -> Some(4096)
+/// ```
+pub fn effective_buffer_window_bytes(sequential: bool, configured: Option<u64>) -> Option<u64> {
+    configured.or_else(|| sequential.then_some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES))
+}
 
 /// Configuration for slot ranges or epochs
 #[derive(Debug, Clone, serde::Deserialize, clap::Args)]
@@ -701,10 +738,23 @@ impl JetstreamSource {
             },
         );
 
+        // Upstream's default window can be too large to download inside its own
+        // header-read timeout, which hangs the run. Use a bounded default.
+        let buffer_window_bytes =
+            effective_buffer_window_bytes(config.sequential, config.buffer_window_bytes);
+
+        if config.buffer_window_bytes.is_none() && config.sequential {
+            info!(
+                buffer_window_bytes = DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES,
+                "sequential mode active with no explicit buffer window; using the vixen default \
+                 instead of upstream's RAM-derived one"
+            );
+        }
+
         let result = firehose(
             config.threads as u64,
             config.sequential,
-            config.buffer_window_bytes,
+            buffer_window_bytes,
             start_slot..end_slot,
             on_block,
             on_tx,
@@ -923,6 +973,38 @@ slot-end = 2000
         assert_eq!(
             config.stats_interval_slots, 10_000,
             "`stats_interval_slots` must default to 10_000 when absent from TOML"
+        );
+    }
+
+    /// Upstream's RAM-derived window can be too large to download inside its
+    /// own 180s header-read timeout, which hangs the run instead of failing it.
+    /// Sequential runs must therefore get a bounded window by default, while an
+    /// explicit choice is always honoured.
+    #[test]
+    fn sequential_mode_gets_a_bounded_default_buffer_window() {
+        assert_eq!(
+            effective_buffer_window_bytes(false, None),
+            None,
+            "no window should be injected when upstream would ignore it"
+        );
+        assert_eq!(
+            effective_buffer_window_bytes(true, None),
+            Some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES),
+            "sequential mode must fall back to the vixen default"
+        );
+    }
+
+    #[test]
+    fn explicit_buffer_window_always_wins() {
+        // Including a value far larger than the default — opting back into
+        // upstream's throughput-oriented behaviour must remain possible.
+        let huge = DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES * 16;
+
+        assert_eq!(effective_buffer_window_bytes(true, Some(huge)), Some(huge));
+        assert_eq!(
+            effective_buffer_window_bytes(false, Some(4096)),
+            Some(4096),
+            "a value set while sequential mode is off is passed through untouched"
         );
     }
 
