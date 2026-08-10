@@ -443,8 +443,19 @@ pub struct JetstreamSourceConfig {
     #[serde(default)]
     pub sequential: bool,
 
-    /// Ripget hot/cold window size in bytes when `sequential` is enabled.
-    /// Ignored otherwise. `None` falls back to
+    /// Process epochs from highest to lowest instead of lowest to highest.
+    /// Slots *within* an epoch are still emitted in ascending order, because
+    /// the underlying CAR archive can only be streamed forward.
+    ///
+    /// Upstream treats this as sequential-only and turns `sequential` on
+    /// implicitly (`sequential || reverse`), so enabling `reverse` alone
+    /// also forfeits the multi-threaded work-stealing path.
+    #[arg(long, env, default_value = "false")]
+    #[serde(default)]
+    pub reverse: bool,
+
+    /// Ripget hot/cold window size in bytes when sequential mode is active
+    /// (`sequential` or `reverse` set). Ignored otherwise. `None` falls back to
     /// [`DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES`]; set it explicitly for a
     /// larger window on a fast link.
     #[arg(long, env)]
@@ -499,19 +510,24 @@ pub const DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES: u64 = 256 * 1024 * 1024;
 /// Resolve the ripget window handed to `firehose()`.
 ///
 /// An explicit `configured` value is returned as-is; the default only applies
-/// in sequential mode, where upstream would otherwise use its RAM-derived one.
-/// Upstream discards a window below 2 (`filter(|v| *v >= 2)`), so an explicit
-/// value wins only for `>= 2`.
+/// in sequential or reverse mode, where upstream would otherwise use its
+/// RAM-derived one. Upstream discards a window below 2 (`filter(|v| *v >= 2)`),
+/// so an explicit value wins only for `>= 2`.
 ///
 /// Example output:
 ///
 /// ```text, ignore
-/// (seq: false, cfg: None)       -> None
-/// (seq: true,  cfg: None)       -> Some(268435456)
-/// (seq: true,  cfg: Some(4096)) -> Some(4096)
+/// (seq: false, rev: false, cfg: None)       -> None
+/// (seq: true,  rev: false, cfg: None)       -> Some(268435456)
+/// (seq: false, rev: true,  cfg: None)       -> Some(268435456)
+/// (seq: true,  rev: false, cfg: Some(4096)) -> Some(4096)
 /// ```
-pub fn effective_buffer_window_bytes(sequential: bool, configured: Option<u64>) -> Option<u64> {
-    configured.or_else(|| sequential.then_some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES))
+pub fn effective_buffer_window_bytes(
+    sequential: bool,
+    reverse: bool,
+    configured: Option<u64>,
+) -> Option<u64> {
+    configured.or_else(|| (sequential || reverse).then_some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES))
 }
 
 /// Configuration for slot ranges or epochs
@@ -599,10 +615,12 @@ impl SourceTrait for JetstreamSource {
             expected.validate_matches(&ProcessEnvConfig::from_process())?;
         }
 
-        if config.buffer_window_bytes.is_some() && !config.sequential {
+        // `reverse` implies sequential upstream, so it also makes the window
+        // meaningful — only warn when neither mode is active.
+        if config.buffer_window_bytes.is_some() && !config.sequential && !config.reverse {
             tracing::warn!(
-                "`buffer_window_bytes` is set but `sequential` is false; the value will be \
-                 ignored by jetstreamer-firehose"
+                "`buffer_window_bytes` is set but neither `sequential` nor `reverse` is enabled; \
+                 the value will be ignored by jetstreamer-firehose"
             );
         }
 
@@ -740,10 +758,13 @@ impl JetstreamSource {
 
         // Upstream's default window can be too large to download inside its own
         // header-read timeout, which hangs the run. Use a bounded default.
-        let buffer_window_bytes =
-            effective_buffer_window_bytes(config.sequential, config.buffer_window_bytes);
+        let buffer_window_bytes = effective_buffer_window_bytes(
+            config.sequential,
+            config.reverse,
+            config.buffer_window_bytes,
+        );
 
-        if config.buffer_window_bytes.is_none() && config.sequential {
+        if config.buffer_window_bytes.is_none() && (config.sequential || config.reverse) {
             info!(
                 buffer_window_bytes = DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES,
                 "sequential mode active with no explicit buffer window; using the vixen default \
@@ -754,6 +775,7 @@ impl JetstreamSource {
         let result = firehose(
             config.threads as u64,
             config.sequential,
+            config.reverse,
             buffer_window_bytes,
             start_slot..end_slot,
             on_block,
@@ -902,6 +924,7 @@ mod tests {
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
             sequential: false,
+            reverse: false,
             buffer_window_bytes: None,
             stats_interval_slots: 10_000,
             possible_leader_skipped_tx: None,
@@ -927,6 +950,7 @@ network = "mainnet"
 compact-index-base-url = "https://files.old-faithful.net"
 network-capacity-mb = 1000
 sequential = true
+reverse = true
 buffer-window-bytes = 1073741824
 stats-interval-slots = 500
 
@@ -939,6 +963,7 @@ slot-end = 2000
             toml::from_str(toml_str).expect("valid TOML for JetstreamSourceConfig");
 
         assert!(config.sequential);
+        assert!(config.reverse);
         assert_eq!(config.buffer_window_bytes, Some(1_073_741_824));
         assert_eq!(config.stats_interval_slots, 500);
         assert_eq!(config.archive_url, "https://api.old-faithful.net");
@@ -967,6 +992,10 @@ slot-end = 2000
             "`sequential` must default to false when absent from TOML"
         );
         assert!(
+            !config.reverse,
+            "`reverse` must default to false when absent from TOML"
+        );
+        assert!(
             config.buffer_window_bytes.is_none(),
             "`buffer_window_bytes` must default to None when absent from TOML"
         );
@@ -981,17 +1010,20 @@ slot-end = 2000
     /// Sequential runs must therefore get a bounded window by default, while an
     /// explicit choice is always honoured.
     #[test]
-    fn sequential_mode_gets_a_bounded_default_buffer_window() {
+    fn sequential_modes_get_a_bounded_default_buffer_window() {
         assert_eq!(
-            effective_buffer_window_bytes(false, None),
+            effective_buffer_window_bytes(false, false, None),
             None,
             "no window should be injected when upstream would ignore it"
         );
-        assert_eq!(
-            effective_buffer_window_bytes(true, None),
-            Some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES),
-            "sequential mode must fall back to the vixen default"
-        );
+
+        for (sequential, reverse) in [(true, false), (false, true), (true, true)] {
+            assert_eq!(
+                effective_buffer_window_bytes(sequential, reverse, None),
+                Some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES),
+                "sequential={sequential} reverse={reverse} must fall back to the vixen default"
+            );
+        }
     }
 
     #[test]
@@ -1000,9 +1032,16 @@ slot-end = 2000
         // upstream's throughput-oriented behaviour must remain possible.
         let huge = DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES * 16;
 
-        assert_eq!(effective_buffer_window_bytes(true, Some(huge)), Some(huge));
         assert_eq!(
-            effective_buffer_window_bytes(false, Some(4096)),
+            effective_buffer_window_bytes(true, false, Some(huge)),
+            Some(huge)
+        );
+        assert_eq!(
+            effective_buffer_window_bytes(false, true, Some(4096)),
+            Some(4096)
+        );
+        assert_eq!(
+            effective_buffer_window_bytes(false, false, Some(4096)),
             Some(4096),
             "a value set while sequential mode is off is passed through untouched"
         );
@@ -1136,6 +1175,7 @@ slot-end = 2000
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
             sequential: false,
+            reverse: false,
             buffer_window_bytes: None,
             stats_interval_slots: 10_000,
             possible_leader_skipped_tx: None,
