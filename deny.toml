@@ -65,6 +65,14 @@ ignore = [
     # debug-formatting an Atomic/Shared holding an invalid pointer, which this
     # workspace never does; 0.9.18 is the latest release on the pinned line.
     "RUSTSEC-2026-0204",
+    # im 15.1.0 is unmaintained, along with bitmaps and sized-chunks, which it
+    # pulls in itself. The whole line enters through solana-runtime 3.1.4, the
+    # Agave release this workspace pins, so there is no local upgrade that drops
+    # it. Unmaintained only, no advisory of a vulnerability. Track until the
+    # Solana/Agave runtime stack stops depending on im.
+    "RUSTSEC-2026-0247", # bitmaps
+    "RUSTSEC-2026-0248", # im
+    "RUSTSEC-2026-0251", # sized-chunks
 ]
 
 [licenses]
