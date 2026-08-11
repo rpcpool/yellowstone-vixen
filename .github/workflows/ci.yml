@@ -87,13 +87,8 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --lib --tests
 
-      # The protobuf `package` declarations are the gRPC wire contract: they set
-      # the method path and the `Any` type URLs. wire_compat_tests guards them,
-      # but it is feature-gated (parser/stream) and the step above only reaches
-      # it because crates/parser and crates/stream happen to enable those
-      # features -- and shipstern-proto is an optional dep in crates/parser. A
-      # dependency change would silently stop running the guard, with no red X.
-      # Pin the features so the guard cannot drift.
+      # wire_compat_tests is feature-gated, and the step above only reaches it
+      # incidentally. Pin the features so the guard cannot drift.
       - name: Run protobuf wire-compat tests
         run: cargo test -p shipstern-proto --lib --features parser,stream
 

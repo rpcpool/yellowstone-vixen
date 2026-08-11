@@ -226,13 +226,9 @@ mod dispatch_index_tests {
 /// caught, and reject any `vixen.*` declaration left behind by an incomplete
 /// sweep. Nothing else in the suite covers these strings.
 ///
-/// Example output when a rename slips through:
-///
-/// ```rust, ignore
-/// assertion `left == right` failed: token.proto must declare `package shipstern.parser.token;`
-///   left: "vixen.parser.token"
-///  right: "shipstern.parser.token"
-/// ```
+/// A proto-only sweep fails to compile first, since generated file names track
+/// the package and `include!` stops resolving. This guard covers the
+/// consistent rename, where package and include paths move together.
 ///
 #[cfg(all(test, feature = "parser"))]
 mod wire_compat_tests {
@@ -293,9 +289,9 @@ mod wire_compat_tests {
 ///
 /// Wire-compatibility guard for the `stream` gRPC service path.
 ///
-/// Decodes the compiled descriptor set rather than the `.proto` text, so this
+/// Decodes the compiled descriptor set rather than the `.proto` text, so it
 /// asserts what the generated server actually serves. See
-/// [`wire_compat_tests`] for why the package string is load-bearing.
+/// [`wire_compat_tests`] for why the package string matters.
 ///
 #[cfg(all(test, feature = "stream"))]
 mod stream_wire_compat_tests {
