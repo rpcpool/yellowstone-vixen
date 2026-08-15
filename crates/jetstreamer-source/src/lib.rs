@@ -14,7 +14,10 @@ use shipstern_core::Filters;
 use tokio::sync::{broadcast, mpsc, mpsc::Sender, oneshot};
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
-    geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateBlock},
+    geyser::{
+        subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateBlock,
+        SubscribeUpdateBlockMeta, SubscribeUpdateSlot,
+    },
     solana::storage::confirmed_block::{BlockHeight, UnixTimestamp},
 };
 
@@ -135,14 +138,31 @@ pub unsafe fn init_process_env(config: &JetstreamSourceConfig) {
     unsafe { env_config.apply() };
 }
 
+/// Filter IDs bucketed by the `UpdateOneof` variant each one actually consumes.
+///
+/// The runtime dispatches by variant: `UpdateOneof::Block` only ever reaches
+/// block pipelines, `BlockMeta` only block-meta pipelines, and so on. A
+/// `block_meta` filter ID riding along on a `Block` update matches no pipeline
+/// and is dropped, so every bucket needs its own emission.
+#[derive(Debug, Default)]
+struct FilterMatches {
+    block: Vec<String>,
+    block_meta: Vec<String>,
+    slot: Vec<String>,
+    transaction: Vec<String>,
+    /// True iff any block filter requested `include_entries`. When false we
+    /// skip the per-entry buffering work entirely.
+    wants_entries: bool,
+}
+
 struct ShipsternStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
     skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
     // Cache matching filters to avoid iteration per item
     block_matches: Vec<String>,
+    block_meta_matches: Vec<String>,
+    slot_matches: Vec<String>,
     transaction_matches: Vec<String>,
-    // True iff any block filter requested `include_entries`. When false we
-    // skip the per-entry buffering work entirely.
     wants_entries: bool,
     // Per-slot buffer of entries arriving via `on_entry`. Drained when the
     // matching `BlockData::Block` is emitted. Upstream `firehose` emits all
@@ -157,63 +177,96 @@ impl ShipsternStreamHandler {
         skipped_slots_tx: Option<mpsc::Sender<PossibleLeaderSkippedEvent>>,
         filters: Filters,
     ) -> Self {
-        let (block_matches, transaction_matches, wants_entries) =
-            Self::precalculate_filters(&filters);
+        let matches = Self::precalculate_filters(&filters);
 
         info!(
-            block_filters = block_matches.len(),
-            transaction_filters = transaction_matches.len(),
-            wants_entries,
+            block_filters = matches.block.len(),
+            block_meta_filters = matches.block_meta.len(),
+            slot_filters = matches.slot.len(),
+            transaction_filters = matches.transaction.len(),
+            wants_entries = matches.wants_entries,
             "Initialized ShipsternStreamHandler with cached filters"
         );
+
+        let FilterMatches {
+            block: block_matches,
+            block_meta: block_meta_matches,
+            slot: slot_matches,
+            transaction: transaction_matches,
+            wants_entries,
+        } = matches;
 
         Self {
             tx,
             skipped_slots_tx,
             block_matches,
+            block_meta_matches,
+            slot_matches,
             transaction_matches,
             wants_entries,
             entry_buffer: Mutex::new(HashMap::new()),
         }
     }
 
-    fn precalculate_filters(filters: &Filters) -> (Vec<String>, Vec<String>, bool) {
-        let mut block_matches = Vec::new();
-        let mut transaction_matches = Vec::new();
-        let mut wants_entries = false;
+    fn precalculate_filters(filters: &Filters) -> FilterMatches {
+        let mut matches = FilterMatches::default();
 
         for (filter_id, prefilter) in &filters.parsers_filters {
-            // 1. Calculate Block Matches
-            let mut block_match = false;
+            // 1. Block matches. Only a `block` prefilter consumes `UpdateOneof::Block`.
             if let Some(block_filter) = &prefilter.block
                 && (block_filter.include_transactions
                     || block_filter.include_accounts
                     || block_filter.include_entries)
             {
-                block_match = true;
+                matches.block.push(filter_id.clone());
                 if block_filter.include_entries {
-                    wants_entries = true;
+                    matches.wants_entries = true;
                 }
             }
-            if prefilter.block_meta.is_some() || prefilter.slot.is_some() {
-                block_match = true;
+
+            // 2. Block-meta and slot matches get their own updates. Bucketing them
+            // under `block` would attach their IDs to `UpdateOneof::Block`, which
+            // the runtime routes only to block pipelines, dropping them silently.
+            if prefilter.block_meta.is_some() {
+                matches.block_meta.push(filter_id.clone());
+            }
+            if prefilter.slot.is_some() {
+                matches.slot.push(filter_id.clone());
             }
 
-            if block_match {
-                block_matches.push(filter_id.clone());
-            }
-
-            // 2. Calculate Transaction Matches
+            // 3. Calculate Transaction Matches
             // Instruction parsers need transactions to extract instructions from,
             // so any parser with a transaction filter must receive all transactions.
             // The jetstreamer-firehose API does not support per-account filtering,
             // so we include all transactions whenever a transaction filter is present.
             if prefilter.transaction.is_some() {
-                transaction_matches.push(filter_id.clone());
+                matches.transaction.push(filter_id.clone());
             }
         }
 
-        (block_matches, transaction_matches, wants_entries)
+        matches
+    }
+
+    /// Wrap `update_oneof` in a [`SubscribeUpdate`] addressed to `filters` and
+    /// hand it to the runtime, mapping a closed channel to [`Error::ChannelSend`].
+    async fn send(
+        &self,
+        filters: Vec<String>,
+        update_oneof: UpdateOneof,
+    ) -> Result<(), SharedError> {
+        let update = SubscribeUpdate {
+            filters,
+            update_oneof: Some(update_oneof),
+            created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
+                std::time::SystemTime::now(),
+            )),
+        };
+
+        self.tx.send(Ok(update)).await.map_err(|e| {
+            let error_msg = format!("Failed to send update: {}", e);
+            error!("{}", error_msg);
+            Box::new(Error::ChannelSend(error_msg)) as SharedError
+        })
     }
 
     /// Lock `entry_buffer`, converting a poisoned mutex into a structured
@@ -259,22 +312,28 @@ impl ShipsternStreamHandler {
                 executed_transaction_count,
                 entry_count,
             } => {
-                // Use cached matches
-                if self.block_matches.is_empty() {
-                    debug!(slot, "No filters interested in block, skipping");
+                // Always drain, even when nothing consumes the entries: a slot
+                // whose buffer is left behind pins its entries for the rest of
+                // the run.
+                let buffered = if self.wants_entries {
+                    self.lock_entry_buffer()?.remove(&slot).unwrap_or_default()
+                } else {
+                    Vec::new()
+                };
 
-                    // Drop any entries buffered for this slot — no consumer.
-                    if self.wants_entries {
-                        let _ = self.lock_entry_buffer()?.remove(&slot);
-                    }
-
+                if self.block_matches.is_empty()
+                    && self.block_meta_matches.is_empty()
+                    && self.slot_matches.is_empty()
+                {
+                    debug!(
+                        slot,
+                        "No block, block-meta, or slot filters interested; skipping"
+                    );
                     return Ok(());
                 }
 
-                let entries = if self.wants_entries {
-                    let buffered = self.lock_entry_buffer()?.remove(&slot).unwrap_or_default();
-
-                    if buffered.len() as u64 != entry_count {
+                if !self.block_matches.is_empty() {
+                    if self.wants_entries && buffered.len() as u64 != entry_count {
                         debug!(
                             slot,
                             buffered = buffered.len(),
@@ -283,45 +342,82 @@ impl ShipsternStreamHandler {
                         );
                     }
 
-                    convert::entries(buffered)
-                } else {
-                    Vec::new()
-                };
-
-                let update = SubscribeUpdate {
-                    filters: self.block_matches.clone(),
-                    update_oneof: Some(UpdateOneof::Block(SubscribeUpdateBlock {
+                    debug!(
                         slot,
-                        blockhash: blockhash.to_string(),
-                        rewards: Some(convert::keyed_rewards(&rewards)),
-                        block_time: block_time.map(|bt| UnixTimestamp { timestamp: bt }),
-                        block_height: block_height.map(|bh| BlockHeight { block_height: bh }),
-                        executed_transaction_count,
-                        transactions: vec![],
-                        updated_account_count: 0,
-                        accounts: vec![],
-                        entries,
-                        entries_count: entry_count,
-                        parent_slot,
-                        parent_blockhash: parent_blockhash.to_string(),
-                    })),
-                    created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
-                        std::time::SystemTime::now(),
-                    )),
-                };
+                        filters = ?self.block_matches,
+                        "Sending block update with {} filter matches",
+                        self.block_matches.len()
+                    );
 
-                debug!(
-                    slot,
-                    filters = ?self.block_matches,
-                    "Sending block update with {} filter matches",
-                    self.block_matches.len()
-                );
+                    self.send(
+                        self.block_matches.clone(),
+                        UpdateOneof::Block(SubscribeUpdateBlock {
+                            slot,
+                            blockhash: blockhash.to_string(),
+                            rewards: Some(convert::keyed_rewards(&rewards)),
+                            block_time: block_time.map(|bt| UnixTimestamp { timestamp: bt }),
+                            block_height: block_height.map(|bh| BlockHeight { block_height: bh }),
+                            executed_transaction_count,
+                            transactions: vec![],
+                            updated_account_count: 0,
+                            accounts: vec![],
+                            entries: convert::entries(buffered),
+                            entries_count: entry_count,
+                            parent_slot,
+                            parent_blockhash: parent_blockhash.to_string(),
+                        }),
+                    )
+                    .await?;
+                }
 
-                self.tx.send(Ok(update)).await.map_err(|e| {
-                    let error_msg = format!("Failed to send block update: {}", e);
-                    error!("{}", error_msg);
-                    Box::new(Error::ChannelSend(error_msg)) as SharedError
-                })?;
+                if !self.block_meta_matches.is_empty() {
+                    debug!(
+                        slot,
+                        filters = ?self.block_meta_matches,
+                        "Sending block meta update with {} filter matches",
+                        self.block_meta_matches.len()
+                    );
+
+                    self.send(
+                        self.block_meta_matches.clone(),
+                        UpdateOneof::BlockMeta(SubscribeUpdateBlockMeta {
+                            slot,
+                            blockhash: blockhash.to_string(),
+                            rewards: Some(convert::keyed_rewards(&rewards)),
+                            block_time: block_time.map(|bt| UnixTimestamp { timestamp: bt }),
+                            block_height: block_height.map(|bh| BlockHeight { block_height: bh }),
+                            parent_slot,
+                            parent_blockhash: parent_blockhash.to_string(),
+                            executed_transaction_count,
+                            entries_count: entry_count,
+                        }),
+                    )
+                    .await?;
+                }
+
+                if !self.slot_matches.is_empty() {
+                    debug!(
+                        slot,
+                        filters = ?self.slot_matches,
+                        "Sending slot update with {} filter matches",
+                        self.slot_matches.len()
+                    );
+
+                    // Old Faithful archives only carry finalized history, so a
+                    // replayed slot has exactly one status transition to report.
+                    // `SlotPrefilter::filter_by_commitment = false` cannot yield
+                    // the intermediate processed/confirmed/dead transitions here.
+                    self.send(
+                        self.slot_matches.clone(),
+                        UpdateOneof::Slot(SubscribeUpdateSlot {
+                            slot,
+                            parent: Some(parent_slot),
+                            status: SlotStatus::SlotFinalized as i32,
+                            dead_error: None,
+                        }),
+                    )
+                    .await?;
+                }
             },
             BlockData::PossibleLeaderSkipped { slot } => {
                 debug!(
@@ -378,19 +474,6 @@ impl ShipsternStreamHandler {
             },
         );
 
-        let update = SubscribeUpdate {
-            filters: self.transaction_matches.clone(),
-            update_oneof: Some(UpdateOneof::Transaction(
-                yellowstone_grpc_proto::geyser::SubscribeUpdateTransaction {
-                    slot: tx_data.slot,
-                    transaction: transaction_info,
-                },
-            )),
-            created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
-                std::time::SystemTime::now(),
-            )),
-        };
-
         debug!(
             slot = tx_data.slot,
             filters = ?self.transaction_matches,
@@ -398,13 +481,14 @@ impl ShipsternStreamHandler {
             self.transaction_matches.len()
         );
 
-        self.tx.send(Ok(update)).await.map_err(|e| {
-            let error_msg = format!("Failed to send transaction update: {}", e);
-            error!("{}", error_msg);
-            Box::new(Error::ChannelSend(error_msg)) as SharedError
-        })?;
-
-        Ok(())
+        self.send(
+            self.transaction_matches.clone(),
+            UpdateOneof::Transaction(yellowstone_grpc_proto::geyser::SubscribeUpdateTransaction {
+                slot: tx_data.slot,
+                transaction: transaction_info,
+            }),
+        )
+        .await
     }
 }
 
@@ -1248,6 +1332,172 @@ slot-end = 2000
             matches!(downcast, Error::EntryBufferPoisoned(_)),
             "expected EntryBufferPoisoned, got {downcast:?}"
         );
+    }
+
+    /// Build a `Filters` set holding a single prefilter under `filter_id`.
+    fn filters_with(filter_id: &str, prefilter: shipstern_core::Prefilter) -> Filters {
+        let mut prefilters = std::collections::HashMap::new();
+        prefilters.insert(filter_id.to_string(), prefilter);
+
+        Filters::new(prefilters)
+    }
+
+    /// A block covering every slot-scoped variant, so one call can prove which
+    /// updates a given prefilter does and does not produce.
+    fn sample_block() -> BlockData {
+        use solana_hash::Hash;
+        use solana_runtime::bank::KeyedRewardsAndNumPartitions;
+
+        BlockData::Block {
+            parent_slot: 41,
+            parent_blockhash: Hash::default(),
+            slot: 42,
+            blockhash: Hash::default(),
+            rewards: KeyedRewardsAndNumPartitions {
+                keyed_rewards: Vec::new(),
+                num_partitions: None,
+            },
+            block_time: Some(1_700_000_000),
+            block_height: Some(7),
+            executed_transaction_count: 6,
+            entry_count: 3,
+        }
+    }
+
+    /// The runtime dispatches by `UpdateOneof` variant, so a `block_meta`
+    /// prefilter must get an actual `BlockMeta` update. Riding along on a
+    /// `Block` update would match no pipeline and be dropped.
+    #[tokio::test]
+    async fn block_meta_prefilter_receives_a_block_meta_update() {
+        use shipstern_core::{BlockMetaPrefilter, Prefilter};
+
+        let filters = filters_with("wants-block-meta", Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: Some(BlockMetaPrefilter {}),
+            block: None,
+            slot: None,
+        });
+
+        let (updates_tx, mut updates_rx) = mpsc::channel(4);
+        let handler = ShipsternStreamHandler::new(updates_tx, None, filters);
+
+        assert!(
+            handler.block_matches.is_empty(),
+            "a block-meta prefilter must not be bucketed as a block filter"
+        );
+
+        handler
+            .process_block(sample_block())
+            .await
+            .expect("block emission");
+
+        let update = updates_rx.recv().await.expect("update").expect("ok");
+        assert_eq!(update.filters, vec!["wants-block-meta".to_string()]);
+
+        let Some(UpdateOneof::BlockMeta(meta)) = update.update_oneof else {
+            panic!("expected BlockMeta variant, got {:?}", update.update_oneof);
+        };
+
+        assert_eq!(meta.slot, 42);
+        assert_eq!(meta.parent_slot, 41);
+        assert_eq!(meta.executed_transaction_count, 6);
+        assert_eq!(meta.entries_count, 3);
+        assert_eq!(meta.block_time.map(|t| t.timestamp), Some(1_700_000_000));
+        assert_eq!(meta.block_height.map(|h| h.block_height), Some(7));
+        assert!(meta.rewards.is_some(), "rewards must be forwarded");
+
+        assert!(
+            updates_rx.try_recv().is_err(),
+            "no Block update should be emitted for a block-meta-only filter"
+        );
+    }
+
+    /// Archived history is finalized, so a replayed slot reports exactly one
+    /// status transition rather than the live processed/confirmed sequence.
+    #[tokio::test]
+    async fn slot_prefilter_receives_a_finalized_slot_update() {
+        use shipstern_core::{Prefilter, SlotPrefilter};
+
+        let filters = filters_with("wants-slots", Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: None,
+            block: None,
+            slot: Some(SlotPrefilter::default()),
+        });
+
+        let (updates_tx, mut updates_rx) = mpsc::channel(4);
+        let handler = ShipsternStreamHandler::new(updates_tx, None, filters);
+
+        assert!(
+            handler.block_matches.is_empty(),
+            "a slot prefilter must not be bucketed as a block filter"
+        );
+
+        handler
+            .process_block(sample_block())
+            .await
+            .expect("block emission");
+
+        let update = updates_rx.recv().await.expect("update").expect("ok");
+        assert_eq!(update.filters, vec!["wants-slots".to_string()]);
+
+        let Some(UpdateOneof::Slot(slot_update)) = update.update_oneof else {
+            panic!("expected Slot variant, got {:?}", update.update_oneof);
+        };
+
+        assert_eq!(slot_update.slot, 42);
+        assert_eq!(slot_update.parent, Some(41));
+        assert_eq!(slot_update.status, SlotStatus::SlotFinalized as i32);
+        assert_eq!(slot_update.dead_error, None);
+
+        assert!(
+            updates_rx.try_recv().is_err(),
+            "no Block update should be emitted for a slot-only filter"
+        );
+    }
+
+    /// One parser asking for all three variants must get all three, each
+    /// addressed to its own filter ID.
+    #[tokio::test]
+    async fn every_requested_variant_is_emitted_for_one_block() {
+        use shipstern_core::{BlockMetaPrefilter, BlockPrefilter, Prefilter, SlotPrefilter};
+
+        let filters = filters_with("wants-everything", Prefilter {
+            account: None,
+            transaction: None,
+            block_meta: Some(BlockMetaPrefilter {}),
+            block: Some(BlockPrefilter {
+                accounts_include: Default::default(),
+                include_transactions: true,
+                include_accounts: false,
+                include_entries: false,
+            }),
+            slot: Some(SlotPrefilter::default()),
+        });
+
+        let (updates_tx, mut updates_rx) = mpsc::channel(8);
+        let handler = ShipsternStreamHandler::new(updates_tx, None, filters);
+
+        handler
+            .process_block(sample_block())
+            .await
+            .expect("block emission");
+
+        let mut variants = Vec::new();
+        while let Ok(update) = updates_rx.try_recv() {
+            let update = update.expect("ok");
+            assert_eq!(update.filters, vec!["wants-everything".to_string()]);
+            variants.push(match update.update_oneof {
+                Some(UpdateOneof::Block(_)) => "block",
+                Some(UpdateOneof::BlockMeta(_)) => "block_meta",
+                Some(UpdateOneof::Slot(_)) => "slot",
+                other => panic!("unexpected variant {other:?}"),
+            });
+        }
+
+        assert_eq!(variants, ["block", "block_meta", "slot"]);
     }
 
     #[tokio::test]

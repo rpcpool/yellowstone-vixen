@@ -10,6 +10,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Bumped `yellowstone-grpc-proto` from `12.4` to `12.6`, picking up the Transaction V1 (SIMD-0385) `Message.config` field and the `cuckoo_account_include` transaction filter. The new filter is not exposed through `TransactionFilter` and is always sent as `None` ([#304](https://github.com/solana-rpc/shipstern/pull/304) by @ultrasilicon).
+- `yellowstone-vixen-jetstream-source`: a parser registered on the `block` pipeline whose prefilter sets `block_meta` or `slot` but none of `include_transactions` / `include_accounts` / `include_entries` no longer receives a `Block` update. Previously any `block_meta`/`slot` prefilter forced its filter ID into the block match list, so such a parser received a header-only `Block`: `transactions` and `accounts` were always empty. Use a `block_meta` pipeline instead.
 
 ### Added
 
@@ -21,6 +22,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `yellowstone-vixen-jetstream-source`: populate `Reward::commission_bps` on both reward conversion paths. The field arrived with `yellowstone-grpc-proto` 12.5 and was hardcoded to an empty string, so consumers reading it saw nothing even though `commission` was already forwarded. It is now derived from the whole-percent commission, which is lossless because the source is a `u8` percentage: a 7% commission reports `700`. Salvaged from ([#254](https://github.com/rpcpool/yellowstone-vixen/pull/254) by @the-orex), which is otherwise superseded by the 0.7.0 dependency bumps.
+- `yellowstone-vixen-jetstream-source`: emit `SubscribeUpdateBlockMeta` and `SubscribeUpdateSlot` for filters that request them. `block_meta` and `slot` prefilters were previously bucketed into the block match list, so their filter IDs rode on `UpdateOneof::Block`. The runtime dispatches by variant, so those IDs matched no pipeline and were dropped with only a `trace!` line: block-meta and slot parsers ran to completion having handled zero updates, and `yellowstone-vixen-block-coordinator`, which keys on `BlockMeta`, received none of it on the historical-replay path (delivering it is a prerequisite for driving that crate from replay, not on its own sufficient). Both messages are built from fields already carried on `BlockData::Block`. Replayed slots report `SLOT_FINALIZED`, since Old Faithful archives hold only finalized history and cannot reproduce the processed/confirmed transitions that `SlotPrefilter::filter_by_commitment = false` asks for.
 
 ## [0.7.0] 07-26-2026
 
