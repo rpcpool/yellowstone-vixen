@@ -1368,11 +1368,52 @@ slot-end = 2000
         assert_eq!(out.rewards[2].commission, "7");
         assert_eq!(out.rewards[3].commission, "0");
 
+        // Basis points: whole-percent x 100, empty when absent.
+        assert_eq!(out.rewards[0].commission_bps, "");
+        assert_eq!(out.rewards[2].commission_bps, "700");
+        assert_eq!(out.rewards[3].commission_bps, "0");
+
         // num_partitions wrapped in proto NumPartitions.
         assert_eq!(
             out.num_partitions,
             Some(proto::NumPartitions { num_partitions: 64 })
         );
+    }
+
+    /// The second reward conversion path. `transaction_status_meta` carries its
+    /// own `proto::Reward` mapping, so `commission_bps` has to be pinned here
+    /// too rather than relying on `keyed_rewards` coverage alone.
+    #[test]
+    fn transaction_status_meta_rewards_carry_commission_bps() {
+        use solana_transaction_status::{Reward, RewardType, TransactionStatusMeta};
+
+        let meta = TransactionStatusMeta {
+            rewards: Some(vec![
+                Reward {
+                    pubkey: "voter".to_string(),
+                    lamports: 5,
+                    post_balance: 50,
+                    reward_type: Some(RewardType::Voting),
+                    commission: Some(7),
+                },
+                Reward {
+                    pubkey: "fee-payer".to_string(),
+                    lamports: -1,
+                    post_balance: 10,
+                    reward_type: Some(RewardType::Fee),
+                    commission: None,
+                },
+            ]),
+            ..Default::default()
+        };
+
+        let out = convert::transaction_status_meta(meta);
+
+        assert_eq!(out.rewards.len(), 2);
+        assert_eq!(out.rewards[0].commission, "7");
+        assert_eq!(out.rewards[0].commission_bps, "700");
+        assert_eq!(out.rewards[1].commission, "");
+        assert_eq!(out.rewards[1].commission_bps, "");
     }
 
     #[test]
@@ -1425,6 +1466,11 @@ mod convert {
     /// SDK enum has no `Unspecified`, so the mapping is total. `commission`
     /// is encoded as a stringified `u8` (proto convention), or empty when
     /// absent.
+    /// `commission_bps` is derived as `commission * 100`, which is lossless only
+    /// while upstream `commission` is a whole-percent `u8`. SIMD-0291 adds a real
+    /// `commission_bps: Option<u16>` to `RewardInfo` (present from
+    /// `solana-transaction-status-client-types` 4.1.0) that permits values which
+    /// are not multiples of 100. Forward that field instead on a 4.x bump.
     pub fn keyed_rewards(keyed: &KeyedRewardsAndNumPartitions) -> proto::Rewards {
         let rewards = keyed
             .keyed_rewards
@@ -1443,7 +1489,10 @@ mod convert {
                     post_balance: info.post_balance,
                     reward_type,
                     commission: info.commission.map(|c| c.to_string()).unwrap_or_default(),
-                    commission_bps: String::new(),
+                    commission_bps: info
+                        .commission
+                        .map(|c| (u16::from(c) * 100).to_string())
+                        .unwrap_or_default(),
                 }
             })
             .collect();
@@ -1581,7 +1630,10 @@ mod convert {
                         _ => proto::RewardType::Unspecified as i32,
                     },
                     commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
-                    commission_bps: String::new(),
+                    commission_bps: r
+                        .commission
+                        .map(|c| (u16::from(c) * 100).to_string())
+                        .unwrap_or_default(),
                 })
                 .collect(),
             loaded_writable_addresses: meta

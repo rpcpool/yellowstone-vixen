@@ -13,6 +13,8 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `yellowstone-vixen-jetstream-source`: populate `Reward::commission_bps` on both reward conversion paths. The field arrived with `yellowstone-grpc-proto` 12.5 and was hardcoded to an empty string, so consumers reading it saw nothing even though `commission` was already forwarded. It is now derived from the whole-percent commission, which is lossless because the source is a `u8` percentage: a 7% commission reports `700`. Salvaged from ([#254](https://github.com/rpcpool/yellowstone-vixen/pull/254) by @the-orex), which is otherwise superseded by the 0.7.0 dependency bumps.
+
 ## [0.7.0] 07-26-2026
 
 ### Changed
