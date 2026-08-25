@@ -11,10 +11,10 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
+use shipstern::{Handler, HandlerResult, Pipeline, Runtime};
+use shipstern_spl_token_parser::{AccountParser, InstructionParser};
+use shipstern_yellowstone_grpc_source::YellowstoneGrpcSource;
 use tracing_subscriber::layer::SubscriberExt;
-use yellowstone_vixen::{Handler, HandlerResult, Pipeline, Runtime};
-use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
-use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -59,7 +59,7 @@ fn main() {
         .with_batch_exporter(log_exporter)
         .build();
 
-    let tracer = tracer_provider.tracer("vixen_tracer");
+    let tracer = tracer_provider.tracer("shipstern_tracer");
     let _ = opentelemetry::global::set_tracer_provider(tracer_provider);
 
     let traces_layer = tracing_opentelemetry::layer().with_tracer(tracer);

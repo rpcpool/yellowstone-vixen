@@ -1,10 +1,10 @@
 use prost::Message;
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::Parser;
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
+use shipstern_core::Parser;
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
 
-include_vixen_parser!("../idls/invite_escrow.json");
+include_shipstern_parser!("../idls/invite_escrow.json");
 
 // ---------------------------------------------------------------------------
 // Proto schemas

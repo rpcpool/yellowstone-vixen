@@ -3,18 +3,18 @@
 //! Uses `tests/fixtures/sample.bin` (captured 05-feb-2026).
 //!
 //! ```bash
-//! cargo test -p yellowstone-vixen-block-coordinator
-//! FIXTURE_PATH=/custom/path.bin cargo test -p yellowstone-vixen-block-coordinator
+//! cargo test -p shipstern-block-coordinator
+//! FIXTURE_PATH=/custom/path.bin cargo test -p shipstern-block-coordinator
 //! ```
 
 use std::{collections::HashMap, env, path::PathBuf};
 
-use tokio::sync::mpsc;
-use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
-use yellowstone_vixen_block_coordinator::{
+use shipstern_block_coordinator::{
     AccountCommitAt, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
     CoordinatorMessage, FixtureReader, InstructionSlot,
 };
+use tokio::sync::mpsc;
+use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
 
 fn fixture_path() -> PathBuf {
     env::var("FIXTURE_PATH")

@@ -4,10 +4,10 @@
 // as `[u8 length][N-byte UTF-8 buffer]`. The proc macro must materialize these
 // structs as protobuf messages, including when they are wrapped in Option.
 
-use vixen_test_utils::check_protobuf_format;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::check_protobuf_format;
 
-include_vixen_parser!("../idls/inline_struct.json");
+include_shipstern_parser!("../idls/inline_struct.json");
 
 #[test]
 fn check_protobuf_schema() {

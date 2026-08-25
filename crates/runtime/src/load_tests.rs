@@ -8,7 +8,7 @@
 //! `#[ignore]`d: slow, and the timing asserts aren't for shared runners.
 //!
 //! ```sh, ignore
-//! cargo test -p yellowstone-vixen --lib --release load_ -- --ignored --nocapture
+//! cargo test -p shipstern --lib --release load_ -- --ignored --nocapture
 //! ```
 //!
 
@@ -22,15 +22,15 @@ use std::{
 };
 
 use async_trait::async_trait;
+use shipstern_core::{ParseResult, Parser, Prefilter, SlotUpdate};
 use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateSlot},
     tonic,
 };
-use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, SlotUpdate};
 
 use crate::{
-    config::{BufferConfig, NullConfig, VixenConfig},
+    config::{BufferConfig, NullConfig, ShipsternConfig},
     sources::{SourceExitStatus, SourceTrait},
     Error, Handler, Pipeline, Runtime,
 };
@@ -83,7 +83,7 @@ struct FloodSource<const N: u64>;
 impl<const N: u64> SourceTrait for FloodSource<N> {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: yellowstone_vixen_core::Filters) -> Self { Self }
+    fn new(_: NullConfig, _: shipstern_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -181,8 +181,8 @@ impl Handler<SlotUpdate, SlotUpdate> for LoadHandler {
     }
 }
 
-fn config_with_jobs(jobs: usize) -> VixenConfig<NullConfig> {
-    VixenConfig {
+fn config_with_jobs(jobs: usize) -> ShipsternConfig<NullConfig> {
+    ShipsternConfig {
         source: NullConfig,
         buffer: BufferConfig {
             jobs: Some(jobs),

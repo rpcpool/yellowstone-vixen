@@ -26,7 +26,11 @@ impl Default for ParserConfig {
     }
 }
 
-pub fn vixen_parser(idl: &RootNode, events: &[EventNode], config: &ParserConfig) -> TokenStream {
+pub fn shipstern_parser(
+    idl: &RootNode,
+    events: &[EventNode],
+    config: &ParserConfig,
+) -> TokenStream {
     let program_mod_ident = format_ident!("{}", crate::utils::to_snake_case(&idl.program.name));
 
     let program_pubkey = crate::render::program_pubkey(&idl.program.public_key);
@@ -130,9 +134,9 @@ pub fn vixen_parser(idl: &RootNode, events: &[EventNode], config: &ParserConfig)
 
     quote! {
         pub mod #program_mod_ident {
-            use yellowstone_vixen_parser::prelude::*;
+            use shipstern_parser::prelude::*;
 
-            pub use yellowstone_vixen_core::Pubkey;
+            pub use shipstern_core::Pubkey;
 
             #option_borsh_helpers
 

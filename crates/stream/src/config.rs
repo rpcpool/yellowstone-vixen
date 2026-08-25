@@ -1,10 +1,10 @@
-//! Configuration types for the Vixen stream server.
+//! Configuration types for the Shipstern stream server.
 
 use std::net::SocketAddr;
 
 use clap::Args;
 use serde::Deserialize;
-use yellowstone_vixen::config::VixenConfig;
+use shipstern::config::ShipsternConfig;
 
 #[derive(Debug, Args)]
 pub struct StreamConfig<S>
@@ -14,7 +14,7 @@ where S: Args
     pub grpc: GrpcConfig,
 
     #[command(flatten)]
-    pub runtime: VixenConfig<S>,
+    pub runtime: ShipsternConfig<S>,
 }
 
 #[derive(Deserialize)]
@@ -22,7 +22,7 @@ struct StreamConfigInner<S: Args> {
     #[serde(default)]
     grpc: GrpcConfig,
     #[serde(flatten)]
-    runtime: VixenConfig<S>,
+    runtime: ShipsternConfig<S>,
 }
 
 impl<'de, S> Deserialize<'de> for StreamConfig<S>

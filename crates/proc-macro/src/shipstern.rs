@@ -12,14 +12,14 @@ enum Mode {
 }
 
 ///
-/// Main entry point for the `#[vixen]` attribute macro.
+/// Main entry point for the `#[shipstern]` attribute macro.
 /// Determines the mode (message, oneof, enumeration) and dispatches to the appropriate expansion function.
 ///
 /// # Usage Examples
 ///
 /// ```rust, ignore
 /// // Struct with prost::Message (default mode):
-/// #[vixen]
+/// #[shipstern]
 /// struct Transfer {
 ///     pub source: Option<String>,
 ///     pub destination: Option<String>,
@@ -27,14 +27,14 @@ enum Mode {
 /// }
 ///
 /// // Enum with prost::Oneof:
-/// #[vixen(oneof)]
+/// #[shipstern(oneof)]
 /// enum Instruction {
 ///     Transfer(Transfer),
 ///     Approve(Approve),
 /// }
 ///
 /// // Enum with prost::Enumeration:
-/// #[vixen(enumeration)]
+/// #[shipstern(enumeration)]
 /// #[repr(i32)]
 /// enum AccountType {
 ///     Uninitialized = 0,
@@ -53,19 +53,20 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> syn::Result<TokenStream> 
 
             Mode::Oneof => Err(syn::Error::new_spanned(
                 &item_struct.ident,
-                "vixen(oneof) requires an enum, not a struct",
+                "shipstern(oneof) requires an enum, not a struct",
             )),
 
             Mode::Enumeration => Err(syn::Error::new_spanned(
                 &item_struct.ident,
-                "vixen(enumeration) requires an enum, not a struct",
+                "shipstern(enumeration) requires an enum, not a struct",
             )),
         }
     } else if let Ok(mut item_enum) = syn::parse2::<ItemEnum>(item.clone()) {
         match mode {
             Mode::Message => Err(syn::Error::new_spanned(
                 &item_enum.ident,
-                "vixen on an enum requires a mode: #[vixen(oneof)] or #[vixen(enumeration)]",
+                "shipstern on an enum requires a mode: #[shipstern(oneof)] or \
+                 #[shipstern(enumeration)]",
             )),
 
             Mode::Oneof => expand_oneof(&mut item_enum),
@@ -75,7 +76,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> syn::Result<TokenStream> 
     } else {
         Err(syn::Error::new(
             Span::call_site(),
-            "vixen can only be applied to structs or enums",
+            "shipstern can only be applied to structs or enums",
         ))
     }
 }
@@ -91,20 +92,20 @@ fn parse_mode(attr: TokenStream) -> syn::Result<Mode> {
         "enumeration" => Ok(Mode::Enumeration),
         other => Err(syn::Error::new(
             ident.span(),
-            format!("unknown vixen mode `{other}`, expected `oneof` or `enumeration`"),
+            format!("unknown shipstern mode `{other}`, expected `oneof` or `enumeration`"),
         )),
     }
 }
 
 ///
-///  Expands a struct annotated with `#[vixen]` into a `prost::Message`.
+///  Expands a struct annotated with `#[shipstern]` into a `prost::Message`.
 ///
 /// Auto-tags fields starting at 1 and infers prost annotations from Rust types.
 /// Use `#[hint(...)]` on individual fields when the type can't be auto-inferred.
 ///
 /// Input:
 /// ```rust, ignore
-/// #[vixen]
+/// #[shipstern]
 /// struct Transfer {
 ///     pub source: Option<String>,
 ///     pub destination: Option<String>,
@@ -152,7 +153,7 @@ fn expand_message(item: &mut ItemStruct) -> syn::Result<TokenStream> {
     let Fields::Named(ref mut fields) = item.fields else {
         return Err(syn::Error::new_spanned(
             &item.ident,
-            "vixen requires named fields",
+            "shipstern requires named fields",
         ));
     };
 
@@ -201,13 +202,13 @@ fn expand_message(item: &mut ItemStruct) -> syn::Result<TokenStream> {
 }
 
 ///
-/// Expands an enum annotated with `#[vixen(oneof)]` into a `prost::Oneof`.
+/// Expands an enum annotated with `#[shipstern(oneof)]` into a `prost::Oneof`.
 ///
 /// Each variant must be a single-field tuple variant. Tags are auto-assigned starting at 1.
 ///
 /// Input:
 /// ```rust, ignore
-/// #[vixen(oneof)]
+/// #[shipstern(oneof)]
 /// enum Instruction {
 ///     Transfer(Transfer),
 ///     Approve(Approve),
@@ -281,13 +282,13 @@ fn expand_oneof(item: &mut ItemEnum) -> syn::Result<TokenStream> {
 }
 
 ///
-/// Expands an enum annotated with `#[vixen(enumeration)]` into a `prost::Enumeration`.
+/// Expands an enum annotated with `#[shipstern(enumeration)]` into a `prost::Enumeration`.
 ///
 /// Requires `#[repr(i32)]` on the enum because protobuf enumerations are int32 on the wire.
 ///
 /// Input:
 /// ```rust, ignore
-/// #[vixen(enumeration)]
+/// #[shipstern(enumeration)]
 /// #[repr(i32)]
 /// enum AccountType {
 ///     Uninitialized = 0,
@@ -336,7 +337,7 @@ fn expand_enumeration(item: &mut ItemEnum) -> syn::Result<TokenStream> {
     if !has_repr_i32 {
         return Err(syn::Error::new_spanned(
             &item.ident,
-            "vixen(enumeration) requires #[repr(i32)] on the enum",
+            "shipstern(enumeration) requires #[repr(i32)] on the enum",
         ));
     }
 

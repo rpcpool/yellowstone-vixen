@@ -1,8 +1,8 @@
-use solana_loader_v3_interface::instruction::UpgradeableLoaderInstruction;
-use yellowstone_vixen_core::{
+use shipstern_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
-use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
+use shipstern_parser::{check_min_accounts_req, Result, ResultExt};
+use solana_loader_v3_interface::instruction::UpgradeableLoaderInstruction;
 
 use crate::Pubkey;
 
@@ -36,7 +36,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+    fn program_id(&self) -> shipstern_core::Pubkey {
         solana_sdk_ids::bpf_loader_upgradeable::ID.to_bytes().into()
     }
 }
@@ -165,7 +165,7 @@ impl InstructionParser {
 
             // Migrate and ExtendProgramChecked are newer variants we skip for now
             _ => {
-                return Err(yellowstone_vixen_parser::Error::new(
+                return Err(shipstern_parser::Error::new(
                     "Unsupported BPF loader instruction variant".to_string(),
                 ))
             },

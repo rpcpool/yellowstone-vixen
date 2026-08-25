@@ -1,9 +1,9 @@
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::{Parser, Pubkey};
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_core::{Parser, Pubkey};
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
 
-include_vixen_parser!("../idls/pump_fun.json");
+include_shipstern_parser!("../idls/pump_fun.json");
 
 #[test]
 fn check_protobuf_schema() {

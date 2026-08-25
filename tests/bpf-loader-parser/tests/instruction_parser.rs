@@ -1,6 +1,6 @@
-use yellowstone_vixen_bpf_loader_parser::{instruction, InstructionParser};
-use yellowstone_vixen_core::{Parser, Pubkey};
-use yellowstone_vixen_mock::tx_fixture;
+use shipstern_bpf_loader_parser::{instruction, InstructionParser};
+use shipstern_core::{Parser, Pubkey};
+use shipstern_mock::tx_fixture;
 
 #[tokio::test]
 async fn parse_initialize_buffer_ix() {

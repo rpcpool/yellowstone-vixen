@@ -60,12 +60,12 @@
 ## Running Tests
 
 ```bash
-cargo test -p yellowstone-vixen-block-coordinator
-cargo test -p yellowstone-vixen-block-coordinator -- --nocapture
+cargo test -p shipstern-block-coordinator
+cargo test -p shipstern-block-coordinator -- --nocapture
 ```
 
 ## Custom Fixture Path
 
 ```bash
-FIXTURE_PATH=/path/to/fixture.bin cargo test -p yellowstone-vixen-block-coordinator
+FIXTURE_PATH=/path/to/fixture.bin cargo test -p shipstern-block-coordinator
 ```

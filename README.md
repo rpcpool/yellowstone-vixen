@@ -1,12 +1,12 @@
-# Yellowstone Vixen
+# Shipstern
 
-Yellowstone Vixen is a comprehensive framework for building program-aware, real-time Solana data pipelines. It provides the core components—runtime, parser definitions, and handler interfaces—needed to transform raw on-chain events into structured, actionable data. Vixen supports the registration of custom data sources, allowing developers to integrate various data streams seamlessly.
+Shipstern is a comprehensive framework for building program-aware, real-time Solana data pipelines. It provides the core components—runtime, parser definitions, and handler interfaces—needed to transform raw on-chain events into structured, actionable data. Shipstern supports the registration of custom data sources, allowing developers to integrate various data streams seamlessly.
 
 Solana change events, following the Yellowstone gRPC specification, are received from the source and routed through pluggable parsers. This enables developers to log, store, or stream enriched data for indexing, analytics, and downstream consumption.
 
 ## Table of Contents
 
-- [Yellowstone Vixen](#yellowstone-vixen)
+- [Shipstern](#shipstern)
   - [Table of Contents](#table-of-contents)
   - [Problem Solving](#problem-solving)
   - [Features](#features)
@@ -21,7 +21,7 @@ Solana change events, following the Yellowstone gRPC specification, are received
 
 ## Problem Solving
 
-Yellowstone Vixen solves core challenges for Solana dApp developers:
+Shipstern solves core challenges for Solana dApp developers:
 
 - **Cost Efficiency**: Share Dragon's Mouth subscriptions and filter only the data you care about.
 - **Operational Simplicity**: Lightweight setup, minimal external dependencies.
@@ -46,9 +46,9 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::Pipeline;
-use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
-use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
+use shipstern::Pipeline;
+use shipstern_spl_token_parser::{AccountParser, InstructionParser};
+use shipstern_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -60,8 +60,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
-    async fn handle(&self, value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> {
+impl<V: std::fmt::Debug + Sync, R: Sync> shipstern::Handler<V, R> for Logger {
+    async fn handle(&self, value: &V, _raw: &R) -> shipstern::HandlerResult<()> {
         tracing::info!(?value);
         Ok(())
     }
@@ -81,7 +81,7 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    yellowstone_vixen::Runtime<YellowstoneGrpcSource>::builder()
+    shipstern::Runtime<YellowstoneGrpcSource>::builder()
         .account(Pipeline::new(AccountParser, [Logger]))
         .instruction(Pipeline::new(InstructionParser, [Logger]))
         .build(config)
@@ -90,7 +90,7 @@ fn main() {
 ```
 
 ```shell
-RUST_LOG=info cargo run -- --config "./Vixen.toml"
+RUST_LOG=info cargo run -- --config "./Shipstern.toml"
 ```
 
 Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9090` after running the prometheus server using docker-compose.
@@ -107,28 +107,28 @@ sudo docker-compose up
 
 | Address                                       | Public Name          | Parser                                                                                                                                      |
 | --------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` | **Token Program**    | [yellowstone-vixen-spl-token-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/spl-token-parser)                        |
-| `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` | **Token Extensions** | [yellowstone-vixen-spl-token-extensions-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/spl-token-extensions-program) |
+| `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` | **Token Program**    | [shipstern-spl-token-parser](https://github.com/solana-rpc/shipstern/tree/main/crates/spl-token-parser)                        |
+| `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` | **Token Extensions** | [shipstern-spl-token-extensions-parser](https://github.com/solana-rpc/shipstern/tree/main/crates/spl-token-extensions-program) |
 
 ### Codegen Macro
 
-The `yellowstone-vixen-proc-macro` crate provides the `include_vixen_parser!` procedural macro, which generates a Vixen parser from a Codama JSON IDL file.
+The `shipstern-proc-macro` crate provides the `include_shipstern_parser!` procedural macro, which generates a Shipstern parser from a Codama JSON IDL file.
 
 To use it, add the following dependencies to your `Cargo.toml`:
 
 ```toml
 [dependencies]
 borsh = "^1.0.0"
-yellowstone-vixen-parser = { version = "0.7.0" }
-yellowstone-vixen-proc-macro = { version = "0.7.0" }
+shipstern-parser = { version = "0.8.0" }
+shipstern-proc-macro = { version = "0.8.0" }
 ```
 
 Then, import and invoke the macro in your code. Specify the path to your Codama JSON IDL file relative to your crate root:
 
 ```rust
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
 
-include_vixen_parser!("path/to/idl.json");
+include_shipstern_parser!("path/to/idl.json");
 ```
 
 The generated account and instruction parsers will be available under a module named after the program.
@@ -145,7 +145,7 @@ let parser = my_program::InstructionParser;
 When two or more variants share both the same discriminator **and** the same account count, the default parser cannot disambiguate and returns an error at runtime. In that case, implement `InstructionResolver` and use `CustomInstructionParser`:
 
 ```rust
-use yellowstone_vixen_core::ParseError;
+use shipstern_core::ParseError;
 
 #[derive(Debug, Copy, Clone)]
 struct MyResolver;
@@ -153,7 +153,7 @@ struct MyResolver;
 impl my_program::InstructionResolver for MyResolver {
     fn resolve(
         &self,
-        accounts: &[yellowstone_vixen_core::KeyBytes<32>],
+        accounts: &[shipstern_core::KeyBytes<32>],
         data: &[u8],
     ) -> Result<my_program::Instructions, ParseError> {
         // Custom disambiguation logic for the ambiguous discriminator.
@@ -171,7 +171,7 @@ let parser = my_program::CustomInstructionParser(MyResolver);
 
 ## Official Sources
 
-Yellowstone Vixen supports several official data sources for ingesting Solana account and transaction data. Each source is provided as a Rust crate and can be configured in your Vixen pipeline. Below is a summary of the available sources:
+Shipstern supports several official data sources for ingesting Solana account and transaction data. Each source is provided as a Rust crate and can be configured in your Shipstern pipeline. Below is a summary of the available sources:
 
 | Source Crate                                                          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -207,8 +207,8 @@ This applies to every `cargo` invocation inside this workspace. The file is giti
 
 - [**Mock Testing for Parsers**](./crates/mock/README.md): Load and replay devnet accounts or transactions offline.
 - [**Usage Examples**](./examples/): A variety of example projects that demonstrate how to use the features.
-- [**Example Vixen Configuration**](./Vixen.example.toml): Starter TOML file for pipeline configuration.
-- [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Use Codama to automatically generate Vixen parsers from Anchor or custom IDL files.
+- [**Example Shipstern Configuration**](./Shipstern.example.toml): Starter TOML file for pipeline configuration.
+- [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Use Codama to automatically generate Shipstern parsers from Anchor or custom IDL files.
 
 ## Maintainers
 

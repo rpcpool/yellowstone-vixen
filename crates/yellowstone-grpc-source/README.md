@@ -1,8 +1,8 @@
-# Yellowstone Vixen Sources
+# Shipstern Sources
 
 ## Overview
 
-Yellowstone Vixen introduces a flexible `Source` system that allows you to connect to various data sources and stream their updates through a standardized interface. This feature is designed to be extensible, allowing you to create custom sources while maintaining a consistent API.
+Shipstern introduces a flexible `Source` system that allows you to connect to various data sources and stream their updates through a standardized interface. This feature is designed to be extensible, allowing you to create custom sources while maintaining a consistent API.
 
 ## Key Features
 
@@ -13,9 +13,9 @@ Yellowstone Vixen introduces a flexible `Source` system that allows you to conne
 
 ## How It Works
 
-The [`Source`](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/runtime/src/sources.rs) trait provides a standardized way to:
+The [`Source`](https://github.com/solana-rpc/shipstern/blob/main/crates/runtime/src/sources.rs) trait provides a standardized way to:
 - Connect to external data sources
-- Stream updates through a channel to the Vixen runtime for processing
+- Stream updates through a channel to the Shipstern runtime for processing
 - Configure filters for data processing
 - Manage source-specific configuration
 
@@ -26,9 +26,9 @@ Here's a step-by-step guide to creating your own source:
 ```rust
 use async_trait::async_trait;
 use tokio::sync::mpsc::Sender;
-use yellowstone_vixen::sources::Source;
-use yellowstone_vixen::config::YellowstoneConfig;
-use vixen_core::Filters;
+use shipstern::sources::Source;
+use shipstern::config::YellowstoneConfig;
+use shipstern_core::Filters;
 
 #[derive(Debug)]
 struct MyCustomSource {
@@ -85,7 +85,7 @@ The trait provides two optional methods with safe default implementations:
 Here's a practical example of how to use a source:
 
 ```rust
-vixen::Runtime::builder()
+shipstern::Runtime::builder()
     // Add the source to the runtime
     .source(YellowstoneGrpcSource::new())
     // We could call this multiple times to add concurrent Sources
@@ -119,6 +119,6 @@ We welcome contributions to expand the ecosystem of sources! When creating a new
 
 ## Support
 
-If you need help or have questions, please open an issue on [GitHub](https://github.com/rpcpool/yellowstone-vixen) or also check other sources implementations in the repository.
+If you need help or have questions, please open an issue on [GitHub](https://github.com/solana-rpc/shipstern) or also check other sources implementations in the repository.
 
 ---

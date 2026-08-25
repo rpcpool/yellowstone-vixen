@@ -1,9 +1,9 @@
 use borsh::BorshDeserialize;
-use spl_stake_pool::instruction::StakePoolInstruction;
-use yellowstone_vixen_core::{
+use shipstern_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
-use yellowstone_vixen_parser::check_min_accounts_req;
+use shipstern_parser::check_min_accounts_req;
+use spl_stake_pool::instruction::StakePoolInstruction;
 
 use crate::instructions::*;
 
@@ -34,9 +34,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_stake_pool::id().to_bytes().into()
-    }
+    fn program_id(&self) -> shipstern_core::Pubkey { spl_stake_pool::id().to_bytes().into() }
 }
 
 impl InstructionParser {

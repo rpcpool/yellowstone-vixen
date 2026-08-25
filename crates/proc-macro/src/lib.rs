@@ -9,42 +9,42 @@ use syn::{
 mod intermediate_representation;
 mod parse;
 mod render;
+mod shipstern;
 mod utils;
-mod vixen;
 
 /// Attribute macro that auto-infers prost annotations from Rust types.
 ///
 /// # Modes
 ///
-/// - `#[vixen]` — struct with `prost::Message` (default)
-/// - `#[vixen(oneof)]` — enum with `prost::Oneof`
-/// - `#[vixen(enumeration)]` — enum with `prost::Enumeration`
+/// - `#[shipstern]` — struct with `prost::Message` (default)
+/// - `#[shipstern(oneof)]` — enum with `prost::Oneof`
+/// - `#[shipstern(enumeration)]` — enum with `prost::Enumeration`
 ///
 /// Fields are auto-tagged starting at 1. Use `#[hint(...)]` on individual
 /// fields when the type can't be auto-inferred.
 #[proc_macro_attribute]
-pub fn vixen(attr: TokenStream, item: TokenStream) -> TokenStream {
-    vixen::expand(attr.into(), item.into())
+pub fn shipstern(attr: TokenStream, item: TokenStream) -> TokenStream {
+    shipstern::expand(attr.into(), item.into())
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
 
 #[proc_macro]
-pub fn include_vixen_parser(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as IncludeVixenParserInput);
+pub fn include_shipstern_parser(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as IncludeShipsternParserInput);
 
     match input.parser_config() {
-        Ok(config) => expand_include_vixen_parser(input.idl_path.value(), config),
+        Ok(config) => expand_include_shipstern_parser(input.idl_path.value(), config),
         Err(err) => err.to_compile_error().into(),
     }
 }
 
-/// Input for `include_vixen_parser!`.
+/// Input for `include_shipstern_parser!`.
 ///
 /// The macro accepts a Codama IDL path, plus optional parser config:
 ///
 /// ```ignore
-/// include_vixen_parser!(
+/// include_shipstern_parser!(
 ///     "../idls/custom_events.json",
 ///     cpi_event_discriminator = 0xfe,
 ///     cpi_event_payload_offset = 1,
@@ -61,7 +61,7 @@ pub fn include_vixen_parser(input: TokenStream) -> TokenStream {
 /// discriminator and payload. Override these options for non-Anchor programs
 /// that wrap events differently, such as Pinocchio programs that emit events
 /// through a custom one-byte self-CPI instruction envelope.
-struct IncludeVixenParserInput {
+struct IncludeShipsternParserInput {
     idl_path: LitStr,
     cpi_event_discriminator: Option<HexBytesLiteral>,
     cpi_event_payload_offset: Option<LitInt>,
@@ -82,7 +82,7 @@ impl Parse for HexBytesLiteral {
     }
 }
 
-impl Parse for IncludeVixenParserInput {
+impl Parse for IncludeShipsternParserInput {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let idl_path = input.parse()?;
         let mut cpi_event_discriminator = None;
@@ -108,7 +108,7 @@ impl Parse for IncludeVixenParserInput {
                 _ => {
                     return Err(syn::Error::new(
                         key.span(),
-                        "unsupported include_vixen_parser option",
+                        "unsupported include_shipstern_parser option",
                     ));
                 },
             }
@@ -122,9 +122,9 @@ impl Parse for IncludeVixenParserInput {
     }
 }
 
-impl IncludeVixenParserInput {
-    fn parser_config(&self) -> syn::Result<crate::render::vixen_parser::ParserConfig> {
-        let mut config = crate::render::vixen_parser::ParserConfig::default();
+impl IncludeShipsternParserInput {
+    fn parser_config(&self) -> syn::Result<crate::render::shipstern_parser::ParserConfig> {
+        let mut config = crate::render::shipstern_parser::ParserConfig::default();
 
         if let Some(discriminator) = &self.cpi_event_discriminator {
             config.cpi_event.discriminator = decode_hex_bytes_literal(discriminator)?;
@@ -197,16 +197,16 @@ fn invalid_cpi_event_discriminator_hex(
     )
 }
 
-fn expand_include_vixen_parser(
+fn expand_include_shipstern_parser(
     idl_path: String,
-    config: crate::render::vixen_parser::ParserConfig,
+    config: crate::render::shipstern_parser::ParserConfig,
 ) -> TokenStream {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
     let full_path = std::path::Path::new(&manifest_dir).join(&idl_path);
 
     match parse::load_codama_idl(&full_path) {
-        Ok((idl, events)) => crate::render::vixen_parser(&idl, &events, &config).into(),
+        Ok((idl, events)) => crate::render::shipstern_parser(&idl, &events, &config).into(),
         Err(e) => {
             let error_msg = format!("Failed to load/parse IDL from {:?}: {}", full_path, e);
 

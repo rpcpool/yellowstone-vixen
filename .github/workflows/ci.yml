@@ -87,8 +87,13 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --lib --tests
 
+      # wire_compat_tests is feature-gated, and the step above only reaches it
+      # incidentally. Pin the features so the guard cannot drift.
+      - name: Run protobuf wire-compat tests
+        run: cargo test -p shipstern-proto --lib --features parser,stream
+
       - name: Run experimental account parser tests
-        run: cargo test -p yellowstone-vixen-kafka-sink --features experimental-account-parser --lib --tests
+        run: cargo test -p shipstern-kafka-sink --features experimental-account-parser --lib --tests
 
   test-events:
     runs-on: ubuntu-24.04
@@ -153,4 +158,4 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
 
       - name: Run clippy
-        run: cargo clippy --all-targets --tests --no-deps --features yellowstone-vixen-kafka-sink/experimental-account-parser -- -Dwarnings
+        run: cargo clippy --all-targets --tests --no-deps --features shipstern-kafka-sink/experimental-account-parser -- -Dwarnings

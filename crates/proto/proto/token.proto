@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package vixen.parser.token;
+package shipstern.parser.token;
 
 message PublicKey {
   bytes value = 1;

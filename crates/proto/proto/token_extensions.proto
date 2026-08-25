@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "token.proto";
 
-package vixen.parser.token_extensions;
+package shipstern.parser.token_extensions;
 
 // ── Enums ──────────────────────────────────────────────────────────
 
@@ -40,29 +40,29 @@ enum ExtensionWithCommonInstruction {
 // ── Account state ──────────────────────────────────────────────────
 
 message Mint {
-  optional vixen.parser.token.PublicKey mint_authority = 1;
+  optional shipstern.parser.token.PublicKey mint_authority = 1;
   uint64 supply = 2;
   uint32 decimals = 3;
   bool is_initialized = 4;
-  optional vixen.parser.token.PublicKey freeze_authority = 5;
+  optional shipstern.parser.token.PublicKey freeze_authority = 5;
 }
 
 message Account {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey owner = 2;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey owner = 2;
   uint64 amount = 3;
-  optional vixen.parser.token.PublicKey delegate = 4;
+  optional shipstern.parser.token.PublicKey delegate = 4;
   uint32 state = 5;
   optional uint64 is_native = 6;
   uint64 delegated_amount = 7;
-  optional vixen.parser.token.PublicKey close_authority = 8;
+  optional shipstern.parser.token.PublicKey close_authority = 8;
 }
 
 message Multisig {
   uint32 m = 1;
   uint32 n = 2;
   bool is_initialized = 3;
-  repeated vixen.parser.token.PublicKey signers = 4;
+  repeated shipstern.parser.token.PublicKey signers = 4;
 }
 
 message ExtensionData {
@@ -91,25 +91,25 @@ message TokenExtensionState {
 // ── Common Extension Instructions ──────────────────────────────────
 
 message ExtInitializeAccounts {
-  vixen.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint = 1;
 }
 
 message UpdateAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey extension_authority = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey extension_authority = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message EnableAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey owner = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey owner = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message DisableAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey owner = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey owner = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message CommonExtensionInstructions {
@@ -138,11 +138,11 @@ message CommonExtensionInstructions {
 // ── Transfer Fee Extension ─────────────────────────────────────────
 
 message TransferCheckedWithFeeAccounts {
-  vixen.parser.token.PublicKey source = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey destination = 3;
-  vixen.parser.token.PublicKey owner = 4;
-  repeated vixen.parser.token.PublicKey multisig_signers = 5;
+  shipstern.parser.token.PublicKey source = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey destination = 3;
+  shipstern.parser.token.PublicKey owner = 4;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 5;
 }
 
 message TransferCheckedWithFeeArgs {
@@ -152,29 +152,29 @@ message TransferCheckedWithFeeArgs {
 }
 
 message InitializeTransferFeeConfigAccounts {
-  vixen.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint = 1;
 }
 
 message InitializeTransferFeeConfigArgs {
-  optional vixen.parser.token.PublicKey transfer_fee_config_authority = 1;
-  optional vixen.parser.token.PublicKey withdraw_withheld_authority = 2;
+  optional shipstern.parser.token.PublicKey transfer_fee_config_authority = 1;
+  optional shipstern.parser.token.PublicKey withdraw_withheld_authority = 2;
   uint32 transfer_fee_basis_points = 3;
   uint64 maximum_fee = 4;
 }
 
 message WithdrawWithheldTokensFromMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey fee_recipient = 2;
-  vixen.parser.token.PublicKey withdraw_withheld_authority = 3;
-  repeated vixen.parser.token.PublicKey multisig_signers = 4;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey fee_recipient = 2;
+  shipstern.parser.token.PublicKey withdraw_withheld_authority = 3;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 4;
 }
 
 message WithdrawWithheldTokensFromAccountsAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey fee_recipient = 2;
-  vixen.parser.token.PublicKey withdraw_withheld_authority = 3;
-  repeated vixen.parser.token.PublicKey source_accounts = 4;
-  repeated vixen.parser.token.PublicKey multisig_signers = 5;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey fee_recipient = 2;
+  shipstern.parser.token.PublicKey withdraw_withheld_authority = 3;
+  repeated shipstern.parser.token.PublicKey source_accounts = 4;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 5;
 }
 
 message WithdrawWithheldTokensFromAccountsArgs {
@@ -182,9 +182,9 @@ message WithdrawWithheldTokensFromAccountsArgs {
 }
 
 message SetTransferFeeAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey mint_fee_acc_owner = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint_fee_acc_owner = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message SetTransferFeeArgs {
@@ -193,8 +193,8 @@ message SetTransferFeeArgs {
 }
 
 message HarvestWithheldTokensToMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey mint_fee_acc_owner = 2;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint_fee_acc_owner = 2;
 }
 
 message TransferFeeIx {
@@ -234,10 +234,10 @@ message TransferFeeIx {
 // ── Token Metadata Extension ───────────────────────────────────────
 
 message InitializeAccounts {
-  vixen.parser.token.PublicKey metadata = 1;
-  vixen.parser.token.PublicKey update_authority = 2;
-  vixen.parser.token.PublicKey mint = 3;
-  vixen.parser.token.PublicKey mint_authority = 4;
+  shipstern.parser.token.PublicKey metadata = 1;
+  shipstern.parser.token.PublicKey update_authority = 2;
+  shipstern.parser.token.PublicKey mint = 3;
+  shipstern.parser.token.PublicKey mint_authority = 4;
 }
 
 message InitializeArgs {
@@ -245,8 +245,8 @@ message InitializeArgs {
 }
 
 message UpdateFieldAccounts {
-  vixen.parser.token.PublicKey metadata = 1;
-  vixen.parser.token.PublicKey update_authority = 2;
+  shipstern.parser.token.PublicKey metadata = 1;
+  shipstern.parser.token.PublicKey update_authority = 2;
 }
 
 message UpdateFieldArgs {
@@ -254,8 +254,8 @@ message UpdateFieldArgs {
 }
 
 message RemoveKeyAccounts {
-  vixen.parser.token.PublicKey metadata = 1;
-  vixen.parser.token.PublicKey update_authority = 2;
+  shipstern.parser.token.PublicKey metadata = 1;
+  shipstern.parser.token.PublicKey update_authority = 2;
 }
 
 message RemoveKeyArgs {
@@ -263,8 +263,8 @@ message RemoveKeyArgs {
 }
 
 message UpdateAuthorityAccounts {
-  vixen.parser.token.PublicKey metadata = 1;
-  vixen.parser.token.PublicKey current_update_authority = 2;
+  shipstern.parser.token.PublicKey metadata = 1;
+  shipstern.parser.token.PublicKey current_update_authority = 2;
 }
 
 message UpdateAuthorityArgs {
@@ -272,7 +272,7 @@ message UpdateAuthorityArgs {
 }
 
 message EmitAccounts {
-  vixen.parser.token.PublicKey metadata = 1;
+  shipstern.parser.token.PublicKey metadata = 1;
 }
 
 message EmitArgs {
@@ -313,19 +313,19 @@ message TokenMetadataIx {
 // ── Token Group Extension ──────────────────────────────────────────
 
 message InitializeGroupAccounts {
-  vixen.parser.token.PublicKey group = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey mint_authority = 3;
+  shipstern.parser.token.PublicKey group = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey mint_authority = 3;
 }
 
 message InitializeGroupArgs {
   uint64 max_size = 1;
-  optional vixen.parser.token.PublicKey update_authority = 2;
+  optional shipstern.parser.token.PublicKey update_authority = 2;
 }
 
 message UpdateGroupMaxSizeAccounts {
-  vixen.parser.token.PublicKey group = 1;
-  vixen.parser.token.PublicKey update_authority = 2;
+  shipstern.parser.token.PublicKey group = 1;
+  shipstern.parser.token.PublicKey update_authority = 2;
 }
 
 message UpdateGroupMaxSizeArgs {
@@ -333,20 +333,20 @@ message UpdateGroupMaxSizeArgs {
 }
 
 message UpdateGroupAuthorityAccounts {
-  vixen.parser.token.PublicKey group = 1;
-  vixen.parser.token.PublicKey current_authority = 2;
+  shipstern.parser.token.PublicKey group = 1;
+  shipstern.parser.token.PublicKey current_authority = 2;
 }
 
 message UpdateGroupAuthorityArgs {
-  vixen.parser.token.PublicKey new_authority = 1;
+  shipstern.parser.token.PublicKey new_authority = 1;
 }
 
 message InitializeMemberAccounts {
-  vixen.parser.token.PublicKey member = 1;
-  vixen.parser.token.PublicKey member_mint = 2;
-  vixen.parser.token.PublicKey member_mint_authority = 3;
-  vixen.parser.token.PublicKey group = 4;
-  vixen.parser.token.PublicKey group_update_authority = 5;
+  shipstern.parser.token.PublicKey member = 1;
+  shipstern.parser.token.PublicKey member_mint = 2;
+  shipstern.parser.token.PublicKey member_mint_authority = 3;
+  shipstern.parser.token.PublicKey group = 4;
+  shipstern.parser.token.PublicKey group_update_authority = 5;
 }
 
 message InitializeMemberArgs {}
@@ -380,82 +380,82 @@ message TokenGroupIx {
 // ── Confidential Transfer Extension ────────────────────────────────
 
 message UpdateMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey authority = 2;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey authority = 2;
 }
 
 message ConfigureAccountAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey sysvar = 3;
-  vixen.parser.token.PublicKey owner = 4;
-  repeated vixen.parser.token.PublicKey multisig_signers = 5;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey sysvar = 3;
+  shipstern.parser.token.PublicKey owner = 4;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 5;
 }
 
 message ApproveAccountAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey authority = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey authority = 3;
 }
 
 message EmptyAccountAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey sysvar = 2;
-  vixen.parser.token.PublicKey owner = 3;
-  repeated vixen.parser.token.PublicKey multisig_signers = 4;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey sysvar = 2;
+  shipstern.parser.token.PublicKey owner = 3;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 4;
 }
 
 message DepositAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey owner = 3;
-  repeated vixen.parser.token.PublicKey multisig_signers = 4;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey owner = 3;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 4;
 }
 
 message WithdrawAccounts {
-  vixen.parser.token.PublicKey source_account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey destination = 3;
-  vixen.parser.token.PublicKey owner = 4;
-  repeated vixen.parser.token.PublicKey multisig_signers = 5;
+  shipstern.parser.token.PublicKey source_account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey destination = 3;
+  shipstern.parser.token.PublicKey owner = 4;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 5;
 }
 
 message ConfidentialTransferAccounts {
-  vixen.parser.token.PublicKey source_account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey destination = 3;
-  vixen.parser.token.PublicKey context_account = 4;
-  vixen.parser.token.PublicKey owner = 5;
-  repeated vixen.parser.token.PublicKey multisig_signers = 6;
+  shipstern.parser.token.PublicKey source_account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey destination = 3;
+  shipstern.parser.token.PublicKey context_account = 4;
+  shipstern.parser.token.PublicKey owner = 5;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 6;
 }
 
 message ApplyPendingBalanceAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey owner = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey owner = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message CreditsAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey owner = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey owner = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message TransferWithFeeAccounts {
-  vixen.parser.token.PublicKey source_account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey destination = 3;
+  shipstern.parser.token.PublicKey source_account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey destination = 3;
 }
 
 message ConfigureAccountWithRegistryAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey mint = 2;
-  vixen.parser.token.PublicKey registry = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey mint = 2;
+  shipstern.parser.token.PublicKey registry = 3;
 }
 
 message ConfidentialTransferIx {
   message InitializeMint {
-    vixen.parser.token.InitializeMintAccounts accounts = 1;
+    shipstern.parser.token.InitializeMintAccounts accounts = 1;
   }
   message UpdateMint {
     UpdateMintAccounts accounts = 1;
@@ -522,41 +522,41 @@ message ConfidentialTransferIx {
 // ── Confidential Transfer Fee Extension ────────────────────────────
 
 message InitializeConfidentialTransferFeeConfigAccounts {
-  vixen.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint = 1;
 }
 
 message ConfidentialWithdrawWithheldTokensFromMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey fee_recipient = 2;
-  vixen.parser.token.PublicKey sysvar = 3;
-  vixen.parser.token.PublicKey withdraw_withheld_authority = 4;
-  repeated vixen.parser.token.PublicKey multisig_signers = 5;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey fee_recipient = 2;
+  shipstern.parser.token.PublicKey sysvar = 3;
+  shipstern.parser.token.PublicKey withdraw_withheld_authority = 4;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 5;
 }
 
 message ConfidentialWithdrawWithheldTokensFromAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey fee_recipient = 2;
-  vixen.parser.token.PublicKey sysvar = 3;
-  vixen.parser.token.PublicKey withdraw_withheld_authority = 4;
-  repeated vixen.parser.token.PublicKey source_accounts = 5;
-  repeated vixen.parser.token.PublicKey multisig_signers = 6;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey fee_recipient = 2;
+  shipstern.parser.token.PublicKey sysvar = 3;
+  shipstern.parser.token.PublicKey withdraw_withheld_authority = 4;
+  repeated shipstern.parser.token.PublicKey source_accounts = 5;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 6;
 }
 
 message ConfidentialHarvestWithheldTokensToMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  repeated vixen.parser.token.PublicKey source_accounts = 2;
+  shipstern.parser.token.PublicKey mint = 1;
+  repeated shipstern.parser.token.PublicKey source_accounts = 2;
 }
 
 message EnableHarvestToMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey confidential_transfer_fee_authority = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey confidential_transfer_fee_authority = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message DisableHarvestToMintAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey confidential_transfer_fee_authority = 2;
-  repeated vixen.parser.token.PublicKey multisig_signers = 3;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey confidential_transfer_fee_authority = 2;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 3;
 }
 
 message ConfidentialTransferFeeIx {
@@ -592,27 +592,27 @@ message ConfidentialTransferFeeIx {
 // ── Top-level instruction accounts and args ────────────────────────
 
 message CreateNativeMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
-  vixen.parser.token.PublicKey funding_account = 2;
+  shipstern.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey funding_account = 2;
 }
 
 message InitializeMintCloseAuthorityAccounts {
-  vixen.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint = 1;
 }
 
 message InitializeMintCloseAuthorityArgs {
-  optional vixen.parser.token.PublicKey close_authority = 1;
+  optional shipstern.parser.token.PublicKey close_authority = 1;
 }
 
 message InitializeNonTransferableMintAccounts {
-  vixen.parser.token.PublicKey mint = 1;
+  shipstern.parser.token.PublicKey mint = 1;
 }
 
 message ReallocateAccounts {
-  vixen.parser.token.PublicKey account = 1;
-  vixen.parser.token.PublicKey payer = 2;
-  vixen.parser.token.PublicKey owner = 3;
-  repeated vixen.parser.token.PublicKey multisig_signers = 4;
+  shipstern.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey payer = 2;
+  shipstern.parser.token.PublicKey owner = 3;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 4;
 }
 
 message ReallocateArgs {
@@ -620,33 +620,33 @@ message ReallocateArgs {
 }
 
 message InitializePermanentDelegateAccounts {
-  vixen.parser.token.PublicKey account = 1;
+  shipstern.parser.token.PublicKey account = 1;
 }
 
 message InitializePermanentDelegateArgs {
-  vixen.parser.token.PublicKey delegate = 1;
+  shipstern.parser.token.PublicKey delegate = 1;
 }
 
 message WithdrawExcessLamportsAccounts {
-  vixen.parser.token.PublicKey source_account = 1;
-  vixen.parser.token.PublicKey destination_account = 2;
-  vixen.parser.token.PublicKey authority = 3;
-  repeated vixen.parser.token.PublicKey multisig_signers = 4;
+  shipstern.parser.token.PublicKey source_account = 1;
+  shipstern.parser.token.PublicKey destination_account = 2;
+  shipstern.parser.token.PublicKey authority = 3;
+  repeated shipstern.parser.token.PublicKey multisig_signers = 4;
 }
 
 message SetAuthorityArgs {
   AuthorityType authority_type = 1;
-  optional vixen.parser.token.PublicKey new_authority = 2;
+  optional shipstern.parser.token.PublicKey new_authority = 2;
 }
 
 // ── Instruction wrappers ───────────────────────────────────────────
 
 message TokenProgramInstruction {
-  vixen.parser.token.TokenProgram instruction = 1;
+  shipstern.parser.token.TokenProgram instruction = 1;
 }
 
 message SetAuthorityInstruction {
-  vixen.parser.token.SetAuthorityAccounts accounts = 1;
+  shipstern.parser.token.SetAuthorityAccounts accounts = 1;
   SetAuthorityArgs args = 2;
 }
 

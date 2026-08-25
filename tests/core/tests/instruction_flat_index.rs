@@ -1,6 +1,6 @@
+use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+use shipstern_mock::{FixtureData, SerializableInstructionUpdate};
 use yellowstone_grpc_proto::prost::Message as _;
-use yellowstone_vixen_core::{instruction::InstructionUpdate, TransactionUpdate};
-use yellowstone_vixen_mock::{FixtureData, SerializableInstructionUpdate};
 
 const DP4_TX_FIXTURE: &[u8] = include_bytes!("../fixtures/transactions/dp4_flat_index_tx.bin");
 const DP4_JSON_FIXTURE: &[u8] = include_bytes!(concat!(
@@ -37,13 +37,13 @@ fn real_backfilled_tx_keeps_flat_indices_from_solana_inner_instruction_order() {
 
     assert_eq!(transaction.slot, 420_181_274);
     assert_eq!(
-        yellowstone_vixen_core::bs58::encode(&transaction_info.signature).into_string(),
+        shipstern_core::bs58::encode(&transaction_info.signature).into_string(),
         DP4_SIGNATURE
     );
 
     let instructions =
         InstructionUpdate::build_from_txn(&transaction).expect("fixture should build");
-    let json_fixture = match yellowstone_vixen_mock::read_instructions_fixture(DP4_JSON_FIXTURE)
+    let json_fixture = match shipstern_mock::read_instructions_fixture(DP4_JSON_FIXTURE)
         .expect("Solana RPC JSON fixture should decode")
     {
         FixtureData::Instructions(fixture) => fixture,

@@ -1,13 +1,9 @@
 use std::{collections::HashMap, future::Future, mem, pin::Pin, task::Poll};
 
 use futures_util::pin_mut;
-use tokio::{
-    sync::broadcast,
-    task::{JoinError, JoinHandle},
-};
-use yellowstone_vixen::{stop, Handler, HandlerResult};
-use yellowstone_vixen_core::Pubkey;
-use yellowstone_vixen_proto::{
+use shipstern::{stop, Handler, HandlerResult};
+use shipstern_core::Pubkey;
+use shipstern_proto::{
     prost::{Message, Name},
     prost_types::Any,
     stream::{
@@ -17,6 +13,10 @@ use yellowstone_vixen_proto::{
     },
     tonic::{self, transport, Request, Response, Status},
     tonic_reflection,
+};
+use tokio::{
+    sync::broadcast,
+    task::{JoinError, JoinHandle},
 };
 
 use super::config::GrpcConfig;
@@ -54,7 +54,7 @@ impl ProgramStreams for Service {
         request: Request<SubscribeRequest>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
         let pubkey: Pubkey = request.into_inner().program.parse().map_err(
-            |e: yellowstone_vixen_core::KeyFromStrError| {
+            |e: shipstern_core::KeyFromStrError| {
                 Status::new(tonic::Code::InvalidArgument, e.to_string())
             },
         )?;
@@ -78,10 +78,9 @@ impl ProgramStreams for Service {
             .programs
             .iter()
             .map(|p| {
-                p.parse()
-                    .map_err(|e: yellowstone_vixen_core::KeyFromStrError| {
-                        Status::new(tonic::Code::InvalidArgument, e.to_string())
-                    })
+                p.parse().map_err(|e: shipstern_core::KeyFromStrError| {
+                    Status::new(tonic::Code::InvalidArgument, e.to_string())
+                })
             })
             .collect::<Result<Vec<_>, _>>()?;
 

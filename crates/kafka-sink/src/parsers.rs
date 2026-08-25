@@ -1,6 +1,6 @@
 //! Pass-through subscription parsers for TransactionUpdate and AccountUpdate.
 //!
-//! TransactionSubscription: Forwards transaction updates as-is so the Vixen Runtime routes them
+//! TransactionSubscription: Forwards transaction updates as-is so the Shipstern Runtime routes them
 //! to BufferingHandler for eager instruction parsing.
 //!
 //! AccountSubscription: Forwards account updates as-is, subscribing to the union of all
@@ -8,7 +8,7 @@
 
 use std::{borrow::Cow, collections::HashSet};
 
-use yellowstone_vixen_core::{
+use shipstern_core::{
     AccountUpdate, ParseResult, Parser, Prefilter, Pubkey, TransactionPrefilter, TransactionUpdate,
 };
 

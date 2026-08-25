@@ -1,6 +1,6 @@
 use std::{io::Write, process::Command};
 
-use yellowstone_vixen_core::Pubkey;
+use shipstern_core::Pubkey;
 
 /// Parse a base58 public key string.
 pub fn p(s: &str) -> Pubkey { s.parse().unwrap() }

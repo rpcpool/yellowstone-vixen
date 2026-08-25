@@ -7,6 +7,11 @@ use std::{
 use agave_snapshots::snapshot_config::{SnapshotConfig, SnapshotUsage};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use shipstern::{
+    sources::{SourceExitStatus, SourceTrait},
+    Error as ShipsternError,
+};
+use shipstern_core::{Filters, Pubkey};
 use solana_account::ReadableAccount;
 use solana_accounts_db::{
     accounts_db::{AccountsDbConfig, DEFAULT_MEMLOCK_BUDGET_SIZE},
@@ -31,11 +36,6 @@ use yellowstone_grpc_proto::{
     },
     tonic::Status,
 };
-use yellowstone_vixen::{
-    sources::{SourceExitStatus, SourceTrait},
-    Error as VixenError,
-};
-use yellowstone_vixen_core::{Filters, Pubkey};
 
 const MAX_GENESIS_ARCHIVE_UNPACKED_SIZE: u64 = 10485760;
 
@@ -45,13 +45,13 @@ pub struct SolanaSnapshot {
 }
 
 impl SolanaSnapshot {
-    pub fn load_ledger<P: Into<PathBuf>>(ledger_path: P) -> Result<Self, VixenError> {
+    pub fn load_ledger<P: Into<PathBuf>>(ledger_path: P) -> Result<Self, ShipsternError> {
         let ledger_path = ledger_path.into();
 
         tracing::info!("Opening genesis config from {:?}", ledger_path);
         let genesis_config = open_genesis_config(&ledger_path, MAX_GENESIS_ARCHIVE_UNPACKED_SIZE)
             .map_err(|e| {
-            VixenError::Io(std::io::Error::other(format!(
+            ShipsternError::Io(std::io::Error::other(format!(
                 "Failed to open genesis config: {e}"
             )))
         })?;
@@ -81,7 +81,7 @@ impl SolanaSnapshot {
 
         let (account_run_paths, _account_snapshot_paths) =
             create_all_accounts_run_and_snapshot_dirs(&[account_path]).map_err(|e| {
-                VixenError::Io(std::io::Error::other(format!(
+                ShipsternError::Io(std::io::Error::other(format!(
                     "Failed to create account paths: {e}"
                 )))
             })?;
@@ -93,7 +93,7 @@ impl SolanaSnapshot {
             ..BlockstoreOptions::default()
         })
         .map_err(|e| {
-            VixenError::Io(std::io::Error::other(format!(
+            ShipsternError::Io(std::io::Error::other(format!(
                 "Failed to open blockstore: {e}"
             )))
         })?;
@@ -112,7 +112,7 @@ impl SolanaSnapshot {
                 Arc::new(AtomicBool::new(false)),
             )
             .map_err(|e| {
-                VixenError::Io(std::io::Error::other(format!(
+                ShipsternError::Io(std::io::Error::other(format!(
                     "Failed to load bank forks: {e}"
                 )))
             })?;
@@ -185,7 +185,7 @@ impl SourceTrait for SolanaSnapshotSource {
         &self,
         tx: tokio::sync::mpsc::Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-    ) -> Result<(), VixenError> {
+    ) -> Result<(), ShipsternError> {
         let filter_owner_key_lookup = FilterOwnerKeyLookup::new(&self.filters);
         let solana_snapshot = SolanaSnapshot::load_ledger(self.config.ledger_path.clone())?;
         let snapshot_slot = solana_snapshot.slot;
@@ -208,7 +208,7 @@ impl SourceTrait for SolanaSnapshotSource {
             })),
         }))
         .await
-        .map_err(|_| VixenError::ServerHangup)?;
+        .map_err(|_| ShipsternError::ServerHangup)?;
 
         let channel_size = self.config.channel_size;
         let (sync_tx, mut sync_rx) = mpsc::channel::<Event>(channel_size);
@@ -251,7 +251,7 @@ impl SourceTrait for SolanaSnapshotSource {
                     .collect::<Vec<_>>();
                 let scan_config = ScanConfig::new(ScanOrder::Sorted);
                 let mut is_closed = false;
-                let mut error: Option<VixenError> = None;
+                let mut error: Option<ShipsternError> = None;
 
                 bank.rc
                     .accounts
@@ -295,16 +295,16 @@ impl SourceTrait for SolanaSnapshotSource {
 
                                 if let Err(err) = scan_sync_tx.blocking_send(event) {
                                     is_closed = true;
-                                    error = Some(VixenError::Io(std::io::Error::other(format!(
-                                        "Error sending account update: {err:?}"
-                                    ))));
+                                    error = Some(ShipsternError::Io(std::io::Error::other(
+                                        format!("Error sending account update: {err:?}"),
+                                    )));
                                 }
                             }
                         },
                         &scan_config,
                     )
                     .map_err(|e| {
-                        VixenError::Io(std::io::Error::other(format!("Scan failed: {e}")))
+                        ShipsternError::Io(std::io::Error::other(format!("Scan failed: {e}")))
                     })?;
 
                 if let Some(error) = error {
@@ -314,12 +314,12 @@ impl SourceTrait for SolanaSnapshotSource {
                 }
             })
             .await
-            .map_err(|_| VixenError::Io(std::io::Error::other("Scan thread panicked")))
+            .map_err(|_| ShipsternError::Io(std::io::Error::other("Scan thread panicked")))
         });
 
         let scan_result = scan_handle
             .await
-            .map_err(|_| VixenError::Io(std::io::Error::other("Scan task panicked")))?
+            .map_err(|_| ShipsternError::Io(std::io::Error::other("Scan task panicked")))?
             .and_then(std::convert::identity);
 
         if let Err(error) = scan_result {
@@ -335,7 +335,7 @@ impl SourceTrait for SolanaSnapshotSource {
         sync_tx
             .send(Event::SnapshotFinished)
             .await
-            .map_err(|_| VixenError::ServerHangup)?;
+            .map_err(|_| ShipsternError::ServerHangup)?;
         drop(sync_tx);
         let _ = sender_handle.await;
 

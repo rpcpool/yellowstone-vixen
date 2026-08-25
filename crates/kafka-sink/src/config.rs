@@ -1,7 +1,7 @@
 use std::{fmt, io, str::FromStr};
 
 use serde::{Deserialize, Serialize};
-use yellowstone_vixen_block_coordinator::AccountMode;
+use shipstern_block_coordinator::AccountMode;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -310,7 +310,7 @@ impl KafkaSinkConfig {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_block_coordinator::AccountCommitAt;
+    use shipstern_block_coordinator::AccountCommitAt;
 
     use super::*;
 

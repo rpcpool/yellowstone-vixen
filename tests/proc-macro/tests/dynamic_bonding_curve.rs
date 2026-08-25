@@ -1,7 +1,7 @@
-use vixen_test_utils::check_protobuf_format;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::check_protobuf_format;
 
-include_vixen_parser!("../idls/dynamic_bonding_curve.json");
+include_shipstern_parser!("../idls/dynamic_bonding_curve.json");
 
 #[test]
 fn check_protobuf_schema() {

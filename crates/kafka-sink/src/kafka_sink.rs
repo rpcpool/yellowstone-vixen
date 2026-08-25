@@ -12,10 +12,10 @@ use rdkafka::{
     message::OwnedHeaders,
     producer::{FutureProducer, FutureRecord, Producer},
 };
-use tokio::{sync::mpsc, time::sleep};
 #[cfg(feature = "experimental-account-parser")]
-use yellowstone_vixen_block_coordinator::AccountSlot;
-use yellowstone_vixen_block_coordinator::{AccountCommitAt, InstructionSlot};
+use shipstern_block_coordinator::AccountSlot;
+use shipstern_block_coordinator::{AccountCommitAt, InstructionSlot};
+use tokio::{sync::mpsc, time::sleep};
 
 type SinkError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -954,8 +954,8 @@ impl From<AccountCommitAt> for CommitScope {
 #[cfg(test)]
 mod tests {
     #[cfg(feature = "experimental-account-parser")]
-    use yellowstone_vixen_block_coordinator::AccountSlot;
-    use yellowstone_vixen_block_coordinator::InstructionSlot;
+    use shipstern_block_coordinator::AccountSlot;
+    use shipstern_block_coordinator::InstructionSlot;
 
     use super::*;
     use crate::events::{AccountSlotCommitEvent, MarkerType};

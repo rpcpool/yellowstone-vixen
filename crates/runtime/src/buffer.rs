@@ -103,7 +103,7 @@ async fn run_job(pipelines: &PipelineSets, job: Job) {
                     #[cfg(feature = "prometheus")]
                     update_type,
                 )
-                .instrument(tracing::info_span!("vixen.process.account"))
+                .instrument(tracing::info_span!("shipstern.process.account"))
                 .await;
         },
         UpdateOneof::Transaction(t) => {
@@ -122,7 +122,7 @@ async fn run_job(pipelines: &PipelineSets, job: Job) {
             );
 
             futures_util::future::join_all([transaction_fut, instruction_fut])
-                .instrument(tracing::info_span!("vixen.process.transaction"))
+                .instrument(tracing::info_span!("shipstern.process.transaction"))
                 .await;
         },
         UpdateOneof::BlockMeta(b) => {
@@ -135,7 +135,7 @@ async fn run_job(pipelines: &PipelineSets, job: Job) {
                     #[cfg(feature = "prometheus")]
                     update_type,
                 )
-                .instrument(tracing::info_span!("vixen.process.block_meta"))
+                .instrument(tracing::info_span!("shipstern.process.block_meta"))
                 .await;
         },
         UpdateOneof::Block(b) => {
@@ -148,7 +148,7 @@ async fn run_job(pipelines: &PipelineSets, job: Job) {
                     #[cfg(feature = "prometheus")]
                     update_type,
                 )
-                .instrument(tracing::info_span!("vixen.process.block"))
+                .instrument(tracing::info_span!("shipstern.process.block"))
                 .await;
         },
         UpdateOneof::Slot(s) => {
@@ -161,7 +161,7 @@ async fn run_job(pipelines: &PipelineSets, job: Job) {
                     #[cfg(feature = "prometheus")]
                     update_type,
                 )
-                .instrument(tracing::info_span!("vixen.process.slot"))
+                .instrument(tracing::info_span!("shipstern.process.slot"))
                 .await;
         },
         UpdateOneof::Ping(SubscribeUpdatePing {}) => (),

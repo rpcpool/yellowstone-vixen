@@ -3040,18 +3040,18 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "shipstern",
+ "shipstern-block-meta-parser",
+ "shipstern-core",
+ "shipstern-kafka-sink",
+ "shipstern-mock",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "shipstern-spl-token-extensions-parser",
+ "shipstern-spl-token-parser",
+ "shipstern-stake-pool-parser",
+ "shipstern-test-utils",
  "tokio",
- "vixen-test-utils",
- "yellowstone-vixen",
- "yellowstone-vixen-block-meta-parser",
- "yellowstone-vixen-core",
- "yellowstone-vixen-kafka-sink",
- "yellowstone-vixen-mock",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-spl-token-extensions-parser",
- "yellowstone-vixen-spl-token-parser",
- "yellowstone-vixen-stake-pool-parser",
 ]
 
 [[package]]
@@ -3956,6 +3956,228 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "shipstern"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "crossbeam-channel",
+ "futures-channel",
+ "futures-util",
+ "serde",
+ "shipstern-core",
+ "smallvec",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-block-coordinator"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "bs58",
+ "clap",
+ "futures-util",
+ "prost",
+ "serde",
+ "shipstern",
+ "shipstern-core",
+ "shipstern-yellowstone-grpc-source",
+ "smallvec",
+ "solana-clock 3.0.1",
+ "solana-commitment-config",
+ "solana-hash 3.1.0",
+ "tokio",
+ "tracing",
+ "yellowstone-block-machine",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-block-meta-parser"
+version = "0.8.0"
+dependencies = [
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-proc-macro",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-core"
+version = "0.8.0"
+dependencies = [
+ "borsh 1.6.1",
+ "bs58",
+ "clap",
+ "prost",
+ "prost-types",
+ "serde",
+ "shipstern-proto",
+ "thiserror 1.0.69",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-kafka-sink"
+version = "0.8.0"
+dependencies = [
+ "futures",
+ "prost",
+ "rdkafka",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "shipstern",
+ "shipstern-block-coordinator",
+ "shipstern-core",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+name = "shipstern-mock"
+version = "0.8.0"
+dependencies = [
+ "futures",
+ "regex",
+ "serde",
+ "serde_json",
+ "shipstern-core",
+ "solana-client",
+ "solana-rpc-client-api",
+ "solana-sdk",
+ "solana-transaction-status",
+ "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "shipstern-parser"
+version = "0.8.0"
+dependencies = [
+ "base64 0.22.1",
+ "bs58",
+ "shipstern-core",
+ "shipstern-proto",
+ "solana-program-option 3.1.0",
+ "solana-pubkey 3.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-proc-macro"
+version = "0.8.0"
+dependencies = [
+ "base64 0.22.1",
+ "bs58",
+ "codama-nodes",
+ "hex",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "shipstern-core",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "shipstern-proto"
+version = "0.8.0"
+dependencies = [
+ "prost",
+ "protobuf-src",
+ "tonic-prost-build",
+]
+
+[[package]]
+name = "shipstern-spl-token-extensions-parser"
+version = "0.8.0"
+dependencies = [
+ "borsh 1.6.1",
+ "bs58",
+ "bytemuck",
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "shipstern-proto",
+ "shipstern-spl-token-parser",
+ "solana-program-error 3.0.0",
+ "solana-program-pack 3.1.0",
+ "spl-pod 0.7.2",
+ "spl-token-2022 10.0.0",
+ "spl-token-group-interface 0.7.1",
+ "spl-token-metadata-interface 0.8.0",
+ "spl-type-length-value 0.9.1",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-spl-token-parser"
+version = "0.8.0"
+dependencies = [
+ "bs58",
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "shipstern-proto",
+ "solana-program-error 3.0.0",
+ "spl-pod 0.7.2",
+ "spl-token 9.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-stake-pool-parser"
+version = "0.8.0"
+dependencies = [
+ "borsh 1.6.1",
+ "bs58",
+ "prost",
+ "prost-types",
+ "shipstern-core",
+ "shipstern-parser",
+ "shipstern-proc-macro",
+ "spl-pod 0.7.2",
+ "spl-stake-pool",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "shipstern-test-utils"
+version = "0.0.0"
+dependencies = [
+ "shipstern-core",
+ "tempfile",
+]
+
+[[package]]
+name = "shipstern-yellowstone-grpc-source"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "futures-util",
+ "serde",
+ "shipstern",
+ "shipstern-core",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
 ]
 
 [[package]]
@@ -8221,14 +8443,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
-name = "vixen-test-utils"
-version = "0.0.0"
-dependencies = [
- "tempfile",
- "yellowstone-vixen-core",
-]
-
-[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8949,220 +9163,6 @@ dependencies = [
  "tonic",
  "tonic-prost",
  "tonic-prost-build",
-]
-
-[[package]]
-name = "yellowstone-vixen"
-version = "0.7.0"
-dependencies = [
- "async-trait",
- "clap",
- "crossbeam-channel",
- "futures-channel",
- "futures-util",
- "serde",
- "smallvec",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-block-coordinator"
-version = "0.7.0"
-dependencies = [
- "async-trait",
- "bs58",
- "clap",
- "futures-util",
- "prost",
- "serde",
- "smallvec",
- "solana-clock 3.0.1",
- "solana-commitment-config",
- "solana-hash 3.1.0",
- "tokio",
- "tracing",
- "yellowstone-block-machine",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
- "yellowstone-vixen-yellowstone-grpc-source",
-]
-
-[[package]]
-name = "yellowstone-vixen-block-meta-parser"
-version = "0.7.0"
-dependencies = [
- "prost",
- "prost-types",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-core",
- "yellowstone-vixen-proc-macro",
-]
-
-[[package]]
-name = "yellowstone-vixen-core"
-version = "0.7.0"
-dependencies = [
- "borsh 1.6.1",
- "bs58",
- "clap",
- "prost",
- "prost-types",
- "serde",
- "thiserror 1.0.69",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-proto",
-]
-
-[[package]]
-name = "yellowstone-vixen-kafka-sink"
-version = "0.7.0"
-dependencies = [
- "futures",
- "prost",
- "rdkafka",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
- "tracing",
- "yellowstone-vixen",
- "yellowstone-vixen-block-coordinator",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-mock"
-version = "0.7.0"
-dependencies = [
- "futures",
- "regex",
- "serde",
- "serde_json",
- "solana-client",
- "solana-rpc-client-api",
- "solana-sdk",
- "solana-transaction-status",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-parser"
-version = "0.7.0"
-dependencies = [
- "base64 0.22.1",
- "bs58",
- "solana-program-option 3.1.0",
- "solana-pubkey 3.0.0",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-proto",
-]
-
-[[package]]
-name = "yellowstone-vixen-proc-macro"
-version = "0.7.0"
-dependencies = [
- "base64 0.22.1",
- "bs58",
- "codama-nodes",
- "hex",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "syn 2.0.117",
- "yellowstone-vixen-core",
-]
-
-[[package]]
-name = "yellowstone-vixen-proto"
-version = "0.7.0"
-dependencies = [
- "prost",
- "protobuf-src",
- "tonic-prost-build",
-]
-
-[[package]]
-name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.7.0"
-dependencies = [
- "borsh 1.6.1",
- "bs58",
- "bytemuck",
- "prost",
- "prost-types",
- "solana-program-error 3.0.0",
- "solana-program-pack 3.1.0",
- "spl-pod 0.7.2",
- "spl-token-2022 10.0.0",
- "spl-token-group-interface 0.7.1",
- "spl-token-metadata-interface 0.8.0",
- "spl-type-length-value 0.9.1",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-proto",
- "yellowstone-vixen-spl-token-parser",
-]
-
-[[package]]
-name = "yellowstone-vixen-spl-token-parser"
-version = "0.7.0"
-dependencies = [
- "bs58",
- "prost",
- "prost-types",
- "solana-program-error 3.0.0",
- "spl-pod 0.7.2",
- "spl-token 9.0.0",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
- "yellowstone-vixen-proto",
-]
-
-[[package]]
-name = "yellowstone-vixen-stake-pool-parser"
-version = "0.7.0"
-dependencies = [
- "borsh 1.6.1",
- "bs58",
- "prost",
- "prost-types",
- "spl-pod 0.7.2",
- "spl-stake-pool",
- "thiserror 1.0.69",
- "yellowstone-vixen-core",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proc-macro",
-]
-
-[[package]]
-name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.7.0"
-dependencies = [
- "async-trait",
- "clap",
- "futures-util",
- "serde",
- "tokio",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
 ]
 
 [[package]]

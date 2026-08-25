@@ -1,10 +1,10 @@
 [package]
-name = "yellowstone-vixen-example-idl-parser"
+name = "shipstern-example-idl-parser"
 description = "Example of generating parser from IDL"
 publish = false
 edition.workspace = true
 license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+repository = "https://github.com/solana-rpc/shipstern"
 
 [dependencies]
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
@@ -12,11 +12,11 @@ toml = { workspace = true }
 tracing = { workspace = true }
 rustls = { workspace = true }
 borsh = { workspace = true, features = ["derive"] }
-yellowstone-vixen = { workspace = true }
-yellowstone-vixen-core = { workspace = true, features = ["proto"] }
-yellowstone-vixen-parser = { workspace = true }
-yellowstone-vixen-proc-macro = { workspace = true, features = ["proto"] }
-yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
+shipstern = { workspace = true }
+shipstern-core = { workspace = true, features = ["proto"] }
+shipstern-parser = { workspace = true }
+shipstern-proc-macro = { workspace = true, features = ["proto"] }
+shipstern-yellowstone-grpc-source = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }
 bs58 = { workspace = true }

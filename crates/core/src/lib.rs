@@ -10,10 +10,10 @@
 #![allow(clippy::module_name_repetitions)]
 
 //! This crate provides the core components necessary for implementing parsers
-//! for the `yellowstone-vixen` family of crates.  This crate should be used
-//! as a dependency instead of `yellowstone-vixen` for crates that intend to
-//! define and export Vixen parsers as libraries without needing to access the
-//! runtime functionality of Vixen.
+//! for the `shipstern` family of crates.  This crate should be used
+//! as a dependency instead of `shipstern` for crates that intend to
+//! define and export Shipstern parsers as libraries without needing to access the
+//! runtime functionality of Shipstern.
 
 use std::{
     borrow::Cow,
@@ -37,7 +37,7 @@ use yellowstone_grpc_proto::geyser::{
 pub extern crate bs58;
 
 #[cfg(feature = "proto")]
-pub extern crate yellowstone_vixen_proto;
+pub extern crate shipstern_proto;
 
 pub mod instruction;
 pub mod log_messages;
@@ -47,11 +47,11 @@ pub mod proto;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
-/// An error returned by a Vixen parser
+/// An error returned by a Shipstern parser
 #[derive(Debug)]
 pub enum ParseError {
     /// The parser received an undesired update and requested to skip
-    /// processing for it.  No error will be logged by the Vixen runtime, and
+    /// processing for it.  No error will be logged by the Shipstern runtime, and
     /// no handlers registered to this parser will be executed.
     Filtered,
     /// No instruction discriminator matched the input data.
@@ -105,7 +105,7 @@ pub struct InstructionUpdateOutput<T> {
 }
 
 /// A core trait that defines the parse logic for producing a parsed value from
-/// a Vixen update (typically [`AccountUpdate`], [`TransactionUpdate`], or
+/// a Shipstern update (typically [`AccountUpdate`], [`TransactionUpdate`], or
 /// [`InstructionUpdate`](instruction::InstructionUpdate)).
 pub trait Parser {
     /// The input update type for this parser.
@@ -374,27 +374,31 @@ impl SlotPrefilter {
     }
 }
 
-/// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519
+/// Helper macro for converting Shipstern's [`Pubkey`] to a Solana ed25519
 /// public key.
 ///
 /// Invoking the macro with the name of a publicly-exported Solana `Pubkey`
 /// type (e.g. `pubkey_convert_helpers!(solana_sdk::pubkey::Pubkey);`) will
 /// define two functions:
 ///
-/// - `pub(crate) fn into_vixen_pubkey(`<Solana Pubkey>`) -> yellowstone_vixen_core::Pubkey;`
-/// - `pub(crate) fn from_vixen_pubkey(yellowstone_vixen_core::Pubkey) -> <Solana Pubkey>;`
+/// - `pub(crate) fn into_shipstern_pubkey(`<Solana Pubkey>`) -> shipstern_core::Pubkey;`
+/// - `pub(crate) fn from_shipstern_pubkey(shipstern_core::Pubkey) -> <Solana Pubkey>;`
 ///
 /// These can be used as a convenience for quickly converting between Solana
-/// public keys and their representation in Vixen.  Vixen does not use the
+/// public keys and their representation in Shipstern.  Shipstern does not use the
 /// built-in Solana `Pubkey` type, nor does it provide `From`/`Into` impls for
 /// it, to avoid creating an unnecessary dependency on any specific version of
 /// the full Solana SDK.
 #[macro_export]
 macro_rules! pubkey_convert_helpers {
     ($ty:ty) => {
-        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey { value.to_bytes().into() }
+        pub(crate) fn into_shipstern_pubkey(value: $ty) -> $crate::Pubkey {
+            value.to_bytes().into()
+        }
 
-        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty { value.into_bytes().into() }
+        pub(crate) fn from_shipstern_pubkey(value: $crate::Pubkey) -> $ty {
+            value.into_bytes().into()
+        }
     };
 }
 
@@ -896,7 +900,7 @@ impl PrefilterBuilder {
     }
 }
 
-/// A collection of filters for a Vixen subscription.
+/// A collection of filters for a Shipstern subscription.
 #[derive(Debug, Clone)]
 pub struct Filters {
     /// Filters for each parser.

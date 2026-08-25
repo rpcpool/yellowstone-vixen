@@ -1,11 +1,11 @@
-//! Sources for Vixen.
+//! Sources for Shipstern.
 //!
 //! A `SourceTrait` is a trait that defines the behavior for data sources that can be used to connect to it and
 //! send updates to a channel. This trait is implemented by various modules, including the `yellowstone_grpc` module.
 
 use async_trait::async_trait;
+use shipstern_core::Filters;
 use tokio::sync::{mpsc::Sender, oneshot};
-use vixen_core::Filters;
 use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic};
 
 /// How a source exited.

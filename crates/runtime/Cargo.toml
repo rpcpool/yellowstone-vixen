@@ -1,5 +1,5 @@
 [package]
-name = "yellowstone-vixen"
+name = "shipstern"
 description = "An all-in-one consumer runtime library for Yellowstone"
 version.workspace = true
 edition.workspace = true
@@ -23,7 +23,7 @@ tokio = { workspace = true, features = ["rt-multi-thread", "signal", "time"] }
 tracing = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-vixen-core = { workspace = true }
+shipstern-core = { workspace = true }
 
 [dev-dependencies]
 async-trait = { workspace = true }

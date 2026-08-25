@@ -10,9 +10,9 @@
 use std::{path::PathBuf, time::Duration};
 
 use clap::Parser;
-use yellowstone_vixen::Pipeline;
-use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
-use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
+use shipstern::Pipeline;
+use shipstern_spl_token_parser::{AccountParser, InstructionParser};
+use shipstern_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -24,8 +24,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
-    async fn handle(&self, value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> {
+impl<V: std::fmt::Debug + Sync, R: Sync> shipstern::Handler<V, R> for Logger {
+    async fn handle(&self, value: &V, _raw: &R) -> shipstern::HandlerResult<()> {
         println!("{value:?}");
         Ok(())
     }
@@ -54,7 +54,7 @@ async fn main() {
 
             let _ = tokio::task::spawn_blocking(move || {
                 if let Err(e) = prometheus::push_metrics(
-                    "vixen",
+                    "shipstern",
                     prometheus::labels! {},
                     "http://localhost:9091",
                     metrics,
@@ -67,7 +67,7 @@ async fn main() {
         }
     });
 
-    yellowstone_vixen::Runtime::<YellowstoneGrpcSource>::builder()
+    shipstern::Runtime::<YellowstoneGrpcSource>::builder()
         .instruction(Pipeline::new(InstructionParser, [Logger]))
         .account(Pipeline::new(AccountParser, [Logger]))
         .metrics(prometheus_registry)

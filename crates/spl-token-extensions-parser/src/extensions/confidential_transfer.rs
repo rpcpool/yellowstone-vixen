@@ -1,19 +1,19 @@
+use shipstern_core::instruction::InstructionUpdate;
+use shipstern_parser::{check_min_accounts_req, Result};
+use shipstern_proc_macro::shipstern;
+use shipstern_spl_token_parser::InitializeMintAccounts;
 use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialTransferInstruction as SplConfidentialTransferInstruction;
-use yellowstone_vixen_core::instruction::InstructionUpdate;
-use yellowstone_vixen_parser::{check_min_accounts_req, Result};
-use yellowstone_vixen_proc_macro::vixen;
-use yellowstone_vixen_spl_token_parser::InitializeMintAccounts;
 
 use crate::{decode_extension_ix_type, ExtensionInstructionParser, Pubkey};
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateMintAccounts {
     pub mint: Pubkey,
     pub authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ConfigureAccountAccounts {
     pub account: Pubkey,
@@ -23,7 +23,7 @@ pub struct ConfigureAccountAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ApproveAccountAccounts {
     pub account: Pubkey,
@@ -31,7 +31,7 @@ pub struct ApproveAccountAccounts {
     pub authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct EmptyAccountAccounts {
     pub account: Pubkey,
@@ -40,7 +40,7 @@ pub struct EmptyAccountAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositAccounts {
     pub account: Pubkey,
@@ -49,7 +49,7 @@ pub struct DepositAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawAccounts {
     pub source_account: Pubkey,
@@ -59,7 +59,7 @@ pub struct WithdrawAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferAccounts {
     pub source_account: Pubkey,
@@ -70,7 +70,7 @@ pub struct ConfidentialTransferAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ApplyPendingBalanceAccounts {
     pub account: Pubkey,
@@ -78,7 +78,7 @@ pub struct ApplyPendingBalanceAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CreditsAccounts {
     pub account: Pubkey,
@@ -86,7 +86,7 @@ pub struct CreditsAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct TransferWithFeeAccounts {
     pub source_account: Pubkey,
@@ -94,7 +94,7 @@ pub struct TransferWithFeeAccounts {
     pub destination: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ConfigureAccountWithRegistryAccounts {
     pub account: Pubkey,
@@ -102,7 +102,7 @@ pub struct ConfigureAccountWithRegistryAccounts {
     pub registry: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferIx {
     #[hint(
@@ -115,97 +115,97 @@ pub struct ConfidentialTransferIx {
 pub mod confidential_transfer_instruction {
     use super::*;
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct InitializeMint {
         pub accounts: InitializeMintAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct UpdateMint {
         pub accounts: UpdateMintAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct ConfigureAccount {
         pub accounts: ConfigureAccountAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct ApproveAccount {
         pub accounts: ApproveAccountAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct EmptyAccount {
         pub accounts: EmptyAccountAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Deposit {
         pub accounts: DepositAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Withdraw {
         pub accounts: WithdrawAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct Transfer {
         pub accounts: ConfidentialTransferAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct ApplyPendingBalance {
         pub accounts: ApplyPendingBalanceAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct EnableConfidentialCredits {
         pub accounts: CreditsAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct DisableConfidentialCredits {
         pub accounts: CreditsAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct EnableNonConfidentialCredits {
         pub accounts: CreditsAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct DisableNonConfidentialCredits {
         pub accounts: CreditsAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct TransferWithFee {
         pub accounts: TransferWithFeeAccounts,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct ConfigureAccountWithRegistry {
         pub accounts: ConfigureAccountWithRegistryAccounts,
     }
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
         InitializeMint(InitializeMint),

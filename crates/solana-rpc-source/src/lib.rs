@@ -1,6 +1,11 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
+use shipstern::{
+    sources::{SourceExitStatus, SourceTrait},
+    CommitmentLevel, Error as ShipsternError,
+};
+use shipstern_core::Filters;
 use solana_account_decoder_client_types::UiAccountEncoding;
 use solana_client::{
     nonblocking::rpc_client::RpcClient,
@@ -19,11 +24,6 @@ use yellowstone_grpc_proto::{
     },
     tonic::Status,
 };
-use yellowstone_vixen::{
-    sources::{SourceExitStatus, SourceTrait},
-    CommitmentLevel, Error as VixenError,
-};
-use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Solana Accounts RPC API.
 #[derive(Debug)]
@@ -73,7 +73,7 @@ impl SourceTrait for SolanaAccountsRpcSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-    ) -> Result<(), VixenError> {
+    ) -> Result<(), ShipsternError> {
         let filters = &self.filters;
         let config = &self.config;
 
@@ -194,9 +194,9 @@ impl SourceTrait for SolanaAccountsRpcSource {
 mod tests {
     use std::collections::HashMap;
 
+    use shipstern::{sources::SourceTrait, CommitmentLevel};
+    use shipstern_core::{Filters, Prefilter};
     use tokio::sync::{mpsc, oneshot};
-    use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel};
-    use yellowstone_vixen_core::{Filters, Prefilter};
 
     use super::{SolanaAccountsRpcConfig, SolanaAccountsRpcSource};
 
@@ -229,7 +229,7 @@ mod tests {
                 .expect("connect should report task failure through source status");
 
             let status = status_rx.await.expect("source status should be sent");
-            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+            let shipstern::sources::SourceExitStatus::Error(msg) = status else {
                 panic!("expected source error, got {status:?}");
             };
             assert!(msg.contains("Failed to get slot for source: solana-rpc"));
@@ -277,7 +277,7 @@ mod tests {
             let status = status_rx
                 .await
                 .expect("source status should be sent exactly once");
-            let yellowstone_vixen::sources::SourceExitStatus::Error(msg) = status else {
+            let shipstern::sources::SourceExitStatus::Error(msg) = status else {
                 panic!("expected source error, got {status:?}");
             };
             assert!(msg.contains("Failed to get slot for source: solana-rpc"));

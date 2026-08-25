@@ -1,11 +1,11 @@
+use shipstern_core::instruction::InstructionUpdate;
+use shipstern_parser::{check_min_accounts_req, Result, ResultExt};
+use shipstern_proc_macro::shipstern;
 use spl_token_group_interface::instruction::TokenGroupInstruction as SplTokenGroupInstruction;
-use yellowstone_vixen_core::instruction::InstructionUpdate;
-use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
-use yellowstone_vixen_proc_macro::vixen;
 
 use crate::{ExtensionInstructionParser, Pubkey};
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeGroupAccounts {
     pub group: Pubkey,
@@ -13,40 +13,40 @@ pub struct InitializeGroupAccounts {
     pub mint_authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeGroupArgs {
     pub max_size: u64,
     pub update_authority: ::core::option::Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateGroupMaxSizeAccounts {
     pub group: Pubkey,
     pub update_authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateGroupMaxSizeArgs {
     pub max_size: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateGroupAuthorityAccounts {
     pub group: Pubkey,
     pub current_authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateGroupAuthorityArgs {
     pub new_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMemberAccounts {
     pub member: Pubkey,
@@ -56,13 +56,13 @@ pub struct InitializeMemberAccounts {
     pub group_update_authority: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeMemberArgs {
     // empty
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct TokenGroupIx {
     #[hint(oneof = "token_group_instruction::Instruction", tags = "1, 2, 3, 4")]
@@ -70,37 +70,37 @@ pub struct TokenGroupIx {
 }
 
 pub mod token_group_instruction {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct InitializeGroup {
         pub accounts: super::InitializeGroupAccounts,
         pub args: super::InitializeGroupArgs,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct UpdateGroupMaxSize {
         pub accounts: super::UpdateGroupMaxSizeAccounts,
         pub args: super::UpdateGroupMaxSizeArgs,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct UpdateGroupAuthority {
         pub accounts: super::UpdateGroupAuthorityAccounts,
         pub args: super::UpdateGroupAuthorityArgs,
     }
 
-    #[vixen]
+    #[shipstern]
     #[derive(Clone, PartialEq)]
     pub struct InitializeMember {
         pub accounts: super::InitializeMemberAccounts,
         pub args: super::InitializeMemberArgs,
     }
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
         InitializeGroup(InitializeGroup),

@@ -1,8 +1,8 @@
-use yellowstone_vixen_proc_macro::vixen;
+use shipstern_proc_macro::shipstern;
 
 use crate::Pubkey;
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct StakePoolProgram {
     #[hint(
@@ -14,9 +14,9 @@ pub struct StakePoolProgram {
 }
 
 pub mod stake_pool_program {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
         Initialize(super::InitializeInstruction),
@@ -48,14 +48,14 @@ pub mod stake_pool_program {
     }
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Fee {
     pub numerator: u64,
     pub denominator: u64,
 }
 
-#[vixen(enumeration)]
+#[shipstern(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(i32)]
 pub enum PreferredValidatorType {
@@ -63,7 +63,7 @@ pub enum PreferredValidatorType {
     Withdraw = 1,
 }
 
-#[vixen(enumeration)]
+#[shipstern(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(i32)]
 pub enum FundingType {
@@ -72,7 +72,7 @@ pub enum FundingType {
     SolWithdraw = 2,
 }
 
-#[vixen(enumeration)]
+#[shipstern(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(i32)]
 pub enum FeeKind {
@@ -85,7 +85,7 @@ pub enum FeeKind {
     SolWithdrawal = 6,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct FeeType {
     #[hint(enumeration = "FeeKind")]
@@ -96,9 +96,9 @@ pub struct FeeType {
 }
 
 pub mod fee_type {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Value {
         Fee(super::Fee),
@@ -107,7 +107,7 @@ pub mod fee_type {
     }
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeAccounts {
     pub stake_pool: Pubkey,
@@ -122,7 +122,7 @@ pub struct InitializeAccounts {
     pub deposit_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeArgs {
     pub fee: Option<Fee>,
@@ -132,14 +132,14 @@ pub struct InitializeArgs {
     pub max_validators: u32,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct InitializeInstruction {
     pub accounts: InitializeAccounts,
     pub args: InitializeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct AddValidatorToPoolAccounts {
     pub stake_pool: Pubkey,
@@ -157,20 +157,20 @@ pub struct AddValidatorToPoolAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct AddValidatorToPoolArgs {
     pub raw_validator_seed: u32,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct AddValidatorToPoolInstruction {
     pub accounts: AddValidatorToPoolAccounts,
     pub args: AddValidatorToPoolArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct RemoveValidatorFromPoolAccounts {
     pub stake_pool: Pubkey,
@@ -183,13 +183,13 @@ pub struct RemoveValidatorFromPoolAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct RemoveValidatorFromPoolInstruction {
     pub accounts: RemoveValidatorFromPoolAccounts,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeAccounts {
     pub stake_pool: Pubkey,
@@ -204,21 +204,21 @@ pub struct DecreaseValidatorStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeInstruction {
     pub accounts: DecreaseValidatorStakeAccounts,
     pub args: DecreaseValidatorStakeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseValidatorStakeAccounts {
     pub stake_pool: Pubkey,
@@ -237,21 +237,21 @@ pub struct IncreaseValidatorStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseValidatorStakeArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseValidatorStakeInstruction {
     pub accounts: IncreaseValidatorStakeAccounts,
     pub args: IncreaseValidatorStakeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetPreferredValidatorAccounts {
     pub stake_pool_address: Pubkey,
@@ -259,7 +259,7 @@ pub struct SetPreferredValidatorAccounts {
     pub validator_list_address: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetPreferredValidatorArgs {
     #[hint(enumeration = "PreferredValidatorType")]
@@ -267,14 +267,14 @@ pub struct SetPreferredValidatorArgs {
     pub validator_vote_address: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetPreferredValidatorInstruction {
     pub accounts: SetPreferredValidatorAccounts,
     pub args: SetPreferredValidatorArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateValidatorListBalanceAccounts {
     pub stake_pool: Pubkey,
@@ -286,21 +286,21 @@ pub struct UpdateValidatorListBalanceAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateValidatorListBalanceArgs {
     pub start_index: u32,
     pub no_merge: bool,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateValidatorListBalanceInstruction {
     pub accounts: UpdateValidatorListBalanceAccounts,
     pub args: UpdateValidatorListBalanceArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateStakePoolBalanceAccounts {
     pub stake_pool: Pubkey,
@@ -312,26 +312,26 @@ pub struct UpdateStakePoolBalanceAccounts {
     pub token_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateStakePoolBalanceInstruction {
     pub accounts: UpdateStakePoolBalanceAccounts,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CleanupRemovedValidatorEntriesAccounts {
     pub stake_pool: Pubkey,
     pub validator_list_storage: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CleanupRemovedValidatorEntriesInstruction {
     pub accounts: CleanupRemovedValidatorEntriesAccounts,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeAccounts {
     pub stake_pool: Pubkey,
@@ -351,13 +351,13 @@ pub struct DepositStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeInstruction {
     pub accounts: DepositStakeAccounts,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeAccounts {
     pub stake_pool: Pubkey,
@@ -375,20 +375,20 @@ pub struct WithdrawStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeArgs {
     pub amount: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeInstruction {
     pub accounts: WithdrawStakeAccounts,
     pub args: WithdrawStakeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetManagerAccounts {
     pub stake_pool: Pubkey,
@@ -397,33 +397,33 @@ pub struct SetManagerAccounts {
     pub new_fee_receiver: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetManagerInstruction {
     pub accounts: SetManagerAccounts,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetFeeAccounts {
     pub stake_pool: Pubkey,
     pub manager: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetFeeArgs {
     pub fee: Option<FeeType>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetFeeInstruction {
     pub accounts: SetFeeAccounts,
     pub args: SetFeeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetStakerAccounts {
     pub stake_pool: Pubkey,
@@ -431,13 +431,13 @@ pub struct SetStakerAccounts {
     pub new_staker: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetStakerInstruction {
     pub accounts: SetStakerAccounts,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolAccounts {
     pub stake_pool: Pubkey,
@@ -453,20 +453,20 @@ pub struct DepositSolAccounts {
     pub deposit_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolArgs {
     pub amount: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolInstruction {
     pub accounts: DepositSolAccounts,
     pub args: DepositSolArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetFundingAuthorityAccounts {
     pub stake_pool: Pubkey,
@@ -474,21 +474,21 @@ pub struct SetFundingAuthorityAccounts {
     pub auth: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetFundingAuthorityArgs {
     #[hint(enumeration = "FundingType")]
     pub funding_type: i32,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct SetFundingAuthorityInstruction {
     pub accounts: SetFundingAuthorityAccounts,
     pub args: SetFundingAuthorityArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolAccounts {
     pub stake_pool: Pubkey,
@@ -506,20 +506,20 @@ pub struct WithdrawSolAccounts {
     pub sol_withdraw_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolArgs {
     pub amount: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolInstruction {
     pub accounts: WithdrawSolAccounts,
     pub args: WithdrawSolArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CreateTokenMetadataAccounts {
     pub stake_pool: Pubkey,
@@ -532,7 +532,7 @@ pub struct CreateTokenMetadataAccounts {
     pub system_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CreateTokenMetadataArgs {
     pub name: String,
@@ -540,14 +540,14 @@ pub struct CreateTokenMetadataArgs {
     pub uri: String,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct CreateTokenMetadataInstruction {
     pub accounts: CreateTokenMetadataAccounts,
     pub args: CreateTokenMetadataArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateTokenMetadataAccounts {
     pub stake_pool: Pubkey,
@@ -557,7 +557,7 @@ pub struct UpdateTokenMetadataAccounts {
     pub mpl_token_metadata: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateTokenMetadataArgs {
     pub name: String,
@@ -565,14 +565,14 @@ pub struct UpdateTokenMetadataArgs {
     pub uri: String,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct UpdateTokenMetadataInstruction {
     pub accounts: UpdateTokenMetadataAccounts,
     pub args: UpdateTokenMetadataArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseAdditionalValidatorStakeAccounts {
     pub stake_pool: Pubkey,
@@ -591,7 +591,7 @@ pub struct IncreaseAdditionalValidatorStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseAdditionalValidatorStakeArgs {
     pub lamports: u64,
@@ -599,14 +599,14 @@ pub struct IncreaseAdditionalValidatorStakeArgs {
     pub ephemeral_stake_seed: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseAdditionalValidatorStakeInstruction {
     pub accounts: IncreaseAdditionalValidatorStakeAccounts,
     pub args: IncreaseAdditionalValidatorStakeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseAdditionalValidatorStakeAccounts {
     pub stake_pool: Pubkey,
@@ -623,7 +623,7 @@ pub struct DecreaseAdditionalValidatorStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseAdditionalValidatorStakeArgs {
     pub lamports: u64,
@@ -631,14 +631,14 @@ pub struct DecreaseAdditionalValidatorStakeArgs {
     pub ephemeral_stake_seed: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseAdditionalValidatorStakeInstruction {
     pub accounts: DecreaseAdditionalValidatorStakeAccounts,
     pub args: DecreaseAdditionalValidatorStakeArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeWithReserveAccounts {
     pub stake_pool: Pubkey,
@@ -654,21 +654,21 @@ pub struct DecreaseValidatorStakeWithReserveAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeWithReserveArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeWithReserveInstruction {
     pub accounts: DecreaseValidatorStakeWithReserveAccounts,
     pub args: DecreaseValidatorStakeWithReserveArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeWithSlippageAccounts {
     pub stake_pool: Pubkey,
@@ -688,20 +688,20 @@ pub struct DepositStakeWithSlippageAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeWithSlippageArgs {
     pub minimum_pool_tokens_out: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeWithSlippageInstruction {
     pub accounts: DepositStakeWithSlippageAccounts,
     pub args: DepositStakeWithSlippageArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeWithSlippageAccounts {
     pub stake_pool: Pubkey,
@@ -719,21 +719,21 @@ pub struct WithdrawStakeWithSlippageAccounts {
     pub stake_program: Pubkey,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeWithSlippageArgs {
     pub pool_tokens_in: u64,
     pub minimum_lamports_out: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeWithSlippageInstruction {
     pub accounts: WithdrawStakeWithSlippageAccounts,
     pub args: WithdrawStakeWithSlippageArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolWithSlippageAccounts {
     pub stake_pool: Pubkey,
@@ -749,21 +749,21 @@ pub struct DepositSolWithSlippageAccounts {
     pub deposit_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolWithSlippageArgs {
     pub lamports_in: u64,
     pub minimum_pool_tokens_out: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolWithSlippageInstruction {
     pub accounts: DepositSolWithSlippageAccounts,
     pub args: DepositSolWithSlippageArgs,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolWithSlippageAccounts {
     pub stake_pool: Pubkey,
@@ -781,14 +781,14 @@ pub struct WithdrawSolWithSlippageAccounts {
     pub sol_withdraw_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolWithSlippageArgs {
     pub pool_tokens_in: u64,
     pub minimum_lamports_out: u64,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolWithSlippageInstruction {
     pub accounts: WithdrawSolWithSlippageAccounts,

@@ -1,6 +1,6 @@
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
 
-include_vixen_parser!("../idls/constant_bytes_account.json");
+include_shipstern_parser!("../idls/constant_bytes_account.json");
 
 #[test]
 fn parses_account_after_byte_constant_discriminator() {

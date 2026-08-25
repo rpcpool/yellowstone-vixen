@@ -1,18 +1,16 @@
 use std::borrow::Cow;
 
+use shipstern_core::{AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser};
+use shipstern_proc_macro::shipstern;
 use spl_token::{
     solana_program::{program_error::ProgramError, program_option::COption, program_pack::Pack},
     state::{Account as SplAccount, Mint as SplMint, Multisig as SplMultisig},
 };
-use yellowstone_vixen_core::{
-    AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
-};
-use yellowstone_vixen_proc_macro::vixen;
 
 use crate::Pubkey;
 
 /// SPL Token account state, proto-compatible
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Mint {
     pub mint_authority: Option<Pubkey>,
@@ -22,7 +20,7 @@ pub struct Mint {
     pub freeze_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct TokenAccount {
     pub mint: Pubkey,
@@ -39,7 +37,7 @@ pub struct TokenAccount {
     pub close_authority: Option<Pubkey>,
 }
 
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct Multisig {
     pub m: u32,
@@ -49,7 +47,7 @@ pub struct Multisig {
 }
 
 /// One-of wrapper for SPL Token program account state.
-#[vixen]
+#[shipstern]
 #[derive(Clone, PartialEq)]
 pub struct TokenProgramState {
     #[hint(oneof = "account::Account", tags = "1, 2, 3")]
@@ -57,9 +55,9 @@ pub struct TokenProgramState {
 }
 
 pub mod account {
-    use super::vixen;
+    use super::shipstern;
 
-    #[vixen(oneof)]
+    #[shipstern(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Account {
         TokenAccount(super::TokenAccount),
@@ -172,12 +170,12 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> shipstern_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::account_fixture;
+    use shipstern_mock::account_fixture;
 
     use super::{account, AccountParser, Parser, TokenProgramState};
 

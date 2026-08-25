@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-//! Protobuf definitions used by the `yellowstone-vixen` family of crates.
+//! Protobuf definitions used by the `shipstern` family of crates.
 
 pub extern crate prost;
 #[cfg(feature = "stream")]
@@ -11,17 +11,17 @@ pub extern crate tonic;
 #[cfg(feature = "stream")]
 pub extern crate tonic_reflection;
 
-mod vixen {
+mod shipstern {
     #[cfg(feature = "parser")]
     pub mod parser {
         #![allow(missing_docs)]
 
         pub mod token {
             #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.token.rs"));
+            include!(concat!(env!("OUT_DIR"), "/shipstern.parser.token.rs"));
 
             pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.token.bin"));
+                include_bytes!(concat!(env!("OUT_DIR"), "/shipstern.parser.token.bin"));
 
             /// Raw `.proto` schema text for the token parser.
             pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/token.proto");
@@ -38,10 +38,10 @@ mod vixen {
 
         pub mod bpf_loader {
             #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.rs"));
+            include!(concat!(env!("OUT_DIR"), "/shipstern.parser.bpf_loader.rs"));
 
             pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.bin"));
+                include_bytes!(concat!(env!("OUT_DIR"), "/shipstern.parser.bpf_loader.bin"));
 
             /// Raw `.proto` schema text for the BPF loader parser.
             pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/bpf_loader.proto");
@@ -60,12 +60,12 @@ mod vixen {
             #![allow(clippy::all)]
             include!(concat!(
                 env!("OUT_DIR"),
-                "/vixen.parser.token_extensions.rs"
+                "/shipstern.parser.token_extensions.rs"
             ));
 
             pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(
                 env!("OUT_DIR"),
-                "/vixen.parser.token_extensions.bin"
+                "/shipstern.parser.token_extensions.bin"
             ));
 
             /// Self-contained `.proto` schema text for the token extensions
@@ -92,17 +92,17 @@ mod vixen {
         #![allow(missing_docs)]
 
         //! Protobuf definitions for the `stream` feature of the
-        //! `yellowstone-vixen` crate.
+        //! `shipstern` crate.
 
-        tonic::include_proto!("vixen.stream");
+        tonic::include_proto!("shipstern.stream");
 
-        /// Compiled protobuf file descriptor set for the `vixen.stream`
+        /// Compiled protobuf file descriptor set for the `shipstern.stream`
         /// package.
         pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("stream_descriptor");
     }
 }
 
-pub use vixen::*;
+pub use shipstern::*;
 
 ///
 /// Non-regression tests to ensure that if token.proto or token_extensions.proto are updated, the dispatch message indices are also updated accordingly.
@@ -204,6 +204,127 @@ mod dispatch_index_tests {
             "INSTRUCTION_DISPATCH_MESSAGE_INDEX ({instruction_idx}) should point to \
              TokenExtensionProgram, found {}",
             messages[instruction_idx],
+        );
+    }
+}
+
+///
+/// Wire-compatibility guards for the protobuf `package` declarations.
+///
+/// These strings are part of the public wire contract, not an internal naming
+/// detail. The package determines the gRPC method path
+/// (`/shipstern.stream.ProgramStreams/Subscribe`) and the `google.protobuf.Any`
+/// type URLs carried in `SubscribeUpdate.parsed`
+/// (`type.googleapis.com/shipstern.parser.token.TokenAccount`).
+///
+/// The packages were renamed `vixen.*` -> `shipstern.*` in 0.8.0. That was a
+/// deliberate, one-time break: deployed clients on the old packages get
+/// `UNIMPLEMENTED` on the gRPC path, and their `Any` type URLs stop matching
+/// *without* erroring, so the failure is silent. Consumers must regenerate.
+///
+/// These guards pin the post-rename contract so the next accidental rename is
+/// caught, and reject any `vixen.*` declaration left behind by an incomplete
+/// sweep. Nothing else in the suite covers these strings.
+///
+/// A proto-only sweep fails to compile first, since generated file names track
+/// the package and `include!` stops resolving. This guard covers the
+/// consistent rename, where package and include paths move together.
+///
+#[cfg(all(test, feature = "parser"))]
+mod wire_compat_tests {
+    /// Extract the `package` declaration from `.proto` source text.
+    fn package_decl(proto_text: &str) -> Option<&str> {
+        for line in proto_text.lines() {
+            let Some(rest) = line.trim().strip_prefix("package ") else {
+                continue;
+            };
+
+            return rest.split(';').next().map(str::trim);
+        }
+
+        None
+    }
+
+    #[test]
+    fn parser_proto_packages_are_stable() {
+        let cases = [
+            (
+                "token.proto",
+                include_str!("../proto/token.proto"),
+                "shipstern.parser.token",
+            ),
+            (
+                "bpf_loader.proto",
+                include_str!("../proto/bpf_loader.proto"),
+                "shipstern.parser.bpf_loader",
+            ),
+            (
+                "token_extensions.proto",
+                include_str!("../proto/token_extensions.proto"),
+                "shipstern.parser.token_extensions",
+            ),
+        ];
+
+        for (file, text, expected) in cases {
+            let found =
+                package_decl(text).unwrap_or_else(|| panic!("{file} has no `package` declaration"));
+
+            assert!(
+                !found.starts_with("vixen"),
+                "{file} declares `package {found};` — the wire packages moved to `shipstern.*` in \
+                 0.8.0, so a `vixen.*` declaration here is a leftover from an incomplete rename \
+                 (see the module docs above)",
+            );
+
+            assert_eq!(
+                found, expected,
+                "{file} must declare `package {expected};` — this is the public wire contract \
+                 (gRPC method paths and `Any` type URLs), so renaming it silently breaks deployed \
+                 consumers",
+            );
+        }
+    }
+}
+
+///
+/// Wire-compatibility guard for the `stream` gRPC service path.
+///
+/// Decodes the compiled descriptor set rather than the `.proto` text, so it
+/// asserts what the generated server actually serves. See
+/// [`wire_compat_tests`] for why the package string matters.
+///
+#[cfg(all(test, feature = "stream"))]
+mod stream_wire_compat_tests {
+    use crate::prost::Message as _;
+
+    #[test]
+    fn stream_service_path_is_stable() {
+        let set = crate::prost_types::FileDescriptorSet::decode(crate::stream::DESCRIPTOR_SET)
+            .expect("stream DESCRIPTOR_SET should decode as a FileDescriptorSet");
+
+        let packages: Vec<&str> = set.file.iter().map(|f| f.package()).collect();
+
+        assert!(
+            !packages.iter().any(|p| p.starts_with("vixen")),
+            "descriptor set contains a vixen.* package {packages:?} — the wire packages moved to \
+             `shipstern.*` in 0.8.0, so this is a leftover from an incomplete rename",
+        );
+
+        let file = set
+            .file
+            .iter()
+            .find(|f| f.package() == "shipstern.stream")
+            .expect(
+                "descriptor set must contain a file with `package shipstern.stream` — the gRPC \
+                 method path depends on it",
+            );
+
+        let service_names: Vec<&str> = file.service.iter().map(|s| s.name()).collect();
+
+        assert!(
+            service_names.contains(&"ProgramStreams"),
+            "shipstern.stream must expose the `ProgramStreams` service (wire path \
+             /shipstern.stream.ProgramStreams/Subscribe), found {service_names:?}",
         );
     }
 }

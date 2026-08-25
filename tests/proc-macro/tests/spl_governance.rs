@@ -1,18 +1,20 @@
 use prost::Message;
-use vixen_test_utils::{check_protobuf_format, p};
-use yellowstone_vixen_core::Parser;
-use yellowstone_vixen_mock::{account_fixture, tx_fixture};
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_core::Parser;
+use shipstern_mock::{account_fixture, tx_fixture};
+use shipstern_proc_macro::include_shipstern_parser;
+use shipstern_test_utils::{check_protobuf_format, p};
 
-include_vixen_parser!("../idls/spl_governance.json");
+include_shipstern_parser!("../idls/spl_governance.json");
 
 #[test]
 fn check_protobuf_schema() {
     check_protobuf_format(spl_governance::PROTOBUF_SCHEMA);
 
-    insta::assert_snapshot!(vixen_test_utils::normalize_protobuf_schema_for_snapshot(
-        spl_governance::PROTOBUF_SCHEMA
-    ));
+    insta::assert_snapshot!(
+        shipstern_test_utils::normalize_protobuf_schema_for_snapshot(
+            spl_governance::PROTOBUF_SCHEMA
+        )
+    );
 }
 
 #[tokio::test]

@@ -1,8 +1,8 @@
 [package]
-name = "yellowstone-vixen-solana-snapshot-source"
+name = "shipstern-solana-snapshot-source"
 version.workspace = true
 edition.workspace = true
-description = "Run a Solana snapshot through Yellowstone Vixen"
+description = "Run a Solana snapshot through Shipstern"
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
@@ -14,8 +14,8 @@ async-trait = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
-yellowstone-vixen = { workspace = true }
-yellowstone-vixen-core = { workspace = true }
+shipstern = { workspace = true }
+shipstern-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 toml = { workspace = true }

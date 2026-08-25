@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-parser"
-description = "Vixen program parser utilties."
+name = "shipstern-parser"
+description = "Shipstern program parser utilties."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,10 +10,10 @@ authors.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yellowstone-vixen-core = { workspace = true }
+shipstern-core = { workspace = true }
 solana-program-option = { workspace = true, optional = true }
 solana-pubkey = { workspace = true }
-yellowstone-vixen-proto = { workspace = true, features = [
+shipstern-proto = { workspace = true, features = [
   "parser",
 ], optional = true }
 thiserror.workspace = true
@@ -21,14 +21,14 @@ bs58.workspace = true
 base64 = { workspace = true }
 
 [dev-dependencies]
-yellowstone-vixen-mock = { workspace = true }
+shipstern-mock = { workspace = true }
 tokio.workspace = true
 
 [features]
 default = []
 proto = [
-  "dep:yellowstone-vixen-proto",
-  "yellowstone-vixen-core/proto",
-  "yellowstone-vixen-proto/parser",
+  "dep:shipstern-proto",
+  "shipstern-core/proto",
+  "shipstern-proto/parser",
   "solana-program-option",
 ]

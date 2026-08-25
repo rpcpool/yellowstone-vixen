@@ -1,9 +1,9 @@
 use prost::Message;
-use yellowstone_vixen_core::Parser;
-use yellowstone_vixen_mock::tx_fixture;
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_core::Parser;
+use shipstern_mock::tx_fixture;
+use shipstern_proc_macro::include_shipstern_parser;
 
-include_vixen_parser!("../idls/dca.json");
+include_shipstern_parser!("../idls/dca.json");
 
 /// Transaction that triggered the "unexpected EOF" proto deserialization error
 /// due to `withdraw` and `deposit` name collisions between instructions and events.
@@ -16,7 +16,7 @@ const DCA_WITHDRAW_TX: &str =
 
 #[test]
 fn check_protobuf_schema() {
-    vixen_test_utils::check_protobuf_format(dca::PROTOBUF_SCHEMA);
+    shipstern_test_utils::check_protobuf_format(dca::PROTOBUF_SCHEMA);
     insta::assert_snapshot!(dca::PROTOBUF_SCHEMA);
 }
 

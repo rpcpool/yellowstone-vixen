@@ -2,18 +2,18 @@ use std::sync::Arc;
 
 use base64::Engine;
 use borsh::to_vec;
-use vixen_test_utils::p;
-use yellowstone_vixen_core::{
+use shipstern_test_utils::p;
+use shipstern_core::{
     bs58,
     instruction::{InstructionShared, InstructionUpdate, Path},
     ParseError, Parser,
 };
-use yellowstone_vixen_kafka_sink::{
+use shipstern_kafka_sink::{
     KafkaSink, KafkaSinkBuilder, PreparedRecord, RawInstructionEvent, RecordKind,
 };
-use yellowstone_vixen_proc_macro::include_vixen_parser;
+use shipstern_proc_macro::include_shipstern_parser;
 
-include_vixen_parser!("../idls/jupiter_log_scope_regression.json");
+include_shipstern_parser!("../idls/jupiter_log_scope_regression.json");
 
 const JUPITER_PROGRAM_ID: &str = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4";
 const GOOSEFX_PROGRAM_ID: &str = "GAMMA7meSFWaBXF25oSUgmGRwaW6sCMFLmBNiMSdbHVT";
