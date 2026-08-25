@@ -443,9 +443,21 @@ pub struct JetstreamSourceConfig {
     #[serde(default)]
     pub sequential: bool,
 
-    /// Ripget hot/cold window size in bytes when `sequential` is enabled.
-    /// Ignored when `sequential` is `false`. `None` uses the upstream
-    /// default (`min(4 GiB, 15% of available RAM)`).
+    /// Process epochs from highest to lowest instead of lowest to highest.
+    /// Slots *within* an epoch are still emitted in ascending order, because
+    /// the underlying CAR archive can only be streamed forward.
+    ///
+    /// Upstream treats this as sequential-only and turns `sequential` on
+    /// implicitly (`sequential || reverse`), so enabling `reverse` alone
+    /// also forfeits the multi-threaded work-stealing path.
+    #[arg(long, env, default_value = "false")]
+    #[serde(default)]
+    pub reverse: bool,
+
+    /// Ripget hot/cold window size in bytes when sequential mode is active
+    /// (`sequential` or `reverse` set). Ignored otherwise. `None` falls back to
+    /// [`DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES`]; set it explicitly for a
+    /// larger window on a fast link.
     #[arg(long, env)]
     #[serde(default)]
     pub buffer_window_bytes: Option<u64>,
@@ -476,6 +488,47 @@ pub struct JetstreamSourceConfig {
 }
 
 fn default_stats_interval_slots() -> u64 { 10_000 }
+
+/// Ripget window used in sequential mode when the caller sets none.
+///
+/// Ripget fills the whole window before yielding the first block, and that
+/// fill must finish inside upstream's fixed 180s `read_raw_header` timeout.
+/// Upstream's default is `min(4 GiB, 15% of available RAM)`, which on a
+/// high-RAM host cannot download in time, so the run times out and retries
+/// without ever emitting a slot.
+///
+/// Measured against files.old-faithful.net at ~7 MiB/s, same 5-slot range:
+///
+/// ```text, ignore
+///    64 MiB ->   9.5s
+///   256 MiB ->  33.6s
+///     1 GiB -> 145.6s
+///   2.4 GiB -> never completes (180s timeout)
+/// ```
+pub const DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES: u64 = 256 * 1024 * 1024;
+
+/// Resolve the ripget window handed to `firehose()`.
+///
+/// An explicit `configured` value is returned as-is; the default only applies
+/// in sequential or reverse mode, where upstream would otherwise use its
+/// RAM-derived one. Upstream discards a window below 2 (`filter(|v| *v >= 2)`),
+/// so an explicit value wins only for `>= 2`.
+///
+/// Example output:
+///
+/// ```text, ignore
+/// (seq: false, rev: false, cfg: None)       -> None
+/// (seq: true,  rev: false, cfg: None)       -> Some(268435456)
+/// (seq: false, rev: true,  cfg: None)       -> Some(268435456)
+/// (seq: true,  rev: false, cfg: Some(4096)) -> Some(4096)
+/// ```
+pub fn effective_buffer_window_bytes(
+    sequential: bool,
+    reverse: bool,
+    configured: Option<u64>,
+) -> Option<u64> {
+    configured.or_else(|| (sequential || reverse).then_some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES))
+}
 
 /// Configuration for slot ranges or epochs
 #[derive(Debug, Clone, serde::Deserialize, clap::Args)]
@@ -562,10 +615,12 @@ impl SourceTrait for JetstreamSource {
             expected.validate_matches(&ProcessEnvConfig::from_process())?;
         }
 
-        if config.buffer_window_bytes.is_some() && !config.sequential {
+        // `reverse` implies sequential upstream, so it also makes the window
+        // meaningful — only warn when neither mode is active.
+        if config.buffer_window_bytes.is_some() && !config.sequential && !config.reverse {
             tracing::warn!(
-                "`buffer_window_bytes` is set but `sequential` is false; the value will be \
-                 ignored by jetstreamer-firehose"
+                "`buffer_window_bytes` is set but neither `sequential` nor `reverse` is enabled; \
+                 the value will be ignored by jetstreamer-firehose"
             );
         }
 
@@ -701,10 +756,27 @@ impl JetstreamSource {
             },
         );
 
+        // Upstream's default window can be too large to download inside its own
+        // header-read timeout, which hangs the run. Use a bounded default.
+        let buffer_window_bytes = effective_buffer_window_bytes(
+            config.sequential,
+            config.reverse,
+            config.buffer_window_bytes,
+        );
+
+        if config.buffer_window_bytes.is_none() && (config.sequential || config.reverse) {
+            info!(
+                buffer_window_bytes = DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES,
+                "sequential mode active with no explicit buffer window; using the vixen default \
+                 instead of upstream's RAM-derived one"
+            );
+        }
+
         let result = firehose(
             config.threads as u64,
             config.sequential,
-            config.buffer_window_bytes,
+            config.reverse,
+            buffer_window_bytes,
             start_slot..end_slot,
             on_block,
             on_tx,
@@ -852,6 +924,7 @@ mod tests {
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
             sequential: false,
+            reverse: false,
             buffer_window_bytes: None,
             stats_interval_slots: 10_000,
             possible_leader_skipped_tx: None,
@@ -877,6 +950,7 @@ network = "mainnet"
 compact-index-base-url = "https://files.old-faithful.net"
 network-capacity-mb = 1000
 sequential = true
+reverse = true
 buffer-window-bytes = 1073741824
 stats-interval-slots = 500
 
@@ -889,6 +963,7 @@ slot-end = 2000
             toml::from_str(toml_str).expect("valid TOML for JetstreamSourceConfig");
 
         assert!(config.sequential);
+        assert!(config.reverse);
         assert_eq!(config.buffer_window_bytes, Some(1_073_741_824));
         assert_eq!(config.stats_interval_slots, 500);
         assert_eq!(config.archive_url, "https://api.old-faithful.net");
@@ -917,12 +992,58 @@ slot-end = 2000
             "`sequential` must default to false when absent from TOML"
         );
         assert!(
+            !config.reverse,
+            "`reverse` must default to false when absent from TOML"
+        );
+        assert!(
             config.buffer_window_bytes.is_none(),
             "`buffer_window_bytes` must default to None when absent from TOML"
         );
         assert_eq!(
             config.stats_interval_slots, 10_000,
             "`stats_interval_slots` must default to 10_000 when absent from TOML"
+        );
+    }
+
+    /// Upstream's RAM-derived window can be too large to download inside its
+    /// own 180s header-read timeout, which hangs the run instead of failing it.
+    /// Sequential runs must therefore get a bounded window by default, while an
+    /// explicit choice is always honoured.
+    #[test]
+    fn sequential_modes_get_a_bounded_default_buffer_window() {
+        assert_eq!(
+            effective_buffer_window_bytes(false, false, None),
+            None,
+            "no window should be injected when upstream would ignore it"
+        );
+
+        for (sequential, reverse) in [(true, false), (false, true), (true, true)] {
+            assert_eq!(
+                effective_buffer_window_bytes(sequential, reverse, None),
+                Some(DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES),
+                "sequential={sequential} reverse={reverse} must fall back to the vixen default"
+            );
+        }
+    }
+
+    #[test]
+    fn explicit_buffer_window_always_wins() {
+        // Including a value far larger than the default — opting back into
+        // upstream's throughput-oriented behaviour must remain possible.
+        let huge = DEFAULT_SEQUENTIAL_BUFFER_WINDOW_BYTES * 16;
+
+        assert_eq!(
+            effective_buffer_window_bytes(true, false, Some(huge)),
+            Some(huge)
+        );
+        assert_eq!(
+            effective_buffer_window_bytes(false, true, Some(4096)),
+            Some(4096)
+        );
+        assert_eq!(
+            effective_buffer_window_bytes(false, false, Some(4096)),
+            Some(4096),
+            "a value set while sequential mode is off is passed through untouched"
         );
     }
 
@@ -1054,6 +1175,7 @@ slot-end = 2000
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
             sequential: false,
+            reverse: false,
             buffer_window_bytes: None,
             stats_interval_slots: 10_000,
             possible_leader_skipped_tx: None,
@@ -1246,11 +1368,52 @@ slot-end = 2000
         assert_eq!(out.rewards[2].commission, "7");
         assert_eq!(out.rewards[3].commission, "0");
 
+        // Basis points: whole-percent x 100, empty when absent.
+        assert_eq!(out.rewards[0].commission_bps, "");
+        assert_eq!(out.rewards[2].commission_bps, "700");
+        assert_eq!(out.rewards[3].commission_bps, "0");
+
         // num_partitions wrapped in proto NumPartitions.
         assert_eq!(
             out.num_partitions,
             Some(proto::NumPartitions { num_partitions: 64 })
         );
+    }
+
+    /// The second reward conversion path. `transaction_status_meta` carries its
+    /// own `proto::Reward` mapping, so `commission_bps` has to be pinned here
+    /// too rather than relying on `keyed_rewards` coverage alone.
+    #[test]
+    fn transaction_status_meta_rewards_carry_commission_bps() {
+        use solana_transaction_status::{Reward, RewardType, TransactionStatusMeta};
+
+        let meta = TransactionStatusMeta {
+            rewards: Some(vec![
+                Reward {
+                    pubkey: "voter".to_string(),
+                    lamports: 5,
+                    post_balance: 50,
+                    reward_type: Some(RewardType::Voting),
+                    commission: Some(7),
+                },
+                Reward {
+                    pubkey: "fee-payer".to_string(),
+                    lamports: -1,
+                    post_balance: 10,
+                    reward_type: Some(RewardType::Fee),
+                    commission: None,
+                },
+            ]),
+            ..Default::default()
+        };
+
+        let out = convert::transaction_status_meta(meta);
+
+        assert_eq!(out.rewards.len(), 2);
+        assert_eq!(out.rewards[0].commission, "7");
+        assert_eq!(out.rewards[0].commission_bps, "700");
+        assert_eq!(out.rewards[1].commission, "");
+        assert_eq!(out.rewards[1].commission_bps, "");
     }
 
     #[test]
@@ -1303,6 +1466,11 @@ mod convert {
     /// SDK enum has no `Unspecified`, so the mapping is total. `commission`
     /// is encoded as a stringified `u8` (proto convention), or empty when
     /// absent.
+    /// `commission_bps` is derived as `commission * 100`, which is lossless only
+    /// while upstream `commission` is a whole-percent `u8`. SIMD-0291 adds a real
+    /// `commission_bps: Option<u16>` to `RewardInfo` (present from
+    /// `solana-transaction-status-client-types` 4.1.0) that permits values which
+    /// are not multiples of 100. Forward that field instead on a 4.x bump.
     pub fn keyed_rewards(keyed: &KeyedRewardsAndNumPartitions) -> proto::Rewards {
         let rewards = keyed
             .keyed_rewards
@@ -1321,7 +1489,10 @@ mod convert {
                     post_balance: info.post_balance,
                     reward_type,
                     commission: info.commission.map(|c| c.to_string()).unwrap_or_default(),
-                    commission_bps: String::new(),
+                    commission_bps: info
+                        .commission
+                        .map(|c| (u16::from(c) * 100).to_string())
+                        .unwrap_or_default(),
                 }
             })
             .collect();
@@ -1459,7 +1630,10 @@ mod convert {
                         _ => proto::RewardType::Unspecified as i32,
                     },
                     commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
-                    commission_bps: String::new(),
+                    commission_bps: r
+                        .commission
+                        .map(|c| (u16::from(c) * 100).to_string())
+                        .unwrap_or_default(),
                 })
                 .collect(),
             loaded_writable_addresses: meta

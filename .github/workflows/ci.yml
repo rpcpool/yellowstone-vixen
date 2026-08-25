@@ -50,10 +50,10 @@ jobs:
       - name: Run fmt
         run: cargo +nightly-2026-02-25 fmt --all -- --check
 
-      - name: cargo deny check advisories
+      - name: cargo deny check advisories bans
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          command: check advisories
+          command: check advisories bans
 
   test:
     runs-on: ubuntu-24.04
