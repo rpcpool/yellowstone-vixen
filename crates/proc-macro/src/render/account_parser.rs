@@ -22,6 +22,40 @@ fn decode_discriminator_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec<u8> {
 }
 
 ///
+/// Build the discriminator constants for a generated account type.
+///
+/// The pair is a memcmp predicate: `DISCRIMINATOR` is exactly what the parser
+/// compares at `DISCRIMINATOR_OFFSET`. It is not a payload boundary. A numeric
+/// discriminator is re-read as the first field of the account body, so callers
+/// must decode through `try_unpack` rather than slicing past it.
+///
+/// Returns `None` for an empty discriminator, which would match every account.
+///
+fn discriminator_consts(
+    ident: &proc_macro2::Ident,
+    bytes: &[u8],
+    offset: usize,
+) -> Option<TokenStream> {
+    if bytes.is_empty() {
+        return None;
+    }
+
+    Some(quote! {
+        impl #ident {
+            /// Discriminator bytes that identify this account type on the wire.
+            ///
+            /// Pairs with [`Self::DISCRIMINATOR_OFFSET`] as a memcmp predicate:
+            /// these bytes appear at that offset in the raw account data. It is
+            /// not a payload boundary. Decode with `try_unpack`.
+            pub const DISCRIMINATOR: &'static [u8] = &[#(#bytes),*];
+
+            /// Byte offset at which [`Self::DISCRIMINATOR`] begins in the account data.
+            pub const DISCRIMINATOR_OFFSET: usize = #offset;
+        }
+    })
+}
+
+///
 /// Build the *account parser* for a program.
 ///
 /// Generates a wrapper struct with a non-Option oneof field and a manual
@@ -108,7 +142,7 @@ pub fn account_parser(
         }
     });
 
-    let account_matches = accounts.iter().filter_map(|account| {
+    let account_entries = accounts.iter().filter_map(|account| {
         let discriminator = match account.discriminators.first() {
             Some(d) => d,
             None => {
@@ -133,7 +167,7 @@ pub fn account_parser(
 
                         let value_u8 = value as u8;
 
-                        quote! {
+                        let arm = quote! {
                             if let Some(discriminator) = data.get(#offset) {
                                 if *discriminator == #value_u8 {
                                     match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
@@ -146,7 +180,9 @@ pub fn account_parser(
                                     }
                                 }
                             }
-                        }
+                        };
+
+                        (arm, discriminator_consts(&account_ident, &[value_u8], offset))
                     },
 
                     // Byte discriminators are a prefix and are not part of the account struct.
@@ -154,7 +190,7 @@ pub fn account_parser(
                         let discriminator = decode_discriminator_bytes(bytes);
                         let end = offset + discriminator.len();
 
-                        quote! {
+                        let arm = quote! {
                             if let Some(slice) = data.get(#offset..#end) {
                                 if slice == &[#(#discriminator),*] {
                                     match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
@@ -167,7 +203,9 @@ pub fn account_parser(
                                     }
                                 }
                             }
-                        }
+                        };
+
+                        (arm, discriminator_consts(&account_ident, &discriminator, offset))
                     },
 
                     _ => return None,
@@ -224,7 +262,7 @@ pub fn account_parser(
                     quote! { slice == &[#(#discriminator),*] }
                 };
 
-                quote! {
+                let arm = quote! {
                     if let Some(slice) = data.get(#offset..#end) {
                         if #disc_check {
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
@@ -237,14 +275,25 @@ pub fn account_parser(
                             }
                         }
                     }
-                }
+                };
+
+                // The parser compares a `size`-wide slice against the decoded
+                // default bytes, so a length mismatch can never match. Expose no
+                // constant for a discriminator the parser cannot honor.
+                let disc_const = if discriminator.len() == size {
+                    discriminator_consts(&account_ident, &discriminator, offset)
+                } else {
+                    None
+                };
+
+                (arm, disc_const)
             },
 
             // Handle accounts based on size only (e.g the account is 558 Bytes long)
             DiscriminatorNode::Size(node) => {
                 let size = node.size;
 
-                quote! {
+                let arm = quote! {
                     if data.len() == #size {
                         match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                             Ok(parsed) => {
@@ -255,10 +304,17 @@ pub fn account_parser(
                             Err(e) => return Err(ParseError::Other(e.into())),
                         }
                     }
-                }
+                };
+
+                (arm, None)
             },
         })
     });
+
+    let (account_matches, account_disc_consts): (Vec<TokenStream>, Vec<Option<TokenStream>>) =
+        account_entries.unzip();
+
+    let account_disc_consts = account_disc_consts.into_iter().flatten();
 
     let (struct_and_mod, proto_impls) = if accounts.is_empty() {
         let empty_struct = if cfg!(feature = "proto") {
@@ -323,6 +379,8 @@ pub fn account_parser(
 
     quote! {
         #struct_and_mod
+
+        #(#account_disc_consts)*
 
         #proto_impls
 

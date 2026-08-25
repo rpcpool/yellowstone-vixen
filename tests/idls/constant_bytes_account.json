@@ -42,6 +42,41 @@
             }
           }
         ]
+      },
+      {
+        "kind": "accountNode",
+        "name": "offsetVault",
+        "data": {
+          "kind": "structTypeNode",
+          "fields": [
+            {
+              "kind": "structFieldTypeNode",
+              "name": "flag",
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              }
+            }
+          ]
+        },
+        "discriminators": [
+          {
+            "kind": "constantDiscriminatorNode",
+            "offset": 8,
+            "constant": {
+              "kind": "constantValueNode",
+              "type": {
+                "kind": "bytesTypeNode"
+              },
+              "value": {
+                "kind": "bytesValueNode",
+                "data": "beef",
+                "encoding": "base16"
+              }
+            }
+          }
+        ]
       }
     ],
     "instructions": [],
