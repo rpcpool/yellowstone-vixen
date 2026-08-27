@@ -73,10 +73,10 @@ jobs:
             target/debug/build/
             target/debug/.fingerprint/
             target/debug/deps/
-          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          key: cargo-build-v2-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
-            cargo-build-
+            cargo-build-v2-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-build-v2-
 
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
@@ -113,10 +113,10 @@ jobs:
             tests/proc-macro-events/target/debug/build/
             tests/proc-macro-events/target/debug/.fingerprint/
             tests/proc-macro-events/target/debug/deps/
-          key: cargo-events-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('tests/proc-macro-events/Cargo.lock') }}
+          key: cargo-events-v2-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('tests/proc-macro-events/Cargo.lock') }}
           restore-keys: |
-            cargo-events-${{ hashFiles('rust-toolchain.toml') }}-
-            cargo-events-
+            cargo-events-v2-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-events-v2-
 
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
@@ -146,10 +146,10 @@ jobs:
             target/debug/build/
             target/debug/.fingerprint/
             target/debug/deps/
-          key: cargo-build-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          key: cargo-build-v2-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            cargo-build-${{ hashFiles('rust-toolchain.toml') }}-
-            cargo-build-
+            cargo-build-v2-${{ hashFiles('rust-toolchain.toml') }}-
+            cargo-build-v2-
 
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
