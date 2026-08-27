@@ -347,7 +347,7 @@ async fn instruction_const_matches_real_mainnet_bytes() {
     .unwrap()
     {
         shipstern_mock::FixtureData::Instructions(fixture) => fixture,
-        other => panic!("expected an instruction fixture, got {other:?}"),
+        _ => panic!("expected an instruction fixture"),
     };
 
     let mut checked = 0_usize;

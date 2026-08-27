@@ -417,7 +417,7 @@ macro_rules! run_ix_parse {
 
             // Ignore filtered instructions, but panic on actual errors
             Err(shipstern_core::ParseError::Filtered) => None,
-            Err(e) => panic!("parse error: {e:?}"),
+            Err(_) => panic!("parse error"),
         }
     };
 }
