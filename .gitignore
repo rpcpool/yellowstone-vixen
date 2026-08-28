@@ -5,3 +5,6 @@ crates/mock/fixtures
 **/.DS_Store
 .cargo/
 Shipstern.toml
+
+# Local runtime config; may contain endpoint credentials.
+Vixen.toml

@@ -34,7 +34,11 @@ pub fn include_shipstern_parser(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as IncludeShipsternParserInput);
 
     match input.parser_config() {
-        Ok(config) => expand_include_shipstern_parser(input.idl_path.value(), config),
+        Ok(config) => expand_include_shipstern_parser(
+            input.idl_path.value(),
+            config,
+            input.has_cpi_event_args(),
+        ),
         Err(err) => err.to_compile_error().into(),
     }
 }
@@ -123,6 +127,11 @@ impl Parse for IncludeShipsternParserInput {
 }
 
 impl IncludeShipsternParserInput {
+    /// Whether the call site supplied either CPI event override.
+    fn has_cpi_event_args(&self) -> bool {
+        self.cpi_event_discriminator.is_some() || self.cpi_event_payload_offset.is_some()
+    }
+
     fn parser_config(&self) -> syn::Result<crate::render::shipstern_parser::ParserConfig> {
         let mut config = crate::render::shipstern_parser::ParserConfig::default();
 
@@ -200,20 +209,217 @@ fn invalid_cpi_event_discriminator_hex(
 fn expand_include_shipstern_parser(
     idl_path: String,
     config: crate::render::shipstern_parser::ParserConfig,
+    has_cpi_event_args: bool,
 ) -> TokenStream {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
     let full_path = std::path::Path::new(&manifest_dir).join(&idl_path);
 
-    match parse::load_codama_idl(&full_path) {
-        Ok((idl, events)) => crate::render::shipstern_parser(&idl, &events, &config).into(),
+    expand_parser_tokens(&full_path, config, has_cpi_event_args).into()
+}
+
+/// Split from `expand_include_shipstern_parser` so unit tests can reach the
+/// emission paths; a test cannot construct a `proc_macro::TokenStream`.
+fn expand_parser_tokens(
+    full_path: &std::path::Path,
+    mut config: crate::render::shipstern_parser::ParserConfig,
+    has_cpi_event_args: bool,
+) -> proc_macro2::TokenStream {
+    let (idl, events) = match parse::load_codama_idl(full_path) {
+        Ok(loaded) => loaded,
         Err(e) => {
             let error_msg = format!("Failed to load/parse IDL from {:?}: {}", full_path, e);
 
-            quote::quote! {
+            return quote::quote! {
                 compile_error!(#error_msg);
-            }
-            .into()
+            };
         },
+    };
+
+    // The IDL wins; macro args remain a fallback for IDLs declaring no envelope.
+    let envelope = match parse::program_envelope(&events) {
+        Ok(envelope) => envelope,
+        Err(message) => {
+            let error_msg = format!("Invalid CPI event envelope in {:?}: {}", full_path, message);
+
+            return quote::quote! {
+                compile_error!(#error_msg);
+            };
+        },
+    };
+
+    let deprecation = match &envelope {
+        Some(envelope) => {
+            config.cpi_event.discriminator = envelope.envelope.discriminator.clone();
+            config.cpi_event.payload_offset = envelope.envelope.payload_offset;
+            config.idl_envelope = Some(envelope.clone());
+
+            if has_cpi_event_args {
+                cpi_event_args_deprecation()
+            } else {
+                quote::quote! {}
+            }
+        },
+
+        None => quote::quote! {},
+    };
+
+    // Checked against the resolved tag, so the macro-arg fallback and the Anchor
+    // default are covered too, not just IDL-declared envelopes.
+    if let Some(message) = parse::envelope_instruction_collision(
+        &config.cpi_event.discriminator,
+        &idl.program.instructions,
+    ) {
+        let error_msg = format!("Invalid CPI event envelope in {:?}: {}", full_path, message);
+
+        return quote::quote! {
+            compile_error!(#error_msg);
+        };
+    }
+
+    let parser = crate::render::shipstern_parser(&idl, &events, &config);
+
+    quote::quote! {
+        #deprecation
+        #parser
+    }
+}
+
+/// Proc macros cannot emit diagnostics on stable, so the warning rides the
+/// deprecation lint instead.
+fn cpi_event_args_deprecation() -> proc_macro2::TokenStream {
+    quote::quote! {
+        const _: () = {
+            #[deprecated(
+                note = "the IDL declares a CPI event envelope, so cpi_event_discriminator and \
+                        cpi_event_payload_offset are ignored; these arguments are removed in 0.10"
+            )]
+            const CPI_EVENT_ARGS_IGNORED: () = ();
+
+            let _ = CPI_EVENT_ARGS_IGNORED;
+        };
+    }
+}
+
+#[cfg(test)]
+mod expansion_tests {
+    use super::*;
+
+    fn fixture(name: &str) -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/idls")
+            .join(name)
+    }
+
+    fn expand(name: &str, has_cpi_event_args: bool) -> String {
+        expand_parser_tokens(
+            &fixture(name),
+            crate::render::shipstern_parser::ParserConfig::default(),
+            has_cpi_event_args,
+        )
+        .to_string()
+    }
+
+    /// Guards the wiring: the collision verdict is unit-tested on its own, but
+    /// nothing else proves it is emitted rather than computed and dropped.
+    #[test]
+    fn colliding_envelope_is_emitted_as_a_compile_error() {
+        let tokens = expand("colliding_envelope.json", false);
+
+        assert!(tokens.contains("compile_error"), "no compile_error emitted");
+        assert!(
+            tokens.contains("collides with instruction"),
+            "collision message did not reach the emitted tokens: {tokens}",
+        );
+    }
+
+    /// The same IDL with a non-colliding tag must expand to a real parser.
+    #[test]
+    fn non_colliding_envelope_expands_normally() {
+        let tokens = expand("collision_safe_cpi_event_envelope.json", false);
+
+        assert!(
+            !tokens.contains("compile_error"),
+            "unexpected compile_error: {tokens}",
+        );
+        assert!(tokens.contains("InstructionParser"));
+    }
+
+    /// Mismatched payload offsets must also reach `compile_error!`.
+    #[test]
+    fn envelope_validation_errors_are_emitted() {
+        let tokens = expand("mismatched_payload_offsets.json", false);
+
+        assert!(tokens.contains("compile_error"), "no compile_error emitted");
+        assert!(
+            tokens.contains("different offsets"),
+            "validation message did not reach the emitted tokens: {tokens}",
+        );
+    }
+
+    /// The guard runs on the resolved tag, so the macro-arg fallback is covered
+    /// even though no envelope is declared in the IDL.
+    #[test]
+    fn macro_arg_envelope_colliding_with_an_instruction_is_rejected() {
+        let mut config = crate::render::shipstern_parser::ParserConfig::default();
+        config.cpi_event.discriminator = vec![0x09];
+        config.cpi_event.payload_offset = 1;
+
+        let tokens =
+            expand_parser_tokens(&fixture("macro_arg_envelope_collision.json"), config, true)
+                .to_string();
+
+        assert!(tokens.contains("compile_error"), "no compile_error emitted");
+        assert!(
+            tokens.contains("collides with instruction"),
+            "collision message missing: {tokens}",
+        );
+    }
+
+    /// The same IDL on the Anchor default builds clean.
+    #[test]
+    fn macro_arg_fixture_builds_on_the_anchor_default() {
+        let tokens = expand("macro_arg_envelope_collision.json", false);
+
+        assert!(
+            !tokens.contains("compile_error"),
+            "unexpected compile_error: {tokens}",
+        );
+    }
+
+    /// An undecodable envelope discriminator reports, rather than panicking the
+    /// macro through the shared decoder's `expect`.
+    #[test]
+    fn malformed_envelope_discriminator_is_reported() {
+        let tokens = expand("malformed_envelope_discriminator.json", false);
+
+        assert!(tokens.contains("compile_error"), "no compile_error emitted");
+        assert!(
+            tokens.contains("not valid"),
+            "decode message missing: {tokens}",
+        );
+    }
+
+    /// The deprecation fires only when an IDL envelope and macro args conflict.
+    #[test]
+    fn deprecation_fires_only_on_conflict() {
+        let conflicting = expand("padded_cpi_event_envelope.json", true);
+        assert!(
+            conflicting.contains("CPI_EVENT_ARGS_IGNORED"),
+            "IDL envelope plus macro args must warn",
+        );
+
+        let idl_only = expand("padded_cpi_event_envelope.json", false);
+        assert!(
+            !idl_only.contains("CPI_EVENT_ARGS_IGNORED"),
+            "an IDL envelope alone must not warn",
+        );
+
+        // The supported 0.8.0 fallback: macro args with no IDL envelope.
+        let args_only = expand("single_discriminator_event.json", true);
+        assert!(
+            !args_only.contains("CPI_EVENT_ARGS_IGNORED"),
+            "macro args without an IDL envelope must not warn",
+        );
     }
 }

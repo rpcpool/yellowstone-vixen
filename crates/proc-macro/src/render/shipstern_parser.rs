@@ -5,6 +5,16 @@ use quote::{format_ident, quote};
 #[derive(Debug, Clone)]
 pub struct ParserConfig {
     pub cpi_event: CpiEventConfig,
+
+    ///
+    /// The envelope the IDL declared, validated once by
+    /// [`crate::parse::program_envelope`].
+    ///
+    /// `None` when the IDL declares none, in which case `cpi_event` came from
+    /// the macro arguments or the Anchor default and no event discriminator is
+    /// rebased.
+    ///
+    pub idl_envelope: Option<crate::parse::ProgramEnvelope>,
 }
 
 #[derive(Debug, Clone)]
@@ -22,6 +32,7 @@ impl Default for ParserConfig {
                 discriminator: anchor_event_tag.to_vec(),
                 payload_offset: anchor_event_tag.len(),
             },
+            idl_envelope: None,
         }
     }
 }
@@ -71,7 +82,12 @@ pub fn shipstern_parser(
     };
 
     let event_parser = if has_events {
-        crate::render::event_parser(&idl.program.name, events, has_instructions)
+        crate::render::event_parser(
+            &idl.program.name,
+            events,
+            has_instructions,
+            config.idl_envelope.as_ref(),
+        )
     } else {
         quote! {}
     };
