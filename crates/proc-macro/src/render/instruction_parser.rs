@@ -32,7 +32,7 @@ impl DiscriminatorKey {
 }
 
 /// Decode discriminator bytes from a codama [`BytesValueNode`](codama_nodes::BytesValueNode).
-fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec<u8> {
+pub(crate) fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec<u8> {
     match bytes.encoding {
         codama_nodes::BytesEncoding::Base16 => {
             let padded = crate::utils::pad_hex(&bytes.data);
@@ -123,11 +123,68 @@ fn ix_discriminator_slice_width(ix: &codama_nodes::InstructionNode) -> Option<us
     }
 }
 
+///
+/// An event's own discriminators, rebased onto the envelope-stripped layout.
+///
+/// Both paths hand `resolve_event_default` data with no envelope: the CPI
+/// caller slices it off at `payload_offset`, and log lines never had one. IDL
+/// offsets describe the enveloped layout, so subtracting `payload_offset` puts
+/// both paths on the same layout and one set of offsets serves both.
+///
+/// Example output:
+///
+/// ```rust, ignore
+/// // IDL:      [const e445..@0, const 40c6..@8]
+/// // rebased:  [const 40c6..@0]
+/// ```
+///
+/// `None` when this event declares no envelope, as resolved by the caller from
+/// the validated pass; its discriminators already describe the stripped layout.
+///
+fn rebased_event_discriminators(
+    ev: &codama_nodes::EventNode,
+    envelope: Option<&crate::parse::CpiEventEnvelope>,
+) -> Option<Vec<DiscriminatorNode>> {
+    let envelope = envelope?;
+
+    let mut rebased: Vec<_> = ev
+        .discriminators
+        .iter()
+        .filter_map(|discriminator| {
+            let DiscriminatorNode::Constant(node) = discriminator else {
+                return None;
+            };
+
+            // The envelope itself is the constant at offset 0.
+            if node.offset == 0 {
+                return None;
+            }
+
+            let mut node = node.clone();
+            node.offset -= envelope.payload_offset;
+
+            Some(DiscriminatorNode::Constant(node))
+        })
+        .collect();
+
+    rebased.sort_by_key(|discriminator| match discriminator {
+        DiscriminatorNode::Constant(node) => node.offset,
+        _ => 0,
+    });
+
+    Some(rebased)
+}
+
 /// Extract a discriminator key for an event (collision detection).
 pub(crate) fn extract_event_discriminator_key(
     ev: &codama_nodes::EventNode,
+    envelope: Option<&crate::parse::CpiEventEnvelope>,
 ) -> Option<DiscriminatorKey> {
-    extract_discriminator_key(&ev.discriminators, |name| resolve_event_field(ev, name))
+    let rebased = rebased_event_discriminators(ev, envelope);
+
+    let discriminators = rebased.as_deref().unwrap_or(&ev.discriminators);
+
+    extract_discriminator_key(discriminators, |name| resolve_event_field(ev, name))
 }
 
 /// Extract discriminator info for an instruction (match arm + args deserialization).
@@ -146,20 +203,63 @@ pub(crate) fn extract_ix_discriminator_info(
     )
 }
 
+///
 /// Extract discriminator info for an event (match arm + args deserialization).
+///
+/// A rebased chain of two or more discriminators is combined with `&&` and the
+/// payload read after the last one. A single discriminator delegates to the
+/// same code the pre-chain path ran, so IDLs declaring no envelope are
+/// behaviourally unchanged; generated tokens are not diffed.
+///
 pub(crate) fn extract_event_discriminator_info(
     ev: &codama_nodes::EventNode,
     args_ident: &syn::Ident,
     has_args: bool,
     mod_ident: &syn::Ident,
+    envelope: Option<&crate::parse::CpiEventEnvelope>,
 ) -> Option<DiscriminatorInfo> {
-    extract_discriminator_info(
-        &ev.discriminators,
+    let Some(rebased) = rebased_event_discriminators(ev, envelope) else {
+        return extract_discriminator_info(
+            &ev.discriminators,
+            args_ident,
+            has_args,
+            mod_ident,
+            |name| resolve_event_field(ev, name),
+        );
+    };
+
+    let (last, leading) = rebased.split_last()?;
+
+    // Args start after the last discriminator, so only that one contributes the
+    // payload expression; the rest contribute checks alone.
+    let tail = extract_discriminator_info(
+        std::slice::from_ref(last),
         args_ident,
         has_args,
         mod_ident,
         |name| resolve_event_field(ev, name),
-    )
+    )?;
+
+    let mut checks = Vec::with_capacity(rebased.len());
+
+    for discriminator in leading {
+        let info = extract_discriminator_info(
+            std::slice::from_ref(discriminator),
+            args_ident,
+            false,
+            mod_ident,
+            |name| resolve_event_field(ev, name),
+        )?;
+
+        checks.push(info.check);
+    }
+
+    checks.push(tail.check);
+
+    Some(DiscriminatorInfo {
+        args_expr: tail.args_expr,
+        check: quote! { #((#checks))&&* },
+    })
 }
 
 fn extract_discriminator_key(

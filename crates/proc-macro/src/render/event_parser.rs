@@ -9,32 +9,47 @@ use quote::{format_ident, quote};
 /// The event resolution functions are called by `InstructionParser` (when
 /// `program-events` feature is active) to handle CPI and log-based events.
 ///
+/// An event paired with the envelope resolved for it by the validated pass.
+type EnvelopedEvent<'a> = (
+    &'a codama_nodes::EventNode,
+    Option<&'a crate::parse::CpiEventEnvelope>,
+);
+
 pub fn event_parser(
     _program_name_camel: &CamelCaseString,
     events: &[codama_nodes::EventNode],
     has_instructions: bool,
+    envelope: Option<&crate::parse::ProgramEnvelope>,
 ) -> TokenStream {
     let wrapper_ident = format_ident!("Events");
     let ev_mod = format_ident!("event");
 
     // Per-event parse helper functions
+    // Resolved once from the validated pass so no codegen site re-decides it.
+    let event_envelopes: Vec<Option<&crate::parse::CpiEventEnvelope>> = envelope.map_or_else(
+        || vec![None; events.len()],
+        |program| program.resolve(events),
+    );
+
     let helper_fns: Vec<TokenStream> = events
         .iter()
-        .filter_map(|ev| single_event_helper_fn(ev, &wrapper_ident, &ev_mod))
+        .zip(&event_envelopes)
+        .filter_map(|(ev, envelope)| single_event_helper_fn(ev, &wrapper_ident, &ev_mod, *envelope))
         .collect();
 
     // Discriminator match arms
     let mut groups: Vec<(
         super::instruction_parser::DiscriminatorKey,
-        Vec<&codama_nodes::EventNode>,
+        Vec<EnvelopedEvent<'_>>,
     )> = Vec::new();
 
-    for ev in events {
-        if let Some(key) = super::instruction_parser::extract_event_discriminator_key(ev) {
+    for (ev, envelope) in events.iter().zip(&event_envelopes) {
+        if let Some(key) = super::instruction_parser::extract_event_discriminator_key(ev, *envelope)
+        {
             if let Some(group) = groups.iter_mut().find(|(k, _)| k == &key) {
-                group.1.push(ev);
+                group.1.push((ev, *envelope));
             } else {
-                groups.push((key, vec![ev]));
+                groups.push((key, vec![(ev, *envelope)]));
             }
         }
     }
@@ -43,11 +58,11 @@ pub fn event_parser(
         .iter()
         .filter_map(|(_, evs)| {
             if evs.len() == 1 {
-                single_event_match_arm(evs[0], &ev_mod)
+                single_event_match_arm(evs[0].0, &ev_mod, evs[0].1)
             } else {
                 // Events shouldn't have discriminator collisions in practice.
                 // If they do, emit a compile-time error directing the user to investigate.
-                let names: Vec<_> = evs.iter().map(|e| e.name.to_string()).collect();
+                let names: Vec<_> = evs.iter().map(|(e, _)| e.name.to_string()).collect();
                 let msg = format!(
                     "Event discriminator collision: [{}] share the same discriminator.",
                     names.join(", ")
@@ -271,6 +286,7 @@ fn single_event_helper_fn(
     event: &codama_nodes::EventNode,
     wrapper_ident: &syn::Ident,
     ev_mod: &syn::Ident,
+    envelope: Option<&crate::parse::CpiEventEnvelope>,
 ) -> Option<TokenStream> {
     let ev_name_pascal = crate::utils::to_pascal_case(&event.name);
     let ev_name_snake = crate::utils::to_snake_case(&event.name);
@@ -289,6 +305,7 @@ fn single_event_helper_fn(
         &args_ident,
         has_args,
         ev_mod,
+        envelope,
     )?;
 
     // Events have no accounts — only remaining_accounts (always empty vec)
@@ -322,6 +339,7 @@ fn single_event_helper_fn(
 fn single_event_match_arm(
     event: &codama_nodes::EventNode,
     ev_mod: &syn::Ident,
+    envelope: Option<&crate::parse::CpiEventEnvelope>,
 ) -> Option<TokenStream> {
     let ev_name_snake = crate::utils::to_snake_case(&event.name);
     let fn_ident = format_ident!("parse_event_{}", ev_name_snake);
@@ -336,6 +354,7 @@ fn single_event_match_arm(
         &args_ident,
         has_args,
         ev_mod,
+        envelope,
     )?;
 
     let check = info.check;

@@ -121,3 +121,88 @@ You’ve successfully generated a custom Shipstern parser. It can now be fully i
 - Generated code is idiomatic Rust and integrates directly with shipstern-core.
 
 - Parsers are composable and can be used in a source → parser → sink pipeline for high-throughput indexing.
+
+## Self-CPI events (`emit_cpi!`)
+
+`emit_cpi!` does not write a log line. It invokes the program from itself, with
+instruction data shaped as:
+
+```
+[envelope tag][event discriminator][borsh payload]
+```
+
+Codama has no node for that tag, so Shipstern infers it positionally from the
+event's discriminator chain, the same rule the Carbon renderer uses. Declare two
+or more `constantDiscriminatorNode`s on the event:
+
+```json
+"discriminators": [
+  { "kind": "constantDiscriminatorNode", "offset": 0,
+    "constant": { "kind": "constantValueNode",
+      "type": { "kind": "fixedSizeTypeNode", "size": 8, "type": { "kind": "bytesTypeNode" } },
+      "value": { "kind": "bytesValueNode", "data": "e445a52e51cb9a1d", "encoding": "base16" } } },
+  { "kind": "constantDiscriminatorNode", "offset": 8,
+    "constant": { "kind": "constantValueNode",
+      "type": { "kind": "fixedSizeTypeNode", "size": 8, "type": { "kind": "bytesTypeNode" } },
+      "value": { "kind": "bytesValueNode", "data": "40c6cde8260871e2", "encoding": "base16" } } }
+]
+```
+
+The rules:
+
+- The constant at **offset 0** is the envelope tag.
+- Every remaining constant forms the event's own discriminator.
+- `payload_offset` is `sorted[1].offset`, the declared offset of the next
+  discriminator, not the tag's length. Padded layouts therefore round-trip, and
+  discriminators need not be contiguous.
+- One program has one envelope. Events that declare one must agree on both the
+  tag bytes and the payload offset, or the build fails.
+- An event with a single discriminator declares no envelope. It keeps matching
+  at offset 0 and stays reachable from `emit!` log lines.
+- When no event declares an envelope, Anchor's default 8-byte tag is used.
+
+`e445a52e51cb9a1d` is the little-endian serialisation of
+`sha256("anchor:event")[..8]`, whose natural byte order is `1d9acb512ea545e4`.
+Write the wire bytes, not the digest prefix.
+
+### The envelope must not mask an instruction
+
+The generated parser filters any instruction whose data starts with the envelope
+tag before it dispatches, so an instruction whose discriminator shares a prefix
+with the tag at offset 0 could never be parsed. That is rejected at build time:
+
+    error: Invalid CPI event envelope in "...": CPI event envelope 09 collides
+    with instruction `swapBig` (discriminator 09 at offset 0); the generated
+    parser filters every instruction whose data starts with the envelope tag, so
+    `swapBig` would never parse
+
+The check runs against the tag the parser actually uses, so it covers an IDL
+envelope, the `cpi_event_discriminator` fallback, and the Anchor default alike.
+It compares the tag only against instructions. Instruction variants that
+deliberately share a discriminator with each other, resolved at runtime by
+account count or a `CustomInstructionParser`, are unaffected.
+
+Note this differs from Anchor, whose dispatcher checks the event-CPI sentinel
+after every instruction rather than before.
+
+### Deliberate divergences from Carbon
+
+Both follow from Shipstern supporting `emit!` log events, which Carbon's
+generated decoders do not.
+
+1. **Mixed programs are accepted.** Carbon bails on the whole program if any
+   single event lacks the two-discriminator form; Shipstern accepts a program
+   that mixes `emit_cpi!` and `emit!` events. An IDL Shipstern accepts may
+   therefore render nothing in Carbon.
+2. **A lone two-part discriminator reads as enveloped.** The heuristic is
+   positional and no marker node exists, so an event with a genuine two-part
+   discriminator starting at offset 0 is indistinguishable from
+   envelope-plus-discriminator, and is treated as the latter.
+
+### Macro arguments are deprecated
+
+`cpi_event_discriminator` and `cpi_event_payload_offset` on
+`include_shipstern_parser!` remain as a fallback for IDLs that declare no
+envelope. When the IDL declares one it wins and the arguments are ignored, with
+a deprecation warning at the call site. Both are removed in 0.10; move the
+envelope into the IDL.

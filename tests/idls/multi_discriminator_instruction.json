@@ -1,0 +1,150 @@
+{
+ "kind": "rootNode",
+ "standard": "codama",
+ "version": "1.0.0",
+ "additionalPrograms": [],
+ "program": {
+  "kind": "programNode",
+  "name": "multiDiscInstruction",
+  "publicKey": "11111111111111111111111111111111",
+  "version": "0.1.0",
+  "origin": "anchor",
+  "docs": [],
+  "accounts": [],
+  "definedTypes": [],
+  "pdas": [],
+  "errors": [],
+  "instructions": [
+   {
+    "kind": "instructionNode",
+    "name": "doubleTagged",
+    "docs": [],
+    "optionalAccountStrategy": "programId",
+    "accounts": [
+     {
+      "kind": "instructionAccountNode",
+      "name": "a0",
+      "isWritable": false,
+      "isSigner": false,
+      "isOptional": false,
+      "docs": []
+     }
+    ],
+    "arguments": [
+     {
+      "kind": "instructionArgumentNode",
+      "name": "amountIn",
+      "docs": [],
+      "type": {
+       "kind": "numberTypeNode",
+       "format": "u64",
+       "endian": "le"
+      }
+     }
+    ],
+    "discriminators": [
+     {
+      "kind": "constantDiscriminatorNode",
+      "offset": 0,
+      "constant": {
+       "kind": "constantValueNode",
+       "type": {
+        "kind": "fixedSizeTypeNode",
+        "size": 1,
+        "type": {
+         "kind": "bytesTypeNode"
+        }
+       },
+       "value": {
+        "kind": "bytesValueNode",
+        "data": "aa",
+        "encoding": "base16"
+       }
+      }
+     },
+     {
+      "kind": "constantDiscriminatorNode",
+      "offset": 4,
+      "constant": {
+       "kind": "constantValueNode",
+       "type": {
+        "kind": "fixedSizeTypeNode",
+        "size": 1,
+        "type": {
+         "kind": "bytesTypeNode"
+        }
+       },
+       "value": {
+        "kind": "bytesValueNode",
+        "data": "bb",
+        "encoding": "base16"
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "events": [
+   {
+    "kind": "eventNode",
+    "name": "zetaEvent",
+    "docs": [],
+    "data": {
+     "kind": "structTypeNode",
+     "fields": [
+      {
+       "kind": "structFieldTypeNode",
+       "name": "amount",
+       "docs": [],
+       "type": {
+        "kind": "numberTypeNode",
+        "format": "u64",
+        "endian": "le"
+       }
+      }
+     ]
+    },
+    "discriminators": [
+     {
+      "kind": "constantDiscriminatorNode",
+      "offset": 0,
+      "constant": {
+       "kind": "constantValueNode",
+       "type": {
+        "kind": "fixedSizeTypeNode",
+        "size": 1,
+        "type": {
+         "kind": "bytesTypeNode"
+        }
+       },
+       "value": {
+        "kind": "bytesValueNode",
+        "data": "fe",
+        "encoding": "base16"
+       }
+      }
+     },
+     {
+      "kind": "constantDiscriminatorNode",
+      "offset": 1,
+      "constant": {
+       "kind": "constantValueNode",
+       "type": {
+        "kind": "fixedSizeTypeNode",
+        "size": 2,
+        "type": {
+         "kind": "bytesTypeNode"
+        }
+       },
+       "value": {
+        "kind": "bytesValueNode",
+        "data": "f1f2",
+        "encoding": "base16"
+       }
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

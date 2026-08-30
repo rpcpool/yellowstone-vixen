@@ -1,0 +1,193 @@
+{
+ "kind": "rootNode",
+ "standard": "codama",
+ "version": "1.0.0",
+ "additionalPrograms": [],
+ "program": {
+  "kind": "programNode",
+  "name": "macroArgEnvelope",
+  "publicKey": "11111111111111111111111111111111",
+  "version": "0.1.0",
+  "origin": "anchor",
+  "docs": [],
+  "accounts": [],
+  "definedTypes": [],
+  "pdas": [],
+  "errors": [],
+  "instructions": [
+   {
+    "kind": "instructionNode",
+    "name": "swapBig",
+    "docs": [],
+    "optionalAccountStrategy": "programId",
+    "accounts": [
+     {
+      "kind": "instructionAccountNode",
+      "name": "a0",
+      "isWritable": false,
+      "isSigner": false,
+      "isOptional": false,
+      "docs": []
+     },
+     {
+      "kind": "instructionAccountNode",
+      "name": "a1",
+      "isWritable": false,
+      "isSigner": false,
+      "isOptional": false,
+      "docs": []
+     },
+     {
+      "kind": "instructionAccountNode",
+      "name": "a2",
+      "isWritable": false,
+      "isSigner": false,
+      "isOptional": false,
+      "docs": []
+     }
+    ],
+    "arguments": [
+     {
+      "kind": "instructionArgumentNode",
+      "name": "discriminator",
+      "defaultValueStrategy": "omitted",
+      "docs": [],
+      "type": {
+       "kind": "fixedSizeTypeNode",
+       "size": 1,
+       "type": {
+        "kind": "bytesTypeNode"
+       }
+      },
+      "defaultValue": {
+       "kind": "bytesValueNode",
+       "data": "09",
+       "encoding": "base16"
+      }
+     },
+     {
+      "kind": "instructionArgumentNode",
+      "name": "amountIn",
+      "docs": [],
+      "type": {
+       "kind": "numberTypeNode",
+       "format": "u64",
+       "endian": "le"
+      }
+     }
+    ],
+    "discriminators": [
+     {
+      "kind": "fieldDiscriminatorNode",
+      "name": "discriminator",
+      "offset": 0
+     }
+    ]
+   },
+   {
+    "kind": "instructionNode",
+    "name": "swapSmall",
+    "docs": [],
+    "optionalAccountStrategy": "programId",
+    "accounts": [
+     {
+      "kind": "instructionAccountNode",
+      "name": "a0",
+      "isWritable": false,
+      "isSigner": false,
+      "isOptional": false,
+      "docs": []
+     },
+     {
+      "kind": "instructionAccountNode",
+      "name": "a1",
+      "isWritable": false,
+      "isSigner": false,
+      "isOptional": false,
+      "docs": []
+     }
+    ],
+    "arguments": [
+     {
+      "kind": "instructionArgumentNode",
+      "name": "discriminator",
+      "defaultValueStrategy": "omitted",
+      "docs": [],
+      "type": {
+       "kind": "fixedSizeTypeNode",
+       "size": 1,
+       "type": {
+        "kind": "bytesTypeNode"
+       }
+      },
+      "defaultValue": {
+       "kind": "bytesValueNode",
+       "data": "09",
+       "encoding": "base16"
+      }
+     },
+     {
+      "kind": "instructionArgumentNode",
+      "name": "amountIn",
+      "docs": [],
+      "type": {
+       "kind": "numberTypeNode",
+       "format": "u64",
+       "endian": "le"
+      }
+     }
+    ],
+    "discriminators": [
+     {
+      "kind": "fieldDiscriminatorNode",
+      "name": "discriminator",
+      "offset": 0
+     }
+    ]
+   }
+  ],
+  "events": [
+   {
+    "kind": "eventNode",
+    "name": "deltaEvent",
+    "docs": [],
+    "data": {
+     "kind": "structTypeNode",
+     "fields": [
+      {
+       "kind": "structFieldTypeNode",
+       "name": "amount",
+       "docs": [],
+       "type": {
+        "kind": "numberTypeNode",
+        "format": "u64",
+        "endian": "le"
+       }
+      }
+     ]
+    },
+    "discriminators": [
+     {
+      "kind": "constantDiscriminatorNode",
+      "offset": 0,
+      "constant": {
+       "kind": "constantValueNode",
+       "type": {
+        "kind": "fixedSizeTypeNode",
+        "size": 2,
+        "type": {
+         "kind": "bytesTypeNode"
+        }
+       },
+       "value": {
+        "kind": "bytesValueNode",
+        "data": "d1d2",
+        "encoding": "base16"
+       }
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
