@@ -25,3 +25,22 @@ fn check_json_serialization() {
     let _: dynamic_bonding_curve::InitializePoolParameters =
         serde_json::from_str(&json_str).expect("failed to json deserialize");
 }
+
+///
+/// Anchor-style field discriminator: an 8-byte sighash stripped before the
+/// account body is deserialized.
+///
+#[test]
+fn exposes_account_discriminators() {
+    assert_eq!(
+        dynamic_bonding_curve::VirtualPool::DISCRIMINATOR,
+        hex::decode("d5e005d16245775c").unwrap().as_slice()
+    );
+    assert_eq!(dynamic_bonding_curve::VirtualPool::DISCRIMINATOR_OFFSET, 0);
+
+    assert_eq!(
+        dynamic_bonding_curve::Config::DISCRIMINATOR,
+        hex::decode("9b0caae01efacc82").unwrap().as_slice()
+    );
+    assert_eq!(dynamic_bonding_curve::Config::DISCRIMINATOR_OFFSET, 0);
+}

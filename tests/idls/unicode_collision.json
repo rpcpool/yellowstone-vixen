@@ -1,0 +1,82 @@
+{
+  "kind": "rootNode",
+  "standard": "codama",
+  "version": "1.6.0",
+  "program": {
+    "kind": "programNode",
+    "name": "unicodeCollision",
+    "publicKey": "11111111111111111111111111111111",
+    "version": "0.1.0",
+    "accounts": [],
+    "instructions": [
+      {
+        "kind": "instructionNode",
+        "name": "ä",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 4,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "11223344",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      },
+      {
+        "kind": "instructionNode",
+        "name": "Ä",
+        "accounts": [],
+        "arguments": [
+          {
+            "kind": "instructionArgumentNode",
+            "name": "discriminator",
+            "defaultValueStrategy": "omitted",
+            "docs": [],
+            "type": {
+              "kind": "fixedSizeTypeNode",
+              "size": 4,
+              "type": {
+                "kind": "bytesTypeNode"
+              }
+            },
+            "defaultValue": {
+              "kind": "bytesValueNode",
+              "data": "55667788",
+              "encoding": "base16"
+            }
+          }
+        ],
+        "discriminators": [
+          {
+            "kind": "fieldDiscriminatorNode",
+            "name": "discriminator",
+            "offset": 0
+          }
+        ]
+      }
+    ],
+    "definedTypes": [],
+    "errors": [],
+    "constants": []
+  },
+  "additionalPrograms": []
+}

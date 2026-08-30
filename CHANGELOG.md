@@ -11,6 +11,8 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `shipstern-proc-macro`: generated account types and the `Instructions` wrapper now expose `DISCRIMINATOR` and `DISCRIMINATOR_OFFSET` constants, so consumers can build `memcmp` filters and route on discriminators without re-deriving the bytes from the IDL. The pair is a memcmp predicate: the bytes the parser compares at that offset. It is not a payload boundary, because numeric discriminators (for example SPL Governance) are re-read as the first field of the account body, so decoding still goes through `try_unpack`. No constant is emitted where the parser could not honor it: size-only discriminators, zero-length discriminators, fixed-size fields whose declared width disagrees with the decoded default bytes, and instruction names that collide after case folding ([#294](https://github.com/rpcpool/yellowstone-vixen/issues/294)).
+
 ### Fixed
 
 - `yellowstone-vixen-jetstream-source`: populate `Reward::commission_bps` on both reward conversion paths. The field arrived with `yellowstone-grpc-proto` 12.5 and was hardcoded to an empty string, so consumers reading it saw nothing even though `commission` was already forwarded. It is now derived from the whole-percent commission, which is lossless because the source is a `u8` percentage: a 7% commission reports `700`. Salvaged from ([#254](https://github.com/rpcpool/yellowstone-vixen/pull/254) by @the-orex), which is otherwise superseded by the 0.7.0 dependency bumps.

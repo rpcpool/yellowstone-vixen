@@ -119,3 +119,267 @@ fn check_json_serialization() {
     let _: pump_fun::instruction::Buy =
         serde_json::from_str(&json_str).expect("failed to json deserialize");
 }
+
+#[test]
+fn exposes_account_discriminators() {
+    assert_eq!(
+        pump_fun::BondingCurve::DISCRIMINATOR,
+        hex::decode("17b7f83760d8ac60").unwrap().as_slice()
+    );
+    assert_eq!(pump_fun::BondingCurve::DISCRIMINATOR_OFFSET, 0);
+}
+
+///
+/// Instruction variants are not types, so their discriminators hang on the
+/// `Instructions` wrapper rather than on a per-variant impl.
+///
+#[test]
+fn exposes_instruction_discriminators() {
+    assert_eq!(
+        pump_fun::Instructions::BUY_DISCRIMINATOR,
+        hex::decode("66063d1201daebea").unwrap().as_slice()
+    );
+    assert_eq!(pump_fun::Instructions::BUY_DISCRIMINATOR_OFFSET, 0);
+
+    assert_eq!(
+        pump_fun::Instructions::ADMIN_SET_CREATOR_DISCRIMINATOR,
+        hex::decode("4519ab8e39ef0d04").unwrap().as_slice()
+    );
+}
+
+///
+/// Every emitted instruction constant must be recognised by the matcher.
+///
+/// The constant is built by `extract_ix_discriminator_key` + `to_bytes_offset`,
+/// while the parser matches through `extract_discriminator_info`, two separate
+/// decode paths. Driving `resolve_instruction_default` with a buffer built from
+/// each constant proves they agree: a mismatch surfaces as
+/// `DiscriminatorNotFound`. Argument deserialization is expected to fail on
+/// these synthetic buffers; only the discriminator verdict is asserted.
+///
+#[test]
+fn every_instruction_const_is_recognised_by_the_matcher() {
+    let all: &[(&[u8], usize, &str)] = &[
+        (
+            pump_fun::Instructions::ADMIN_SET_CREATOR_DISCRIMINATOR,
+            pump_fun::Instructions::ADMIN_SET_CREATOR_DISCRIMINATOR_OFFSET,
+            "ADMIN_SET_CREATOR",
+        ),
+        (
+            pump_fun::Instructions::ADMIN_SET_IDL_AUTHORITY_DISCRIMINATOR,
+            pump_fun::Instructions::ADMIN_SET_IDL_AUTHORITY_DISCRIMINATOR_OFFSET,
+            "ADMIN_SET_IDL_AUTHORITY",
+        ),
+        (
+            pump_fun::Instructions::ADMIN_UPDATE_TOKEN_INCENTIVES_DISCRIMINATOR,
+            pump_fun::Instructions::ADMIN_UPDATE_TOKEN_INCENTIVES_DISCRIMINATOR_OFFSET,
+            "ADMIN_UPDATE_TOKEN_INCENTIVES",
+        ),
+        (
+            pump_fun::Instructions::BUY_DISCRIMINATOR,
+            pump_fun::Instructions::BUY_DISCRIMINATOR_OFFSET,
+            "BUY",
+        ),
+        (
+            pump_fun::Instructions::BUY_EXACT_SOL_IN_DISCRIMINATOR,
+            pump_fun::Instructions::BUY_EXACT_SOL_IN_DISCRIMINATOR_OFFSET,
+            "BUY_EXACT_SOL_IN",
+        ),
+        (
+            pump_fun::Instructions::CLAIM_CASHBACK_DISCRIMINATOR,
+            pump_fun::Instructions::CLAIM_CASHBACK_DISCRIMINATOR_OFFSET,
+            "CLAIM_CASHBACK",
+        ),
+        (
+            pump_fun::Instructions::CLAIM_TOKEN_INCENTIVES_DISCRIMINATOR,
+            pump_fun::Instructions::CLAIM_TOKEN_INCENTIVES_DISCRIMINATOR_OFFSET,
+            "CLAIM_TOKEN_INCENTIVES",
+        ),
+        (
+            pump_fun::Instructions::CLOSE_USER_VOLUME_ACCUMULATOR_DISCRIMINATOR,
+            pump_fun::Instructions::CLOSE_USER_VOLUME_ACCUMULATOR_DISCRIMINATOR_OFFSET,
+            "CLOSE_USER_VOLUME_ACCUMULATOR",
+        ),
+        (
+            pump_fun::Instructions::COLLECT_CREATOR_FEE_DISCRIMINATOR,
+            pump_fun::Instructions::COLLECT_CREATOR_FEE_DISCRIMINATOR_OFFSET,
+            "COLLECT_CREATOR_FEE",
+        ),
+        (
+            pump_fun::Instructions::CREATE_DISCRIMINATOR,
+            pump_fun::Instructions::CREATE_DISCRIMINATOR_OFFSET,
+            "CREATE",
+        ),
+        (
+            pump_fun::Instructions::CREATE_V2_DISCRIMINATOR,
+            pump_fun::Instructions::CREATE_V2_DISCRIMINATOR_OFFSET,
+            "CREATE_V2",
+        ),
+        (
+            pump_fun::Instructions::DISTRIBUTE_CREATOR_FEES_DISCRIMINATOR,
+            pump_fun::Instructions::DISTRIBUTE_CREATOR_FEES_DISCRIMINATOR_OFFSET,
+            "DISTRIBUTE_CREATOR_FEES",
+        ),
+        (
+            pump_fun::Instructions::EXTEND_ACCOUNT_DISCRIMINATOR,
+            pump_fun::Instructions::EXTEND_ACCOUNT_DISCRIMINATOR_OFFSET,
+            "EXTEND_ACCOUNT",
+        ),
+        (
+            pump_fun::Instructions::GET_MINIMUM_DISTRIBUTABLE_FEE_DISCRIMINATOR,
+            pump_fun::Instructions::GET_MINIMUM_DISTRIBUTABLE_FEE_DISCRIMINATOR_OFFSET,
+            "GET_MINIMUM_DISTRIBUTABLE_FEE",
+        ),
+        (
+            pump_fun::Instructions::INIT_USER_VOLUME_ACCUMULATOR_DISCRIMINATOR,
+            pump_fun::Instructions::INIT_USER_VOLUME_ACCUMULATOR_DISCRIMINATOR_OFFSET,
+            "INIT_USER_VOLUME_ACCUMULATOR",
+        ),
+        (
+            pump_fun::Instructions::INITIALIZE_DISCRIMINATOR,
+            pump_fun::Instructions::INITIALIZE_DISCRIMINATOR_OFFSET,
+            "INITIALIZE",
+        ),
+        (
+            pump_fun::Instructions::MIGRATE_DISCRIMINATOR,
+            pump_fun::Instructions::MIGRATE_DISCRIMINATOR_OFFSET,
+            "MIGRATE",
+        ),
+        (
+            pump_fun::Instructions::MIGRATE_BONDING_CURVE_CREATOR_DISCRIMINATOR,
+            pump_fun::Instructions::MIGRATE_BONDING_CURVE_CREATOR_DISCRIMINATOR_OFFSET,
+            "MIGRATE_BONDING_CURVE_CREATOR",
+        ),
+        (
+            pump_fun::Instructions::SELL_DISCRIMINATOR,
+            pump_fun::Instructions::SELL_DISCRIMINATOR_OFFSET,
+            "SELL",
+        ),
+        (
+            pump_fun::Instructions::SET_CREATOR_DISCRIMINATOR,
+            pump_fun::Instructions::SET_CREATOR_DISCRIMINATOR_OFFSET,
+            "SET_CREATOR",
+        ),
+        (
+            pump_fun::Instructions::SET_MAYHEM_VIRTUAL_PARAMS_DISCRIMINATOR,
+            pump_fun::Instructions::SET_MAYHEM_VIRTUAL_PARAMS_DISCRIMINATOR_OFFSET,
+            "SET_MAYHEM_VIRTUAL_PARAMS",
+        ),
+        (
+            pump_fun::Instructions::SET_METAPLEX_CREATOR_DISCRIMINATOR,
+            pump_fun::Instructions::SET_METAPLEX_CREATOR_DISCRIMINATOR_OFFSET,
+            "SET_METAPLEX_CREATOR",
+        ),
+        (
+            pump_fun::Instructions::SET_PARAMS_DISCRIMINATOR,
+            pump_fun::Instructions::SET_PARAMS_DISCRIMINATOR_OFFSET,
+            "SET_PARAMS",
+        ),
+        (
+            pump_fun::Instructions::SET_RESERVED_FEE_RECIPIENTS_DISCRIMINATOR,
+            pump_fun::Instructions::SET_RESERVED_FEE_RECIPIENTS_DISCRIMINATOR_OFFSET,
+            "SET_RESERVED_FEE_RECIPIENTS",
+        ),
+        (
+            pump_fun::Instructions::SYNC_USER_VOLUME_ACCUMULATOR_DISCRIMINATOR,
+            pump_fun::Instructions::SYNC_USER_VOLUME_ACCUMULATOR_DISCRIMINATOR_OFFSET,
+            "SYNC_USER_VOLUME_ACCUMULATOR",
+        ),
+        (
+            pump_fun::Instructions::TOGGLE_CASHBACK_ENABLED_DISCRIMINATOR,
+            pump_fun::Instructions::TOGGLE_CASHBACK_ENABLED_DISCRIMINATOR_OFFSET,
+            "TOGGLE_CASHBACK_ENABLED",
+        ),
+        (
+            pump_fun::Instructions::TOGGLE_CREATE_V2_DISCRIMINATOR,
+            pump_fun::Instructions::TOGGLE_CREATE_V2_DISCRIMINATOR_OFFSET,
+            "TOGGLE_CREATE_V2",
+        ),
+        (
+            pump_fun::Instructions::TOGGLE_MAYHEM_MODE_DISCRIMINATOR,
+            pump_fun::Instructions::TOGGLE_MAYHEM_MODE_DISCRIMINATOR_OFFSET,
+            "TOGGLE_MAYHEM_MODE",
+        ),
+        (
+            pump_fun::Instructions::UPDATE_GLOBAL_AUTHORITY_DISCRIMINATOR,
+            pump_fun::Instructions::UPDATE_GLOBAL_AUTHORITY_DISCRIMINATOR_OFFSET,
+            "UPDATE_GLOBAL_AUTHORITY",
+        ),
+    ];
+
+    assert_eq!(
+        all.len(),
+        29,
+        "every pump_fun instruction should expose a constant"
+    );
+
+    for (disc, offset, name) in all {
+        let mut data = vec![0_u8; *offset];
+
+        data.extend_from_slice(disc);
+
+        let path = shipstern_core::instruction::Path::new_single(0);
+
+        if let Err(shipstern_core::ParseError::DiscriminatorNotFound(msg)) =
+            pump_fun::resolve_instruction_default(&[], &data, &path)
+        {
+            panic!("{name}: constant is not recognised by the matcher ({msg})");
+        }
+    }
+}
+
+///
+/// Tie the constant to real on-wire bytes, not just to the matcher.
+///
+/// For the instruction the matcher resolves as `Buy`, the bytes actually present
+/// in the mainnet transaction at `BUY_DISCRIMINATOR_OFFSET` must equal
+/// `BUY_DISCRIMINATOR`.
+///
+#[tokio::test]
+async fn instruction_const_matches_real_mainnet_bytes() {
+    let parser = pump_fun::InstructionParser;
+
+    let fixture = match shipstern_mock::load_fixture(
+        "3tkxRjNDfth6NxXpYbbLKmPkPYyAD4jjXfNnDCYtCKSPN2zSpJXT29reowKtFKz1puY1fHmBFVAskkK2A7o8cZgJ",
+        &parser,
+    )
+    .await
+    .unwrap()
+    {
+        shipstern_mock::FixtureData::Instructions(fixture) => fixture,
+        _ => panic!("expected an instruction fixture"),
+    };
+
+    let mut checked = 0_usize;
+
+    for raw in &fixture.instructions {
+        let update: shipstern_core::instruction::InstructionUpdate = raw.into();
+
+        if *update.program != pump_fun::PROGRAM_ID {
+            continue;
+        }
+
+        let Ok(parsed) =
+            pump_fun::resolve_instruction_default(&update.accounts, &update.data, &update.path)
+        else {
+            continue;
+        };
+
+        let pump_fun::instruction::Instruction::Buy { .. } = &parsed.instruction else {
+            continue;
+        };
+
+        let offset = pump_fun::Instructions::BUY_DISCRIMINATOR_OFFSET;
+        let disc = pump_fun::Instructions::BUY_DISCRIMINATOR;
+
+        assert_eq!(
+            &update.data[offset..offset + disc.len()],
+            disc,
+            "on-wire bytes disagree with BUY_DISCRIMINATOR"
+        );
+
+        checked += 1;
+    }
+
+    assert_eq!(checked, 1, "expected exactly one Buy in the fixture");
+}

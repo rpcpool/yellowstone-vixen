@@ -12,6 +12,25 @@ pub(crate) enum DiscriminatorKey {
     Size { size: usize },
 }
 
+impl DiscriminatorKey {
+    ///
+    /// On-wire discriminator bytes and the offset they appear at.
+    ///
+    /// Mirrors exactly what the generated match arm compares: numeric
+    /// discriminators are checked as `*d == (value as u8)`, so they narrow to a
+    /// single byte here too.
+    ///
+    /// `None` for size-only discriminators, which have no byte prefix.
+    ///
+    pub(crate) fn to_bytes_offset(&self) -> Option<(Vec<u8>, usize)> {
+        match self {
+            DiscriminatorKey::Constant { offset, value } => Some((vec![*value as u8], *offset)),
+            DiscriminatorKey::Field { offset, bytes } => Some((bytes.clone(), *offset)),
+            DiscriminatorKey::Size { .. } => None,
+        }
+    }
+}
+
 /// Decode discriminator bytes from a codama [`BytesValueNode`](codama_nodes::BytesValueNode).
 fn decode_discriminator_field_bytes(bytes: &codama_nodes::BytesValueNode) -> Vec<u8> {
     match bytes.encoding {
@@ -82,6 +101,26 @@ pub(crate) fn extract_ix_discriminator_key(
     ix: &codama_nodes::InstructionNode,
 ) -> Option<DiscriminatorKey> {
     extract_discriminator_key(&ix.discriminators, |name| resolve_ix_field(ix, name))
+}
+
+///
+/// Width of the byte window the generated match arm compares, when the
+/// discriminator is a fixed-size field.
+///
+/// The arm slices `offset..offset + size` using the *declared* field width but
+/// compares against the *decoded* default bytes, so a disagreement makes the arm
+/// unmatchable. `None` when no width constraint applies (constant-bytes and
+/// numeric discriminators derive their window from the bytes themselves).
+///
+fn ix_discriminator_slice_width(ix: &codama_nodes::InstructionNode) -> Option<usize> {
+    let DiscriminatorNode::Field(node) = ix.discriminators.first()? else {
+        return None;
+    };
+
+    match resolve_ix_field(ix, &node.name)?.r#type {
+        TypeNode::FixedSize(fixed) => Some(fixed.size),
+        _ => None,
+    }
 }
 
 /// Extract a discriminator key for an event (collision detection).
@@ -606,6 +645,85 @@ pub fn instruction_parser(
         .filter_map(|ix| single_instruction_helper_fn(ix, &wrapper_ident))
         .collect();
 
+    // 1b. Per-instruction discriminator constants, exposed on the wrapper type.
+    //
+    // `to_snake_case().to_uppercase()` is not injective over names that differ
+    // only by case outside ASCII: `ä` and `Ä` are distinct instructions with
+    // distinct variants and distinct `parse_*` helpers, yet both fold to `Ä`.
+    // An ambiguous constant is worse than none, so a colliding group is skipped
+    // entirely, the same rule the width and empty-discriminator guards follow.
+    // Skipping keeps this purely additive: such an IDL compiles exactly as it did
+    // before, minus the constants.
+    let const_name_counts = instructions.iter().fold(
+        std::collections::HashMap::<String, usize>::new(),
+        |mut counts, ix| {
+            *counts
+                .entry(crate::utils::to_snake_case(&ix.name).to_uppercase())
+                .or_default() += 1;
+
+            counts
+        },
+    );
+
+    let disc_consts: Vec<TokenStream> = instructions
+        .iter()
+        .filter_map(|ix| {
+            let (bytes, offset) = extract_ix_discriminator_key(ix)?.to_bytes_offset()?;
+
+            if bytes.is_empty() {
+                return None;
+            }
+
+            // Mirror the account-side guard: when the declared field width and the
+            // decoded default bytes disagree the generated arm can never match, so
+            // expose no constant for a discriminator the parser cannot honor.
+            if ix_discriminator_slice_width(ix).is_some_and(|width| width != bytes.len()) {
+                return None;
+            }
+
+            let base = crate::utils::to_snake_case(&ix.name).to_uppercase();
+
+            if const_name_counts.get(&base) != Some(&1) {
+                return None;
+            }
+
+            let disc_ident = format_ident!("{}_DISCRIMINATOR", base);
+            let offset_ident = format_ident!("{}_DISCRIMINATOR_OFFSET", base);
+
+            let disc_doc = format!(
+                "Discriminator bytes that identify the `{}` instruction on the wire.\n\nPairs \
+                 with [`Self::{}`] as a memcmp predicate: these bytes appear at that offset in \
+                 the raw instruction data. It is not a payload boundary.",
+                *ix.name, offset_ident,
+            );
+
+            let offset_doc = format!(
+                "Byte offset at which [`Self::{}`] begins in the instruction data.",
+                disc_ident,
+            );
+
+            Some(quote! {
+                #[doc = #disc_doc]
+                pub const #disc_ident: &'static [u8] = &[#(#bytes),*];
+
+                #[doc = #offset_doc]
+                pub const #offset_ident: usize = #offset;
+            })
+        })
+        .collect();
+
+    // Skip the impl block entirely when no instruction has a byte discriminator
+    // (e.g. every instruction is size-discriminated).
+    let disc_consts_impl = if disc_consts.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            impl #wrapper_ident {
+                #(#disc_consts)*
+            }
+        }
+    };
+
     // 2. Group instructions by discriminator for collision detection,
     //    then generate match arms per group.
     let mut groups: Vec<(DiscriminatorKey, Vec<&codama_nodes::InstructionNode>)> = Vec::new();
@@ -782,6 +900,8 @@ pub fn instruction_parser(
         //
 
         #(#helper_fns)*
+
+        #disc_consts_impl
 
         ///
         /// Default instruction resolution using discriminator matching.

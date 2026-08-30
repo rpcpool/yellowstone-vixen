@@ -281,3 +281,24 @@ fn check_json_serialization() {
     let _: spl_governance::SetRealmAuthorityAction =
         serde_json::from_str(&json_str).expect("failed to json deserialize");
 }
+
+///
+/// Numeric constant discriminators, the one branch where the discriminator byte
+/// is *not* stripped: the parser deserializes from `data[..]`, so byte 0 is
+/// re-read as the `account_type` borsh enum tag (16 = RealmV2, 14 = ProposalV2).
+///
+/// `DISCRIMINATOR` is therefore a memcmp predicate only. Slicing past
+/// `DISCRIMINATOR_OFFSET + DISCRIMINATOR.len()` and deserializing would drop the
+/// first field. Decode with `try_unpack`, as `parse_proposal_v2_account` does.
+///
+#[test]
+fn exposes_numeric_account_discriminators() {
+    assert_eq!(spl_governance::RealmV2::DISCRIMINATOR, [16_u8].as_slice());
+    assert_eq!(spl_governance::RealmV2::DISCRIMINATOR_OFFSET, 0);
+
+    assert_eq!(
+        spl_governance::ProposalV2::DISCRIMINATOR,
+        [14_u8].as_slice()
+    );
+    assert_eq!(spl_governance::ProposalV2::DISCRIMINATOR_OFFSET, 0);
+}
