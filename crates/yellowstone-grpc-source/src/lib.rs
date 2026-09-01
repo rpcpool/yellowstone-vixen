@@ -2,14 +2,17 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use clap::ValueEnum;
-use futures_util::StreamExt;
+use futures_util::{SinkExt, StreamExt};
 use shipstern::{
     sources::{SourceExitStatus, SourceTrait},
     CommitmentLevel, Error as ShipsternError,
 };
 use shipstern_core::Filters;
-use tokio::sync::{mpsc::Sender, oneshot};
-use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig};
+use tokio::sync::{
+    mpsc::{self, Receiver, Sender},
+    oneshot,
+};
+use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig, SubscribeRequestSink};
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
@@ -153,9 +156,14 @@ pub struct YellowstoneGrpcSource {
 /// `From<Filters>` conversion leaves unset.
 ///
 /// `from_slot` is deliberately not applied here. It is a one-time start
-/// position rather than a steady-state setting, which is why the client
-/// library overwrites the field with the live checkpoint on reconnect instead
-/// of reusing the configured value. Only the initial subscribe sets it.
+/// position rather than a steady-state setting, and repeating it on a
+/// mid-stream update is destructive: yellowstone-grpc-geyser treats it as a
+/// replay request and either replays every slot since, or ends the stream
+/// with `from_slot is not supported` when it has no replay buffer, while
+/// richat rejects the request outright if the set contains blocks. The client
+/// library agrees, overwriting the field with the live checkpoint on
+/// reconnect rather than reusing the configured value. Only the initial
+/// subscribe sets it.
 ///
 fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> SubscribeRequest {
     let mut request: SubscribeRequest = filters.into();
@@ -167,16 +175,87 @@ fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> 
     request
 }
 
+/// Send `filters` to the server, handing it back unsent if the sink rejects it.
+///
+/// A rejection means the request channel is disconnected. With auto-reconnect
+/// enabled, which is the default, that is a transient reconnect window rather
+/// than a fatal error: the stream yields nothing during it and the client
+/// library swaps a fresh sender into this sink once it recovers. Dropping the
+/// set here would lose it silently, because the sink only records a request
+/// into its reconnect state after a successful send, so the reconnect would
+/// resubscribe with the previous filters.
+///
+async fn send_filter_update(
+    sink: &mut SubscribeRequestSink,
+    config: &YellowstoneGrpcConfig,
+    filters: Filters,
+) -> Option<Filters> {
+    let request = build_subscribe_request(filters.clone(), config);
+
+    tracing::debug!(
+        accounts = request.accounts.len(),
+        transactions = request.transactions.len(),
+        slots = request.slots.len(),
+        "Sending filter update to the live subscription"
+    );
+
+    if let Err(err) = sink.send(request).await {
+        tracing::warn!(
+            %err,
+            "Filter update rejected by the sink, holding it until the stream recovers"
+        );
+
+        return Some(filters);
+    }
+
+    None
+}
+
 #[async_trait]
 impl SourceTrait for YellowstoneGrpcSource {
     type Config = YellowstoneGrpcConfig;
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
+    fn supports_filter_updates() -> bool { true }
+
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), ShipsternError> {
+        let closed = {
+            let (_, rx) = mpsc::channel(1);
+            rx
+        };
+
+        self.run(tx, status_tx, closed).await
+    }
+
+    async fn connect_with_filter_updates(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+        filter_updates: Receiver<Filters>,
+    ) -> Result<(), ShipsternError> {
+        self.run(tx, status_tx, filter_updates).await
+    }
+}
+
+impl YellowstoneGrpcSource {
+    /// Open the subscription and pump updates until the stream ends, sending
+    /// any filter set that arrives on `filter_updates` to the server so it
+    /// replaces the live subscription.
+    ///
+    /// An already closed `filter_updates` is expected rather than an error:
+    /// it is what `connect` passes when the caller never asked for updates,
+    /// and it retires the update branch after one poll.
+    ///
+    async fn run(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+        mut filter_updates: Receiver<Filters>,
     ) -> Result<(), ShipsternError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
@@ -212,7 +291,7 @@ impl SourceTrait for YellowstoneGrpcSource {
             "Subscribing to gRPC stream"
         );
 
-        let (_sub_tx, stream) = client
+        let (mut sink, stream) = client
             .subscribe_with_request(Some(subscribe_request))
             .await?;
 
@@ -220,25 +299,51 @@ impl SourceTrait for YellowstoneGrpcSource {
 
         tracing::debug!("gRPC stream started");
 
+        let mut accept_filter_updates = true;
+        let mut pending_filters: Option<Filters> = None;
+
         let exit_status = loop {
-            match stream.next().await {
-                Some(Ok(update)) => {
-                    if tx.send(Ok(update)).await.is_err() {
-                        tracing::info!("Receiver dropped, stopping source");
-                        // Defensive only - normally unreachable because Signal/Buffer
-                        // branch wins first when receiver drops.
-                        break SourceExitStatus::ReceiverDropped;
-                    }
+            tokio::select! {
+                update = stream.next() => match update {
+                    Some(Ok(update)) => {
+                        if tx.send(Ok(update)).await.is_err() {
+                            tracing::info!("Receiver dropped, stopping source");
+                            // Defensive only - normally unreachable because Signal/Buffer
+                            // branch wins first when receiver drops.
+                            break SourceExitStatus::ReceiverDropped;
+                        }
+
+                        // The stream producing again is the signal that any
+                        // reconnect has landed and the sink has a live sender,
+                        // so this is the moment to retry a held filter set.
+                        if let Some(filters) = pending_filters.take() {
+                            pending_filters =
+                                send_filter_update(&mut sink, &config, filters).await;
+                        }
+                    },
+                    Some(Err(status)) => {
+                        tracing::warn!(code = ?status.code(), message = %status.message(), "Received error status from stream");
+                        let code = status.code();
+                        let message = status.message().to_string();
+                        let _ = tx.send(Err(status)).await;
+                        break SourceExitStatus::StreamError { code, message };
+                    },
+                    None => {
+                        break SourceExitStatus::StreamEnded;
+                    },
                 },
-                Some(Err(status)) => {
-                    tracing::warn!(code = ?status.code(), message = %status.message(), "Received error status from stream");
-                    let code = status.code();
-                    let message = status.message().to_string();
-                    let _ = tx.send(Err(status)).await;
-                    break SourceExitStatus::StreamError { code, message };
-                },
-                None => {
-                    break SourceExitStatus::StreamEnded;
+
+                update = filter_updates.recv(), if accept_filter_updates => {
+                    let Some(filters) = update else {
+                        // Nobody holds the sending half any more, so leave this
+                        // branch alone for the rest of the connection.
+                        accept_filter_updates = false;
+                        continue;
+                    };
+
+                    // A newer set supersedes anything still held, because every
+                    // set is complete rather than a delta.
+                    pending_filters = send_filter_update(&mut sink, &config, filters).await;
                 },
             }
         };
@@ -261,7 +366,9 @@ mod tests {
         toml::from_str(toml_src).expect("config must deserialize")
     }
 
-    /// The commitment `Filters` does not carry is layered on by the builder.
+    /// The startup subscribe and every later filter update are built by the
+    /// same function, so the commitment `Filters` does not carry lands on both
+    /// rather than only on the initial request.
     #[test]
     fn subscribe_request_carries_commitment() {
         let config = config_from(
@@ -277,8 +384,10 @@ mod tests {
         assert_eq!(request.commitment, Some(CommitmentLevel::Finalized as i32));
     }
 
-    /// A configured `from-slot` is a resume position, so the builder leaves it
-    /// alone and the initial subscribe sets it at the call site.
+    /// A configured `from-slot` must never reach a mid-stream update. Servers
+    /// read it as a replay request, so repeating it would replay the whole gap
+    /// or end the stream outright. Only the initial subscribe sets it, and it
+    /// is set at that call site rather than here.
     #[test]
     fn subscribe_request_omits_from_slot() {
         let config = config_from(

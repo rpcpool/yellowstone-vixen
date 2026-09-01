@@ -10,7 +10,7 @@ readme = "./README.md"
 
 [dependencies]
 async-trait = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal", "macros"] }
 tracing = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
 shipstern = { workspace = true }
