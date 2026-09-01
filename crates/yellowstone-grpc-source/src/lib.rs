@@ -192,6 +192,7 @@ async fn send_filter_update(
     sink: &mut SubscribeRequestSink,
     config: &YellowstoneGrpcConfig,
     filters: Filters,
+    sent: &mut u64,
 ) -> Option<Filters> {
     let request = build_subscribe_request(filters.clone(), config);
 
@@ -212,6 +213,8 @@ async fn send_filter_update(
 
         return Some(filters);
     }
+
+    *sent += 1;
 
     None
 }
@@ -322,18 +325,6 @@ impl YellowstoneGrpcSource {
                             // branch wins first when receiver drops.
                             break SourceExitStatus::ReceiverDropped;
                         }
-
-                        // The stream producing again is the signal that any
-                        // reconnect has landed and the sink has a live sender,
-                        // so this is the moment to retry a held filter set.
-                        if let Some(filters) = pending_filters.take() {
-                            pending_filters =
-                                send_filter_update(&mut sink, &config, filters).await;
-
-                            if pending_filters.is_none() {
-                                filter_updates_sent += 1;
-                            }
-                        }
                     },
                     Some(Err(status)) => {
                         // A server that rejects a filter set answers on the stream
@@ -359,11 +350,9 @@ impl YellowstoneGrpcSource {
 
                 _ = retry.tick(), if pending_filters.is_some() => {
                     if let Some(filters) = pending_filters.take() {
-                        pending_filters = send_filter_update(&mut sink, &config, filters).await;
-
-                        if pending_filters.is_none() {
-                            filter_updates_sent += 1;
-                        }
+                        pending_filters =
+                            send_filter_update(&mut sink, &config, filters, &mut filter_updates_sent)
+                                .await;
                     }
                 },
 
@@ -377,10 +366,15 @@ impl YellowstoneGrpcSource {
 
                     // A newer set supersedes anything still held, because every
                     // set is complete rather than a delta.
-                    pending_filters = send_filter_update(&mut sink, &config, filters).await;
+                    pending_filters =
+                        send_filter_update(&mut sink, &config, filters, &mut filter_updates_sent)
+                            .await;
 
-                    if pending_filters.is_none() {
-                        filter_updates_sent += 1;
+                    // An interval's first tick is immediate, so without this a
+                    // rejected set retries at once, inside the same reconnect
+                    // window that just rejected it.
+                    if pending_filters.is_some() {
+                        retry.reset();
                     }
                 },
             }
