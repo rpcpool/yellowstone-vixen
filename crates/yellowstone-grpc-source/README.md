@@ -52,6 +52,15 @@ level, so take the keys from the parsers you registered. Delivery is best
 effort: a set rejected while the source is between connections is retried once
 the stream recovers, but the sender is not told either way.
 
+The server applies the new set promptly, but you see it only once whatever is
+already queued drains, so the delay is however far behind your pipeline already
+was rather than a property of the update. Against a live endpoint, a consumer
+running about 15 seconds behind kept receiving the old set for roughly that
+long, and the first updates matching the new set arrived stale by the same
+margin before catching up. A pipeline keeping pace sees the change almost at
+once. A returned `send` means the request was handed off, not that the
+subscription has changed.
+
 A set the server refuses, by exceeding its configured filter limits for
 example, comes back on the stream with a code the client does not retry, which
 ends the run. An update the provider will not accept stops the runtime rather

@@ -106,6 +106,19 @@ impl<S: SourceTrait> Runtime<S> {
     /// runtime then drops every update of it with only a trace-level line, so
     /// take the keys from the parsers actually registered on this runtime.
     ///
+    /// The server applies the new set promptly, but a consumer sees it only
+    /// once whatever it has already queued drains, so the delay is however far
+    /// behind the pipeline already was rather than a property of the update.
+    /// Measured against a live endpoint, a consumer running about 15 seconds
+    /// behind kept receiving the old set for roughly that long after the send,
+    /// and the first updates matching the new set arrived stale by the same
+    /// margin before catching up to real time. A pipeline keeping pace sees
+    /// the change almost at once.
+    ///
+    /// Treat a returned `send` as the request having been handed off, not as
+    /// the subscription having changed, and keep handlers able to cope with
+    /// updates matching the old set until the backlog clears.
+    ///
     /// Delivery is best effort. A set rejected while the source is between
     /// connections is retried once the stream recovers, but nothing reports
     /// back to the sender either way.
