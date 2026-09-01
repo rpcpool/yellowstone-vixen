@@ -175,6 +175,9 @@ fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> 
     request
 }
 
+/// How often a filter set held after a sink rejection is retried.
+const RETRY_HELD_FILTERS_EVERY: Duration = Duration::from_secs(5);
+
 /// Send `filters` to the server, handing it back unsent if the sink rejects it.
 ///
 /// A rejection means the request channel is disconnected. With auto-reconnect
@@ -196,6 +199,8 @@ async fn send_filter_update(
         accounts = request.accounts.len(),
         transactions = request.transactions.len(),
         slots = request.slots.len(),
+        blocks = request.blocks.len(),
+        blocks_meta = request.blocks_meta.len(),
         "Sending filter update to the live subscription"
     );
 
@@ -224,10 +229,7 @@ impl SourceTrait for YellowstoneGrpcSource {
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), ShipsternError> {
-        let closed = {
-            let (_, rx) = mpsc::channel(1);
-            rx
-        };
+        let (_, closed) = mpsc::channel(1);
 
         self.run(tx, status_tx, closed).await
     }
@@ -303,6 +305,13 @@ impl YellowstoneGrpcSource {
         let mut pending_filters: Option<Filters> = None;
         let mut filter_updates_sent: u64 = 0;
 
+        // A held set cannot wait on the stream to produce again. The filter it
+        // is replacing may match nothing, and the client swallows its own
+        // keepalive messages rather than yielding them, so there are live
+        // connections on which no update ever arrives to retry from.
+        let mut retry = tokio::time::interval(RETRY_HELD_FILTERS_EVERY);
+        retry.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+
         let exit_status = loop {
             tokio::select! {
                 update = stream.next() => match update {
@@ -348,6 +357,16 @@ impl YellowstoneGrpcSource {
                     },
                 },
 
+                _ = retry.tick(), if pending_filters.is_some() => {
+                    if let Some(filters) = pending_filters.take() {
+                        pending_filters = send_filter_update(&mut sink, &config, filters).await;
+
+                        if pending_filters.is_none() {
+                            filter_updates_sent += 1;
+                        }
+                    }
+                },
+
                 update = filter_updates.recv(), if accept_filter_updates => {
                     let Some(filters) = update else {
                         // Nobody holds the sending half any more, so leave this
@@ -366,6 +385,10 @@ impl YellowstoneGrpcSource {
                 },
             }
         };
+
+        if pending_filters.is_some() {
+            tracing::warn!("Connection ended with a filter update still unsent");
+        }
 
         let _ = status_tx.send(exit_status);
 

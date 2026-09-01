@@ -125,9 +125,11 @@ impl<S: SourceTrait> Runtime<S> {
     ///
     /// A set the server itself refuses, by exceeding its configured filter
     /// limits for example, is answered on the stream with a code the client
-    /// does not treat as recoverable, which ends the run. Sending a set the
-    /// provider will not accept therefore stops the runtime rather than
-    /// leaving the previous subscription in place.
+    /// does not treat as recoverable, and the run ends with that error rather
+    /// than the previous subscription staying in place. Under [`Self::run`]
+    /// and [`Self::run_async`] that error is fatal and exits the process, so a
+    /// set the provider will not accept takes the whole indexer down. Use
+    /// [`Self::try_run_async`] if a caller needs to survive one.
     ///
     /// Returns `None` when the source does not support filter updates, or
     /// when the sender has already been taken. Call this before running the

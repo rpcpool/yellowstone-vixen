@@ -15,9 +15,12 @@ use crate::{
 
 /// Depth of the filter update channel handed to callers by
 /// [`Runtime::filter_updates`]. Updates are rare, so a shallow queue is enough
-/// to keep a caller from blocking on a short burst. The queue does not
-/// coalesce: every set sent is forwarded, and the server applies them in order
-/// and ends on the newest.
+/// to keep a caller from blocking on a short burst.
+///
+/// Queued sets are forwarded in order and the server ends on the newest. The
+/// exception is a set the sink rejected: the source holds that one and a newer
+/// arrival replaces it rather than queueing behind it, so an intermediate set
+/// can be skipped after a rejection.
 const FILTER_UPDATE_CHANNEL_SIZE: usize = 8;
 
 /// Helper trait for defining the intended use for a builder.

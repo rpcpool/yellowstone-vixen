@@ -1,6 +1,6 @@
 use std::{
     borrow::Cow,
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{
         atomic::{AtomicUsize, Ordering},
         Mutex,
@@ -9,7 +9,9 @@ use std::{
 };
 
 use async_trait::async_trait;
-use shipstern_core::{Filters, ParseResult, Parser, Prefilter, SlotUpdate};
+use shipstern_core::{
+    AccountPrefilter, Filters, ParseResult, Parser, Prefilter, Pubkey, SlotUpdate,
+};
 use tokio::sync::{
     mpsc::{Receiver, Sender},
     oneshot,
@@ -433,10 +435,22 @@ impl SourceTrait for MockFilterUpdateSource {
     }
 }
 
+/// A filter set carrying an actual account prefilter. `Prefilter::default()`
+/// has every sub-filter unset and converts to an entirely empty
+/// `SubscribeRequest`, so a test built on it would pass on a payload that says
+/// nothing on the wire.
 fn filters_for(ids: &[&str]) -> Filters {
+    let prefilter = Prefilter {
+        account: Some(AccountPrefilter {
+            accounts: HashSet::new(),
+            owners: HashSet::from([Pubkey::default()]),
+        }),
+        ..Default::default()
+    };
+
     Filters::new(
         ids.iter()
-            .map(|id| ((*id).to_owned(), Prefilter::default()))
+            .map(|id| ((*id).to_owned(), prefilter.clone()))
             .collect::<HashMap<_, _>>(),
     )
 }
