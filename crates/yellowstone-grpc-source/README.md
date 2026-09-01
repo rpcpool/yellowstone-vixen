@@ -19,6 +19,45 @@ The [`Source`](https://github.com/solana-rpc/shipstern/blob/main/crates/runtime/
 - Configure filters for data processing
 - Manage source-specific configuration
 
+## Runtime filter updates
+
+The gRPC source keeps the `SubscribeRequest` sink that `yellowstone-grpc-client`
+returns next to the update stream, so a caller can change the subscription
+without tearing down the connection and losing messages during the reconnect.
+
+Take the sender off the runtime before running it, because `run` and
+`run_async` both consume the runtime:
+
+```rust
+let mut runtime = Runtime::<YellowstoneGrpcSource>::builder()
+    .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+    .try_build(config)?;
+
+if let Some(filter_updates) = runtime.filter_updates() {
+    tokio::spawn(async move {
+        filter_updates.send(new_filters).await.ok();
+    });
+}
+
+runtime.run_async().await;
+```
+
+Each `Filters` sent replaces the whole subscription rather than adding to it,
+which is what the server does with a mid-stream request, so send the complete
+set every time.
+
+The map keys are parser IDs. A key that matches no registered pipeline still
+changes what the server sends, and the runtime then discards all of it at trace
+level, so take the keys from the parsers you registered. Delivery is best
+effort: a set rejected while the source is between connections is retried once
+the stream recovers, but the sender is not told either way.
+
+`Runtime::filter_updates` returns `None` for sources that do not implement
+this, which today is every source except gRPC. Whether an update takes effect
+also depends on the provider. Both `yellowstone-grpc-geyser` and `richat` apply
+mid-stream requests to a live subscription, but a deployment can sit behind
+infrastructure that does not forward them.
+
 ## Creating a Custom Source
 
 Here's a step-by-step guide to creating your own source:
