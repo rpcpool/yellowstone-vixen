@@ -110,6 +110,12 @@ impl<S: SourceTrait> Runtime<S> {
     /// connections is retried once the stream recovers, but nothing reports
     /// back to the sender either way.
     ///
+    /// A set the server itself refuses, by exceeding its configured filter
+    /// limits for example, is answered on the stream with a code the client
+    /// does not treat as recoverable, which ends the run. Sending a set the
+    /// provider will not accept therefore stops the runtime rather than
+    /// leaving the previous subscription in place.
+    ///
     /// Returns `None` when the source does not support filter updates, or
     /// when the sender has already been taken. Call this before running the
     /// runtime, since [`Self::run`], [`Self::try_run`], [`Self::run_async`]

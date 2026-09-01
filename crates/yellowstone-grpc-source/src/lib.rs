@@ -301,6 +301,7 @@ impl YellowstoneGrpcSource {
 
         let mut accept_filter_updates = true;
         let mut pending_filters: Option<Filters> = None;
+        let mut filter_updates_sent: u64 = 0;
 
         let exit_status = loop {
             tokio::select! {
@@ -319,10 +320,24 @@ impl YellowstoneGrpcSource {
                         if let Some(filters) = pending_filters.take() {
                             pending_filters =
                                 send_filter_update(&mut sink, &config, filters).await;
+
+                            if pending_filters.is_none() {
+                                filter_updates_sent += 1;
+                            }
                         }
                     },
                     Some(Err(status)) => {
-                        tracing::warn!(code = ?status.code(), message = %status.message(), "Received error status from stream");
+                        // A server that rejects a filter set answers on the stream
+                        // rather than the sink, and the codes it uses for that are
+                        // not recoverable, so this is where a bad update surfaces.
+                        // Report the count so an operator can tell that apart from
+                        // an unrelated server error.
+                        tracing::warn!(
+                            code = ?status.code(),
+                            message = %status.message(),
+                            filter_updates_sent,
+                            "Received error status from stream"
+                        );
                         let code = status.code();
                         let message = status.message().to_string();
                         let _ = tx.send(Err(status)).await;
@@ -344,6 +359,10 @@ impl YellowstoneGrpcSource {
                     // A newer set supersedes anything still held, because every
                     // set is complete rather than a delta.
                     pending_filters = send_filter_update(&mut sink, &config, filters).await;
+
+                    if pending_filters.is_none() {
+                        filter_updates_sent += 1;
+                    }
                 },
             }
         };

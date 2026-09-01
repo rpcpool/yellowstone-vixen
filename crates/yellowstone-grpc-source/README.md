@@ -52,6 +52,12 @@ level, so take the keys from the parsers you registered. Delivery is best
 effort: a set rejected while the source is between connections is retried once
 the stream recovers, but the sender is not told either way.
 
+A set the server refuses, by exceeding its configured filter limits for
+example, comes back on the stream with a code the client does not retry, which
+ends the run. An update the provider will not accept stops the runtime rather
+than leaving the previous subscription in place, so validate against the
+provider's limits before sending one.
+
 `Runtime::filter_updates` returns `None` for sources that do not implement
 this, which today is every source except gRPC. Whether an update takes effect
 also depends on the provider. Both `yellowstone-grpc-geyser` and `richat` apply
