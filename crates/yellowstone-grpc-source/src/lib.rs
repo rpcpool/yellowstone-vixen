@@ -149,6 +149,24 @@ pub struct YellowstoneGrpcSource {
     config: YellowstoneGrpcConfig,
 }
 
+/// Build the wire subscription for `filters`, layering on the commitment the
+/// `From<Filters>` conversion leaves unset.
+///
+/// `from_slot` is deliberately not applied here. It is a one-time start
+/// position rather than a steady-state setting, which is why the client
+/// library overwrites the field with the live checkpoint on reconnect instead
+/// of reusing the configured value. Only the initial subscribe sets it.
+///
+fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> SubscribeRequest {
+    let mut request: SubscribeRequest = filters.into();
+
+    if let Some(commitment_level) = config.commitment_level {
+        request.commitment = Some(commitment_level as i32);
+    }
+
+    request
+}
+
 #[async_trait]
 impl SourceTrait for YellowstoneGrpcSource {
     type Config = YellowstoneGrpcConfig;
@@ -179,13 +197,8 @@ impl SourceTrait for YellowstoneGrpcSource {
 
         let mut client = builder.connect().await?;
 
-        let mut subscribe_request: SubscribeRequest = filters.into();
-        if let Some(from_slot) = config.from_slot {
-            subscribe_request.from_slot = Some(from_slot);
-        }
-        if let Some(commitment_level) = config.commitment_level {
-            subscribe_request.commitment = Some(commitment_level as i32);
-        }
+        let mut subscribe_request = build_subscribe_request(filters, &config);
+        subscribe_request.from_slot = config.from_slot;
 
         tracing::debug!(
             has_transactions = !subscribe_request.transactions.is_empty(),
@@ -238,7 +251,64 @@ impl SourceTrait for YellowstoneGrpcSource {
 
 #[cfg(test)]
 mod tests {
-    use super::YellowstoneGrpcConfig;
+    use std::collections::HashMap;
+
+    use shipstern_core::Filters;
+
+    use super::{build_subscribe_request, CommitmentLevel, YellowstoneGrpcConfig};
+
+    fn config_from(toml_src: &str) -> YellowstoneGrpcConfig {
+        toml::from_str(toml_src).expect("config must deserialize")
+    }
+
+    /// The commitment `Filters` does not carry is layered on by the builder.
+    #[test]
+    fn subscribe_request_carries_commitment() {
+        let config = config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            commitment-level = "finalized"
+        "#,
+        );
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert_eq!(request.commitment, Some(CommitmentLevel::Finalized as i32));
+    }
+
+    /// A configured `from-slot` is a resume position, so the builder leaves it
+    /// alone and the initial subscribe sets it at the call site.
+    #[test]
+    fn subscribe_request_omits_from_slot() {
+        let config = config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            from-slot = 350000000
+        "#,
+        );
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert_eq!(request.from_slot, None);
+    }
+
+    /// Without a commitment the request keeps what the `Filters` conversion
+    /// produced, which leaves it unset.
+    #[test]
+    fn subscribe_request_omits_unset_commitment() {
+        let config = config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+        "#,
+        );
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert_eq!(request.commitment, None);
+    }
 
     /// A config file predating the reconnect fields must still deserialize:
     /// missing `Option` keys become `None`, and the missing `auto-reconnect`
