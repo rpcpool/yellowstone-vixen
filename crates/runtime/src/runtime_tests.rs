@@ -1,12 +1,19 @@
 use std::{
     borrow::Cow,
-    sync::atomic::{AtomicUsize, Ordering},
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Mutex,
+    },
     time::Duration,
 };
 
 use async_trait::async_trait;
-use shipstern_core::{ParseResult, Parser, Prefilter, SlotUpdate};
-use tokio::sync::{mpsc::Sender, oneshot};
+use shipstern_core::{Filters, ParseResult, Parser, Prefilter, SlotUpdate};
+use tokio::sync::{
+    mpsc::{Receiver, Sender},
+    oneshot,
+};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateSlot},
     tonic,
@@ -371,6 +378,119 @@ impl Handler<SlotUpdate, SlotUpdate> for SlowSlotHandler {
         SLOW_SLOT_HANDLED.fetch_add(1, Ordering::Relaxed);
         Ok(())
     }
+}
+
+/// Parser IDs carried by the filter sets a source received through the
+/// runtime filter update channel. Tests run in parallel and all share this,
+/// so each one records under its own ID and asserts on that ID alone.
+static RECEIVED_FILTER_IDS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+
+/// Parser ID used only by [`test_filter_updates_reach_a_supporting_source`].
+const SWAPPED_PARSER_ID: &str = "test::SwappedParser";
+
+#[derive(Debug)]
+struct MockFilterUpdateSource;
+
+#[async_trait]
+impl SourceTrait for MockFilterUpdateSource {
+    type Config = NullConfig;
+
+    fn new(_: NullConfig, _: Filters) -> Self { Self }
+
+    fn supports_filter_updates() -> bool { true }
+
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+        signal_stream_ended(status_tx);
+        hold_channel_open_briefly().await;
+        drop(tx);
+        Ok(())
+    }
+
+    async fn connect_with_filter_updates(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+        mut filter_updates: Receiver<Filters>,
+    ) -> Result<(), Error> {
+        wait_for_runtime_ready().await;
+
+        if let Some(filters) = filter_updates.recv().await {
+            let mut ids = filters.parsers_filters.keys().cloned().collect::<Vec<_>>();
+            ids.sort();
+
+            RECEIVED_FILTER_IDS.lock().unwrap().extend(ids);
+        }
+
+        signal_stream_ended(status_tx);
+        hold_channel_open_briefly().await;
+        drop(tx);
+        Ok(())
+    }
+}
+
+fn filters_for(ids: &[&str]) -> Filters {
+    Filters::new(
+        ids.iter()
+            .map(|id| ((*id).to_owned(), Prefilter::default()))
+            .collect::<HashMap<_, _>>(),
+    )
+}
+
+#[tokio::test]
+async fn test_filter_updates_reach_a_supporting_source() {
+    let mut runtime = Runtime::<MockFilterUpdateSource>::builder()
+        .try_build(default_test_config())
+        .unwrap();
+
+    let updates = runtime
+        .filter_updates()
+        .expect("source advertises filter update support");
+
+    updates
+        .send(filters_for(&[SWAPPED_PARSER_ID]))
+        .await
+        .unwrap();
+
+    assert_server_hangup(runtime.try_run_async().await);
+
+    let received = RECEIVED_FILTER_IDS.lock().unwrap().clone();
+    assert!(
+        received.contains(&SWAPPED_PARSER_ID.to_owned()),
+        "source never saw the updated filter set, recorded {received:?}"
+    );
+}
+
+#[tokio::test]
+async fn test_filter_updates_unavailable_when_source_does_not_support_them() {
+    let mut runtime = Runtime::<MockStreamEndSource>::builder()
+        .try_build(default_test_config())
+        .unwrap();
+
+    assert!(runtime.filter_updates().is_none());
+}
+
+#[tokio::test]
+async fn test_filter_updates_handed_out_only_once() {
+    let mut runtime = Runtime::<MockFilterUpdateSource>::builder()
+        .try_build(default_test_config())
+        .unwrap();
+
+    assert!(runtime.filter_updates().is_some());
+    assert!(runtime.filter_updates().is_none());
+}
+
+#[tokio::test]
+async fn test_source_runs_when_the_filter_update_handle_is_never_taken() {
+    let runtime = Runtime::<MockFilterUpdateSource>::builder()
+        .try_build(default_test_config())
+        .unwrap();
+
+    assert_server_hangup(runtime.try_run_async().await);
 }
 
 #[tokio::test]
