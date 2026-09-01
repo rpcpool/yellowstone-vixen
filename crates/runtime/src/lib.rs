@@ -15,6 +15,7 @@
 use std::marker::PhantomData;
 
 use config::BufferConfig;
+use shipstern_core::Filters;
 use tokio::sync::{mpsc, oneshot};
 use yellowstone_grpc_proto::tonic::Status;
 
@@ -83,6 +84,8 @@ pub struct Runtime<S: SourceTrait> {
     buffer: BufferConfig,
     source: S::Config,
     pipelines: handler::PipelineSets,
+    filter_updates_tx: Option<mpsc::Sender<Filters>>,
+    filter_updates_rx: mpsc::Receiver<Filters>,
     #[cfg(feature = "prometheus")]
     metrics_registry: prometheus::Registry,
     _source: PhantomData<S>,
@@ -91,6 +94,34 @@ pub struct Runtime<S: SourceTrait> {
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new runtime builder.
     pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
+
+    /// Take the sending half of the filter update channel.
+    ///
+    /// Each [`Filters`] sent replaces the whole subscription rather than
+    /// adding to it, because that is what the gRPC servers do with a
+    /// mid-stream request, so send the complete set every time.
+    ///
+    /// Keys are parser IDs. A key matching no registered pipeline still
+    /// changes the wire subscription, so the server streams that data and the
+    /// runtime then drops every update of it with only a trace-level line, so
+    /// take the keys from the parsers actually registered on this runtime.
+    ///
+    /// Delivery is best effort. A set rejected while the source is between
+    /// connections is retried once the stream recovers, but nothing reports
+    /// back to the sender either way.
+    ///
+    /// Returns `None` when the source does not support filter updates, or
+    /// when the sender has already been taken. Call this before running the
+    /// runtime, since [`Self::run`], [`Self::try_run`], [`Self::run_async`]
+    /// and [`Self::try_run_async`] all consume it.
+    ///
+    pub fn filter_updates(&mut self) -> Option<mpsc::Sender<Filters>> {
+        if !S::supports_filter_updates() {
+            return None;
+        }
+
+        self.filter_updates_tx.take()
+    }
 }
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new Tokio runtime and run the Shipstern runtime within it,
@@ -252,9 +283,17 @@ impl<S: SourceTrait> Runtime<S> {
         let filters = self.pipelines.filters();
 
         let source = S::new(self.source, filters);
+        let filter_updates = self.filter_updates_rx;
+
+        // Close the channel when nobody asked for the sending half, so a source
+        // that waits on updates is not left waiting on a sender that can never
+        // produce one.
+        drop(self.filter_updates_tx);
 
         tokio::spawn(async move {
-            let _ = source.connect(tx, status_tx).await;
+            let _ = source
+                .connect_with_filter_updates(tx, status_tx, filter_updates)
+                .await;
         });
 
         let signal;

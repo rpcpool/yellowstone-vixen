@@ -3,6 +3,7 @@ use shipstern_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, BlockUpdate, SlotUpdate,
     TransactionUpdate,
 };
+use tokio::sync::mpsc;
 
 use crate::{
     config::ShipsternConfig,
@@ -11,6 +12,13 @@ use crate::{
     sources::SourceTrait,
     util, Runtime,
 };
+
+/// Depth of the filter update channel handed to callers by
+/// [`Runtime::filter_updates`]. Updates are rare, so a shallow queue is enough
+/// to keep a caller from blocking on a short burst. The queue does not
+/// coalesce: every set sent is forwarded, and the server applies them in order
+/// and ends on the newest.
+const FILTER_UPDATE_CHANNEL_SIZE: usize = 8;
 
 /// Helper trait for defining the intended use for a builder.
 pub trait BuilderKind: Default {
@@ -265,10 +273,14 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             return Err(BuilderError::SlotPipelineCollision);
         }
 
+        let (filter_updates_tx, filter_updates_rx) = mpsc::channel(FILTER_UPDATE_CHANNEL_SIZE);
+
         Ok(Runtime {
             buffer: buffer_cfg,
             source: source_cfg,
             pipelines,
+            filter_updates_tx: Some(filter_updates_tx),
+            filter_updates_rx,
             _source: std::marker::PhantomData,
             #[cfg(feature = "prometheus")]
             metrics_registry,
