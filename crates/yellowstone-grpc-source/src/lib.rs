@@ -9,7 +9,7 @@ use shipstern::{
 };
 use shipstern_core::Filters;
 use tokio::sync::{
-    mpsc::{self, Receiver, Sender},
+    mpsc::{Receiver, Sender},
     oneshot,
 };
 use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig, SubscribeRequestSink};
@@ -175,6 +175,19 @@ fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> 
     request
 }
 
+/// Yield the next filter set, or never resolve when the caller never asked for
+/// updates.
+///
+/// `select!` evaluates a disabled branch's expression before deciding not to
+/// poll it, so this cannot be an `unwrap` guarded by a precondition.
+///
+async fn next_filter_update(filter_updates: &mut Option<Receiver<Filters>>) -> Option<Filters> {
+    match filter_updates {
+        Some(rx) => rx.recv().await,
+        None => std::future::pending().await,
+    }
+}
+
 /// How often a filter set held after a sink rejection is retried.
 const RETRY_HELD_FILTERS_EVERY: Duration = Duration::from_secs(5);
 
@@ -232,9 +245,7 @@ impl SourceTrait for YellowstoneGrpcSource {
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), ShipsternError> {
-        let (_, closed) = mpsc::channel(1);
-
-        self.run(tx, status_tx, closed).await
+        self.run(tx, status_tx, None).await
     }
 
     async fn connect_with_filter_updates(
@@ -243,7 +254,7 @@ impl SourceTrait for YellowstoneGrpcSource {
         status_tx: oneshot::Sender<SourceExitStatus>,
         filter_updates: Receiver<Filters>,
     ) -> Result<(), ShipsternError> {
-        self.run(tx, status_tx, filter_updates).await
+        self.run(tx, status_tx, Some(filter_updates)).await
     }
 }
 
@@ -252,15 +263,14 @@ impl YellowstoneGrpcSource {
     /// any filter set that arrives on `filter_updates` to the server so it
     /// replaces the live subscription.
     ///
-    /// An already closed `filter_updates` is expected rather than an error:
-    /// it is what `connect` passes when the caller never asked for updates,
-    /// and it retires the update branch after one poll.
+    /// `filter_updates` is `None` when the caller never asked for updates,
+    /// which is what `connect` passes.
     ///
     async fn run(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        mut filter_updates: Receiver<Filters>,
+        mut filter_updates: Option<Receiver<Filters>>,
     ) -> Result<(), ShipsternError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
@@ -304,7 +314,6 @@ impl YellowstoneGrpcSource {
 
         tracing::debug!("gRPC stream started");
 
-        let mut accept_filter_updates = true;
         let mut pending_filters: Option<Filters> = None;
         let mut filter_updates_sent: u64 = 0;
 
@@ -356,11 +365,11 @@ impl YellowstoneGrpcSource {
                     }
                 },
 
-                update = filter_updates.recv(), if accept_filter_updates => {
+                update = next_filter_update(&mut filter_updates) => {
                     let Some(filters) = update else {
-                        // Nobody holds the sending half any more, so leave this
-                        // branch alone for the rest of the connection.
-                        accept_filter_updates = false;
+                        // Nobody holds the sending half any more, so retire the
+                        // branch for the rest of the connection.
+                        filter_updates = None;
                         continue;
                     };
 
