@@ -121,7 +121,10 @@ impl<S: SourceTrait> Runtime<S> {
     ///
     /// Delivery is best effort. A set rejected while the source is between
     /// connections is retried once the stream recovers, but nothing reports
-    /// back to the sender either way.
+    /// back to the sender either way, and a newer set arriving in the meantime
+    /// replaces the held one rather than queueing behind it. Every set is
+    /// complete rather than a delta, so the server still ends on the newest,
+    /// but an intermediate set can be skipped.
     ///
     /// A set the server itself refuses, by exceeding its configured filter
     /// limits for example, is answered on the stream with a code the client
