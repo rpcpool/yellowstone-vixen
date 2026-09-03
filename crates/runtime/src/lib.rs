@@ -307,7 +307,7 @@ impl<S: SourceTrait> Runtime<S> {
         let filters = self.pipelines.filters();
 
         let source = S::new(self.source, filters);
-        let filter_updates = self.filter_updates_rx;
+        let filter_updates_rx = self.filter_updates_rx;
 
         // Close the channel when nobody asked for the sending half, so a source
         // that waits on updates is not left waiting on a sender that can never
@@ -316,7 +316,7 @@ impl<S: SourceTrait> Runtime<S> {
 
         tokio::spawn(async move {
             let _ = source
-                .connect_with_filter_updates(tx, status_tx, filter_updates)
+                .connect_with_filter_updates(tx, status_tx, filter_updates_rx)
                 .await;
         });
 

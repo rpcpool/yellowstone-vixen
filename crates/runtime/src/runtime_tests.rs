@@ -417,11 +417,11 @@ impl SourceTrait for MockFilterUpdateSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        mut filter_updates: Receiver<Filters>,
+        mut filter_updates_rx: Receiver<Filters>,
     ) -> Result<(), Error> {
         wait_for_runtime_ready().await;
 
-        if let Some(filters) = filter_updates.recv().await {
+        if let Some(filters) = filter_updates_rx.recv().await {
             let mut ids = filters.parsers_filters.keys().cloned().collect::<Vec<_>>();
             ids.sort();
 

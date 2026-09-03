@@ -60,9 +60,9 @@ pub trait SourceTrait: std::fmt::Debug + Send + Sync + 'static {
     fn supports_filter_updates() -> bool { false }
 
     /// Connect and stream updates, applying filter sets received on
-    /// `filter_updates` to the live subscription.
+    /// `filter_updates_rx` to the live subscription.
     ///
-    /// The default ignores `filter_updates` and defers to [`Self::connect`],
+    /// The default ignores `filter_updates_rx` and defers to [`Self::connect`],
     /// so a source that cannot change its subscription mid-stream needs no
     /// implementation. Override this together with
     /// [`Self::supports_filter_updates`].
@@ -71,9 +71,9 @@ pub trait SourceTrait: std::fmt::Debug + Send + Sync + 'static {
         &self,
         tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        filter_updates: Receiver<Filters>,
+        filter_updates_rx: Receiver<Filters>,
     ) -> Result<(), crate::Error> {
-        drop(filter_updates);
+        drop(filter_updates_rx);
 
         self.connect(tx, status_tx).await
     }
