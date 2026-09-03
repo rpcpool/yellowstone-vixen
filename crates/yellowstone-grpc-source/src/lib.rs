@@ -337,10 +337,16 @@ impl YellowstoneGrpcSource {
                     },
                     Some(Err(status)) => {
                         // A server that rejects a filter set answers on the stream
-                        // rather than the sink, and the codes it uses for that are
-                        // not recoverable, so this is where a bad update surfaces.
-                        // Report the count so an operator can tell that apart from
-                        // an unrelated server error.
+                        // rather than the sink, so this is where a bad update
+                        // surfaces. Report the count so an operator can tell that
+                        // apart from an unrelated server error.
+                        //
+                        // Only for a code the client treats as terminal, though.
+                        // The sink records a request into the reconnect state as
+                        // soon as the local channel takes it, before the server has
+                        // seen it, so a set refused with a recoverable code is
+                        // resubscribed on reconnect and refused again without ever
+                        // reaching this arm.
                         tracing::warn!(
                             code = ?status.code(),
                             message = %status.message(),
@@ -358,11 +364,11 @@ impl YellowstoneGrpcSource {
                 },
 
                 _ = retry.tick(), if pending_filters.is_some() => {
-                    if let Some(filters) = pending_filters.take() {
-                        pending_filters =
-                            send_filter_update(&mut sink, &config, filters, &mut filter_updates_sent)
-                                .await;
-                    }
+                    let Some(filters) = pending_filters.take() else { continue };
+
+                    pending_filters =
+                        send_filter_update(&mut sink, &config, filters, &mut filter_updates_sent)
+                            .await;
                 },
 
                 update = next_filter_update(&mut filter_updates) => {
