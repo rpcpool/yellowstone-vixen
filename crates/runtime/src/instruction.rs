@@ -272,6 +272,7 @@ mod tests {
                         instructions,
                         versioned: false,
                         address_table_lookups: vec![],
+                        config: None,
                     }),
                 }),
                 meta: Some(TransactionStatusMeta {

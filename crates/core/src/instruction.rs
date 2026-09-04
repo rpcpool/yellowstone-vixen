@@ -7,7 +7,7 @@ use yellowstone_grpc_proto::{
     prelude::MessageHeader,
     solana::storage::confirmed_block::{
         CompiledInstruction, InnerInstruction, InnerInstructions, Message, Reward, TokenBalance,
-        Transaction, TransactionError, TransactionStatusMeta,
+        Transaction, TransactionConfig, TransactionError, TransactionStatusMeta,
     },
 };
 
@@ -95,6 +95,8 @@ pub struct InstructionShared {
     pub accounts: AccountKeys,
     /// The header of the transaction.
     pub message_header: MessageHeader,
+    /// The inline transaction budget config introduced by Transaction V1
+    pub transaction_config: Option<TransactionConfig>,
 }
 
 /// A parsed instruction from a transaction update.
@@ -350,6 +352,7 @@ impl InstructionUpdate {
             instructions,
             versioned: _,
             address_table_lookups: _,
+            config,
         } = message.ok_or(Missing::TransactionMessage)?;
 
         let shared = Arc::new(InstructionShared {
@@ -373,6 +376,7 @@ impl InstructionUpdate {
                 dynamic_ro: loaded_readonly_addresses,
             },
             message_header: header.ok_or(Missing::TransactionMessageHeader)?,
+            transaction_config: config,
         });
 
         #[allow(clippy::cast_possible_truncation)] // instruction count never exceeds u32::MAX
@@ -687,7 +691,8 @@ mod tests {
 
     use super::{
         CompiledInstruction, InnerInstruction, InnerInstructions, InstructionShared,
-        InstructionUpdate, Message, MessageHeader, Transaction, TransactionStatusMeta,
+        InstructionUpdate, Message, MessageHeader, Transaction, TransactionConfig,
+        TransactionStatusMeta,
     };
     use crate::TransactionUpdate;
 
@@ -905,6 +910,7 @@ mod tests {
                         instructions: vec![compiled_instruction(0)],
                         versioned: false,
                         address_table_lookups: vec![],
+                        config: None,
                     }),
                 }),
                 meta: Some(TransactionStatusMeta {
@@ -957,6 +963,7 @@ mod tests {
                         instructions: vec![compiled_instruction(0)],
                         versioned: false,
                         address_table_lookups: vec![],
+                        config: None,
                     }),
                 }),
                 meta: Some(TransactionStatusMeta {
@@ -1036,6 +1043,7 @@ mod tests {
                         ],
                         versioned: false,
                         address_table_lookups: vec![],
+                        config: None,
                     }),
                 }),
                 meta: Some(TransactionStatusMeta {
@@ -1087,6 +1095,87 @@ mod tests {
             accounts: vec![],
             data: vec![],
             stack_height: Some(stack_height),
+        }
+    }
+
+    #[test]
+    fn v1_transaction_config_is_exposed_on_shared_tx_ctx() {
+        let txn = transaction_v1_with_inline_budget();
+
+        let instructions =
+            InstructionUpdate::build_from_txn(&txn).expect("v1 transaction should build");
+
+        assert_eq!(instructions.len(), 1);
+        let config = instructions[0]
+            .shared
+            .transaction_config
+            .as_ref()
+            .expect("v1 transaction_config should be populated");
+        assert_eq!(config.priority_fee, Some(5_000));
+        assert_eq!(config.compute_unit_limit, Some(200_000));
+        assert_eq!(config.loaded_accounts_data_size_limit, Some(65_536));
+        assert_eq!(config.heap_size, Some(262_144));
+    }
+
+    #[test]
+    fn legacy_transaction_has_no_inline_budget() {
+        let txn = transaction_with_missing_inner_stack_heights();
+
+        let instructions =
+            InstructionUpdate::build_from_txn(&txn).expect("transaction should build");
+
+        assert!(instructions[0].shared.transaction_config.is_none());
+    }
+
+    fn transaction_v1_with_inline_budget() -> TransactionUpdate {
+        TransactionUpdate {
+            slot: 1,
+            transaction: Some(SubscribeUpdateTransactionInfo {
+                signature: vec![9; 64],
+                is_vote: false,
+                transaction: Some(Transaction {
+                    signatures: vec![vec![9; 64]],
+                    message: Some(Message {
+                        header: Some(MessageHeader {
+                            num_required_signatures: 1,
+                            num_readonly_signed_accounts: 0,
+                            num_readonly_unsigned_accounts: 0,
+                        }),
+                        // V1 inlines every address, so there are no ATL entries.
+                        account_keys: (0..8).map(|byte| vec![byte; 32]).collect(),
+                        recent_blockhash: vec![7; 32],
+                        instructions: vec![compiled_instruction(0)],
+                        versioned: true,
+                        address_table_lookups: vec![],
+                        config: Some(TransactionConfig {
+                            priority_fee: Some(5_000),
+                            compute_unit_limit: Some(200_000),
+                            loaded_accounts_data_size_limit: Some(65_536),
+                            heap_size: Some(262_144),
+                        }),
+                    }),
+                }),
+                meta: Some(TransactionStatusMeta {
+                    err: None,
+                    fee: 0,
+                    pre_balances: vec![],
+                    post_balances: vec![],
+                    inner_instructions: vec![],
+                    inner_instructions_none: false,
+                    log_messages: vec![],
+                    log_messages_none: false,
+                    pre_token_balances: vec![],
+                    post_token_balances: vec![],
+                    rewards: vec![],
+                    loaded_writable_addresses: vec![],
+                    loaded_readonly_addresses: vec![],
+                    return_data: None,
+                    return_data_none: true,
+                    compute_units_consumed: None,
+                    cost_units: None,
+                }),
+                index: 0,
+            }),
         }
     }
 }
