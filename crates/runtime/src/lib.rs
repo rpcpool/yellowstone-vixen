@@ -32,6 +32,7 @@ pub use shipstern_core::bs58;
 mod buffer;
 pub mod builder;
 pub mod config;
+mod handle;
 pub mod handler;
 pub mod instruction;
 
@@ -42,6 +43,7 @@ pub mod util;
 
 pub mod filter_pipeline;
 
+pub use handle::{FilterUpdateError, RuntimeHandle};
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use shipstern_core::CommitmentLevel;
 pub use util::*;
@@ -84,7 +86,7 @@ pub struct Runtime<S: SourceTrait> {
     buffer: BufferConfig,
     source: S::Config,
     pipelines: handler::PipelineSets,
-    filter_updates_tx: Option<mpsc::Sender<Filters>>,
+    filter_updates_tx: mpsc::Sender<Filters>,
     filter_updates_rx: mpsc::Receiver<Filters>,
     #[cfg(feature = "prometheus")]
     metrics_registry: prometheus::Registry,
@@ -95,56 +97,33 @@ impl<S: SourceTrait> Runtime<S> {
     /// Create a new runtime builder.
     pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
 
-    /// Take the sending half of the filter update channel.
+    /// Create a handle for talking to this runtime once it is running.
     ///
-    /// Each [`Filters`] sent replaces the whole subscription rather than
-    /// adding to it, because that is what the gRPC servers do with a
-    /// mid-stream request, so send the complete set every time.
+    /// [`Self::run`], [`Self::try_run`], [`Self::run_async`] and
+    /// [`Self::try_run_async`] all consume the runtime, so take the handle
+    /// first. Handles are cheap to clone, and one taken from a source that
+    /// does not support filter updates still exists, but every
+    /// [`RuntimeHandle::send_filter_update`] on it fails with
+    /// [`FilterUpdateError::Unsupported`].
     ///
-    /// Keys are parser IDs. A key matching no registered pipeline still
-    /// changes the wire subscription, so the server streams that data and the
-    /// runtime then drops every update of it with only a trace-level line, so
-    /// take the keys from the parsers actually registered on this runtime.
+    /// # Example
     ///
-    /// The server applies the new set promptly, but a consumer sees it only
-    /// once whatever it has already queued drains, so the delay is however far
-    /// behind the pipeline already was rather than a property of the update.
-    /// Measured against a live endpoint, a consumer running about 15 seconds
-    /// behind kept receiving the old set for roughly that long after the send,
-    /// and the first updates matching the new set arrived stale by the same
-    /// margin before catching up to real time. A pipeline keeping pace sees
-    /// the change almost at once.
+    /// ```rust, ignore
+    /// let runtime = Runtime::<YellowstoneGrpcSource>::builder()
+    ///     .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+    ///     .try_build(config)?;
     ///
-    /// Treat a returned `send` as the request having been handed off, not as
-    /// the subscription having changed, and keep handlers able to cope with
-    /// updates matching the old set until the backlog clears.
+    /// let handle = runtime.handle();
+    /// tokio::spawn(runtime.run_async());
     ///
-    /// Delivery is best effort. A set rejected while the source is between
-    /// connections is retried once the stream recovers, but nothing reports
-    /// back to the sender either way, and a newer set arriving in the meantime
-    /// replaces the held one rather than queueing behind it. Every set is
-    /// complete rather than a delta, so the server still ends on the newest,
-    /// but an intermediate set can be skipped.
-    ///
-    /// A set the server itself refuses, by exceeding its configured filter
-    /// limits for example, is answered on the stream with a code the client
-    /// does not treat as recoverable, and the run ends with that error rather
-    /// than the previous subscription staying in place. Under [`Self::run`]
-    /// and [`Self::run_async`] that error is fatal and exits the process, so a
-    /// set the provider will not accept takes the whole indexer down. Use
-    /// [`Self::try_run_async`] if a caller needs to survive one.
-    ///
-    /// Returns `None` when the source does not support filter updates, or
-    /// when the sender has already been taken. Call this before running the
-    /// runtime, since [`Self::run`], [`Self::try_run`], [`Self::run_async`]
-    /// and [`Self::try_run_async`] all consume it.
-    ///
-    pub fn filter_updates(&mut self) -> Option<mpsc::Sender<Filters>> {
-        if !S::supports_filter_updates() {
-            return None;
-        }
+    /// handle.send_filter_update(new_filters).await?;
+    /// ```
+    #[must_use]
+    pub fn handle(&self) -> RuntimeHandle {
+        let filter_updates_tx =
+            S::supports_filter_updates().then(|| self.filter_updates_tx.clone());
 
-        self.filter_updates_tx.take()
+        RuntimeHandle::new(filter_updates_tx)
     }
 }
 impl<S: SourceTrait> Runtime<S> {
@@ -309,9 +288,9 @@ impl<S: SourceTrait> Runtime<S> {
         let source = S::new(self.source, filters);
         let filter_updates_rx = self.filter_updates_rx;
 
-        // Close the channel when nobody asked for the sending half, so a source
-        // that waits on updates is not left waiting on a sender that can never
-        // produce one.
+        // Release the runtime's own sender so the channel closes once every
+        // handle is gone, and a source that waits on updates is not left
+        // waiting on a sender that can never produce one.
         drop(self.filter_updates_tx);
 
         tokio::spawn(async move {

@@ -25,22 +25,23 @@ The gRPC source keeps the `SubscribeRequest` sink that `yellowstone-grpc-client`
 returns next to the update stream, so a caller can change the subscription
 without tearing down the connection and losing messages during the reconnect.
 
-Take the sender off the runtime before running it, because `run` and
-`run_async` both consume the runtime:
+Take a `RuntimeHandle` before running, because `run` and `run_async` both
+consume the runtime, then send updates through the handle from wherever they
+originate. Handles are cheap to clone:
 
 ```rust
-let mut runtime = Runtime::<YellowstoneGrpcSource>::builder()
+let runtime = Runtime::<YellowstoneGrpcSource>::builder()
     .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
     .try_build(config)?;
 
-if let Some(filter_updates) = runtime.filter_updates() {
-    tokio::spawn(async move {
-        filter_updates.send(new_filters).await.ok();
-    });
-}
+let handle = runtime.handle();
+tokio::spawn(runtime.run_async());
 
-runtime.run_async().await;
+handle.send_filter_update(new_filters).await?;
 ```
+
+A thread without a Tokio runtime of its own, such as one sitting next to a
+blocking `run()` call, uses `blocking_send_filter_update` instead.
 
 Each `Filters` sent replaces the whole subscription rather than adding to it,
 which is what the server does with a mid-stream request, so send the complete
@@ -67,8 +68,9 @@ ends the run. An update the provider will not accept stops the runtime rather
 than leaving the previous subscription in place, so validate against the
 provider's limits before sending one.
 
-`Runtime::filter_updates` returns `None` for sources that do not implement
-this, which today is every source except gRPC. Whether an update takes effect
+`send_filter_update` fails with `FilterUpdateError::Unsupported` for sources
+that do not implement this, which today is every source except gRPC, and with
+`FilterUpdateError::Closed` once the runtime has stopped. Whether an update takes effect
 also depends on the provider. Both `yellowstone-grpc-geyser` and `richat` apply
 mid-stream requests to a live subscription, but a deployment can sit behind
 infrastructure that does not forward them.

@@ -13,9 +13,10 @@ use crate::{
     util, Runtime,
 };
 
-/// Depth of the filter update channel handed to callers by
-/// [`Runtime::filter_updates`]. Updates are rare, so a shallow queue is enough
-/// to keep a caller from blocking on a short burst.
+/// Depth of the filter update channel behind
+/// [`RuntimeHandle::send_filter_update`](crate::RuntimeHandle::send_filter_update).
+/// Updates are rare, so a shallow queue is enough to keep a caller from
+/// blocking on a short burst.
 const FILTER_UPDATE_CHANNEL_SIZE: usize = 8;
 
 /// Helper trait for defining the intended use for a builder.
@@ -277,7 +278,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             buffer: buffer_cfg,
             source: source_cfg,
             pipelines,
-            filter_updates_tx: Some(filter_updates_tx),
+            filter_updates_tx,
             filter_updates_rx,
             _source: std::marker::PhantomData,
             #[cfg(feature = "prometheus")]

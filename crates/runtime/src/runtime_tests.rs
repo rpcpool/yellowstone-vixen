@@ -24,7 +24,7 @@ use yellowstone_grpc_proto::{
 use crate::{
     config::{BufferConfig, NullConfig, ShipsternConfig},
     sources::{SourceExitStatus, SourceTrait},
-    Error, Handler, Pipeline, Runtime,
+    Error, FilterUpdateError, Handler, Pipeline, Runtime,
 };
 
 async fn wait_for_runtime_ready() { tokio::time::sleep(Duration::from_millis(50)).await; }
@@ -457,20 +457,22 @@ fn filters_for(ids: &[&str]) -> Filters {
 
 #[tokio::test]
 async fn test_filter_updates_reach_a_supporting_source() {
-    let mut runtime = Runtime::<MockFilterUpdateSource>::builder()
+    let runtime = Runtime::<MockFilterUpdateSource>::builder()
         .try_build(default_test_config())
         .unwrap();
 
-    let updates = runtime
-        .filter_updates()
-        .expect("source advertises filter update support");
+    // Taken before the run consumes the runtime, and used while it runs, which
+    // is the shape a caller changing filters on a live subscription has.
+    let handle = runtime.handle();
 
-    updates
-        .send(filters_for(&[SWAPPED_PARSER_ID]))
-        .await
-        .unwrap();
+    let (result, ()) = tokio::join!(runtime.try_run_async(), async {
+        handle
+            .send_filter_update(filters_for(&[SWAPPED_PARSER_ID]))
+            .await
+            .unwrap();
+    });
 
-    assert_server_hangup(runtime.try_run_async().await);
+    assert_server_hangup(result);
 
     let received = RECEIVED_FILTER_IDS.lock().unwrap().clone();
     assert!(
@@ -480,22 +482,33 @@ async fn test_filter_updates_reach_a_supporting_source() {
 }
 
 #[tokio::test]
-async fn test_filter_updates_unavailable_when_source_does_not_support_them() {
-    let mut runtime = Runtime::<MockStreamEndSource>::builder()
+async fn test_filter_updates_rejected_when_source_does_not_support_them() {
+    let runtime = Runtime::<MockStreamEndSource>::builder()
         .try_build(default_test_config())
         .unwrap();
 
-    assert!(runtime.filter_updates().is_none());
+    let result = runtime
+        .handle()
+        .send_filter_update(filters_for(&["test::Unsupported"]))
+        .await;
+
+    assert_eq!(result, Err(FilterUpdateError::Unsupported));
 }
 
 #[tokio::test]
-async fn test_filter_updates_handed_out_only_once() {
-    let mut runtime = Runtime::<MockFilterUpdateSource>::builder()
+async fn test_filter_updates_rejected_once_the_runtime_is_gone() {
+    let runtime = Runtime::<MockFilterUpdateSource>::builder()
         .try_build(default_test_config())
         .unwrap();
 
-    assert!(runtime.filter_updates().is_some());
-    assert!(runtime.filter_updates().is_none());
+    let handle = runtime.handle();
+    drop(runtime);
+
+    let result = handle
+        .send_filter_update(filters_for(&["test::Dropped"]))
+        .await;
+
+    assert_eq!(result, Err(FilterUpdateError::Closed));
 }
 
 #[tokio::test]
