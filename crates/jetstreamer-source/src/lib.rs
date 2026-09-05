@@ -1560,6 +1560,9 @@ mod convert {
                     .collect(),
                 versioned,
                 address_table_lookups,
+                // Firehose transactions are decoded from the Agave-3 SDK, which
+                // has no V1 message variant, so there is never an inline budget.
+                config: None,
             }
         };
 
