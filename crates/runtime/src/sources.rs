@@ -77,9 +77,15 @@ pub trait SourceTrait: std::fmt::Debug + Send + Sync + 'static {
 ///
 /// Implementing this unlocks [`Runtime::handle`](crate::Runtime::handle) for
 /// runtimes built on the source, so a caller can only take a handle where an
-/// update can take effect. Pair it with an override of
-/// [`SourceTrait::connect_with_filter_updates`], since the marker alone does
-/// not change what the source does with the receiver.
+/// update can take effect.
+///
+/// You **must** also override
+/// [`SourceTrait::connect_with_filter_updates`]. The marker alone changes
+/// nothing about what the source does with the receiver, and its default
+/// discards it: a source that implements this and inherits that default hands
+/// out a working handle whose every update returns `Ok(())` and reaches
+/// nothing. There is no error for that case, because the marker is what the
+/// runtime trusts.
 ///
 /// ```rust, ignore
 /// impl FilterUpdateSource for YellowstoneGrpcSource {}

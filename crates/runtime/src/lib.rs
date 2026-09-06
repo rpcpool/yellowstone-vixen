@@ -121,9 +121,11 @@ impl<S: FilterUpdateSource> Runtime<S> {
     ///
     /// handle.update_filters(|filters| filters.merge(TokenProgramAccParser.id(), extra_owner))?;
     /// ```
+    ///
     #[must_use]
     pub fn handle(&self) -> RuntimeHandle { RuntimeHandle::new(Arc::clone(&self.filter_state)) }
 }
+
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new Tokio runtime and run the Shipstern runtime within it,
     /// terminating the current process if the runtime crashes.
@@ -281,10 +283,16 @@ impl<S: SourceTrait> Runtime<S> {
         #[cfg(feature = "prometheus")]
         metrics::register_metrics(&self.metrics_registry);
 
-        let filters = self.filter_state.initial().clone();
+        let mut filter_updates_rx = self.filter_updates_rx;
+
+        // Seed the initial subscribe from the latest set rather than the
+        // registered one, so an update sent between `handle()` and here is part
+        // of the first request instead of a second one that leaves the wider
+        // set live in between. Marking it seen stops the source resending the
+        // set it just subscribed with.
+        let filters = filter_updates_rx.borrow_and_update().clone();
 
         let source = S::new(self.source, filters);
-        let filter_updates_rx = self.filter_updates_rx;
 
         // Release the runtime's own reference so the slot closes once every
         // handle is gone, and a source that waits on updates is not left

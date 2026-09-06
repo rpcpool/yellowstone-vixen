@@ -3,14 +3,15 @@ use std::{
     collections::{HashMap, HashSet},
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Mutex,
+        Mutex, PoisonError,
     },
     time::Duration,
 };
 
 use async_trait::async_trait;
 use shipstern_core::{
-    AccountPrefilter, Filters, ParseResult, Parser, Prefilter, Pubkey, SlotUpdate,
+    instruction::InstructionUpdate, AccountPrefilter, Filters, ParseResult, Parser, Prefilter,
+    Pubkey, SlotUpdate,
 };
 use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_proto::{
@@ -20,8 +21,9 @@ use yellowstone_grpc_proto::{
 
 use crate::{
     config::{BufferConfig, NullConfig, ShipsternConfig},
+    instruction::InstructionPipeline,
     sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
-    Error, FilterUpdateError, Handler, Pipeline, Runtime,
+    Error, FilterUpdateError, Handler, HandlerResult, Pipeline, Runtime,
 };
 
 async fn wait_for_runtime_ready() { tokio::time::sleep(Duration::from_millis(50)).await; }
@@ -384,14 +386,20 @@ impl Handler<SlotUpdate, SlotUpdate> for SlowSlotHandler {
 /// its own owner pubkey and asserts on that marker alone.
 static RECEIVED_FILTERS: Mutex<Vec<Filters>> = Mutex::new(Vec::new());
 
+/// Sets the source was constructed with, standing in for the initial
+/// subscribe. Separate from `RECEIVED_FILTERS` so a test can tell the first
+/// request apart from the updates that follow it, under the same
+/// mark-and-filter convention.
+static INITIAL_FILTERS: Mutex<Vec<Filters>> = Mutex::new(Vec::new());
+
 #[derive(Debug)]
-struct MockFilterUpdateSource;
+struct MockFilterUpdateSource(Filters);
 
 #[async_trait]
 impl SourceTrait for MockFilterUpdateSource {
     type Config = NullConfig;
 
-    fn new(_: NullConfig, _: Filters) -> Self { Self }
+    fn new(_: NullConfig, filters: Filters) -> Self { Self(filters) }
 
     async fn connect(
         &self,
@@ -405,20 +413,28 @@ impl SourceTrait for MockFilterUpdateSource {
         Ok(())
     }
 
-    /// Records every set until the last handle is dropped, then ends the
-    /// stream, so a test controls when the run finishes by dropping its
-    /// handle.
+    /// Records the set it was constructed with, standing in for the initial
+    /// subscribe, then every set published until the last handle is dropped,
+    /// so a test controls when the run finishes by dropping its handle.
     async fn connect_with_filter_updates(
         &self,
         tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
         mut filter_updates_rx: watch::Receiver<Filters>,
     ) -> Result<(), Error> {
+        INITIAL_FILTERS
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(self.0.clone());
+
         wait_for_runtime_ready().await;
 
         while filter_updates_rx.changed().await.is_ok() {
             let filters = filter_updates_rx.borrow_and_update().clone();
-            RECEIVED_FILTERS.lock().unwrap().push(filters);
+            RECEIVED_FILTERS
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .push(filters);
         }
 
         signal_stream_ended(status_tx);
@@ -452,6 +468,20 @@ fn owned_by(marker: u8) -> Prefilter {
     }
 }
 
+/// Whether any set recorded in `recorded` carries `marker` under the slot
+/// parser. Copies out and releases the guard before the caller asserts, so a
+/// failing assertion cannot poison a static every other test locks.
+fn recorded_marker(recorded: &Mutex<Vec<Filters>>, marker: u8) -> (bool, String) {
+    let sets = recorded.lock().unwrap_or_else(PoisonError::into_inner);
+
+    let seen = sets
+        .iter()
+        .filter_map(|filters| owners_of(filters, TEST_SLOT_FILTER))
+        .any(|owners| owners.contains(&Pubkey::new([marker; 32])));
+
+    (seen, format!("{sets:?}"))
+}
+
 fn owners_of(filters: &Filters, parser_id: &str) -> Option<HashSet<Pubkey>> {
     filters
         .get(parser_id)
@@ -474,6 +504,11 @@ async fn test_update_filters_reaches_the_source_while_it_runs() {
     let handle = runtime.handle();
 
     let (result, ()) = tokio::join!(runtime.try_run_async(), async {
+        // The update has to land after the source has read its seed, or it
+        // folds into the initial subscribe and this stops testing delivery to
+        // a running source. Poll order alone does not guarantee that.
+        wait_for_runtime_ready().await;
+
         handle
             .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(1)))
             .unwrap();
@@ -484,15 +519,11 @@ async fn test_update_filters_reaches_the_source_while_it_runs() {
 
     assert_server_hangup(result);
 
-    let received = RECEIVED_FILTERS.lock().unwrap();
-    let marked = received
-        .iter()
-        .filter_map(|filters| owners_of(filters, TEST_SLOT_FILTER))
-        .any(|owners| owners.contains(&Pubkey::new([1; 32])));
+    let (marked, recorded) = recorded_marker(&RECEIVED_FILTERS, 1);
 
     assert!(
         marked,
-        "source never saw the merged owner, recorded {received:?}"
+        "source never saw the merged owner, recorded {recorded}"
     );
 }
 
@@ -557,6 +588,130 @@ async fn test_reset_filters_restores_the_registered_set() {
     assert!(owners_of(&filters, TEST_SLOT_FILTER).is_none());
 }
 
+const TEST_IX_PARSER: &str = "test::MarkerIxParser";
+
+#[derive(Debug, Clone, Copy)]
+struct MarkerIxParser;
+
+impl Parser for MarkerIxParser {
+    type Input = InstructionUpdate;
+    type Output = ();
+
+    fn id(&self) -> Cow<'static, str> { TEST_IX_PARSER.into() }
+
+    fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+    async fn parse(&self, _value: &Self::Input) -> ParseResult<Self::Output> { Ok(()) }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct MarkerIxHandler;
+
+impl Handler<(), InstructionUpdate> for MarkerIxHandler {
+    async fn handle(&self, _value: &(), _raw: &InstructionUpdate) -> HandlerResult<()> { Ok(()) }
+}
+
+fn instruction_filter_update_runtime() -> Runtime<MockFilterUpdateSource> {
+    Runtime::<MockFilterUpdateSource>::builder()
+        .instruction(Pipeline::new(MarkerIxParser, [MarkerIxHandler]))
+        .try_build(default_test_config())
+        .unwrap()
+}
+
+/// The builder bundles every instruction parser behind one
+/// [`InstructionPipeline`], so the filter set keys them under its ID rather
+/// than each parser's own. Naming the parser is the mistake the docs have to
+/// steer callers away from.
+#[tokio::test]
+async fn test_instruction_filters_are_keyed_by_the_bundle_not_the_parser() {
+    let runtime = instruction_filter_update_runtime();
+    let handle = runtime.handle();
+
+    assert_eq!(handle.filters().parser_ids().collect::<Vec<_>>(), [
+        InstructionPipeline::ID
+    ]);
+
+    let result = handle.update_filters(|filters| filters.merge(MarkerIxParser.id(), owned_by(5)));
+
+    assert_eq!(
+        result,
+        Err(FilterUpdateError::UnknownParser(TEST_IX_PARSER.to_owned()))
+    );
+
+    handle
+        .update_filters(|filters| filters.merge(InstructionPipeline::ID, owned_by(5)))
+        .unwrap();
+
+    assert_eq!(
+        owners_of(&handle.filters(), InstructionPipeline::ID),
+        Some(HashSet::from([Pubkey::new([5; 32])]))
+    );
+}
+
+/// `update_filters` holds a lock across the read, the edit and the send, so
+/// concurrent callers on separate handles serialise instead of overwriting one
+/// another. Without the lock the last writer's snapshot wins and the other
+/// owners vanish.
+#[tokio::test]
+async fn test_concurrent_update_filters_lose_no_edit() {
+    const WRITERS: u8 = 8;
+
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    let writers: Vec<_> = (0..WRITERS)
+        .map(|marker| {
+            // A clone per thread also pins that handles share one view.
+            let handle = handle.clone();
+
+            std::thread::spawn(move || {
+                handle
+                    .update_filters(|filters| {
+                        filters.merge(TEST_SLOT_FILTER, owned_by(0x40 + marker));
+                    })
+                    .unwrap();
+            })
+        })
+        .collect();
+
+    for writer in writers {
+        writer.join().expect("writer thread panicked");
+    }
+
+    let owners = owners_of(&handle.filters(), TEST_SLOT_FILTER).expect("owners must be set");
+
+    for marker in 0..WRITERS {
+        assert!(
+            owners.contains(&Pubkey::new([0x40 + marker; 32])),
+            "edit from writer {marker} was lost, got {owners:?}"
+        );
+    }
+}
+
+/// An `edit` closure that panics leaves the lock poisoned. The next caller has
+/// to get through anyway, because nothing partial was published.
+#[tokio::test]
+async fn test_update_filters_recovers_from_a_poisoned_lock() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    let poisoner = handle.clone();
+    std::thread::spawn(move || {
+        poisoner.update_filters(|_| panic!("edit blew up")).ok();
+    })
+    .join()
+    .expect_err("the writer must have panicked");
+
+    handle
+        .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(0x39)))
+        .expect("a poisoned lock must not wedge the handle");
+
+    assert_eq!(
+        owners_of(&handle.filters(), TEST_SLOT_FILTER),
+        Some(HashSet::from([Pubkey::new([0x39; 32])]))
+    );
+}
+
 #[tokio::test]
 async fn test_filter_updates_rejected_once_the_runtime_is_gone() {
     let runtime = filter_update_runtime();
@@ -566,6 +721,40 @@ async fn test_filter_updates_rejected_once_the_runtime_is_gone() {
     let result = handle.update_filters(|_| {});
 
     assert_eq!(result, Err(FilterUpdateError::Closed));
+}
+
+/// An update sent before `run` must reach the initial subscribe, not arrive as
+/// a second request that leaves the wider set live in between.
+#[tokio::test]
+async fn test_update_before_run_reaches_the_initial_subscribe() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    handle
+        .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(6)))
+        .unwrap();
+
+    let (result, ()) = tokio::join!(runtime.try_run_async(), async {
+        wait_for_runtime_ready().await;
+        drop(handle);
+    });
+
+    assert_server_hangup(result);
+
+    let (marked, subscribed) = recorded_marker(&INITIAL_FILTERS, 6);
+
+    assert!(
+        marked,
+        "initial subscribe used a stale set, subscribed with {subscribed}"
+    );
+
+    // Seeding marks the set seen, so it must not also arrive as an update.
+    let (resent, received) = recorded_marker(&RECEIVED_FILTERS, 6);
+
+    assert!(
+        !resent,
+        "seeded set was resent as an update, got {received}"
+    );
 }
 
 #[tokio::test]

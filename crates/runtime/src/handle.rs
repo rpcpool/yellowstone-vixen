@@ -15,6 +15,11 @@ pub enum FilterUpdateError {
     /// The set names a parser no pipeline on this runtime is registered for.
     /// The server would stream that data and the runtime would discard all of
     /// it, so the update is refused before anything is sent.
+    ///
+    /// Only the name is checked, not the kind of prefilter carried under it.
+    /// A prefilter whose kind does not match the pipeline registered for that
+    /// name still reaches the wire, and the runtime discards those updates the
+    /// same way, silently.
     #[error("no pipeline registered for parser `{0}`")]
     UnknownParser(String),
 }
@@ -48,21 +53,18 @@ impl FilterState {
         }
     }
 
-    /// The set the pipelines were built with.
-    pub(crate) fn initial(&self) -> &Filters { &self.initial }
-
     fn snapshot(&self) -> Filters { self.filter_updates_tx.borrow().clone() }
 
     /// Refuse a set naming a parser that has no registered pipeline.
     fn validate(&self, filters: &Filters) -> Result<(), FilterUpdateError> {
-        let unknown = filters
+        let Some(unknown) = filters
             .parser_ids()
-            .find(|id| !self.initial.parsers_filters.contains_key(*id));
+            .find(|id| self.initial.get(id).is_none())
+        else {
+            return Ok(());
+        };
 
-        match unknown {
-            Some(id) => Err(FilterUpdateError::UnknownParser(id.to_owned())),
-            None => Ok(()),
-        }
+        Err(FilterUpdateError::UnknownParser(unknown.to_owned()))
     }
 }
 
@@ -97,16 +99,34 @@ impl FilterState {
 /// - Every update sends the complete set and replaces the live subscription,
 ///   which is what gRPC servers do with a mid-stream request.
 /// - Keys are parser IDs, and only IDs with a registered pipeline are
-///   accepted. Take them from [`Parser::id`](shipstern_core::Parser::id).
+///   accepted. Take them from [`Parser::id`](shipstern_core::Parser::id),
+///   except for instruction parsers: the runtime bundles them all behind one
+///   [`InstructionPipeline`](crate::instruction::InstructionPipeline), so the
+///   set holds a single entry under
+///   [`InstructionPipeline::ID`](crate::instruction::InstructionPipeline::ID)
+///   whose prefilter is the union of theirs. Naming an individual instruction
+///   parser is refused as unknown. Acceptance is judged against the registered
+///   set, not the current one, so a key dropped by [`Filters::remove`] stays
+///   acceptable and can be merged back even though
+///   [`filters`](Self::filters) no longer lists it;
+///   [`reset_filters`](Self::reset_filters) restores the full registered set.
 /// - `Ok(())` means the set was handed to the source, not that the server
 ///   applied it. Handlers keep seeing updates matching the old set until the
 ///   already-queued backlog drains, roughly however far behind the pipeline
-///   was at the time.
+///   was at the time. The source awaits that same buffer inside the loop that
+///   watches for updates, so while it is full the request has not reached the
+///   server either.
 /// - Only the newest set matters. Two updates in quick succession may reach
 ///   the source as the second alone, and a set rejected while the source is
-///   between connections is retried once the stream recovers.
-/// - A set the server refuses, by exceeding its filter limits for example,
-///   ends the run. Under `run` and `run_async` that exits the process.
+///   between connections is retried once the stream recovers. With
+///   auto-reconnect off there is nothing to recover into, so such a set is
+///   dropped with a warning while [`filters`](Self::filters) still reports it.
+/// - A set the server refuses comes back on the stream, not on the sink. A
+///   terminal status code ends the run, and under `run` and `run_async` that
+///   exits the process. A recoverable one, `ResourceExhausted` among them,
+///   does not: the client resubscribes with the same refused set and repeats,
+///   so an unacceptable set can leave the runtime reconnecting rather than
+///   stopping.
 #[derive(Debug, Clone)]
 pub struct RuntimeHandle {
     state: Arc<FilterState>,
@@ -115,8 +135,14 @@ pub struct RuntimeHandle {
 impl RuntimeHandle {
     pub(crate) fn new(state: Arc<FilterState>) -> Self { Self { state } }
 
-    /// The last filter set handed to the source, seeded from the registered
+    /// The last filter set published for the source, seeded from the registered
     /// pipelines.
+    ///
+    /// This leads what the server is serving, and by an unbounded amount when
+    /// the sink is between connections: the source may not have read the slot
+    /// yet, a rejected set can sit in the retry queue across a reconnect, and
+    /// a set still unsent when the connection ends is logged and lost. Judge a
+    /// live subscription by what the handlers receive, not by this.
     ///
     /// ```rust, ignore
     /// let owners = handle
@@ -125,6 +151,7 @@ impl RuntimeHandle {
     ///     .and_then(|prefilter| prefilter.account.as_ref())
     ///     .map(|account| account.owners.clone());
     /// ```
+    ///
     #[must_use]
     pub fn filters(&self) -> Filters { self.state.snapshot() }
 
@@ -132,12 +159,14 @@ impl RuntimeHandle {
     ///
     /// `edit` sees a copy of the current set, and the result replaces the
     /// subscription. Concurrent calls from any handle are applied one after
-    /// another, so no edit is lost.
+    /// another, so no edit is lost. `edit` runs while that lock is held, so it
+    /// must not call back into `update_filters` on this handle or any clone of
+    /// it; doing so deadlocks the calling thread.
     ///
     /// ```rust, ignore
     /// handle.update_filters(|filters| {
     ///     filters.merge(TokenProgramAccParser.id(), extra_owner);
-    ///     filters.remove(&TokenProgramIxParser.id());
+    ///     filters.remove(InstructionPipeline::ID);
     /// })?;
     /// ```
     ///
@@ -148,6 +177,9 @@ impl RuntimeHandle {
     ///
     pub fn update_filters<F>(&self, edit: F) -> Result<(), FilterUpdateError>
     where F: FnOnce(&mut Filters) {
+        // The guarded section only copies and republishes a set, so a panic
+        // partway through leaves no torn state behind and the next caller can
+        // take the lock as if nothing happened.
         let _serialised = self
             .state
             .update_lock
@@ -168,10 +200,13 @@ impl RuntimeHandle {
 
     /// Replace the whole subscription with `filters`.
     ///
+    /// For a set built from scratch. Reading [`Self::filters`] and sending the
+    /// result back reads outside the lock, so two callers doing that lose one
+    /// of the two edits; use [`Self::update_filters`] for anything that starts
+    /// from the current set.
+    ///
     /// ```rust, ignore
-    /// let mut filters = handle.filters();
-    /// filters.insert(TokenProgramAccParser.id(), narrower);
-    /// handle.send_filter_update(filters)?;
+    /// handle.send_filter_update(Filters::new(rebuilt))?;
     /// ```
     ///
     /// # Errors

@@ -44,6 +44,21 @@ impl fmt::Debug for InstructionPipeline {
 }
 
 impl InstructionPipeline {
+    /// The parser ID every bundled instruction parser shares.
+    ///
+    /// Because the runtime collapses them into one pipeline, the runtime's
+    /// filter set carries a single entry under this ID whose prefilter is the
+    /// union of all of them. A filter update naming an individual instruction
+    /// parser is refused as unknown; key it here instead.
+    ///
+    /// ```rust, ignore
+    /// handle.update_filters(|filters| {
+    ///     filters.merge(InstructionPipeline::ID, extra);
+    /// })?;
+    /// ```
+    ///
+    pub const ID: &'static str = "InstructionPipeline";
+
     /// Create a new instruction pipeline from a list of sub-pipelines.
     #[must_use]
     pub fn new(pipelines: Vec<BoxPipeline<'static, InstructionUpdate>>) -> Option<Self> {
@@ -102,7 +117,7 @@ impl InstructionPipeline {
 }
 
 impl ParserId for InstructionPipeline {
-    fn id(&self) -> std::borrow::Cow<'static, str> { "InstructionPipeline".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { Self::ID.into() }
 }
 
 impl GetPrefilter for InstructionPipeline {
