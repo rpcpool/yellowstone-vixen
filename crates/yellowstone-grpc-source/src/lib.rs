@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::{SinkExt, StreamExt};
 use shipstern::{
-    sources::{SourceExitStatus, SourceTrait},
+    sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
     CommitmentLevel, Error as ShipsternError,
 };
 use shipstern_core::Filters;
@@ -259,8 +259,6 @@ impl SourceTrait for YellowstoneGrpcSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
-    fn supports_filter_updates() -> bool { true }
-
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
@@ -278,6 +276,8 @@ impl SourceTrait for YellowstoneGrpcSource {
         self.run(tx, status_tx, Some(filter_updates_rx)).await
     }
 }
+
+impl FilterUpdateSource for YellowstoneGrpcSource {}
 
 impl YellowstoneGrpcSource {
     /// Open the subscription and pump updates until the stream ends, sending

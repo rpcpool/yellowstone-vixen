@@ -49,7 +49,10 @@ pub use shipstern_core::CommitmentLevel;
 pub use util::*;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
-use crate::{builder::RuntimeBuilder, sources::SourceTrait};
+use crate::{
+    builder::RuntimeBuilder,
+    sources::{FilterUpdateSource, SourceTrait},
+};
 
 /// An error thrown by the Shipstern runtime.
 #[derive(Debug, thiserror::Error)]
@@ -96,15 +99,17 @@ pub struct Runtime<S: SourceTrait> {
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new runtime builder.
     pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
+}
 
+impl<S: FilterUpdateSource> Runtime<S> {
     /// Create a handle for changing this runtime's subscription once it is
     /// running.
     ///
-    /// [`Self::run`], [`Self::try_run`], [`Self::run_async`] and
+    /// Only available when the source implements [`FilterUpdateSource`], so a
+    /// runtime whose source cannot change its subscription has no handle to
+    /// take. [`Self::run`], [`Self::try_run`], [`Self::run_async`] and
     /// [`Self::try_run_async`] all consume the runtime, so take the handle
-    /// first. Every handle shares one view of the filters, and one taken from
-    /// a source that cannot change its subscription fails each update with
-    /// [`FilterUpdateError::Unsupported`].
+    /// first. Every handle shares one view of the filters.
     ///
     /// ```rust, ignore
     /// let runtime = Runtime::<YellowstoneGrpcSource>::builder()
@@ -117,9 +122,7 @@ impl<S: SourceTrait> Runtime<S> {
     /// handle.update_filters(|filters| filters.merge(TokenProgramAccParser.id(), extra_owner))?;
     /// ```
     #[must_use]
-    pub fn handle(&self) -> RuntimeHandle {
-        RuntimeHandle::new(S::supports_filter_updates(), Arc::clone(&self.filter_state))
-    }
+    pub fn handle(&self) -> RuntimeHandle { RuntimeHandle::new(Arc::clone(&self.filter_state)) }
 }
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new Tokio runtime and run the Shipstern runtime within it,
