@@ -4,14 +4,11 @@ use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::{SinkExt, StreamExt};
 use shipstern::{
-    sources::{SourceExitStatus, SourceTrait},
+    sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
     CommitmentLevel, Error as ShipsternError,
 };
 use shipstern_core::Filters;
-use tokio::sync::{
-    mpsc::{Receiver, Sender},
-    oneshot,
-};
+use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig, SubscribeRequestSink};
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
@@ -175,15 +172,23 @@ fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> 
     request
 }
 
-/// Yield the next filter set, or never resolve when the caller never asked for
-/// updates.
+/// Yield the newest filter set once it changes, or never resolve when the
+/// caller never asked for updates.
 ///
 /// `select!` evaluates a disabled branch's expression before deciding not to
 /// poll it, so this cannot be an `unwrap` guarded by a precondition.
 ///
-async fn next_filter_update(filter_updates_rx: &mut Option<Receiver<Filters>>) -> Option<Filters> {
+/// Returns `None` once every handle is gone and no unseen set remains.
+///
+async fn next_filter_update(
+    filter_updates_rx: &mut Option<watch::Receiver<Filters>>,
+) -> Option<Filters> {
     match filter_updates_rx {
-        Some(rx) => rx.recv().await,
+        Some(rx) => {
+            rx.changed().await.ok()?;
+
+            Some(rx.borrow_and_update().clone())
+        },
         None => std::future::pending().await,
     }
 }
@@ -254,8 +259,6 @@ impl SourceTrait for YellowstoneGrpcSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
-    fn supports_filter_updates() -> bool { true }
-
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
@@ -268,15 +271,17 @@ impl SourceTrait for YellowstoneGrpcSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        filter_updates_rx: Receiver<Filters>,
+        filter_updates_rx: watch::Receiver<Filters>,
     ) -> Result<(), ShipsternError> {
         self.run(tx, status_tx, Some(filter_updates_rx)).await
     }
 }
 
+impl FilterUpdateSource for YellowstoneGrpcSource {}
+
 impl YellowstoneGrpcSource {
     /// Open the subscription and pump updates until the stream ends, sending
-    /// any filter set that arrives on `filter_updates_rx` to the server so it
+    /// each filter set published on `filter_updates_rx` to the server so it
     /// replaces the live subscription.
     ///
     /// `filter_updates_rx` is `None` when the caller never asked for updates,
@@ -286,7 +291,7 @@ impl YellowstoneGrpcSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        mut filter_updates_rx: Option<Receiver<Filters>>,
+        mut filter_updates_rx: Option<watch::Receiver<Filters>>,
     ) -> Result<(), ShipsternError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
@@ -389,8 +394,8 @@ impl YellowstoneGrpcSource {
 
                 update = next_filter_update(&mut filter_updates_rx) => {
                     let Some(filters) = update else {
-                        // Nobody holds the sending half any more, so retire the
-                        // branch for the rest of the connection.
+                        // Every handle is gone, so retire the branch for the
+                        // rest of the connection.
                         filter_updates_rx = None;
                         continue;
                     };

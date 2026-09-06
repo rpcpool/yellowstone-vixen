@@ -12,11 +12,11 @@
 //! Shipstern provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Arc};
 
 use config::BufferConfig;
 use shipstern_core::Filters;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot, watch};
 use yellowstone_grpc_proto::tonic::Status;
 
 use crate::sources::SourceExitStatus;
@@ -49,7 +49,10 @@ pub use shipstern_core::CommitmentLevel;
 pub use util::*;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
-use crate::{builder::RuntimeBuilder, sources::SourceTrait};
+use crate::{
+    builder::RuntimeBuilder,
+    sources::{FilterUpdateSource, SourceTrait},
+};
 
 /// An error thrown by the Shipstern runtime.
 #[derive(Debug, thiserror::Error)]
@@ -86,8 +89,8 @@ pub struct Runtime<S: SourceTrait> {
     buffer: BufferConfig,
     source: S::Config,
     pipelines: handler::PipelineSets,
-    filter_updates_tx: mpsc::Sender<Filters>,
-    filter_updates_rx: mpsc::Receiver<Filters>,
+    filter_updates_rx: watch::Receiver<Filters>,
+    filter_state: Arc<handle::FilterState>,
     #[cfg(feature = "prometheus")]
     metrics_registry: prometheus::Registry,
     _source: PhantomData<S>,
@@ -96,35 +99,30 @@ pub struct Runtime<S: SourceTrait> {
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new runtime builder.
     pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
+}
 
-    /// Create a handle for talking to this runtime once it is running.
+impl<S: FilterUpdateSource> Runtime<S> {
+    /// Create a handle for changing this runtime's subscription once it is
+    /// running.
     ///
-    /// [`Self::run`], [`Self::try_run`], [`Self::run_async`] and
+    /// Only available when the source implements [`FilterUpdateSource`], so a
+    /// runtime whose source cannot change its subscription has no handle to
+    /// take. [`Self::run`], [`Self::try_run`], [`Self::run_async`] and
     /// [`Self::try_run_async`] all consume the runtime, so take the handle
-    /// first. Handles are cheap to clone, and one taken from a source that
-    /// does not support filter updates still exists, but every
-    /// [`RuntimeHandle::send_filter_update`] on it fails with
-    /// [`FilterUpdateError::Unsupported`].
-    ///
-    /// # Example
+    /// first. Every handle shares one view of the filters.
     ///
     /// ```rust, ignore
     /// let runtime = Runtime::<YellowstoneGrpcSource>::builder()
-    ///     .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+    ///     .account(Pipeline::new(TokenProgramAccParser, [Handler]))
     ///     .try_build(config)?;
     ///
     /// let handle = runtime.handle();
     /// tokio::spawn(runtime.run_async());
     ///
-    /// handle.send_filter_update(new_filters).await?;
+    /// handle.update_filters(|filters| filters.merge(TokenProgramAccParser.id(), extra_owner))?;
     /// ```
     #[must_use]
-    pub fn handle(&self) -> RuntimeHandle {
-        let filter_updates_tx =
-            S::supports_filter_updates().then(|| self.filter_updates_tx.clone());
-
-        RuntimeHandle::new(filter_updates_tx)
-    }
+    pub fn handle(&self) -> RuntimeHandle { RuntimeHandle::new(Arc::clone(&self.filter_state)) }
 }
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new Tokio runtime and run the Shipstern runtime within it,
@@ -283,15 +281,15 @@ impl<S: SourceTrait> Runtime<S> {
         #[cfg(feature = "prometheus")]
         metrics::register_metrics(&self.metrics_registry);
 
-        let filters = self.pipelines.filters();
+        let filters = self.filter_state.initial().clone();
 
         let source = S::new(self.source, filters);
         let filter_updates_rx = self.filter_updates_rx;
 
-        // Release the runtime's own sender so the channel closes once every
+        // Release the runtime's own reference so the slot closes once every
         // handle is gone, and a source that waits on updates is not left
         // waiting on a sender that can never produce one.
-        drop(self.filter_updates_tx);
+        drop(self.filter_state);
 
         tokio::spawn(async move {
             let _ = source

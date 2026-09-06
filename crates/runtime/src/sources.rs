@@ -5,10 +5,7 @@
 
 use async_trait::async_trait;
 use shipstern_core::Filters;
-use tokio::sync::{
-    mpsc::{Receiver, Sender},
-    oneshot,
-};
+use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic};
 
 /// How a source exited.
@@ -49,32 +46,42 @@ pub trait SourceTrait: std::fmt::Debug + Send + Sync + 'static {
         status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), crate::Error>;
 
-    /// Whether this source applies filter updates to a live subscription.
-    ///
-    /// The runtime checks this before handing a caller the sending half of the
-    /// filter update channel, so a caller wiring updates to a source that
-    /// ignores them finds out at the call site instead of silently sending
-    /// into a void.
-    ///
-    #[must_use]
-    fn supports_filter_updates() -> bool { false }
-
-    /// Connect and stream updates, applying filter sets received on
+    /// Connect and stream updates, applying each filter set published on
     /// `filter_updates_rx` to the live subscription.
+    ///
+    /// The slot holds only the newest set, so a source that falls behind sees
+    /// the latest one rather than every intermediate step. `changed()` fails
+    /// once every handle is gone, at which point no further set can arrive.
     ///
     /// The default ignores `filter_updates_rx` and defers to [`Self::connect`],
     /// so a source that cannot change its subscription mid-stream needs no
-    /// implementation. Override this together with
-    /// [`Self::supports_filter_updates`].
+    /// implementation. The runtime calls this for every source, because
+    /// generic code cannot pick a method based on which traits `Self` also
+    /// implements. Override it together with implementing
+    /// [`FilterUpdateSource`], which is what lets a caller reach
+    /// [`Runtime::handle`](crate::Runtime::handle) at all.
     ///
     async fn connect_with_filter_updates(
         &self,
         tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        filter_updates_rx: Receiver<Filters>,
+        filter_updates_rx: watch::Receiver<Filters>,
     ) -> Result<(), crate::Error> {
         drop(filter_updates_rx);
 
         self.connect(tx, status_tx).await
     }
 }
+
+/// A source that applies filter updates to its live subscription.
+///
+/// Implementing this unlocks [`Runtime::handle`](crate::Runtime::handle) for
+/// runtimes built on the source, so a caller can only take a handle where an
+/// update can take effect. Pair it with an override of
+/// [`SourceTrait::connect_with_filter_updates`], since the marker alone does
+/// not change what the source does with the receiver.
+///
+/// ```rust, ignore
+/// impl FilterUpdateSource for YellowstoneGrpcSource {}
+/// ```
+pub trait FilterUpdateSource: SourceTrait {}
