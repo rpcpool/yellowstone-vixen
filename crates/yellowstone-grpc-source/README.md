@@ -26,32 +26,43 @@ returns next to the update stream, so a caller can change the subscription
 without tearing down the connection and losing messages during the reconnect.
 
 Take a `RuntimeHandle` before running, because `run` and `run_async` both
-consume the runtime, then send updates through the handle from wherever they
-originate. Handles are cheap to clone:
+consume the runtime, then edit the live set through it from wherever the
+change originates. Handles are cheap to clone and share one view of the
+filters. Nothing on the handle awaits, so it works the same from async code
+and from a plain thread beside a blocking `run()`:
 
 ```rust
 let runtime = Runtime::<YellowstoneGrpcSource>::builder()
-    .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+    .account(Pipeline::new(TokenProgramAccParser, [Handler]))
     .try_build(config)?;
 
 let handle = runtime.handle();
 tokio::spawn(runtime.run_async());
 
-handle.send_filter_update(new_filters).await?;
+// Widen the account subscription with one more owner.
+let extra = Prefilter::builder().account_owners([new_mint]).build()?;
+handle.update_filters(|filters| filters.merge(TokenProgramAccParser.id(), extra))?;
+
+// Inspect what is live, replace it wholesale, or go back to the start.
+let current = handle.filters();
+handle.send_filter_update(current)?;
+handle.reset_filters()?;
 ```
 
-A thread without a Tokio runtime of its own, such as one sitting next to a
-blocking `run()` call, uses `blocking_send_filter_update` instead.
+`Filters` offers `get`, `insert`, `merge` and `remove` keyed by parser ID for
+building the next set.
 
 Each `Filters` sent replaces the whole subscription rather than adding to it,
 which is what the server does with a mid-stream request, so send the complete
 set every time.
 
-The map keys are parser IDs. A key that matches no registered pipeline still
-changes what the server sends, and the runtime then discards all of it at trace
-level, so take the keys from the parsers you registered. Delivery is best
-effort: a set rejected while the source is between connections is retried once
-the stream recovers, but the sender is not told either way.
+The map keys are parser IDs, and a set naming a parser with no registered
+pipeline is refused with `FilterUpdateError::UnknownParser` before anything is
+sent, since the server would stream data the runtime then discards. Take the
+keys from `Parser::id()`. Only the newest set matters: two updates in quick
+succession may reach the source as the second alone, and a set rejected while
+the source is between connections is retried once the stream recovers, but the
+sender is not told either way.
 
 The server applies the new set promptly, but you see it only once whatever is
 already queued drains, so the delay is however far behind your pipeline already

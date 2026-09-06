@@ -1,23 +1,20 @@
 //! Builder types for the Shipstern runtime and stream server.
+use std::sync::Arc;
+
 use shipstern_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, BlockUpdate, SlotUpdate,
     TransactionUpdate,
 };
-use tokio::sync::mpsc;
+use tokio::sync::watch;
 
 use crate::{
     config::ShipsternConfig,
+    handle::FilterState,
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
     instruction::InstructionPipeline,
     sources::SourceTrait,
     util, Runtime,
 };
-
-/// Depth of the filter update channel behind
-/// [`RuntimeHandle::send_filter_update`](crate::RuntimeHandle::send_filter_update).
-/// Updates are rare, so a shallow queue is enough to keep a caller from
-/// blocking on a short burst.
-const FILTER_UPDATE_CHANNEL_SIZE: usize = 8;
 
 /// Helper trait for defining the intended use for a builder.
 pub trait BuilderKind: Default {
@@ -272,14 +269,15 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             return Err(BuilderError::SlotPipelineCollision);
         }
 
-        let (filter_updates_tx, filter_updates_rx) = mpsc::channel(FILTER_UPDATE_CHANNEL_SIZE);
+        let (filter_updates_tx, filter_updates_rx) = watch::channel(pipelines.filters());
+        let filter_state = Arc::new(FilterState::new(filter_updates_tx));
 
         Ok(Runtime {
             buffer: buffer_cfg,
             source: source_cfg,
             pipelines,
-            filter_updates_tx,
             filter_updates_rx,
+            filter_state,
             _source: std::marker::PhantomData,
             #[cfg(feature = "prometheus")]
             metrics_registry,

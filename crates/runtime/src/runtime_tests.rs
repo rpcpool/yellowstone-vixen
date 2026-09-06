@@ -12,10 +12,7 @@ use async_trait::async_trait;
 use shipstern_core::{
     AccountPrefilter, Filters, ParseResult, Parser, Prefilter, Pubkey, SlotUpdate,
 };
-use tokio::sync::{
-    mpsc::{Receiver, Sender},
-    oneshot,
-};
+use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateSlot},
     tonic,
@@ -382,13 +379,10 @@ impl Handler<SlotUpdate, SlotUpdate> for SlowSlotHandler {
     }
 }
 
-/// Parser IDs carried by the filter sets a source received through the
-/// runtime filter update channel. Tests run in parallel and all share this,
-/// so each one records under its own ID and asserts on that ID alone.
-static RECEIVED_FILTER_IDS: Mutex<Vec<String>> = Mutex::new(Vec::new());
-
-/// Parser ID used only by [`test_filter_updates_reach_a_supporting_source`].
-const SWAPPED_PARSER_ID: &str = "test::SwappedParser";
+/// Filter sets a source received through the runtime filter update channel.
+/// Tests run in parallel and all share this, so each one marks its sets with
+/// its own owner pubkey and asserts on that marker alone.
+static RECEIVED_FILTERS: Mutex<Vec<Filters>> = Mutex::new(Vec::new());
 
 #[derive(Debug)]
 struct MockFilterUpdateSource;
@@ -413,19 +407,20 @@ impl SourceTrait for MockFilterUpdateSource {
         Ok(())
     }
 
+    /// Records every set until the last handle is dropped, then ends the
+    /// stream, so a test controls when the run finishes by dropping its
+    /// handle.
     async fn connect_with_filter_updates(
         &self,
         tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
-        mut filter_updates_rx: Receiver<Filters>,
+        mut filter_updates_rx: watch::Receiver<Filters>,
     ) -> Result<(), Error> {
         wait_for_runtime_ready().await;
 
-        if let Some(filters) = filter_updates_rx.recv().await {
-            let mut ids = filters.parsers_filters.keys().cloned().collect::<Vec<_>>();
-            ids.sort();
-
-            RECEIVED_FILTER_IDS.lock().unwrap().extend(ids);
+        while filter_updates_rx.changed().await.is_ok() {
+            let filters = filter_updates_rx.borrow_and_update().clone();
+            RECEIVED_FILTERS.lock().unwrap().push(filters);
         }
 
         signal_stream_ended(status_tx);
@@ -435,50 +430,131 @@ impl SourceTrait for MockFilterUpdateSource {
     }
 }
 
-/// A filter set carrying an actual account prefilter. `Prefilter::default()`
-/// has every sub-filter unset and converts to an entirely empty
-/// `SubscribeRequest`, so a test built on it would pass on a payload that says
-/// nothing on the wire.
-fn filters_for(ids: &[&str]) -> Filters {
-    let prefilter = Prefilter {
+/// A runtime with one registered slot pipeline, so `TEST_SLOT_FILTER` is a
+/// parser ID that filter updates may name.
+fn filter_update_runtime() -> Runtime<MockFilterUpdateSource> {
+    Runtime::<MockFilterUpdateSource>::builder()
+        .slot(Pipeline::new(SlowSlotParser, [SlowSlotHandler]))
+        .try_build(default_test_config())
+        .unwrap()
+}
+
+/// A prefilter carrying an actual account owner, since `Prefilter::default()`
+/// converts to an entirely empty `SubscribeRequest`. The owner doubles as a
+/// per-test marker.
+fn owned_by(marker: u8) -> Prefilter {
+    Prefilter {
         account: Some(AccountPrefilter {
             accounts: HashSet::new(),
-            owners: HashSet::from([Pubkey::default()]),
+            owners: HashSet::from([Pubkey::new([marker; 32])]),
         }),
         ..Default::default()
-    };
+    }
+}
 
-    Filters::new(
-        ids.iter()
-            .map(|id| ((*id).to_owned(), prefilter.clone()))
-            .collect::<HashMap<_, _>>(),
-    )
+fn owners_of(filters: &Filters, parser_id: &str) -> Option<HashSet<Pubkey>> {
+    filters
+        .get(parser_id)
+        .and_then(|prefilter| prefilter.account.as_ref())
+        .map(|account| account.owners.clone())
 }
 
 #[tokio::test]
-async fn test_filter_updates_reach_a_supporting_source() {
-    let runtime = Runtime::<MockFilterUpdateSource>::builder()
-        .try_build(default_test_config())
-        .unwrap();
+async fn test_handle_filters_are_seeded_from_registered_pipelines() {
+    let runtime = filter_update_runtime();
 
-    // Taken before the run consumes the runtime, and used while it runs, which
-    // is the shape a caller changing filters on a live subscription has.
+    let filters = runtime.handle().filters();
+
+    assert_eq!(filters.parser_ids().collect::<Vec<_>>(), [TEST_SLOT_FILTER]);
+}
+
+#[tokio::test]
+async fn test_update_filters_reaches_the_source_while_it_runs() {
+    let runtime = filter_update_runtime();
     let handle = runtime.handle();
 
     let (result, ()) = tokio::join!(runtime.try_run_async(), async {
         handle
-            .send_filter_update(filters_for(&[SWAPPED_PARSER_ID]))
-            .await
+            .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(1)))
             .unwrap();
+
+        // Ending the run is the source's reaction to the last handle going away.
+        drop(handle);
     });
 
     assert_server_hangup(result);
 
-    let received = RECEIVED_FILTER_IDS.lock().unwrap().clone();
+    let received = RECEIVED_FILTERS.lock().unwrap();
+    let marked = received
+        .iter()
+        .filter_map(|filters| owners_of(filters, TEST_SLOT_FILTER))
+        .any(|owners| owners.contains(&Pubkey::new([1; 32])));
+
     assert!(
-        received.contains(&SWAPPED_PARSER_ID.to_owned()),
-        "source never saw the updated filter set, recorded {received:?}"
+        marked,
+        "source never saw the merged owner, recorded {received:?}"
     );
+}
+
+#[tokio::test]
+async fn test_update_filters_advances_the_snapshot() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    handle
+        .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(2)))
+        .unwrap();
+
+    assert_eq!(
+        owners_of(&handle.filters(), TEST_SLOT_FILTER),
+        Some(HashSet::from([Pubkey::new([2; 32])]))
+    );
+}
+
+#[tokio::test]
+async fn test_update_filters_rejects_an_unregistered_parser() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    let result = handle.update_filters(|filters| {
+        filters.insert("test::Unregistered", owned_by(3));
+    });
+
+    assert_eq!(
+        result,
+        Err(FilterUpdateError::UnknownParser(
+            "test::Unregistered".to_owned()
+        ))
+    );
+    assert!(handle.filters().get("test::Unregistered").is_none());
+}
+
+#[tokio::test]
+async fn test_send_filter_update_replaces_the_whole_set() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    handle
+        .send_filter_update(Filters::new(HashMap::new()))
+        .unwrap();
+
+    assert_eq!(handle.filters().parser_ids().count(), 0);
+}
+
+#[tokio::test]
+async fn test_reset_filters_restores_the_registered_set() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    handle
+        .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(4)))
+        .unwrap();
+
+    handle.reset_filters().unwrap();
+
+    let filters = handle.filters();
+    assert_eq!(filters.parser_ids().collect::<Vec<_>>(), [TEST_SLOT_FILTER]);
+    assert!(owners_of(&filters, TEST_SLOT_FILTER).is_none());
 }
 
 #[tokio::test]
@@ -487,35 +563,25 @@ async fn test_filter_updates_rejected_when_source_does_not_support_them() {
         .try_build(default_test_config())
         .unwrap();
 
-    let result = runtime
-        .handle()
-        .send_filter_update(filters_for(&["test::Unsupported"]))
-        .await;
+    let result = runtime.handle().reset_filters();
 
     assert_eq!(result, Err(FilterUpdateError::Unsupported));
 }
 
 #[tokio::test]
 async fn test_filter_updates_rejected_once_the_runtime_is_gone() {
-    let runtime = Runtime::<MockFilterUpdateSource>::builder()
-        .try_build(default_test_config())
-        .unwrap();
-
+    let runtime = filter_update_runtime();
     let handle = runtime.handle();
     drop(runtime);
 
-    let result = handle
-        .send_filter_update(filters_for(&["test::Dropped"]))
-        .await;
+    let result = handle.update_filters(|_| {});
 
     assert_eq!(result, Err(FilterUpdateError::Closed));
 }
 
 #[tokio::test]
 async fn test_source_runs_when_the_filter_update_handle_is_never_taken() {
-    let runtime = Runtime::<MockFilterUpdateSource>::builder()
-        .try_build(default_test_config())
-        .unwrap();
+    let runtime = filter_update_runtime();
 
     assert_server_hangup(runtime.try_run_async().await);
 }
