@@ -20,7 +20,7 @@ use yellowstone_grpc_proto::{
 
 use crate::{
     config::{BufferConfig, NullConfig, ShipsternConfig},
-    sources::{SourceExitStatus, SourceTrait},
+    sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
     Error, FilterUpdateError, Handler, Pipeline, Runtime,
 };
 
@@ -393,8 +393,6 @@ impl SourceTrait for MockFilterUpdateSource {
 
     fn new(_: NullConfig, _: Filters) -> Self { Self }
 
-    fn supports_filter_updates() -> bool { true }
-
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
@@ -429,6 +427,8 @@ impl SourceTrait for MockFilterUpdateSource {
         Ok(())
     }
 }
+
+impl FilterUpdateSource for MockFilterUpdateSource {}
 
 /// A runtime with one registered slot pipeline, so `TEST_SLOT_FILTER` is a
 /// parser ID that filter updates may name.
@@ -555,17 +555,6 @@ async fn test_reset_filters_restores_the_registered_set() {
     let filters = handle.filters();
     assert_eq!(filters.parser_ids().collect::<Vec<_>>(), [TEST_SLOT_FILTER]);
     assert!(owners_of(&filters, TEST_SLOT_FILTER).is_none());
-}
-
-#[tokio::test]
-async fn test_filter_updates_rejected_when_source_does_not_support_them() {
-    let runtime = Runtime::<MockStreamEndSource>::builder()
-        .try_build(default_test_config())
-        .unwrap();
-
-    let result = runtime.handle().reset_filters();
-
-    assert_eq!(result, Err(FilterUpdateError::Unsupported));
 }
 
 #[tokio::test]

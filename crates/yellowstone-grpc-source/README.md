@@ -79,8 +79,9 @@ ends the run. An update the provider will not accept stops the runtime rather
 than leaving the previous subscription in place, so validate against the
 provider's limits before sending one.
 
-`send_filter_update` fails with `FilterUpdateError::Unsupported` for sources
-that do not implement this, which today is every source except gRPC, and with
+`Runtime::handle` exists only for sources implementing `FilterUpdateSource`,
+which today is gRPC alone, so a runtime on any other source has no handle to
+take and the mistake is a compile error. An update fails with
 `FilterUpdateError::Closed` once the runtime has stopped. Whether an update takes effect
 also depends on the provider. Both `yellowstone-grpc-geyser` and `richat` apply
 mid-stream requests to a live subscription, but a deployment can sit behind

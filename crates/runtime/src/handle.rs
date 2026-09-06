@@ -8,10 +8,6 @@ use tokio::sync::watch;
 /// Why a filter update never reached the source.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum FilterUpdateError {
-    /// The source behind the runtime cannot change its subscription
-    /// mid-stream, so no update could ever take effect.
-    #[error("the source does not support filter updates")]
-    Unsupported,
     /// The runtime has stopped, or was dropped without being run, so nothing
     /// is left to apply the set.
     #[error("the runtime is no longer running")]
@@ -75,8 +71,10 @@ impl FilterState {
 ///
 /// [`Runtime::run`](crate::Runtime::run) and its variants take the runtime by
 /// value, so take the handle with [`Runtime::handle`](crate::Runtime::handle)
-/// first. Handles are cheap to clone, share one view of the filters, and work
-/// from async and plain threads alike since nothing here awaits.
+/// first. It exists only for sources implementing
+/// [`FilterUpdateSource`](crate::sources::FilterUpdateSource). Handles are
+/// cheap to clone, share one view of the filters, and work from async and
+/// plain threads alike since nothing here awaits.
 ///
 /// ```rust, ignore
 /// let runtime = Runtime::<YellowstoneGrpcSource>::builder()
@@ -111,17 +109,11 @@ impl FilterState {
 ///   ends the run. Under `run` and `run_async` that exits the process.
 #[derive(Debug, Clone)]
 pub struct RuntimeHandle {
-    /// Whether the source behind the runtime applies filter updates, so a
-    /// send fails at the call site instead of vanishing into a slot nobody
-    /// reads.
-    supported: bool,
     state: Arc<FilterState>,
 }
 
 impl RuntimeHandle {
-    pub(crate) fn new(supported: bool, state: Arc<FilterState>) -> Self {
-        Self { supported, state }
-    }
+    pub(crate) fn new(state: Arc<FilterState>) -> Self { Self { state } }
 
     /// The last filter set handed to the source, seeded from the registered
     /// pipelines.
@@ -156,10 +148,6 @@ impl RuntimeHandle {
     ///
     pub fn update_filters<F>(&self, edit: F) -> Result<(), FilterUpdateError>
     where F: FnOnce(&mut Filters) {
-        if !self.supported {
-            return Err(FilterUpdateError::Unsupported);
-        }
-
         let _serialised = self
             .state
             .update_lock
