@@ -12,7 +12,7 @@
 //! Shipstern provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use std::{marker::PhantomData, sync::Arc};
+use std::sync::Arc;
 
 use config::BufferConfig;
 use shipstern_core::Filters;
@@ -87,13 +87,12 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Runtime<S: SourceTrait> {
     buffer: BufferConfig,
-    source: S::Config,
+    source: S,
     pipelines: handler::PipelineSets,
     filter_updates_rx: watch::Receiver<Filters>,
     filter_state: Arc<handle::FilterState>,
     #[cfg(feature = "prometheus")]
     metrics_registry: prometheus::Registry,
-    _source: PhantomData<S>,
 }
 
 impl<S: SourceTrait> Runtime<S> {
@@ -283,7 +282,7 @@ impl<S: SourceTrait> Runtime<S> {
 
         let filters = self.filter_state.initial().clone();
 
-        let source = S::new(self.source, filters);
+        let source = self.source;
         let filter_updates_rx = self.filter_updates_rx;
 
         // Release the runtime's own reference so the slot closes once every
@@ -293,7 +292,7 @@ impl<S: SourceTrait> Runtime<S> {
 
         tokio::spawn(async move {
             let _ = source
-                .connect_with_filter_updates(tx, status_tx, filter_updates_rx)
+                .connect_with_filter_updates(filters, tx, status_tx, filter_updates_rx)
                 .await;
         });
 
