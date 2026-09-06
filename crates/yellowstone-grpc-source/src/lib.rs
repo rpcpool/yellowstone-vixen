@@ -7,7 +7,7 @@ use shipstern::{
     sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
     CommitmentLevel, Error as ShipsternError,
 };
-use shipstern_core::Filters;
+use shipstern_core::{AccountsDataSlice, Filters};
 use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig};
 use yellowstone_grpc_proto::{
@@ -61,6 +61,17 @@ pub struct YellowstoneGrpcConfig {
 
     #[arg(long, env)]
     pub from_slot: Option<u64>,
+
+    /// Receive only a window of each account's data instead of all of it.
+    ///
+    /// Applies to the whole subscription rather than to one parser, which is
+    /// why it lives here and not on a `Prefilter`. Each entry is an
+    /// `{ offset, length }` pair; the server returns those bytes for every
+    /// account update on this connection.
+    ///
+    #[arg(skip)]
+    #[serde(default)]
+    pub accounts_data_slice: Vec<AccountsDataSlice>,
 
     #[arg(long, env)]
     pub max_decoding_message_size: Option<usize>,
@@ -351,6 +362,15 @@ impl YellowstoneGrpcSource {
 
         let mut subscribe_request = build_subscribe_request(filters, &config);
         subscribe_request.from_slot = config.from_slot;
+
+        // Request-level rather than per-parser, so `From<Filters>` cannot fill
+        // it: the window belongs to the connection, not to any one pipeline.
+        subscribe_request.accounts_data_slice = config
+            .accounts_data_slice
+            .iter()
+            .copied()
+            .map(Into::into)
+            .collect();
 
         tracing::debug!(
             has_accounts = !subscribe_request.accounts.is_empty(),
