@@ -17,7 +17,7 @@
 
 use std::{
     borrow::Cow,
-    collections::{HashMap, HashSet},
+    collections::{hash_map::Entry, HashMap, HashSet},
     fmt::{self, Debug},
     future::Future,
     str::FromStr,
@@ -916,6 +916,55 @@ impl Filters {
             parsers_filters: filters,
         }
     }
+
+    /// The prefilter registered under `parser_id`, if any.
+    #[inline]
+    #[must_use]
+    pub fn get(&self, parser_id: &str) -> Option<&Prefilter> { self.parsers_filters.get(parser_id) }
+
+    /// Parser IDs this set subscribes for.
+    #[inline]
+    pub fn parser_ids(&self) -> impl Iterator<Item = &str> {
+        self.parsers_filters.keys().map(String::as_str)
+    }
+
+    /// Replace the prefilter under `parser_id`, returning the previous one.
+    ///
+    /// ```rust, ignore
+    /// let narrower = Prefilter::builder().account_owners([mint]).build()?;
+    /// filters.insert(parser.id(), narrower);
+    /// ```
+    #[inline]
+    pub fn insert(
+        &mut self,
+        parser_id: impl Into<String>,
+        prefilter: Prefilter,
+    ) -> Option<Prefilter> {
+        self.parsers_filters.insert(parser_id.into(), prefilter)
+    }
+
+    /// Union `prefilter` into the one under `parser_id`, inserting it when
+    /// there is none yet.
+    ///
+    /// ```rust, ignore
+    /// let extra = Prefilter::builder().account_owners([new_mint]).build()?;
+    /// filters.merge(parser.id(), extra);
+    /// ```
+    pub fn merge(&mut self, parser_id: impl Into<String>, prefilter: Prefilter) {
+        match self.parsers_filters.entry(parser_id.into()) {
+            Entry::Occupied(mut existing) => existing.get_mut().merge(prefilter),
+            Entry::Vacant(slot) => {
+                slot.insert(prefilter);
+            },
+        }
+    }
+
+    /// Drop the prefilter under `parser_id`, so the set no longer subscribes
+    /// for that parser. Returns the removed prefilter.
+    #[inline]
+    pub fn remove(&mut self, parser_id: &str) -> Option<Prefilter> {
+        self.parsers_filters.remove(parser_id)
+    }
 }
 
 /// Type mirroring the `CommitmentLevel` enum in the `geyser` crate but serializable.
@@ -1037,6 +1086,77 @@ impl From<Filters> for SubscribeRequest {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn owned_by(marker: u8) -> Prefilter {
+        Prefilter {
+            account: Some(AccountPrefilter {
+                accounts: HashSet::new(),
+                owners: HashSet::from([Pubkey::new([marker; 32])]),
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn owners_of(filters: &Filters, parser_id: &str) -> HashSet<Pubkey> {
+        filters
+            .get(parser_id)
+            .and_then(|prefilter| prefilter.account.as_ref())
+            .map(|account| account.owners.clone())
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn test_filters_merge_unions_into_an_existing_prefilter() {
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), owned_by(1))]));
+
+        filters.merge("p", owned_by(2));
+
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([1; 32]), Pubkey::new([2; 32])])
+        );
+    }
+
+    #[test]
+    fn test_filters_merge_inserts_when_absent() {
+        let mut filters = Filters::new(HashMap::new());
+
+        filters.merge("p", owned_by(1));
+
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([1; 32])])
+        );
+    }
+
+    #[test]
+    fn test_filters_insert_replaces_and_returns_the_previous_prefilter() {
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), owned_by(1))]));
+
+        let previous = filters.insert("p", owned_by(2));
+
+        assert_eq!(
+            previous
+                .and_then(|prefilter| prefilter.account)
+                .map(|a| a.owners),
+            Some(HashSet::from([Pubkey::new([1; 32])]))
+        );
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([2; 32])])
+        );
+    }
+
+    #[test]
+    fn test_filters_remove_drops_the_parser() {
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), owned_by(1))]));
+
+        assert!(filters.remove("p").is_some());
+        assert!(filters.get("p").is_none());
+        assert_eq!(filters.parser_ids().count(), 0);
+        assert!(filters.remove("p").is_none());
+    }
+
     fn block_prefilter(
         include_accounts: bool,
         include_transactions: bool,
