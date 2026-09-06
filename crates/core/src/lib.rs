@@ -1030,6 +1030,9 @@ impl From<Filters> for SubscribeRequest {
                     Some((k.clone(), SubscribeRequestFilterTransactions {
                         vote: None,
                         failed: v.failed,
+                        // Cuckoo-filter account matching (proto 12.6.0) is not
+                        // exposed through `TransactionFilter`; opt out for now.
+                        cuckoo_account_include: None,
                         signature: None,
                         account_include: v
                             .accounts_include
