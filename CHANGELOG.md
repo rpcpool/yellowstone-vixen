@@ -9,8 +9,11 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Bumped `yellowstone-grpc-proto` from `12.4` to `12.6`, picking up the Transaction V1 (SIMD-0385) `Message.config` field and the `cuckoo_account_include` transaction filter. The new filter is not exposed through `TransactionFilter` and is always sent as `None` ([#304](https://github.com/solana-rpc/shipstern/pull/304) by @ultrasilicon).
+
 ### Added
 
+- `shipstern-core`: `InstructionShared` gained `transaction_config: Option<TransactionConfig>`, the inline compute budget that Transaction V1 (SIMD-0385) carries on the message instead of in top-level `ComputeBudget` instructions. It exposes the priority fee, compute-unit limit, loaded-accounts data-size limit, and heap size. It is `None` for Legacy and V0 transactions and for jetstream-source transactions, which are decoded from an SDK without a V1 message variant ([#304](https://github.com/solana-rpc/shipstern/pull/304) by @ultrasilicon).
 - `shipstern-proc-macro`: generated account types and the `Instructions` wrapper now expose `DISCRIMINATOR` and `DISCRIMINATOR_OFFSET` constants, so consumers can build `memcmp` filters and route on discriminators without re-deriving the bytes from the IDL. The pair is a memcmp predicate: the bytes the parser compares at that offset. It is not a payload boundary, because numeric discriminators (for example SPL Governance) are re-read as the first field of the account body, so decoding still goes through `try_unpack`. No constant is emitted where the parser could not honor it: size-only discriminators, zero-length discriminators, fixed-size fields whose declared width disagrees with the decoded default bytes, and instruction names that collide after case folding ([#294](https://github.com/rpcpool/yellowstone-vixen/issues/294)).
 
 ### Fixed
