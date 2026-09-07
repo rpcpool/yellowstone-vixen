@@ -2,13 +2,13 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use clap::ValueEnum;
-use futures_util::StreamExt;
+use futures_util::{SinkExt, StreamExt};
 use shipstern::{
-    sources::{SourceExitStatus, SourceTrait},
+    sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
     CommitmentLevel, Error as ShipsternError,
 };
 use shipstern_core::Filters;
-use tokio::sync::{mpsc::Sender, oneshot};
+use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig};
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
@@ -114,7 +114,12 @@ impl YellowstoneGrpcConfig {
     /// assert_eq!(rc.backoff.multiplier, 2.0);
     /// ```
     ///
-    /// Returns `None` when auto-reconnect is disabled.
+    /// Returns `None` when auto-reconnect is disabled, and when it is on with
+    /// a retry budget of zero, which the client library treats the same way:
+    /// it stops on the first stream error instead of reconnecting. Callers
+    /// decide whether a rejected request can be recovered from this returning
+    /// `Some`, so the two have to agree or a set is held for a recovery that
+    /// cannot arrive.
     pub fn reconnect_config(&self) -> Option<ReconnectConfig> {
         if !self.auto_reconnect {
             return None;
@@ -123,6 +128,10 @@ impl YellowstoneGrpcConfig {
         let max_retries = self
             .reconnect_max_retries
             .unwrap_or(DEFAULT_RECONNECT_MAX_RETRIES);
+
+        if max_retries == 0 {
+            return None;
+        }
 
         let backoff = Backoff::new(
             DEFAULT_RECONNECT_INITIAL_BACKOFF,
@@ -149,6 +158,138 @@ pub struct YellowstoneGrpcSource {
     config: YellowstoneGrpcConfig,
 }
 
+/// Build the wire subscription for `filters`, layering on the commitment the
+/// `From<Filters>` conversion leaves unset.
+///
+/// `from_slot` is deliberately not applied here. It is a one-time start
+/// position rather than a steady-state setting, and repeating it on a
+/// mid-stream update is destructive: yellowstone-grpc-geyser treats it as a
+/// replay request and either replays every slot since, or ends the stream
+/// with `from_slot is not supported` when it has no replay buffer, while
+/// richat rejects the request outright if the set contains blocks. The client
+/// library agrees, overwriting the field with the live checkpoint on
+/// reconnect rather than reusing the configured value. Only the initial
+/// subscribe sets it.
+///
+fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> SubscribeRequest {
+    let mut request: SubscribeRequest = filters.into();
+
+    if let Some(commitment_level) = config.commitment_level {
+        request.commitment = Some(commitment_level as i32);
+    }
+
+    request
+}
+
+/// Yield the newest filter set once it changes, or never resolve when the
+/// caller never asked for updates.
+///
+/// `select!` evaluates a disabled branch's expression before deciding not to
+/// poll it, so this cannot be an `unwrap` guarded by a precondition.
+///
+/// Returns `None` once every handle is gone and no unseen set remains.
+///
+async fn next_filter_update(
+    filter_updates_rx: &mut Option<watch::Receiver<Filters>>,
+) -> Option<Filters> {
+    match filter_updates_rx {
+        Some(rx) => {
+            rx.changed().await.ok()?;
+
+            Some(rx.borrow_and_update().clone())
+        },
+        None => std::future::pending().await,
+    }
+}
+
+/// Whether a send is the first attempt at a set or a retry of one already
+/// held, which is the only thing separating a loud rejection from a quiet one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SendAttempt {
+    /// A set the caller just published.
+    First,
+    /// A set the retry timer is re-offering.
+    Retry,
+}
+
+/// How often a filter set held after a sink rejection is retried.
+const RETRY_HELD_FILTERS_EVERY: Duration = Duration::from_secs(5);
+
+/// Send `filters` to the server, handing it back unsent when the sink rejects
+/// it and a later retry can still land. A `Some` return is a set still owed to
+/// the server, not a failure.
+///
+/// A rejection means the request channel is disconnected. With auto-reconnect
+/// enabled, which is the default, that is a transient reconnect window rather
+/// than a fatal error: the stream yields nothing during it and the client
+/// library swaps a fresh sender into this sink once it recovers. Dropping the
+/// set here would lose it silently, because the sink only records a request
+/// into its reconnect state after a successful send, so the reconnect would
+/// resubscribe with the previous filters.
+///
+/// That swap is the only thing that revives a rejected sink, and it belongs to
+/// the reconnect connector. Without one the sink stays disconnected for the
+/// rest of the run, so the set is dropped rather than held for a recovery that
+/// cannot arrive.
+///
+async fn send_or_hold<S>(
+    sink: &mut S,
+    config: &YellowstoneGrpcConfig,
+    filters: Filters,
+    filter_updates_sent: &mut u64,
+    attempt: SendAttempt,
+) -> Option<Filters>
+where
+    S: SinkExt<SubscribeRequest> + Unpin,
+    S::Error: std::fmt::Display,
+{
+    let request = build_subscribe_request(filters.clone(), config);
+
+    tracing::debug!(
+        // Entry counts, one per parser, not pubkey counts.
+        accounts = request.accounts.len(),
+        transactions = request.transactions.len(),
+        slots = request.slots.len(),
+        blocks = request.blocks.len(),
+        blocks_meta = request.blocks_meta.len(),
+        "Sending filter update to the live subscription"
+    );
+
+    if let Err(err) = sink.send(request).await {
+        // Whether the set can be held at all depends on the connection, not on
+        // which attempt this is, so decide that first. Holding on a sink that
+        // cannot recover would retry every 5s for the rest of the run.
+        if config.reconnect_config().is_none() {
+            tracing::warn!(
+                %err,
+                "Filter update rejected by the sink and dropped, since auto-reconnect is off \
+                 and the subscription cannot recover; it keeps its previous filters"
+            );
+
+            return None;
+        }
+
+        // A retry re-offers a set already reported, so it stays quiet. The
+        // sturdy reconnect defaults span minutes, and one line per 5s tick
+        // would bury the original rejection.
+        match attempt {
+            SendAttempt::First => tracing::warn!(
+                %err,
+                "Filter update rejected by the sink, holding it until the stream recovers"
+            ),
+            SendAttempt::Retry => {
+                tracing::debug!(%err, "Filter update still rejected, holding it");
+            },
+        }
+
+        return Some(filters);
+    }
+
+    *filter_updates_sent += 1;
+
+    None
+}
+
 #[async_trait]
 impl SourceTrait for YellowstoneGrpcSource {
     type Config = YellowstoneGrpcConfig;
@@ -159,6 +300,35 @@ impl SourceTrait for YellowstoneGrpcSource {
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), ShipsternError> {
+        self.run(tx, status_tx, None).await
+    }
+
+    async fn connect_with_filter_updates(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+        filter_updates_rx: watch::Receiver<Filters>,
+    ) -> Result<(), ShipsternError> {
+        self.run(tx, status_tx, Some(filter_updates_rx)).await
+    }
+}
+
+impl FilterUpdateSource for YellowstoneGrpcSource {}
+
+impl YellowstoneGrpcSource {
+    /// Open the subscription and pump updates until the stream ends, sending
+    /// each filter set published on `filter_updates_rx` to the server so it
+    /// replaces the live subscription.
+    ///
+    /// `filter_updates_rx` is `None` when the caller never asked for updates,
+    /// which is what `connect` passes.
+    ///
+    async fn run(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+        mut filter_updates_rx: Option<watch::Receiver<Filters>>,
     ) -> Result<(), ShipsternError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
@@ -179,15 +349,12 @@ impl SourceTrait for YellowstoneGrpcSource {
 
         let mut client = builder.connect().await?;
 
-        let mut subscribe_request: SubscribeRequest = filters.into();
-        if let Some(from_slot) = config.from_slot {
-            subscribe_request.from_slot = Some(from_slot);
-        }
-        if let Some(commitment_level) = config.commitment_level {
-            subscribe_request.commitment = Some(commitment_level as i32);
-        }
+        let mut subscribe_request = build_subscribe_request(filters, &config);
+        subscribe_request.from_slot = config.from_slot;
 
         tracing::debug!(
+            has_accounts = !subscribe_request.accounts.is_empty(),
+            account_filters = ?subscribe_request.accounts.keys().collect::<Vec<_>>(),
             has_transactions = !subscribe_request.transactions.is_empty(),
             transaction_filters = ?subscribe_request.transactions.keys().collect::<Vec<_>>(),
             has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
@@ -199,7 +366,7 @@ impl SourceTrait for YellowstoneGrpcSource {
             "Subscribing to gRPC stream"
         );
 
-        let (_sub_tx, stream) = client
+        let (mut sink, stream) = client
             .subscribe_with_request(Some(subscribe_request))
             .await?;
 
@@ -207,28 +374,107 @@ impl SourceTrait for YellowstoneGrpcSource {
 
         tracing::debug!("gRPC stream started");
 
+        let mut pending_filters: Option<Filters> = None;
+        let mut filter_updates_sent: u64 = 0;
+
+        // A held set cannot wait on the stream to produce again. The filter it
+        // is replacing may match nothing, and the client swallows its own
+        // keepalive messages rather than yielding them, so there are live
+        // connections on which no update ever arrives to retry from.
+        let mut retry = tokio::time::interval(RETRY_HELD_FILTERS_EVERY);
+        retry.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+
         let exit_status = loop {
-            match stream.next().await {
-                Some(Ok(update)) => {
-                    if tx.send(Ok(update)).await.is_err() {
-                        tracing::info!("Receiver dropped, stopping source");
-                        // Defensive only - normally unreachable because Signal/Buffer
-                        // branch wins first when receiver drops.
-                        break SourceExitStatus::ReceiverDropped;
+            tokio::select! {
+                update = stream.next() => match update {
+                    Some(Ok(update)) => {
+                        if tx.send(Ok(update)).await.is_err() {
+                            tracing::info!("Receiver dropped, stopping source");
+                            // Defensive only - normally unreachable because Signal/Buffer
+                            // branch wins first when receiver drops.
+                            break SourceExitStatus::ReceiverDropped;
+                        }
+                    },
+                    Some(Err(status)) => {
+                        // A server that rejects a filter set answers on the stream
+                        // rather than the sink, so this is where a bad update
+                        // surfaces. Report the count so an operator can tell that
+                        // apart from an unrelated server error.
+                        //
+                        // Only for a code the client treats as terminal, though.
+                        // The sink records a request into the reconnect state as
+                        // soon as the local channel takes it, before the server has
+                        // seen it, so a set refused with a recoverable code is
+                        // resubscribed on reconnect and refused again without ever
+                        // reaching this arm.
+                        tracing::warn!(
+                            code = ?status.code(),
+                            message = %status.message(),
+                            filter_updates_sent,
+                            "Received error status from stream"
+                        );
+                        let code = status.code();
+                        let message = status.message().to_string();
+                        let _ = tx.send(Err(status)).await;
+                        break SourceExitStatus::StreamError { code, message };
+                    },
+                    None => {
+                        break SourceExitStatus::StreamEnded;
+                    },
+                },
+
+                _ = retry.tick(), if pending_filters.is_some() => {
+                    let Some(filters) = pending_filters.take() else { continue };
+
+                    pending_filters =
+                        send_or_hold(
+                            &mut sink,
+                            &config,
+                            filters,
+                            &mut filter_updates_sent,
+                            SendAttempt::Retry,
+                        )
+                            .await;
+                },
+
+                update = next_filter_update(&mut filter_updates_rx) => {
+                    let Some(filters) = update else {
+                        // Every handle is gone, so retire the branch for the
+                        // rest of the connection. `Runtime::handle` borrows the
+                        // runtime and every `run` consumes it, so no further
+                        // handle can be taken: this is permanent for the run.
+                        tracing::debug!(
+                            "Last runtime handle dropped, filter updates are off for this run"
+                        );
+                        filter_updates_rx = None;
+                        continue;
+                    };
+
+                    // A newer set supersedes anything still held, because every
+                    // set is complete rather than a delta.
+                    pending_filters =
+                        send_or_hold(
+                            &mut sink,
+                            &config,
+                            filters,
+                            &mut filter_updates_sent,
+                            SendAttempt::First,
+                        )
+                            .await;
+
+                    // An interval's first tick is immediate, so without this a
+                    // rejected set retries at once, inside the same reconnect
+                    // window that just rejected it.
+                    if pending_filters.is_some() {
+                        retry.reset();
                     }
-                },
-                Some(Err(status)) => {
-                    tracing::warn!(code = ?status.code(), message = %status.message(), "Received error status from stream");
-                    let code = status.code();
-                    let message = status.message().to_string();
-                    let _ = tx.send(Err(status)).await;
-                    break SourceExitStatus::StreamError { code, message };
-                },
-                None => {
-                    break SourceExitStatus::StreamEnded;
                 },
             }
         };
+
+        if pending_filters.is_some() {
+            tracing::warn!("Connection ended with a filter update still unsent");
+        }
 
         let _ = status_tx.send(exit_status);
 
@@ -238,7 +484,291 @@ impl SourceTrait for YellowstoneGrpcSource {
 
 #[cfg(test)]
 mod tests {
-    use super::YellowstoneGrpcConfig;
+    use std::collections::{HashMap, HashSet};
+
+    use shipstern_core::{AccountPrefilter, Filters, Prefilter, Pubkey};
+
+    use super::{
+        build_subscribe_request, send_or_hold, CommitmentLevel, SendAttempt, SubscribeRequest,
+        YellowstoneGrpcConfig,
+    };
+
+    fn config_from(toml_src: &str) -> YellowstoneGrpcConfig {
+        toml::from_str(toml_src).expect("config must deserialize")
+    }
+
+    /// Stands in for the client's sink, which has private fields and no
+    /// constructor. `disconnected` reproduces a request channel that has gone
+    /// away, which is the only way a real send fails.
+    #[derive(Default)]
+    struct TestSink {
+        disconnected: bool,
+        sent: Vec<SubscribeRequest>,
+    }
+
+    impl TestSink {
+        fn disconnected() -> Self {
+            Self {
+                disconnected: true,
+                sent: Vec::new(),
+            }
+        }
+
+        /// Stands in for the reconnect connector swapping a fresh sender in.
+        fn recover(&mut self) { self.disconnected = false; }
+    }
+
+    /// A set carrying one account owner, so a test can tell the request the
+    /// sink received apart from an empty one.
+    fn filters_owned_by(marker: u8) -> Filters {
+        Filters::new(HashMap::from([("p".to_owned(), Prefilter {
+            account: Some(AccountPrefilter {
+                accounts: HashSet::new(),
+                owners: HashSet::from([Pubkey::new([marker; 32])]),
+            }),
+            ..Default::default()
+        })]))
+    }
+
+    /// The owners the sink actually received under parser `p`.
+    fn received_owners(request: &SubscribeRequest) -> Vec<String> {
+        let mut owners = request
+            .accounts
+            .get("p")
+            .expect("the request must carry the parser's account filter")
+            .owner
+            .clone();
+        owners.sort();
+
+        owners
+    }
+
+    #[derive(Debug)]
+    struct Disconnected;
+
+    impl std::fmt::Display for Disconnected {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("send failed because the receiver is gone")
+        }
+    }
+
+    impl futures_util::Sink<SubscribeRequest> for TestSink {
+        type Error = Disconnected;
+
+        fn poll_ready(
+            self: std::pin::Pin<&mut Self>,
+            _: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Result<(), Self::Error>> {
+            if self.disconnected {
+                return std::task::Poll::Ready(Err(Disconnected));
+            }
+
+            std::task::Poll::Ready(Ok(()))
+        }
+
+        fn start_send(
+            mut self: std::pin::Pin<&mut Self>,
+            item: SubscribeRequest,
+        ) -> Result<(), Self::Error> {
+            self.sent.push(item);
+
+            Ok(())
+        }
+
+        fn poll_flush(
+            self: std::pin::Pin<&mut Self>,
+            _: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Result<(), Self::Error>> {
+            std::task::Poll::Ready(Ok(()))
+        }
+
+        fn poll_close(
+            self: std::pin::Pin<&mut Self>,
+            _: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Result<(), Self::Error>> {
+            std::task::Poll::Ready(Ok(()))
+        }
+    }
+
+    fn reconnecting_config() -> YellowstoneGrpcConfig {
+        config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+        "#,
+        )
+    }
+
+    fn non_reconnecting_config() -> YellowstoneGrpcConfig {
+        config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            auto-reconnect = false
+        "#,
+        )
+    }
+
+    /// A set that reaches the sink is not held, arrives as the subscription the
+    /// caller asked for rather than an empty one, and advances the counter that
+    /// tells an operator a stream error followed an update.
+    #[tokio::test]
+    async fn accepted_filter_update_reaches_the_sink_intact() {
+        let mut sink = TestSink::default();
+        let mut sent = 0;
+
+        let held = send_or_hold(
+            &mut sink,
+            &reconnecting_config(),
+            filters_owned_by(1),
+            &mut sent,
+            SendAttempt::First,
+        )
+        .await;
+
+        assert!(held.is_none());
+        assert_eq!(sent, 1);
+        assert_eq!(sink.sent.len(), 1);
+        assert_eq!(received_owners(&sink.sent[0]), [
+            Pubkey::new([1; 32]).to_string()
+        ]);
+    }
+
+    /// A rejected send means the request channel is disconnected, which with
+    /// auto-reconnect on is a reconnect window rather than a fatal error. The
+    /// set has to come back so the retry timer can land it once the client
+    /// swaps a fresh sender in; dropping it would resubscribe with the old
+    /// filters.
+    #[tokio::test]
+    async fn rejected_filter_update_is_held_when_reconnect_can_recover() {
+        let mut sink = TestSink::disconnected();
+        let mut sent = 0;
+
+        let held = send_or_hold(
+            &mut sink,
+            &reconnecting_config(),
+            filters_owned_by(2),
+            &mut sent,
+            SendAttempt::First,
+        )
+        .await;
+
+        assert!(held.is_some(), "set must be held for the retry timer");
+        assert_eq!(sent, 0);
+        assert!(sink.sent.is_empty());
+    }
+
+    /// The whole reason a rejected set is held rather than dropped: once the
+    /// connector swaps a working sender in, the retry has to land the set the
+    /// caller asked for, not the one the subscription already had.
+    #[tokio::test]
+    async fn held_filter_update_lands_once_the_sink_recovers() {
+        let mut sink = TestSink::disconnected();
+        let mut sent = 0;
+
+        let held = send_or_hold(
+            &mut sink,
+            &reconnecting_config(),
+            filters_owned_by(3),
+            &mut sent,
+            SendAttempt::First,
+        )
+        .await;
+
+        let held = held.expect("set must be held while the sink is down");
+
+        sink.recover();
+
+        let still_held = send_or_hold(
+            &mut sink,
+            &reconnecting_config(),
+            held,
+            &mut sent,
+            SendAttempt::Retry,
+        )
+        .await;
+
+        assert!(still_held.is_none(), "retry must land the held set");
+        assert_eq!(sent, 1);
+        assert_eq!(sink.sent.len(), 1);
+        assert_eq!(received_owners(&sink.sent[0]), [
+            Pubkey::new([3; 32]).to_string()
+        ]);
+    }
+
+    /// Nothing revives a rejected sink without the reconnect connector, so
+    /// holding the set would wait for a recovery that cannot arrive.
+    #[tokio::test]
+    async fn rejected_filter_update_is_dropped_when_reconnect_is_off() {
+        let mut sink = TestSink::disconnected();
+        let mut sent = 0;
+
+        let held = send_or_hold(
+            &mut sink,
+            &non_reconnecting_config(),
+            filters_owned_by(4),
+            &mut sent,
+            SendAttempt::First,
+        )
+        .await;
+
+        assert!(held.is_none(), "set must be dropped, not held forever");
+        assert_eq!(sent, 0);
+        assert!(sink.sent.is_empty());
+    }
+
+    /// The startup subscribe and every later filter update are built by the
+    /// same function, so the commitment `Filters` does not carry lands on both
+    /// rather than only on the initial request.
+    #[test]
+    fn subscribe_request_carries_commitment() {
+        let config = config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            commitment-level = "finalized"
+        "#,
+        );
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert_eq!(request.commitment, Some(CommitmentLevel::Finalized as i32));
+    }
+
+    /// A configured `from-slot` must never reach a mid-stream update. Servers
+    /// read it as a replay request, so repeating it would replay the whole gap
+    /// or end the stream outright. Only the initial subscribe sets it, and it
+    /// is set at that call site rather than here.
+    #[test]
+    fn subscribe_request_omits_from_slot() {
+        let config = config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            from-slot = 350000000
+        "#,
+        );
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert_eq!(request.from_slot, None);
+    }
+
+    /// Without a commitment the request keeps what the `Filters` conversion
+    /// produced, which leaves it unset.
+    #[test]
+    fn subscribe_request_omits_unset_commitment() {
+        let config = config_from(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+        "#,
+        );
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert_eq!(request.commitment, None);
+    }
 
     /// A config file predating the reconnect fields must still deserialize:
     /// missing `Option` keys become `None`, and the missing `auto-reconnect`
@@ -273,6 +803,28 @@ mod tests {
 
         assert!(!config.auto_reconnect);
         assert!(config.reconnect_config().is_none());
+    }
+
+    /// A zero retry budget stops the client on the first stream error, so it
+    /// has to read as "no reconnect" here too. `send_or_hold` decides whether
+    /// a rejected set can be recovered from this, and holding one for a
+    /// recovery that cannot arrive retries it every 5s for the rest of the run.
+    #[test]
+    fn zero_retries_reads_as_no_reconnect() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            auto-reconnect = true
+            reconnect-max-retries = 0
+        "#,
+        )
+        .expect("config must deserialize");
+
+        assert!(
+            config.reconnect_config().is_none(),
+            "a zero retry budget cannot recover a rejected sink"
+        );
     }
 
     /// With no overrides, the helper yields the sturdy built-in defaults

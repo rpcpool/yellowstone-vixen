@@ -12,10 +12,11 @@
 //! Shipstern provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Arc};
 
 use config::BufferConfig;
-use tokio::sync::{mpsc, oneshot};
+use shipstern_core::Filters;
+use tokio::sync::{mpsc, oneshot, watch};
 use yellowstone_grpc_proto::tonic::Status;
 
 use crate::sources::SourceExitStatus;
@@ -31,6 +32,7 @@ pub use shipstern_core::bs58;
 mod buffer;
 pub mod builder;
 pub mod config;
+mod handle;
 pub mod handler;
 pub mod instruction;
 
@@ -41,12 +43,16 @@ pub mod util;
 
 pub mod filter_pipeline;
 
+pub use handle::{FilterUpdateError, RuntimeHandle};
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use shipstern_core::CommitmentLevel;
 pub use util::*;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
-use crate::{builder::RuntimeBuilder, sources::SourceTrait};
+use crate::{
+    builder::RuntimeBuilder,
+    sources::{FilterUpdateSource, SourceTrait},
+};
 
 /// An error thrown by the Shipstern runtime.
 #[derive(Debug, thiserror::Error)]
@@ -83,6 +89,8 @@ pub struct Runtime<S: SourceTrait> {
     buffer: BufferConfig,
     source: S::Config,
     pipelines: handler::PipelineSets,
+    filter_updates_rx: watch::Receiver<Filters>,
+    filter_state: Arc<handle::FilterState>,
     #[cfg(feature = "prometheus")]
     metrics_registry: prometheus::Registry,
     _source: PhantomData<S>,
@@ -92,6 +100,32 @@ impl<S: SourceTrait> Runtime<S> {
     /// Create a new runtime builder.
     pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
 }
+
+impl<S: FilterUpdateSource> Runtime<S> {
+    /// Create a handle for changing this runtime's subscription once it is
+    /// running.
+    ///
+    /// Only available when the source implements [`FilterUpdateSource`], so a
+    /// runtime whose source cannot change its subscription has no handle to
+    /// take. [`Self::run`], [`Self::try_run`], [`Self::run_async`] and
+    /// [`Self::try_run_async`] all consume the runtime, so take the handle
+    /// first. Every handle shares one view of the filters.
+    ///
+    /// ```rust, ignore
+    /// let runtime = Runtime::<YellowstoneGrpcSource>::builder()
+    ///     .account(Pipeline::new(TokenProgramAccParser, [Handler]))
+    ///     .try_build(config)?;
+    ///
+    /// let handle = runtime.handle();
+    /// tokio::spawn(runtime.run_async());
+    ///
+    /// handle.update_filters(|filters| filters.merge(TokenProgramAccParser.id(), extra_owner))?;
+    /// ```
+    ///
+    #[must_use]
+    pub fn handle(&self) -> RuntimeHandle { RuntimeHandle::new(Arc::clone(&self.filter_state)) }
+}
+
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new Tokio runtime and run the Shipstern runtime within it,
     /// terminating the current process if the runtime crashes.
@@ -249,12 +283,26 @@ impl<S: SourceTrait> Runtime<S> {
         #[cfg(feature = "prometheus")]
         metrics::register_metrics(&self.metrics_registry);
 
-        let filters = self.pipelines.filters();
+        let mut filter_updates_rx = self.filter_updates_rx;
+
+        // Seed the initial subscribe from the latest set rather than the
+        // registered one, so an update sent between `handle()` and here is part
+        // of the first request instead of a second one that leaves the wider
+        // set live in between. Marking it seen stops the source resending the
+        // set it just subscribed with.
+        let filters = filter_updates_rx.borrow_and_update().clone();
 
         let source = S::new(self.source, filters);
 
+        // Release the runtime's own reference so the slot closes once every
+        // handle is gone, and a source that waits on updates is not left
+        // waiting on a sender that can never produce one.
+        drop(self.filter_state);
+
         tokio::spawn(async move {
-            let _ = source.connect(tx, status_tx).await;
+            let _ = source
+                .connect_with_filter_updates(tx, status_tx, filter_updates_rx)
+                .await;
         });
 
         let signal;

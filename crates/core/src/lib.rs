@@ -17,7 +17,7 @@
 
 use std::{
     borrow::Cow,
-    collections::{HashMap, HashSet},
+    collections::{hash_map::Entry, HashMap, HashSet},
     fmt::{self, Debug},
     future::Future,
     str::FromStr,
@@ -180,7 +180,7 @@ impl<T: Parser> GetPrefilter for T {
 
 // TODO: why are so many fields on the prefilters and prefilter builder optional???
 /// A prefilter for narrowing down the updates that a parser will receive.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Prefilter {
     /// Filters for account updates.
     pub account: Option<AccountPrefilter>,
@@ -901,7 +901,7 @@ impl PrefilterBuilder {
 }
 
 /// A collection of filters for a Shipstern subscription.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Filters {
     /// Filters for each parser.
     pub parsers_filters: HashMap<String, Prefilter>,
@@ -915,6 +915,69 @@ impl Filters {
         Self {
             parsers_filters: filters,
         }
+    }
+
+    /// The prefilter registered under `parser_id`, if any.
+    #[inline]
+    #[must_use]
+    pub fn get(&self, parser_id: &str) -> Option<&Prefilter> { self.parsers_filters.get(parser_id) }
+
+    /// Parser IDs this set subscribes for.
+    #[inline]
+    pub fn parser_ids(&self) -> impl Iterator<Item = &str> {
+        self.parsers_filters.keys().map(String::as_str)
+    }
+
+    /// Replace the prefilter under `parser_id`, returning the previous one.
+    ///
+    /// ```rust, ignore
+    /// let narrower = Prefilter::builder().account_owners([mint]).build()?;
+    /// filters.insert(parser.id(), narrower);
+    /// ```
+    ///
+    #[inline]
+    pub fn insert(
+        &mut self,
+        parser_id: impl Into<String>,
+        prefilter: Prefilter,
+    ) -> Option<Prefilter> {
+        self.parsers_filters.insert(parser_id.into(), prefilter)
+    }
+
+    /// Union `prefilter` into the one under `parser_id`, inserting it when
+    /// there is none yet.
+    ///
+    /// ```rust, ignore
+    /// let extra = Prefilter::builder().account_owners([new_mint]).build()?;
+    /// filters.merge(parser.id(), extra);
+    /// ```
+    ///
+    /// The union is over the field sets, which widens a field the server reads
+    /// as OR and narrows one it reads as AND. Two cases to know:
+    ///
+    /// - An empty set means "match everything" on the wire, so merging into a
+    ///   match-all **narrows** it: one owner merged into an
+    ///   `accounts_include_all` prefilter leaves that owner alone subscribed.
+    /// - `accounts_required` is an AND on the wire, so unioning it **narrows**
+    ///   too: `{A}` merged with `{B}` requires a transaction to touch both.
+    ///
+    /// Use [`Self::insert`] to replace a prefilter deliberately, and check
+    /// [`Self::get`] first when the existing one may be either shape.
+    ///
+    pub fn merge(&mut self, parser_id: impl Into<String>, prefilter: Prefilter) {
+        match self.parsers_filters.entry(parser_id.into()) {
+            Entry::Occupied(mut existing) => existing.get_mut().merge(prefilter),
+            Entry::Vacant(slot) => {
+                slot.insert(prefilter);
+            },
+        }
+    }
+
+    /// Drop the prefilter under `parser_id`, so the set no longer subscribes
+    /// for that parser. Returns the removed prefilter.
+    #[inline]
+    pub fn remove(&mut self, parser_id: &str) -> Option<Prefilter> {
+        self.parsers_filters.remove(parser_id)
     }
 }
 
@@ -1040,6 +1103,130 @@ impl From<Filters> for SubscribeRequest {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn owned_by(marker: u8) -> Prefilter {
+        Prefilter {
+            account: Some(AccountPrefilter {
+                accounts: HashSet::new(),
+                owners: HashSet::from([Pubkey::new([marker; 32])]),
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn owners_of(filters: &Filters, parser_id: &str) -> HashSet<Pubkey> {
+        filters
+            .get(parser_id)
+            .and_then(|prefilter| prefilter.account.as_ref())
+            .map(|account| account.owners.clone())
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn test_filters_merge_unions_into_an_existing_prefilter() {
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), owned_by(1))]));
+
+        filters.merge("p", owned_by(2));
+
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([1; 32]), Pubkey::new([2; 32])])
+        );
+    }
+
+    #[test]
+    fn test_filters_merge_inserts_when_absent() {
+        let mut filters = Filters::new(HashMap::new());
+
+        filters.merge("p", owned_by(1));
+
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([1; 32])])
+        );
+    }
+
+    #[test]
+    fn test_filters_insert_replaces_and_returns_the_previous_prefilter() {
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), owned_by(1))]));
+
+        let previous = filters.insert("p", owned_by(2));
+
+        assert_eq!(
+            previous
+                .and_then(|prefilter| prefilter.account)
+                .map(|a| a.owners),
+            Some(HashSet::from([Pubkey::new([1; 32])]))
+        );
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([2; 32])])
+        );
+    }
+
+    /// An empty field set means "match everything" on the wire, and `merge`
+    /// unions the sets, so merging one owner into a match-all leaves that owner
+    /// alone subscribed. Documented on `merge` because it reads as widening and
+    /// is not; `insert` is the way to replace a match-all deliberately.
+    #[test]
+    fn test_filters_merge_narrows_a_match_all() {
+        let match_all = Prefilter {
+            account: Some(AccountPrefilter::default()),
+            ..Default::default()
+        };
+
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), match_all)]));
+
+        filters.merge("p", owned_by(1));
+
+        assert_eq!(
+            owners_of(&filters, "p"),
+            HashSet::from([Pubkey::new([1; 32])]),
+            "merging into a match-all narrows it rather than widening"
+        );
+    }
+
+    /// `accounts_required` is an AND on the wire, so unioning two required sets
+    /// asks for transactions touching both rather than either. Documented on
+    /// `merge` because it reads as widening and is not.
+    #[test]
+    fn test_filters_merge_narrows_accounts_required() {
+        let requiring = |key: u8| Prefilter {
+            transaction: Some(TransactionPrefilter {
+                accounts_required: HashSet::from([Pubkey::new([key; 32])]),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), requiring(1))]));
+
+        filters.merge("p", requiring(2));
+
+        let required = filters
+            .get("p")
+            .and_then(|prefilter| prefilter.transaction.as_ref())
+            .map(|transaction| transaction.accounts_required.clone())
+            .expect("required set must be present");
+
+        assert_eq!(
+            required,
+            HashSet::from([Pubkey::new([1; 32]), Pubkey::new([2; 32])]),
+            "merging required accounts asks for both, which is narrower"
+        );
+    }
+
+    #[test]
+    fn test_filters_remove_drops_the_parser() {
+        let mut filters = Filters::new(HashMap::from([("p".to_owned(), owned_by(1))]));
+
+        assert!(filters.remove("p").is_some());
+
+        assert!(filters.get("p").is_none());
+        assert_eq!(filters.parser_ids().count(), 0);
+        assert!(filters.remove("p").is_none());
+    }
+
     fn block_prefilter(
         include_accounts: bool,
         include_transactions: bool,
