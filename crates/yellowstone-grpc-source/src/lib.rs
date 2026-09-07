@@ -572,6 +572,7 @@ mod tests {
             account: Some(AccountPrefilter {
                 accounts: HashSet::new(),
                 owners: HashSet::from([Pubkey::new([marker; 32])]),
+                ..Default::default()
             }),
             ..Default::default()
         })]))
