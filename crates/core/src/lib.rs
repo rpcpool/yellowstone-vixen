@@ -24,6 +24,7 @@ use std::{
     sync::Arc,
 };
 
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::Deserialize;
 use yellowstone_grpc_proto::geyser::{
@@ -897,8 +898,8 @@ pub enum PrefilterError {
     DataSliceOverlap(u64, u64),
 }
 
-/// Reject data the server would refuse, naming what was measured so the
-/// message says which limit was hit.
+/// Reject data over a limit, naming what was measured so the message says
+/// which limit was hit.
 fn check_memcmp_len(
     len: usize,
     max: usize,
@@ -929,10 +930,16 @@ impl AccountFilter {
 
     /// Check that the server could act on this filter.
     ///
-    /// Encoding and size are validated here rather than at send time, so a bad
-    /// config fails at load instead of taking the subscription down mid-run.
-    /// The limits mirror the ones the Yellowstone geyser plugin enforces when
-    /// it builds its filter, since a value over them is a hard error there.
+    /// Encoding and size are checked when the prefilter is built rather than
+    /// at send time, so a bad value fails there instead of taking the
+    /// subscription down when it is opened. The limits mirror the ones the
+    /// Yellowstone geyser plugin enforces when it builds its filter, since a
+    /// value over them is a hard error there.
+    ///
+    /// Two checks are stricter than the server: it accepts an empty memcmp
+    /// comparison, which matches every account long enough to reach the
+    /// offset, and this refuses one, because a comparison that constrains
+    /// nothing is a mistake rather than a request.
     ///
     /// # Errors
     ///
@@ -951,41 +958,42 @@ impl AccountFilter {
 
         // The string limits are on the encoded form, so they are checked before
         // decoding, exactly as the server does.
-        let decoded: Cow<[u8]> = match data {
-            MemcmpData::Bytes(bytes) => Cow::Borrowed(bytes),
-            MemcmpData::Base58(text) => {
-                check_memcmp_len(
-                    text.len(),
-                    Self::MAX_DATA_BASE58_SIZE,
-                    offset,
-                    "base58 characters",
-                )?;
-
-                Cow::Owned(bs58::decode(text).into_vec().map_err(|err| {
-                    PrefilterError::BadMemcmpData {
-                        encoding: "base58",
+        let decoded: Cow<[u8]> =
+            match data {
+                MemcmpData::Bytes(bytes) => Cow::Borrowed(bytes),
+                MemcmpData::Base58(text) => {
+                    check_memcmp_len(
+                        text.len(),
+                        Self::MAX_DATA_BASE58_SIZE,
                         offset,
-                        message: err.to_string(),
-                    }
-                })?)
-            },
-            MemcmpData::Base64(text) => {
-                check_memcmp_len(
-                    text.len(),
-                    Self::MAX_DATA_BASE64_SIZE,
-                    offset,
-                    "base64 characters",
-                )?;
+                        "base58 characters",
+                    )?;
 
-                Cow::Owned(
-                    base64_decode(text).ok_or_else(|| PrefilterError::BadMemcmpData {
-                        encoding: "base64",
+                    Cow::Owned(bs58::decode(text).into_vec().map_err(|err| {
+                        PrefilterError::BadMemcmpData {
+                            encoding: "base58",
+                            offset,
+                            message: err.to_string(),
+                        }
+                    })?)
+                },
+                MemcmpData::Base64(text) => {
+                    check_memcmp_len(
+                        text.len(),
+                        Self::MAX_DATA_BASE64_SIZE,
                         offset,
-                        message: "not valid base64".to_owned(),
-                    })?,
-                )
-            },
-        };
+                        "base64 characters",
+                    )?;
+
+                    Cow::Owned(STANDARD.decode(text).map_err(|err| {
+                        PrefilterError::BadMemcmpData {
+                            encoding: "base64",
+                            offset,
+                            message: err.to_string(),
+                        }
+                    })?)
+                },
+            };
 
         if decoded.is_empty() {
             return Err(PrefilterError::EmptyMemcmpData(offset));
@@ -996,12 +1004,11 @@ impl AccountFilter {
         Ok(())
     }
 
-    /// Check a whole filter list the way the server does.
+    /// Check the rules that are about the list rather than any one entry.
     ///
-    /// Two of the server's rules are about the list rather than any one entry:
-    /// how many filters it holds, and that a data size appears at most once. A
-    /// list whose entries each pass [`Self::validate`] can still be refused on
-    /// either count.
+    /// Two of the server's are: how many filters it holds, and that a data
+    /// size appears at most once. A list whose entries each pass
+    /// [`Self::validate`] can still be refused on either count.
     ///
     /// # Errors
     ///
@@ -1030,51 +1037,6 @@ impl AccountFilter {
     }
 }
 
-/// Decode canonical standard base64 without pulling in a dependency for it.
-///
-/// Strict on purpose. The server decodes with the `base64` crate's standard
-/// engine, which requires the padding to be present and correct and the bits
-/// the padding stands in for to be zero. Anything accepted here that the engine
-/// refuses would pass config load and then fail at subscribe time, which is the
-/// failure this validation exists to prevent.
-fn base64_decode(text: &str) -> Option<Vec<u8>> {
-    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    if !text.len().is_multiple_of(4) {
-        return None;
-    }
-
-    let body = text.trim_end_matches('=');
-
-    if text.len() - body.len() > 2 {
-        return None;
-    }
-
-    let mut out = Vec::with_capacity(body.len() * 3 / 4);
-    let mut acc: u32 = 0;
-    let mut bits = 0_u32;
-
-    for byte in body.bytes() {
-        let value = u32::try_from(TABLE.iter().position(|c| *c == byte)?)
-            .expect("a table index is at most 63");
-        acc = (acc << 6) | value;
-        bits += 6;
-
-        if bits >= 8 {
-            bits -= 8;
-            out.push(((acc >> bits) & 0xff) as u8);
-        }
-    }
-
-    // Leftover bits belong to no byte, so a non-zero one means the same bytes
-    // have two spellings and the server takes neither.
-    if acc & ((1 << bits) - 1) != 0 {
-        return None;
-    }
-
-    Some(out)
-}
-
 impl AccountsDataSlice {
     /// Check that the slice would return bytes.
     ///
@@ -1098,12 +1060,14 @@ impl AccountsDataSlice {
         Ok(())
     }
 
-    /// Check a whole set of slices the way the server does.
+    /// Check the rules that are about the set rather than any one slice.
     ///
     /// The server reads the windows as one ordered cut through the account
     /// data: it requires ascending offsets and refuses any overlap, closing the
     /// subscription otherwise. Those are properties of the set, so a list whose
-    /// entries each pass [`Self::validate`] can still be refused.
+    /// entries each pass [`Self::validate`] can still be refused. It also caps
+    /// how many windows a subscription may carry, which is configured per
+    /// deployment and so cannot be checked here.
     ///
     /// # Errors
     ///
@@ -1260,7 +1224,15 @@ impl PrefilterBuilder {
         };
 
         let account = if accounts_include_all {
-            Some(AccountPrefilter::default())
+            // "All accounts" replaces the key axes, but the data comparisons
+            // and the signature requirement are orthogonal to which keys are
+            // subscribed: "every 165-byte account" is a request the wire can
+            // express, so they survive rather than being dropped silently.
+            Some(AccountPrefilter {
+                filters: account.filters,
+                nonempty_txn_signature: account.nonempty_txn_signature,
+                ..Default::default()
+            })
         } else {
             (account != AccountPrefilter::default()).then_some(account)
         };
@@ -1288,6 +1260,14 @@ impl PrefilterBuilder {
     /// further. Validated here, so a bad encoding fails the build rather than
     /// the subscription.
     ///
+    /// Pair these with [`Self::accounts`] or [`Self::account_owners`]. The
+    /// server decides whether a subscription is filtered at all by looking
+    /// only at the account and owner keys, so a prefilter carrying nothing but
+    /// comparisons counts as unfiltered and a server configured to refuse
+    /// those will refuse it.
+    ///
+    /// # Example
+    ///
     /// ```rust, ignore
     /// Prefilter::builder()
     ///     .account_owners([spl_token::ID])
@@ -1304,14 +1284,21 @@ impl PrefilterBuilder {
         })
     }
 
-    /// Receive only account updates carrying a transaction signature.
+    /// Receive only account updates that carry a transaction signature, or
+    /// only those that do not.
     ///
-    /// The default receives every update, including those with no signature.
+    /// Both directions narrow. `true` drops every update with no signature;
+    /// `false` drops every update that has one, which is not the same as
+    /// turning the requirement off. Leaving it unset is the default and
+    /// receives both.
     ///
     pub fn account_nonempty_txn_signature(self, required: bool) -> Self {
         self.mutate(|this| {
-            this.account_nonempty_txn_signature = Some(required);
-            Ok(())
+            set_opt(
+                &mut this.account_nonempty_txn_signature,
+                "account_nonempty_txn_signature",
+                required,
+            )
         })
     }
 
@@ -1336,10 +1323,7 @@ impl PrefilterBuilder {
     /// The default receives both.
     ///
     pub fn transaction_vote(self, vote: bool) -> Self {
-        self.mutate(|this| {
-            this.transaction_vote = Some(vote);
-            Ok(())
-        })
+        self.mutate(|this| set_opt(&mut this.transaction_vote, "transaction_vote", vote))
     }
 
     /// Receive only the transaction with this signature.
@@ -1356,8 +1340,11 @@ impl PrefilterBuilder {
     /// Receive the extra updates the server emits between slots.
     pub fn slot_interslot_updates(self, wanted: bool) -> Self {
         self.mutate(|this| {
-            this.slot_interslot_updates = Some(wanted);
-            Ok(())
+            set_opt(
+                &mut this.slot_interslot_updates,
+                "slot_interslot_updates",
+                wanted,
+            )
         })
     }
 
@@ -2001,6 +1988,90 @@ mod tests {
         assert!(accounts.filters.is_empty());
         assert_eq!(accounts.nonempty_txn_signature, None);
         assert!(request.accounts_data_slice.is_empty());
+
+        // The account-only prefilter above leaves `transactions` and `slots`
+        // empty, so the defaults on those two need their own request.
+        let request = one(Prefilter::builder()
+            .transaction_accounts_include([Pubkey::new([1; 32])])
+            .slots()
+            .build()
+            .expect("prefilter must build"));
+
+        let transactions = request.transactions.get("p").expect("txn filter");
+
+        assert_eq!(transactions.vote, None);
+        assert_eq!(transactions.signature, None);
+        assert!(transactions.account_exclude.is_empty());
+
+        assert_eq!(
+            request
+                .slots
+                .get("p")
+                .expect("slot filter")
+                .interslot_updates,
+            None
+        );
+    }
+
+    /// `accounts_include_all` replaces the key axes, but a data comparison is
+    /// orthogonal to which keys are subscribed, so dropping it would silently
+    /// discard what the caller asked for.
+    #[test]
+    fn accounts_include_all_keeps_the_data_comparisons() {
+        let prefilter = Prefilter::builder()
+            .accounts_include_all()
+            .account_filters([AccountFilter::DataSize(165)])
+            .account_nonempty_txn_signature(true)
+            .build()
+            .expect("prefilter must build");
+
+        let request = one(prefilter);
+        let accounts = request.accounts.get("p").expect("account filter");
+
+        assert!(accounts.account.is_empty(), "every key stays subscribed");
+        assert!(accounts.owner.is_empty());
+        assert_eq!(accounts.nonempty_txn_signature, Some(true));
+        assert!(matches!(accounts.filters.as_slice(), [
+            SubscribeRequestFilterAccountsFilter {
+                filter: Some(wire_filter::Filter::Datasize(165)),
+            }
+        ]));
+    }
+
+    /// Every other `Option`-valued setter refuses a second call, so these three
+    /// have to as well rather than silently overwriting.
+    #[test]
+    fn setting_an_option_twice_is_refused() {
+        let refused = |result: Result<Prefilter, PrefilterError>, field: &str| {
+            assert!(
+                matches!(result, Err(PrefilterError::AlreadySet(named)) if named == field),
+                "{field} must refuse a second call"
+            );
+        };
+
+        refused(
+            Prefilter::builder()
+                .account_nonempty_txn_signature(true)
+                .account_nonempty_txn_signature(false)
+                .build(),
+            "account_nonempty_txn_signature",
+        );
+
+        refused(
+            Prefilter::builder()
+                .transaction_vote(true)
+                .transaction_vote(false)
+                .build(),
+            "transaction_vote",
+        );
+
+        refused(
+            Prefilter::builder()
+                .slot_interslot_updates(true)
+                .slot_interslot_updates(false)
+                .build(),
+            "slot_interslot_updates",
+        );
     }
 
     #[test]
