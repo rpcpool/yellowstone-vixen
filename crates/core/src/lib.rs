@@ -1242,7 +1242,12 @@ impl PrefilterBuilder {
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
             block_meta: block_metas.then_some(block_meta),
             block: (block != BlockPrefilter::default()).then_some(block),
-            slot: slots.then_some(slot),
+            // A caller who set only `interslot_updates` asked for slot updates
+            // just as plainly as one who called `slots()`, so honour it rather
+            // than dropping it. Cannot be `!= default()` like the others:
+            // `filter_by_commitment` defaults to true, so `slots()` on its own
+            // yields the default prefilter.
+            slot: (slots || slot != SlotPrefilter::default()).then_some(slot),
         })
     }
 
@@ -1287,6 +1292,11 @@ impl PrefilterBuilder {
     /// Receive only account updates that carry a transaction signature, or
     /// only those that do not.
     ///
+    /// Pair this with [`Self::accounts`] or [`Self::account_owners`]. On its
+    /// own it subscribes to every account on the cluster that matches, because
+    /// the server reads an empty key set as "no constraint" rather than
+    /// "nothing".
+    ///
     /// Both directions narrow. `true` drops every update with no signature;
     /// `false` drops every update that has one, which is not the same as
     /// turning the requirement off. Leaving it unset is the default and
@@ -1304,6 +1314,11 @@ impl PrefilterBuilder {
 
     /// Drop transactions touching any of these accounts.
     ///
+    /// Pair this with [`Self::transaction_accounts_include`] or
+    /// [`Self::transaction_accounts_required`]. On its own it subscribes to
+    /// every transaction except the excluded ones, because the server reads an
+    /// empty include set as "no constraint".
+    ///
     /// Exclusion beats inclusion on the wire, so a key here is not delivered
     /// even when another axis would have matched it.
     ///
@@ -1319,6 +1334,11 @@ impl PrefilterBuilder {
     }
 
     /// Receive only vote transactions, or only non-vote ones.
+    ///
+    /// Pair this with [`Self::transaction_accounts_include`] or
+    /// [`Self::transaction_accounts_required`]. On its own it subscribes to
+    /// every transaction of the chosen kind, because the server reads an empty
+    /// include set as "no constraint".
     ///
     /// The default receives both.
     ///
@@ -1968,6 +1988,31 @@ mod tests {
             .slot_interslot_updates(true)
             .build()
             .expect("prefilter must build");
+
+        assert_eq!(
+            one(prefilter)
+                .slots
+                .get("p")
+                .expect("slot filter")
+                .interslot_updates,
+            Some(true)
+        );
+    }
+
+    /// A caller who set only `interslot_updates` asked for slot updates as
+    /// plainly as one who called `slots()`, so the setting must not be dropped
+    /// on the way to the request.
+    #[test]
+    fn interslot_updates_alone_still_subscribes_to_slots() {
+        let prefilter = Prefilter::builder()
+            .slot_interslot_updates(true)
+            .build()
+            .expect("prefilter must build");
+
+        assert!(
+            prefilter.slot.is_some(),
+            "interslot updates imply a slot subscription"
+        );
 
         assert_eq!(
             one(prefilter)

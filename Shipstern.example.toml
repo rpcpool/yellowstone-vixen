@@ -38,7 +38,7 @@ timeout = 60
 # pipeline sees the same truncated data. Windows must ascend by offset and must
 # not overlap; the server refuses the subscription otherwise, which is checked
 # before connecting. Omit for full account data.
-#[[accounts-data-slice]]
+#[[source.accounts-data-slice]]
 #offset = 0
 #length = 8
 
