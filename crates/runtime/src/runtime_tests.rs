@@ -572,6 +572,53 @@ async fn test_send_filter_update_replaces_the_whole_set() {
     assert_eq!(handle.filters().parser_ids().count(), 0);
 }
 
+/// A `watch` send publishes whether or not the value changed, and the source
+/// turns anything published into a fresh subscribe request, so an edit that
+/// changed nothing would make the server re-apply the whole set for no reason.
+///
+/// Counts how many times marker 7 reached the source: one real update puts it
+/// in the live set, and the two no-ops that follow would each republish that
+/// same set if `watch` were sent unconditionally. Marker 7 is used by no other
+/// test, which matters because the recording statics are shared across the
+/// whole binary.
+#[tokio::test]
+async fn test_update_that_changes_nothing_is_not_handed_to_the_source() {
+    let runtime = filter_update_runtime();
+    let handle = runtime.handle();
+
+    let (result, ()) = tokio::join!(runtime.try_run_async(), async {
+        wait_for_runtime_ready().await;
+
+        handle
+            .update_filters(|filters| filters.merge(TEST_SLOT_FILTER, owned_by(7)))
+            .unwrap();
+
+        // Two spellings of "no change": an empty edit, and the set that is
+        // already live sent back whole.
+        handle.update_filters(|_| {}).unwrap();
+        handle.send_filter_update(handle.filters()).unwrap();
+
+        drop(handle);
+    });
+
+    assert_server_hangup(result);
+
+    let sets = RECEIVED_FILTERS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+
+    let with_marker = sets
+        .iter()
+        .filter_map(|filters| owners_of(filters, TEST_SLOT_FILTER))
+        .filter(|owners| owners.contains(&Pubkey::new([7; 32])))
+        .count();
+
+    assert_eq!(
+        with_marker, 1,
+        "the real update should reach the source once and the two no-ops not at all, got {sets:?}"
+    );
+}
+
 #[tokio::test]
 async fn test_reset_filters_restores_the_registered_set() {
     let runtime = filter_update_runtime();

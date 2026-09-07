@@ -114,7 +114,12 @@ impl YellowstoneGrpcConfig {
     /// assert_eq!(rc.backoff.multiplier, 2.0);
     /// ```
     ///
-    /// Returns `None` when auto-reconnect is disabled.
+    /// Returns `None` when auto-reconnect is disabled, and when it is on with
+    /// a retry budget of zero, which the client library treats the same way:
+    /// it stops on the first stream error instead of reconnecting. Callers
+    /// decide whether a rejected request can be recovered from this returning
+    /// `Some`, so the two have to agree or a set is held for a recovery that
+    /// cannot arrive.
     pub fn reconnect_config(&self) -> Option<ReconnectConfig> {
         if !self.auto_reconnect {
             return None;
@@ -123,6 +128,10 @@ impl YellowstoneGrpcConfig {
         let max_retries = self
             .reconnect_max_retries
             .unwrap_or(DEFAULT_RECONNECT_MAX_RETRIES);
+
+        if max_retries == 0 {
+            return None;
+        }
 
         let backoff = Backoff::new(
             DEFAULT_RECONNECT_INITIAL_BACKOFF,
@@ -794,6 +803,28 @@ mod tests {
 
         assert!(!config.auto_reconnect);
         assert!(config.reconnect_config().is_none());
+    }
+
+    /// A zero retry budget stops the client on the first stream error, so it
+    /// has to read as "no reconnect" here too. `send_or_hold` decides whether
+    /// a rejected set can be recovered from this, and holding one for a
+    /// recovery that cannot arrive retries it every 5s for the rest of the run.
+    #[test]
+    fn zero_retries_reads_as_no_reconnect() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+            auto-reconnect = true
+            reconnect-max-retries = 0
+        "#,
+        )
+        .expect("config must deserialize");
+
+        assert!(
+            config.reconnect_config().is_none(),
+            "a zero retry budget cannot recover a rejected sink"
+        );
     }
 
     /// With no overrides, the helper yields the sturdy built-in defaults

@@ -180,7 +180,7 @@ impl<T: Parser> GetPrefilter for T {
 
 // TODO: why are so many fields on the prefilters and prefilter builder optional???
 /// A prefilter for narrowing down the updates that a parser will receive.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Prefilter {
     /// Filters for account updates.
     pub account: Option<AccountPrefilter>,
@@ -901,7 +901,7 @@ impl PrefilterBuilder {
 }
 
 /// A collection of filters for a Shipstern subscription.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Filters {
     /// Filters for each parser.
     pub parsers_filters: HashMap<String, Prefilter>,

@@ -190,6 +190,20 @@ impl RuntimeHandle {
         edit(&mut next);
         self.state.validate(&next)?;
 
+        // A `watch` send publishes whether or not the value changed, and the
+        // source turns anything published into a fresh subscribe request. An
+        // edit that changed nothing would make the server tear down and
+        // re-apply the whole set for no reason, so it is dropped here. Safe to
+        // read before writing because the update lock is held, and the source
+        // only ever reads the slot.
+        if *self.state.filter_updates_tx.borrow() == next {
+            return if self.state.filter_updates_tx.receiver_count() == 0 {
+                Err(FilterUpdateError::Closed)
+            } else {
+                Ok(())
+            };
+        }
+
         // A failed send leaves the slot untouched, so `filters()` never
         // reports a set that went nowhere.
         self.state
