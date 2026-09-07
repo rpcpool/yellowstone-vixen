@@ -7,7 +7,7 @@ use shipstern::{
     sources::{FilterUpdateSource, SourceExitStatus, SourceTrait},
     CommitmentLevel, Error as ShipsternError,
 };
-use shipstern_core::{AccountsDataSlice, Filters};
+use shipstern_core::{AccountsDataSlice, Filters, PrefilterError};
 use tokio::sync::{mpsc::Sender, oneshot, watch};
 use yellowstone_grpc_client::{Backoff, GeyserGrpcClient, ReconnectConfig};
 use yellowstone_grpc_proto::{
@@ -110,6 +110,22 @@ pub struct YellowstoneGrpcConfig {
 }
 
 impl YellowstoneGrpcConfig {
+    /// Check the settings the server would refuse the whole subscription over.
+    ///
+    /// Called before dialing so a bad data-slice window surfaces as a startup
+    /// error naming the offending window, rather than as a stream that dies on
+    /// subscribe. An embedder can call it earlier, as soon as the config is
+    /// loaded.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::accounts_data_slice`] is not in ascending
+    /// order of offset, overlaps, or carries a zero-length window.
+    ///
+    pub fn validate(&self) -> Result<(), PrefilterError> {
+        AccountsDataSlice::validate_all(&self.accounts_data_slice)
+    }
+
     /// Build the auto-reconnect config from the user-facing flags.
     ///
     /// Uses sturdier backoff defaults than the client library (see
@@ -190,6 +206,17 @@ fn build_subscribe_request(filters: Filters, config: &YellowstoneGrpcConfig) -> 
     if let Some(commitment_level) = config.commitment_level {
         request.commitment = Some(commitment_level as i32);
     }
+
+    // Request-level rather than per-parser, so `From<Filters>` cannot fill it:
+    // the window belongs to the connection, not to any one pipeline. Unlike
+    // `from_slot` it is steady state, so a later request that omitted it would
+    // widen every account back to full data.
+    request.accounts_data_slice = config
+        .accounts_data_slice
+        .iter()
+        .copied()
+        .map(Into::into)
+        .collect();
 
     request
 }
@@ -350,7 +377,8 @@ impl YellowstoneGrpcSource {
         // The server refuses out-of-order or overlapping windows and answers
         // with an error instead of a stream, so check before dialing and say
         // which window is at fault.
-        AccountsDataSlice::validate_all(&config.accounts_data_slice)
+        config
+            .validate()
             .map_err(|err| ShipsternError::Other(Box::new(err)))?;
 
         let mut builder = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
@@ -370,15 +398,6 @@ impl YellowstoneGrpcSource {
 
         let mut subscribe_request = build_subscribe_request(filters, &config);
         subscribe_request.from_slot = config.from_slot;
-
-        // Request-level rather than per-parser, so `From<Filters>` cannot fill
-        // it: the window belongs to the connection, not to any one pipeline.
-        subscribe_request.accounts_data_slice = config
-            .accounts_data_slice
-            .iter()
-            .copied()
-            .map(Into::into)
-            .collect();
 
         tracing::debug!(
             has_accounts = !subscribe_request.accounts.is_empty(),
@@ -815,6 +834,151 @@ mod tests {
 
         assert!(config.auto_reconnect);
         assert!(config.reconnect_config().is_some());
+    }
+
+    /// A data slice is steady state, so it has to be on every request the
+    /// subscription builds. Asserted on the built request rather than on the
+    /// config, since the config carrying it is not the same as it being sent.
+    #[test]
+    fn accounts_data_slice_reaches_the_subscribe_request() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+
+            [[accounts-data-slice]]
+            offset = 0
+            length = 8
+
+            [[accounts-data-slice]]
+            offset = 32
+            length = 32
+        "#,
+        )
+        .expect("config must deserialize");
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+        let windows: Vec<_> = request
+            .accounts_data_slice
+            .iter()
+            .map(|slice| (slice.offset, slice.length))
+            .collect();
+
+        assert_eq!(windows, vec![(0, 8), (32, 32)]);
+    }
+
+    /// With no windows configured the request has to look exactly as it did
+    /// before the field existed.
+    #[test]
+    fn no_data_slice_leaves_the_request_unchanged() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+        "#,
+        )
+        .expect("config must deserialize");
+
+        let request = build_subscribe_request(Filters::new(HashMap::new()), &config);
+
+        assert!(request.accounts_data_slice.is_empty());
+        assert_eq!(request.commitment, None);
+        assert_eq!(request.from_slot, None);
+    }
+
+    /// The `accounts-data-slice` key is the only way to set the windows, so
+    /// the TOML shape is the whole user-facing surface of the feature.
+    #[test]
+    fn deserializes_accounts_data_slice_from_config() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+
+            [[accounts-data-slice]]
+            offset = 0
+            length = 8
+
+            [[accounts-data-slice]]
+            offset = 32
+            length = 32
+        "#,
+        )
+        .expect("config with data slices must deserialize");
+
+        let windows: Vec<_> = config
+            .accounts_data_slice
+            .iter()
+            .map(|slice| (slice.offset, slice.length))
+            .collect();
+
+        assert_eq!(windows, vec![(0, 8), (32, 32)]);
+        config
+            .validate()
+            .expect("ascending disjoint windows are valid");
+    }
+
+    /// A config predating the field must still load and must ask for full
+    /// account data, or every existing deployment changes what it receives.
+    #[test]
+    fn accounts_data_slice_defaults_to_empty() {
+        let config: YellowstoneGrpcConfig = toml::from_str(
+            r#"
+            endpoint = "https://example.rpcpool.com"
+            timeout = 60
+        "#,
+        )
+        .expect("config must deserialize");
+
+        assert!(config.accounts_data_slice.is_empty());
+        config.validate().expect("an empty window list is valid");
+    }
+
+    /// The server answers a malformed window list with an error instead of a
+    /// stream, so it is worth refusing before dialing.
+    #[test]
+    fn validate_rejects_malformed_data_slices() {
+        let config_with = |windows: &str| -> YellowstoneGrpcConfig {
+            toml::from_str(&format!(
+                r#"
+                endpoint = "https://example.rpcpool.com"
+                timeout = 60
+                {windows}
+            "#
+            ))
+            .expect("config must deserialize")
+        };
+
+        let overlapping = config_with(
+            r#"
+            [[accounts-data-slice]]
+            offset = 0
+            length = 16
+
+            [[accounts-data-slice]]
+            offset = 8
+            length = 8
+        "#,
+        );
+
+        assert!(overlapping.validate().is_err(), "overlap must be refused");
+
+        let descending = config_with(
+            r#"
+            [[accounts-data-slice]]
+            offset = 32
+            length = 8
+
+            [[accounts-data-slice]]
+            offset = 0
+            length = 8
+        "#,
+        );
+
+        assert!(
+            descending.validate().is_err(),
+            "descending offsets must be refused"
+        );
     }
 
     /// Auto-reconnect can be explicitly disabled.

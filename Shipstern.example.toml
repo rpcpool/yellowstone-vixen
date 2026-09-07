@@ -33,6 +33,15 @@ timeout = 60
 # value; raise it if your replay window is large.
 #reconnect-slot-retention = 150
 
+# Windows of account data to receive in place of the whole account.
+# Applies to the whole subscription rather than to one parser, so every account
+# pipeline sees the same truncated data. Windows must ascend by offset and must
+# not overlap; the server refuses the subscription otherwise, which is checked
+# before connecting. Omit for full account data.
+#[[accounts-data-slice]]
+#offset = 0
+#length = 8
+
 # # Only needed if you are using Fumarole as a source.
 # [source]
 # endpoint = "https://index.rpcpool.com"
