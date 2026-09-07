@@ -6958,6 +6958,7 @@ dependencies = [
 name = "shipstern-core"
 version = "0.8.0"
 dependencies = [
+ "base64 0.22.1",
  "borsh 1.6.0",
  "bs58",
  "clap 4.5.53",

@@ -24,10 +24,16 @@ use std::{
     sync::Arc,
 };
 
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::Deserialize;
 use yellowstone_grpc_proto::geyser::{
-    self, SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocks,
+    self, subscribe_request_filter_accounts_filter as wire_filter,
+    subscribe_request_filter_accounts_filter_lamports as wire_lamports,
+    subscribe_request_filter_accounts_filter_memcmp as wire_memcmp, SubscribeRequest,
+    SubscribeRequestAccountsDataSlice, SubscribeRequestFilterAccounts,
+    SubscribeRequestFilterAccountsFilter, SubscribeRequestFilterAccountsFilterLamports,
+    SubscribeRequestFilterAccountsFilterMemcmp, SubscribeRequestFilterBlocks,
     SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterSlots,
     SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateAccountInfo,
     SubscribeUpdateBlock, SubscribeUpdateBlockMeta, SubscribeUpdateSlot,
@@ -238,6 +244,80 @@ impl FromIterator<Prefilter> for Prefilter {
     }
 }
 
+/// How the bytes of a [`AccountFilter::Memcmp`] comparison are written.
+///
+/// The wire accepts three encodings of the same bytes. `Bytes` is the one to
+/// reach for; the string forms exist because config documents cannot carry raw
+/// bytes.
+///
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MemcmpData {
+    /// Raw bytes.
+    Bytes(Vec<u8>),
+    /// Base58, the encoding pubkeys and signatures already use.
+    Base58(String),
+    /// Base64, for data that is not key-shaped.
+    Base64(String),
+}
+
+/// A lamport-balance comparison.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LamportsCmp {
+    /// Balance equals this.
+    Eq(u64),
+    /// Balance does not equal this.
+    Ne(u64),
+    /// Balance is below this.
+    Lt(u64),
+    /// Balance is above this.
+    Gt(u64),
+}
+
+/// A server-side comparison on an account's contents, narrowing a subscription
+/// beyond the account and owner keys.
+///
+/// Several filters on one parser are **`ANDed`** by the server, so adding one
+/// only ever narrows what that parser receives.
+///
+/// ```rust, ignore
+/// Prefilter::builder()
+///     .account_owners([spl_token::ID])
+///     .account_filters([AccountFilter::DataSize(165)])
+/// ```
+///
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AccountFilter {
+    /// Compare bytes at an offset.
+    Memcmp {
+        /// Byte offset into the account data.
+        offset: u64,
+        /// The bytes to compare against.
+        data: MemcmpData,
+    },
+    /// Match accounts whose data is exactly this many bytes.
+    DataSize(u64),
+    /// Match only initialized SPL token accounts.
+    TokenAccountState(bool),
+    /// Compare the lamport balance.
+    Lamports(LamportsCmp),
+}
+
+/// A window of account data to receive instead of the whole account.
+///
+/// Applies to the subscription as a whole rather than to one parser, so it
+/// lives on the source configuration rather than on a [`Prefilter`].
+///
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+pub struct AccountsDataSlice {
+    /// Byte offset to start at.
+    pub offset: u64,
+    /// Number of bytes to take.
+    pub length: u64,
+}
+
 /// A prefilter for matching accounts.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct AccountPrefilter {
@@ -245,16 +325,67 @@ pub struct AccountPrefilter {
     pub accounts: HashSet<Pubkey>,
     /// The owners that this prefilter will match.
     pub owners: HashSet<Pubkey>,
+    /// Server-side comparisons on the account contents. Several are `ANDed`, so
+    /// each one narrows further. Empty means no comparison.
+    pub filters: Vec<AccountFilter>,
+    /// Whether to require a non-empty transaction signature on the update.
+    /// `None` receives every account update, which is the default.
+    pub nonempty_txn_signature: Option<bool>,
 }
 
 impl AccountPrefilter {
     /// Merge another account prefilter into this one, producing a prefilter
     /// that describes the union of the two.
     pub fn merge(&mut self, other: AccountPrefilter) {
-        let Self { accounts, owners } = self;
+        let Self {
+            accounts,
+            owners,
+            filters,
+            nonempty_txn_signature,
+        } = self;
         accounts.extend(other.accounts);
         owners.extend(other.owners);
+
+        // The server ANDs the filter list, so keeping both sides' entries would
+        // deliver the intersection. Two prefilters wanting different data
+        // comparisons cannot be expressed as one list, so the union is the
+        // absence of a comparison: over-deliver and let the parser reject.
+        if !same_account_filters(filters, &other.filters) {
+            filters.clear();
+        }
+
+        // `None` receives everything, so it absorbs any narrower choice.
+        if *nonempty_txn_signature != other.nonempty_txn_signature {
+            *nonempty_txn_signature = None;
+        }
     }
+}
+
+/// Compare two account filter lists as multisets.
+///
+/// The server `ANDs` the entries, so two lists holding the same comparisons
+/// narrow identically however they are ordered. Comparing the vectors directly
+/// would call a reordering a disagreement and needlessly widen the merge.
+fn same_account_filters(lhs: &[AccountFilter], rhs: &[AccountFilter]) -> bool {
+    if lhs.len() != rhs.len() {
+        return false;
+    }
+
+    let mut counts: HashMap<&AccountFilter, isize> = HashMap::new();
+
+    for filter in lhs {
+        *counts.entry(filter).or_default() += 1;
+    }
+
+    for filter in rhs {
+        let Some(count) = counts.get_mut(filter) else {
+            return false;
+        };
+
+        *count -= 1;
+    }
+
+    counts.into_values().all(|count| count == 0)
 }
 
 /// A prefilter for matching transactions.
@@ -267,6 +398,13 @@ pub struct TransactionPrefilter {
     ///  That means if any of the accounts are not included in the transaction, the transaction
     ///  won't be retrieved.
     pub accounts_required: HashSet<Pubkey>,
+    /// Transactions touching any of these are **not** retrieved.
+    pub accounts_exclude: HashSet<Pubkey>,
+    /// Whether to receive vote transactions. `None` receives all, which is the
+    /// default.
+    pub vote: Option<bool>,
+    /// Receive only the transaction with this signature. `None` receives all.
+    pub signature: Option<String>,
     /// Filter by transaction success/failure status.
     /// - `None`: Include all transactions (required for "any" filter in Richat)
     /// - `Some(false)`: Only successful transactions (default)
@@ -278,7 +416,10 @@ impl Default for TransactionPrefilter {
     fn default() -> Self {
         Self {
             accounts_include: HashSet::new(),
+            accounts_exclude: HashSet::new(),
             accounts_required: HashSet::new(),
+            vote: None,          // Receive vote and non-vote alike, as before
+            signature: None,     // No single-signature narrowing, as before
             failed: Some(false), // Default to successful transactions (keep original behaviour)
         }
     }
@@ -290,12 +431,29 @@ impl TransactionPrefilter {
     pub fn merge(&mut self, other: TransactionPrefilter) {
         let Self {
             accounts_include,
+            accounts_exclude,
             accounts_required,
+            vote,
+            signature,
             failed,
         } = self;
 
         accounts_include.extend(other.accounts_include);
         accounts_required.extend(other.accounts_required);
+
+        // Exclusion is a negation, so the union of what two prefilters receive
+        // is the intersection of what they exclude: a key only one side hides
+        // must still reach the other.
+        accounts_exclude.retain(|key| other.accounts_exclude.contains(key));
+
+        // Both of these narrow, so any disagreement widens to "receive all".
+        if *vote != other.vote {
+            *vote = None;
+        }
+
+        if *signature != other.signature {
+            *signature = None;
+        }
 
         // The union of two success/failure filters accepts everything the two
         //  accept together. Only when both sides agree on a concrete value does
@@ -354,12 +512,16 @@ pub struct SlotPrefilter {
     /// If true (default), only receive slot updates at the connection's commitment level.
     /// If false, receive ALL slot status transitions (processed, confirmed, finalized, dead).
     pub filter_by_commitment: bool,
+    /// Whether to receive the extra updates the server emits between slots.
+    /// `None` leaves the server default.
+    pub interslot_updates: Option<bool>,
 }
 
 impl Default for SlotPrefilter {
     fn default() -> Self {
         Self {
             filter_by_commitment: true,
+            interslot_updates: None, // Leave the server default, as before
         }
     }
 }
@@ -371,6 +533,14 @@ impl SlotPrefilter {
     /// - `false`: Receive ALL slot status transitions (processed, confirmed, finalized, dead)
     pub fn merge(lhs: &mut Self, rhs: Self) {
         lhs.filter_by_commitment = lhs.filter_by_commitment && rhs.filter_by_commitment;
+
+        // Interslot updates only add traffic, so either side asking for them
+        // wins, and an explicit request beats leaving the server default.
+        lhs.interslot_updates = match (lhs.interslot_updates, rhs.interslot_updates) {
+            (Some(a), Some(b)) => Some(a || b),
+            (Some(want), None) | (None, Some(want)) => Some(want),
+            (None, None) => None,
+        };
     }
 }
 
@@ -670,6 +840,266 @@ pub enum PrefilterError {
     /// An error occurred while parsing a public key as a [`Pubkey`].
     #[error("Invalid pubkey {}", bs58::encode(.0).into_string())]
     BadPubkey(Vec<u8>, std::array::TryFromSliceError),
+    /// A memcmp comparison carried an encoding the server would reject.
+    #[error("Invalid {encoding} in memcmp data at offset {offset}: {message}")]
+    BadMemcmpData {
+        /// Which encoding failed to decode.
+        encoding: &'static str,
+        /// The offset the comparison was declared at.
+        offset: u64,
+        /// What the decoder said.
+        message: String,
+    },
+    /// A memcmp comparison had nothing to compare against.
+    #[error("Empty memcmp data at offset {0}, which matches every account")]
+    EmptyMemcmpData(u64),
+    /// A memcmp comparison carried more data than the server accepts.
+    #[error("Memcmp data at offset {offset} is {len} {unit}, over the server's limit of {max}")]
+    MemcmpDataTooLarge {
+        /// The offset the comparison was declared at.
+        offset: u64,
+        /// How much data was given.
+        len: usize,
+        /// What the server accepts.
+        max: usize,
+        /// What `len` and `max` count.
+        unit: &'static str,
+    },
+    /// More filters on one subscription than the server accepts.
+    #[error("{count} account filters, over the server's limit of {max}")]
+    TooManyAccountFilters {
+        /// How many filters were given.
+        count: usize,
+        /// What the server accepts.
+        max: usize,
+    },
+    /// More than one data size comparison, which the server refuses outright.
+    #[error("Repeated data size filter, which the server accepts only once")]
+    RepeatedDataSize,
+    /// A token account state comparison asked for uninitialized accounts.
+    #[error("Token account state may only be true; the server rejects false")]
+    FalseTokenAccountState,
+    /// A data slice asked for no bytes, which yields empty account data.
+    #[error("Zero-length accounts data slice at offset {0}")]
+    ZeroLengthDataSlice(u64),
+    /// A data slice ran past the end of the offset space.
+    #[error("Accounts data slice at offset {offset} overflows with length {length}")]
+    DataSliceOverflow {
+        /// Where the slice starts.
+        offset: u64,
+        /// How many bytes it asked for.
+        length: u64,
+    },
+    /// Data slices were not given in ascending order of offset.
+    #[error("Accounts data slice at offset {0} follows one at offset {1}")]
+    DataSliceOutOfOrder(u64, u64),
+    /// Two data slices covered some of the same bytes.
+    #[error("Accounts data slice at offset {0} overlaps the one ending at {1}")]
+    DataSliceOverlap(u64, u64),
+}
+
+/// Reject data over a limit, naming what was measured so the message says
+/// which limit was hit.
+fn check_memcmp_len(
+    len: usize,
+    max: usize,
+    offset: u64,
+    unit: &'static str,
+) -> Result<(), PrefilterError> {
+    if len > max {
+        return Err(PrefilterError::MemcmpDataTooLarge {
+            offset,
+            len,
+            max,
+            unit,
+        });
+    }
+
+    Ok(())
+}
+
+impl AccountFilter {
+    /// The longest base58 memcmp string the server accepts.
+    const MAX_DATA_BASE58_SIZE: usize = 175;
+    /// The longest base64 memcmp string the server accepts.
+    const MAX_DATA_BASE64_SIZE: usize = 172;
+    /// The most bytes a memcmp comparison may decode to.
+    const MAX_DATA_SIZE: usize = 128;
+    /// The most filters the server accepts on one account subscription.
+    const MAX_FILTERS: usize = 4;
+
+    /// Check that the server could act on this filter.
+    ///
+    /// Encoding and size are checked when the prefilter is built rather than
+    /// at send time, so a bad value fails there instead of taking the
+    /// subscription down when it is opened. The limits mirror the ones the
+    /// Yellowstone geyser plugin enforces when it builds its filter, since a
+    /// value over them is a hard error there.
+    ///
+    /// Two checks are stricter than the server: it accepts an empty memcmp
+    /// comparison, which matches every account long enough to reach the
+    /// offset, and this refuses one, because a comparison that constrains
+    /// nothing is a mistake rather than a request.
+    ///
+    /// # Errors
+    ///
+    /// See [`PrefilterError::BadMemcmpData`], [`PrefilterError::EmptyMemcmpData`],
+    /// [`PrefilterError::MemcmpDataTooLarge`], and
+    /// [`PrefilterError::FalseTokenAccountState`].
+    ///
+    pub fn validate(&self) -> Result<(), PrefilterError> {
+        let (offset, data) = match self {
+            Self::Memcmp { offset, data } => (*offset, data),
+            // The server reads this as "only initialized accounts" and refuses
+            // `false` outright rather than treating it as "any state".
+            Self::TokenAccountState(false) => return Err(PrefilterError::FalseTokenAccountState),
+            Self::TokenAccountState(true) | Self::DataSize(_) | Self::Lamports(_) => return Ok(()),
+        };
+
+        // The string limits are on the encoded form, so they are checked before
+        // decoding, exactly as the server does.
+        let decoded: Cow<[u8]> =
+            match data {
+                MemcmpData::Bytes(bytes) => Cow::Borrowed(bytes),
+                MemcmpData::Base58(text) => {
+                    check_memcmp_len(
+                        text.len(),
+                        Self::MAX_DATA_BASE58_SIZE,
+                        offset,
+                        "base58 characters",
+                    )?;
+
+                    Cow::Owned(bs58::decode(text).into_vec().map_err(|err| {
+                        PrefilterError::BadMemcmpData {
+                            encoding: "base58",
+                            offset,
+                            message: err.to_string(),
+                        }
+                    })?)
+                },
+                MemcmpData::Base64(text) => {
+                    check_memcmp_len(
+                        text.len(),
+                        Self::MAX_DATA_BASE64_SIZE,
+                        offset,
+                        "base64 characters",
+                    )?;
+
+                    Cow::Owned(STANDARD.decode(text).map_err(|err| {
+                        PrefilterError::BadMemcmpData {
+                            encoding: "base64",
+                            offset,
+                            message: err.to_string(),
+                        }
+                    })?)
+                },
+            };
+
+        if decoded.is_empty() {
+            return Err(PrefilterError::EmptyMemcmpData(offset));
+        }
+
+        check_memcmp_len(decoded.len(), Self::MAX_DATA_SIZE, offset, "decoded bytes")?;
+
+        Ok(())
+    }
+
+    /// Check the rules that are about the list rather than any one entry.
+    ///
+    /// Two of the server's are: how many filters it holds, and that a data
+    /// size appears at most once. A list whose entries each pass
+    /// [`Self::validate`] can still be refused on either count.
+    ///
+    /// # Errors
+    ///
+    /// See [`PrefilterError::TooManyAccountFilters`],
+    /// [`PrefilterError::RepeatedDataSize`], and [`Self::validate`].
+    ///
+    pub fn validate_all(filters: &[Self]) -> Result<(), PrefilterError> {
+        if filters.len() > Self::MAX_FILTERS {
+            return Err(PrefilterError::TooManyAccountFilters {
+                count: filters.len(),
+                max: Self::MAX_FILTERS,
+            });
+        }
+
+        let mut saw_data_size = false;
+
+        for filter in filters {
+            filter.validate()?;
+
+            if matches!(filter, Self::DataSize(_)) && std::mem::replace(&mut saw_data_size, true) {
+                return Err(PrefilterError::RepeatedDataSize);
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl AccountsDataSlice {
+    /// Check that the slice would return bytes.
+    ///
+    /// # Errors
+    ///
+    /// See [`PrefilterError::ZeroLengthDataSlice`] and
+    /// [`PrefilterError::DataSliceOverflow`].
+    ///
+    pub fn validate(&self) -> Result<(), PrefilterError> {
+        if self.length == 0 {
+            return Err(PrefilterError::ZeroLengthDataSlice(self.offset));
+        }
+
+        if self.offset.checked_add(self.length).is_none() {
+            return Err(PrefilterError::DataSliceOverflow {
+                offset: self.offset,
+                length: self.length,
+            });
+        }
+
+        Ok(())
+    }
+
+    /// Check the rules that are about the set rather than any one slice.
+    ///
+    /// The server reads the windows as one ordered cut through the account
+    /// data: it requires ascending offsets and refuses any overlap, closing the
+    /// subscription otherwise. Those are properties of the set, so a list whose
+    /// entries each pass [`Self::validate`] can still be refused. It also caps
+    /// how many windows a subscription may carry, which is configured per
+    /// deployment and so cannot be checked here.
+    ///
+    /// # Errors
+    ///
+    /// See [`PrefilterError::DataSliceOutOfOrder`],
+    /// [`PrefilterError::DataSliceOverlap`], and [`Self::validate`].
+    ///
+    pub fn validate_all(slices: &[Self]) -> Result<(), PrefilterError> {
+        let mut previous: Option<Self> = None;
+
+        for slice in slices {
+            slice.validate()?;
+
+            if let Some(previous) = previous {
+                if slice.offset < previous.offset {
+                    return Err(PrefilterError::DataSliceOutOfOrder(
+                        slice.offset,
+                        previous.offset,
+                    ));
+                }
+
+                let end = previous.offset + previous.length;
+
+                if slice.offset < end {
+                    return Err(PrefilterError::DataSliceOverlap(slice.offset, end));
+                }
+            }
+
+            previous = Some(*slice);
+        }
+
+        Ok(())
+    }
 }
 
 /// A builder for constructing a prefilter.
@@ -694,6 +1124,18 @@ pub struct PrefilterBuilder {
     accounts: Option<HashSet<Pubkey>>,
     /// Matching [`AccountPrefilter::account_owners`]
     account_owners: Option<HashSet<Pubkey>>,
+    /// Matching [`AccountPrefilter::filters`]
+    account_filters: Option<Vec<AccountFilter>>,
+    /// Matching [`AccountPrefilter::nonempty_txn_signature`]
+    account_nonempty_txn_signature: Option<bool>,
+    /// Matching [`TransactionPrefilter::accounts_exclude`]
+    transaction_accounts_exclude: Option<HashSet<Pubkey>>,
+    /// Matching [`TransactionPrefilter::vote`]
+    transaction_vote: Option<bool>,
+    /// Matching [`TransactionPrefilter::signature`]
+    transaction_signature: Option<String>,
+    /// Matching [`SlotPrefilter::interslot_updates`]
+    slot_interslot_updates: Option<bool>,
     /// Matching [`TransactionPrefilter::accounts_include`]
     transaction_accounts_include: Option<HashSet<Pubkey>>,
     /// Matching [`TransactionPrefilter::accounts_required`]
@@ -740,6 +1182,12 @@ impl PrefilterBuilder {
             block_include_transactions,
             transaction_accounts_include,
             transaction_accounts_required,
+            account_filters,
+            account_nonempty_txn_signature,
+            transaction_accounts_exclude,
+            transaction_vote,
+            transaction_signature,
+            slot_interslot_updates,
         } = self;
         if let Some(err) = error {
             return Err(err);
@@ -748,11 +1196,16 @@ impl PrefilterBuilder {
         let account = AccountPrefilter {
             accounts: accounts.unwrap_or_default(),
             owners: account_owners.unwrap_or_default(),
+            filters: account_filters.unwrap_or_default(),
+            nonempty_txn_signature: account_nonempty_txn_signature,
         };
 
         let transaction = TransactionPrefilter {
             accounts_include: transaction_accounts_include.unwrap_or_default(),
+            accounts_exclude: transaction_accounts_exclude.unwrap_or_default(),
             accounts_required: transaction_accounts_required.unwrap_or_default(),
+            vote: transaction_vote,
+            signature: transaction_signature,
             ..Default::default()
         };
 
@@ -765,10 +1218,21 @@ impl PrefilterBuilder {
             include_entries: block_include_entries,
         };
 
-        let slot = SlotPrefilter::default();
+        let slot = SlotPrefilter {
+            interslot_updates: slot_interslot_updates,
+            ..Default::default()
+        };
 
         let account = if accounts_include_all {
-            Some(AccountPrefilter::default())
+            // "All accounts" replaces the key axes, but the data comparisons
+            // and the signature requirement are orthogonal to which keys are
+            // subscribed: "every 165-byte account" is a request the wire can
+            // express, so they survive rather than being dropped silently.
+            Some(AccountPrefilter {
+                filters: account.filters,
+                nonempty_txn_signature: account.nonempty_txn_signature,
+                ..Default::default()
+            })
         } else {
             (account != AccountPrefilter::default()).then_some(account)
         };
@@ -778,7 +1242,12 @@ impl PrefilterBuilder {
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
             block_meta: block_metas.then_some(block_meta),
             block: (block != BlockPrefilter::default()).then_some(block),
-            slot: slots.then_some(slot),
+            // A caller who set only `interslot_updates` asked for slot updates
+            // just as plainly as one who called `slots()`, so honour it rather
+            // than dropping it. Cannot be `!= default()` like the others:
+            // `filter_by_commitment` defaults to true, so `slots()` on its own
+            // yields the default prefilter.
+            slot: (slots || slot != SlotPrefilter::default()).then_some(slot),
         })
     }
 
@@ -788,6 +1257,115 @@ impl PrefilterBuilder {
         }
 
         self
+    }
+
+    /// Narrow the account subscription with server-side data comparisons.
+    ///
+    /// Several comparisons are `ANDed` by the server, so each one narrows
+    /// further. Validated here, so a bad encoding fails the build rather than
+    /// the subscription.
+    ///
+    /// Pair these with [`Self::accounts`] or [`Self::account_owners`]. The
+    /// server decides whether a subscription is filtered at all by looking
+    /// only at the account and owner keys, so a prefilter carrying nothing but
+    /// comparisons counts as unfiltered and a server configured to refuse
+    /// those will refuse it.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// Prefilter::builder()
+    ///     .account_owners([spl_token::ID])
+    ///     .account_filters([AccountFilter::DataSize(165)])
+    /// ```
+    ///
+    pub fn account_filters<I: IntoIterator<Item = AccountFilter>>(self, it: I) -> Self {
+        self.mutate(|this| {
+            let filters: Vec<_> = it.into_iter().collect();
+
+            AccountFilter::validate_all(&filters)?;
+
+            set_opt(&mut this.account_filters, "account_filters", filters)
+        })
+    }
+
+    /// Receive only account updates that carry a transaction signature, or
+    /// only those that do not.
+    ///
+    /// Pair this with [`Self::accounts`] or [`Self::account_owners`]. On its
+    /// own it subscribes to every account on the cluster that matches, because
+    /// the server reads an empty key set as "no constraint" rather than
+    /// "nothing".
+    ///
+    /// Both directions narrow. `true` drops every update with no signature;
+    /// `false` drops every update that has one, which is not the same as
+    /// turning the requirement off. Leaving it unset is the default and
+    /// receives both.
+    ///
+    pub fn account_nonempty_txn_signature(self, required: bool) -> Self {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.account_nonempty_txn_signature,
+                "account_nonempty_txn_signature",
+                required,
+            )
+        })
+    }
+
+    /// Drop transactions touching any of these accounts.
+    ///
+    /// Pair this with [`Self::transaction_accounts_include`] or
+    /// [`Self::transaction_accounts_required`]. On its own it subscribes to
+    /// every transaction except the excluded ones, because the server reads an
+    /// empty include set as "no constraint".
+    ///
+    /// Exclusion beats inclusion on the wire, so a key here is not delivered
+    /// even when another axis would have matched it.
+    ///
+    pub fn transaction_accounts_exclude<I: IntoIterator>(self, it: I) -> Self
+    where I::Item: AsRef<[u8]> {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.transaction_accounts_exclude,
+                "transaction_accounts_exclude",
+                collect_pubkeys(it)?,
+            )
+        })
+    }
+
+    /// Receive only vote transactions, or only non-vote ones.
+    ///
+    /// Pair this with [`Self::transaction_accounts_include`] or
+    /// [`Self::transaction_accounts_required`]. On its own it subscribes to
+    /// every transaction of the chosen kind, because the server reads an empty
+    /// include set as "no constraint".
+    ///
+    /// The default receives both.
+    ///
+    pub fn transaction_vote(self, vote: bool) -> Self {
+        self.mutate(|this| set_opt(&mut this.transaction_vote, "transaction_vote", vote))
+    }
+
+    /// Receive only the transaction with this signature.
+    pub fn transaction_signature(self, signature: impl Into<String>) -> Self {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.transaction_signature,
+                "transaction_signature",
+                signature.into(),
+            )
+        })
+    }
+
+    /// Receive the extra updates the server emits between slots.
+    pub fn slot_interslot_updates(self, wanted: bool) -> Self {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.slot_interslot_updates,
+                "slot_interslot_updates",
+                wanted,
+            )
+        })
     }
 
     /// Set prefilter will request slot updates.
@@ -1004,6 +1582,62 @@ impl From<geyser::CommitmentLevel> for CommitmentLevel {
     }
 }
 
+impl From<&MemcmpData> for wire_memcmp::Data {
+    fn from(value: &MemcmpData) -> Self {
+        match value {
+            MemcmpData::Bytes(bytes) => Self::Bytes(bytes.clone()),
+            MemcmpData::Base58(text) => Self::Base58(text.clone()),
+            MemcmpData::Base64(text) => Self::Base64(text.clone()),
+        }
+    }
+}
+
+impl From<LamportsCmp> for wire_lamports::Cmp {
+    fn from(value: LamportsCmp) -> Self {
+        match value {
+            LamportsCmp::Eq(lamports) => Self::Eq(lamports),
+            LamportsCmp::Ne(lamports) => Self::Ne(lamports),
+            LamportsCmp::Lt(lamports) => Self::Lt(lamports),
+            LamportsCmp::Gt(lamports) => Self::Gt(lamports),
+        }
+    }
+}
+
+impl From<&AccountFilter> for SubscribeRequestFilterAccountsFilter {
+    fn from(value: &AccountFilter) -> Self {
+        let filter = match value {
+            AccountFilter::Memcmp { offset, data } => {
+                wire_filter::Filter::Memcmp(SubscribeRequestFilterAccountsFilterMemcmp {
+                    offset: *offset,
+                    data: Some(data.into()),
+                })
+            },
+            AccountFilter::DataSize(size) => wire_filter::Filter::Datasize(*size),
+            AccountFilter::TokenAccountState(state) => {
+                wire_filter::Filter::TokenAccountState(*state)
+            },
+            AccountFilter::Lamports(cmp) => {
+                wire_filter::Filter::Lamports(SubscribeRequestFilterAccountsFilterLamports {
+                    cmp: Some((*cmp).into()),
+                })
+            },
+        };
+
+        Self {
+            filter: Some(filter),
+        }
+    }
+}
+
+impl From<AccountsDataSlice> for SubscribeRequestAccountsDataSlice {
+    fn from(value: AccountsDataSlice) -> Self {
+        Self {
+            offset: value.offset,
+            length: value.length,
+        }
+    }
+}
+
 impl From<Filters> for SubscribeRequest {
     fn from(value: Filters) -> Self {
         SubscribeRequest {
@@ -1016,10 +1650,10 @@ impl From<Filters> for SubscribeRequest {
                     Some((k.clone(), SubscribeRequestFilterAccounts {
                         account: v.accounts.iter().map(ToString::to_string).collect(),
                         owner: v.owners.iter().map(ToString::to_string).collect(),
-                        // TODO: probably a good thing to look into
-                        filters: vec![],
-                        // We receive all accounts updates
-                        nonempty_txn_signature: None,
+                        filters: v.filters.iter().map(Into::into).collect(),
+                        nonempty_txn_signature: v.nonempty_txn_signature,
+                        // Cuckoo-filter account matching (proto 12.6) is not
+                        // exposed through `AccountPrefilter`; opt out for now.
                         cuckoo_accounts_filter: None,
                     }))
                 })
@@ -1031,7 +1665,7 @@ impl From<Filters> for SubscribeRequest {
                     let slot_filter = v.slot.as_ref()?;
                     Some((k.clone(), SubscribeRequestFilterSlots {
                         filter_by_commitment: Some(slot_filter.filter_by_commitment),
-                        interslot_updates: None,
+                        interslot_updates: slot_filter.interslot_updates,
                     }))
                 })
                 .collect(),
@@ -1042,18 +1676,22 @@ impl From<Filters> for SubscribeRequest {
                     let v = v.transaction.as_ref()?;
 
                     Some((k.clone(), SubscribeRequestFilterTransactions {
-                        vote: None,
+                        vote: v.vote,
                         failed: v.failed,
                         // Cuckoo-filter account matching (proto 12.6.0) is not
                         // exposed through `TransactionFilter`; opt out for now.
                         cuckoo_account_include: None,
-                        signature: None,
+                        signature: v.signature.clone(),
                         account_include: v
                             .accounts_include
                             .iter()
                             .map(ToString::to_string)
                             .collect(),
-                        account_exclude: [].into_iter().collect(),
+                        account_exclude: v
+                            .accounts_exclude
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect(),
                         account_required: v
                             .accounts_required
                             .iter()
@@ -1063,6 +1701,9 @@ impl From<Filters> for SubscribeRequest {
                     }))
                 })
                 .collect(),
+            // Transaction-status and entry updates are separate subscription
+            // kinds with no pipeline type behind them, so nothing could consume
+            // what they delivered. Unsupported rather than unimplemented.
             transactions_status: [].into_iter().collect(),
             blocks: value
                 .parsers_filters
@@ -1093,6 +1734,8 @@ impl From<Filters> for SubscribeRequest {
                 .collect(),
             entry: [].into_iter().collect(),
             commitment: None,
+            // Request-level rather than per-parser, so it is set by the source
+            // from its configuration after this conversion.
             accounts_data_slice: vec![],
             ping: None,
             from_slot: None,
@@ -1102,6 +1745,7 @@ impl From<Filters> for SubscribeRequest {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     fn owned_by(marker: u8) -> Prefilter {
@@ -1109,6 +1753,7 @@ mod tests {
             account: Some(AccountPrefilter {
                 accounts: HashSet::new(),
                 owners: HashSet::from([Pubkey::new([marker; 32])]),
+                ..Default::default()
             }),
             ..Default::default()
         }
@@ -1240,11 +1885,499 @@ mod tests {
         }
     }
 
+    fn one(prefilter: Prefilter) -> SubscribeRequest {
+        Filters::new(HashMap::from([("p".to_owned(), prefilter)])).into()
+    }
+
+    fn account_with(build: fn(PrefilterBuilder) -> PrefilterBuilder) -> SubscribeRequest {
+        one(
+            build(Prefilter::builder().account_owners([Pubkey::new([9; 32])]))
+                .build()
+                .expect("prefilter must build"),
+        )
+    }
+
+    /// Every field #303 listed has to survive the conversion, so one assertion
+    /// each on the built request rather than on the prefilter.
+    #[test]
+    fn memcmp_filter_reaches_the_request() {
+        let request = account_with(|b| {
+            b.account_filters([AccountFilter::Memcmp {
+                offset: 8,
+                data: MemcmpData::Bytes(vec![1, 2, 3]),
+            }])
+        });
+
+        let filters = &request.accounts.get("p").expect("account filter").filters;
+
+        assert_eq!(filters.len(), 1);
+        assert!(matches!(
+            filters[0].filter,
+            Some(wire_filter::Filter::Memcmp(ref memcmp))
+                if memcmp.offset == 8
+                    && memcmp.data == Some(wire_memcmp::Data::Bytes(vec![1, 2, 3]))
+        ));
+    }
+
+    #[test]
+    fn datasize_token_state_and_lamports_reach_the_request() {
+        let request = account_with(|b| {
+            b.account_filters([
+                AccountFilter::DataSize(165),
+                AccountFilter::TokenAccountState(true),
+                AccountFilter::Lamports(LamportsCmp::Gt(1_000)),
+            ])
+        });
+
+        let filters = &request.accounts.get("p").expect("account filter").filters;
+
+        assert_eq!(filters.len(), 3);
+        assert!(matches!(
+            filters[0].filter,
+            Some(wire_filter::Filter::Datasize(165))
+        ));
+        assert!(matches!(
+            filters[1].filter,
+            Some(wire_filter::Filter::TokenAccountState(true))
+        ));
+        assert!(matches!(
+            filters[2].filter,
+            Some(wire_filter::Filter::Lamports(ref cmp))
+                if cmp.cmp == Some(wire_lamports::Cmp::Gt(1_000))
+        ));
+    }
+
+    #[test]
+    fn nonempty_txn_signature_reaches_the_request() {
+        let request = account_with(|b| b.account_nonempty_txn_signature(true));
+
+        assert_eq!(
+            request
+                .accounts
+                .get("p")
+                .expect("account filter")
+                .nonempty_txn_signature,
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn transaction_exclude_vote_and_signature_reach_the_request() {
+        let prefilter = Prefilter::builder()
+            .transaction_accounts_include([Pubkey::new([1; 32])])
+            .transaction_accounts_exclude([Pubkey::new([2; 32])])
+            .transaction_vote(false)
+            .transaction_signature("sig")
+            .build()
+            .expect("prefilter must build");
+
+        let request = one(prefilter);
+        let transactions = request.transactions.get("p").expect("txn filter");
+
+        assert_eq!(transactions.account_exclude, vec![
+            Pubkey::new([2; 32]).to_string()
+        ]);
+        assert_eq!(transactions.vote, Some(false));
+        assert_eq!(transactions.signature.as_deref(), Some("sig"));
+    }
+
+    #[test]
+    fn interslot_updates_reaches_the_request() {
+        let prefilter = Prefilter::builder()
+            .slots()
+            .slot_interslot_updates(true)
+            .build()
+            .expect("prefilter must build");
+
+        assert_eq!(
+            one(prefilter)
+                .slots
+                .get("p")
+                .expect("slot filter")
+                .interslot_updates,
+            Some(true)
+        );
+    }
+
+    /// A caller who set only `interslot_updates` asked for slot updates as
+    /// plainly as one who called `slots()`, so the setting must not be dropped
+    /// on the way to the request.
+    #[test]
+    fn interslot_updates_alone_still_subscribes_to_slots() {
+        let prefilter = Prefilter::builder()
+            .slot_interslot_updates(true)
+            .build()
+            .expect("prefilter must build");
+
+        assert!(
+            prefilter.slot.is_some(),
+            "interslot updates imply a slot subscription"
+        );
+
+        assert_eq!(
+            one(prefilter)
+                .slots
+                .get("p")
+                .expect("slot filter")
+                .interslot_updates,
+            Some(true)
+        );
+    }
+
+    /// The defaults have to leave the wire exactly as it was before the fields
+    /// existed, or every existing subscription changes shape.
+    #[test]
+    fn defaults_leave_the_request_unchanged() {
+        let request = account_with(|b| b);
+        let accounts = request.accounts.get("p").expect("account filter");
+
+        assert!(accounts.filters.is_empty());
+        assert_eq!(accounts.nonempty_txn_signature, None);
+        assert!(request.accounts_data_slice.is_empty());
+
+        // The account-only prefilter above leaves `transactions` and `slots`
+        // empty, so the defaults on those two need their own request.
+        let request = one(Prefilter::builder()
+            .transaction_accounts_include([Pubkey::new([1; 32])])
+            .slots()
+            .build()
+            .expect("prefilter must build"));
+
+        let transactions = request.transactions.get("p").expect("txn filter");
+
+        assert_eq!(transactions.vote, None);
+        assert_eq!(transactions.signature, None);
+        assert!(transactions.account_exclude.is_empty());
+
+        assert_eq!(
+            request
+                .slots
+                .get("p")
+                .expect("slot filter")
+                .interslot_updates,
+            None
+        );
+    }
+
+    /// `accounts_include_all` replaces the key axes, but a data comparison is
+    /// orthogonal to which keys are subscribed, so dropping it would silently
+    /// discard what the caller asked for.
+    #[test]
+    fn accounts_include_all_keeps_the_data_comparisons() {
+        let prefilter = Prefilter::builder()
+            .accounts_include_all()
+            .account_filters([AccountFilter::DataSize(165)])
+            .account_nonempty_txn_signature(true)
+            .build()
+            .expect("prefilter must build");
+
+        let request = one(prefilter);
+        let accounts = request.accounts.get("p").expect("account filter");
+
+        assert!(accounts.account.is_empty(), "every key stays subscribed");
+        assert!(accounts.owner.is_empty());
+        assert_eq!(accounts.nonempty_txn_signature, Some(true));
+        assert!(matches!(accounts.filters.as_slice(), [
+            SubscribeRequestFilterAccountsFilter {
+                filter: Some(wire_filter::Filter::Datasize(165)),
+            }
+        ]));
+    }
+
+    /// Every other `Option`-valued setter refuses a second call, so these three
+    /// have to as well rather than silently overwriting.
+    #[test]
+    fn setting_an_option_twice_is_refused() {
+        let refused = |result: Result<Prefilter, PrefilterError>, field: &str| {
+            assert!(
+                matches!(result, Err(PrefilterError::AlreadySet(named)) if named == field),
+                "{field} must refuse a second call"
+            );
+        };
+
+        refused(
+            Prefilter::builder()
+                .account_nonempty_txn_signature(true)
+                .account_nonempty_txn_signature(false)
+                .build(),
+            "account_nonempty_txn_signature",
+        );
+
+        refused(
+            Prefilter::builder()
+                .transaction_vote(true)
+                .transaction_vote(false)
+                .build(),
+            "transaction_vote",
+        );
+
+        refused(
+            Prefilter::builder()
+                .slot_interslot_updates(true)
+                .slot_interslot_updates(false)
+                .build(),
+            "slot_interslot_updates",
+        );
+    }
+
+    #[test]
+    fn memcmp_validation_rejects_bad_encodings() {
+        let bad_base58 = AccountFilter::Memcmp {
+            offset: 0,
+            data: MemcmpData::Base58("0OIl".to_owned()),
+        };
+        assert!(matches!(
+            bad_base58.validate(),
+            Err(PrefilterError::BadMemcmpData { .. })
+        ));
+
+        let empty = AccountFilter::Memcmp {
+            offset: 4,
+            data: MemcmpData::Bytes(vec![]),
+        };
+        assert!(matches!(
+            empty.validate(),
+            Err(PrefilterError::EmptyMemcmpData(4))
+        ));
+
+        let good = AccountFilter::Memcmp {
+            offset: 0,
+            data: MemcmpData::Base64("AQID".to_owned()),
+        };
+        assert!(good.validate().is_ok());
+    }
+
+    #[test]
+    fn zero_length_data_slice_is_rejected() {
+        assert!(matches!(
+            AccountsDataSlice {
+                offset: 3,
+                length: 0
+            }
+            .validate(),
+            Err(PrefilterError::ZeroLengthDataSlice(3))
+        ));
+        assert!(AccountsDataSlice {
+            offset: 0,
+            length: 8
+        }
+        .validate()
+        .is_ok());
+    }
+
+    /// The server decodes base64 with a strict engine, so anything accepted
+    /// here that the engine refuses would pass config load and then fail when
+    /// the subscription is opened.
+    #[test]
+    fn base64_validation_rejects_non_canonical_encodings() {
+        let memcmp = |text: &str| AccountFilter::Memcmp {
+            offset: 0,
+            data: MemcmpData::Base64(text.to_owned()),
+        };
+
+        assert!(memcmp("AQID").validate().is_ok(), "three bytes, no padding");
+        assert!(memcmp("AQI=").validate().is_ok(), "two bytes, one pad");
+
+        for text in ["AQI", "AQ", "AAAAA", "AQJ=", "AQID===="] {
+            assert!(
+                matches!(
+                    memcmp(text).validate(),
+                    Err(PrefilterError::BadMemcmpData {
+                        encoding: "base64",
+                        ..
+                    })
+                ),
+                "{text} is not canonical base64"
+            );
+        }
+    }
+
+    /// The server reads this as "only initialized accounts" and refuses
+    /// `false`, rather than reading it as "any state".
+    #[test]
+    fn false_token_account_state_is_rejected() {
+        assert!(matches!(
+            AccountFilter::TokenAccountState(false).validate(),
+            Err(PrefilterError::FalseTokenAccountState)
+        ));
+
+        assert!(AccountFilter::TokenAccountState(true).validate().is_ok());
+    }
+
+    #[test]
+    fn oversized_memcmp_data_is_rejected() {
+        let memcmp = |data| AccountFilter::Memcmp { offset: 0, data };
+
+        assert!(matches!(
+            memcmp(MemcmpData::Base64(
+                "A".repeat(AccountFilter::MAX_DATA_BASE64_SIZE + 4)
+            ))
+            .validate(),
+            Err(PrefilterError::MemcmpDataTooLarge {
+                unit: "base64 characters",
+                max: 172,
+                ..
+            })
+        ));
+
+        assert!(matches!(
+            memcmp(MemcmpData::Base58(
+                "1".repeat(AccountFilter::MAX_DATA_BASE58_SIZE + 1)
+            ))
+            .validate(),
+            Err(PrefilterError::MemcmpDataTooLarge {
+                unit: "base58 characters",
+                max: 175,
+                ..
+            })
+        ));
+
+        assert!(matches!(
+            memcmp(MemcmpData::Bytes(vec![1; AccountFilter::MAX_DATA_SIZE + 1])).validate(),
+            Err(PrefilterError::MemcmpDataTooLarge {
+                unit: "decoded bytes",
+                len: 129,
+                max: 128,
+                ..
+            })
+        ));
+
+        assert!(
+            memcmp(MemcmpData::Bytes(vec![1; AccountFilter::MAX_DATA_SIZE]))
+                .validate()
+                .is_ok()
+        );
+    }
+
+    /// Two of the server's rules are about the list rather than any one entry.
+    #[test]
+    fn account_filter_list_limits_match_the_server() {
+        let filters = [
+            AccountFilter::DataSize(165),
+            AccountFilter::TokenAccountState(true),
+            AccountFilter::Lamports(LamportsCmp::Gt(0)),
+            AccountFilter::Lamports(LamportsCmp::Lt(9)),
+            AccountFilter::Lamports(LamportsCmp::Ne(3)),
+        ];
+
+        assert!(AccountFilter::validate_all(&filters[..4]).is_ok());
+
+        assert!(matches!(
+            AccountFilter::validate_all(&filters),
+            Err(PrefilterError::TooManyAccountFilters { count: 5, max: 4 })
+        ));
+
+        assert!(matches!(
+            AccountFilter::validate_all(&[
+                AccountFilter::DataSize(165),
+                AccountFilter::DataSize(82)
+            ]),
+            Err(PrefilterError::RepeatedDataSize)
+        ));
+    }
+
+    /// The server reads the windows as one ordered cut through the account
+    /// data, so order and overlap are properties of the whole list.
+    #[test]
+    fn data_slices_must_be_ordered_and_disjoint() {
+        let slice = |offset, length| AccountsDataSlice { offset, length };
+
+        assert!(AccountsDataSlice::validate_all(&[slice(0, 8), slice(8, 32)]).is_ok());
+
+        assert!(matches!(
+            AccountsDataSlice::validate_all(&[slice(8, 8), slice(0, 8)]),
+            Err(PrefilterError::DataSliceOutOfOrder(0, 8))
+        ));
+
+        assert!(matches!(
+            AccountsDataSlice::validate_all(&[slice(0, 8), slice(4, 8)]),
+            Err(PrefilterError::DataSliceOverlap(4, 8))
+        ));
+
+        assert!(matches!(
+            AccountsDataSlice::validate_all(&[slice(u64::MAX, 1)]),
+            Err(PrefilterError::DataSliceOverflow { .. })
+        ));
+    }
+
+    /// The server ANDs the list, so the order two prefilters happened to build
+    /// it in does not change what arrives and must not widen the merge.
+    #[test]
+    fn merging_reordered_account_filters_keeps_them() {
+        let with = |filters: Vec<AccountFilter>| AccountPrefilter {
+            filters,
+            ..Default::default()
+        };
+
+        let size = AccountFilter::DataSize(165);
+        let lamports = AccountFilter::Lamports(LamportsCmp::Gt(0));
+
+        let mut reordered = with(vec![size.clone(), lamports.clone()]);
+        reordered.merge(with(vec![lamports.clone(), size.clone()]));
+
+        assert_eq!(
+            reordered.filters,
+            vec![size, lamports.clone()],
+            "the same comparisons in another order narrow identically"
+        );
+
+        // Repetition still counts: these two lists do not ask for the same
+        // thing, so the merge has to drop the comparison.
+        let mut repeated = with(vec![lamports.clone(), lamports.clone()]);
+        repeated.merge(with(vec![
+            lamports,
+            AccountFilter::Lamports(LamportsCmp::Lt(9)),
+        ]));
+
+        assert!(repeated.filters.is_empty());
+    }
+
+    /// The server ANDs the filter list, so two prefilters asking for different
+    /// comparisons cannot both be honoured; the union has to drop the
+    /// comparison and over-deliver.
+    #[test]
+    fn merging_different_account_filters_widens_to_none() {
+        let with = |size| AccountPrefilter {
+            filters: vec![AccountFilter::DataSize(size)],
+            ..Default::default()
+        };
+
+        let mut lhs = with(165);
+        lhs.merge(with(82));
+
+        assert!(lhs.filters.is_empty());
+
+        let mut same = with(165);
+        same.merge(with(165));
+
+        assert_eq!(same.filters, vec![AccountFilter::DataSize(165)]);
+    }
+
+    /// Exclusion is a negation, so the union of deliveries is the intersection
+    /// of the exclude sets.
+    #[test]
+    fn merging_excludes_keeps_only_the_common_ones() {
+        let excluding = |keys: &[u8]| TransactionPrefilter {
+            accounts_exclude: keys.iter().map(|k| Pubkey::new([*k; 32])).collect(),
+            ..Default::default()
+        };
+
+        let mut lhs = excluding(&[1, 2]);
+        lhs.merge(excluding(&[2, 3]));
+
+        assert_eq!(
+            lhs.accounts_exclude,
+            HashSet::from([Pubkey::new([2; 32])]),
+            "only a key both sides exclude stays excluded"
+        );
+    }
+
     fn transaction_prefilter(failed: Option<bool>) -> TransactionPrefilter {
         TransactionPrefilter {
             accounts_include: HashSet::new(),
             accounts_required: HashSet::new(),
             failed,
+            ..Default::default()
         }
     }
 
