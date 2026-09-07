@@ -349,7 +349,7 @@ impl AccountPrefilter {
         // deliver the intersection. Two prefilters wanting different data
         // comparisons cannot be expressed as one list, so the union is the
         // absence of a comparison: over-deliver and let the parser reject.
-        if *filters != other.filters {
+        if !same_account_filters(filters, &other.filters) {
             filters.clear();
         }
 
@@ -358,6 +358,33 @@ impl AccountPrefilter {
             *nonempty_txn_signature = None;
         }
     }
+}
+
+/// Compare two account filter lists as multisets.
+///
+/// The server `ANDs` the entries, so two lists holding the same comparisons
+/// narrow identically however they are ordered. Comparing the vectors directly
+/// would call a reordering a disagreement and needlessly widen the merge.
+fn same_account_filters(lhs: &[AccountFilter], rhs: &[AccountFilter]) -> bool {
+    if lhs.len() != rhs.len() {
+        return false;
+    }
+
+    let mut counts: HashMap<&AccountFilter, isize> = HashMap::new();
+
+    for filter in lhs {
+        *counts.entry(filter).or_default() += 1;
+    }
+
+    for filter in rhs {
+        let Some(count) = counts.get_mut(filter) else {
+            return false;
+        };
+
+        *count -= 1;
+    }
+
+    counts.into_values().all(|count| count == 0)
 }
 
 /// A prefilter for matching transactions.
@@ -825,65 +852,209 @@ pub enum PrefilterError {
     /// A memcmp comparison had nothing to compare against.
     #[error("Empty memcmp data at offset {0}, which matches every account")]
     EmptyMemcmpData(u64),
+    /// A memcmp comparison carried more data than the server accepts.
+    #[error("Memcmp data at offset {offset} is {len} {unit}, over the server's limit of {max}")]
+    MemcmpDataTooLarge {
+        /// The offset the comparison was declared at.
+        offset: u64,
+        /// How much data was given.
+        len: usize,
+        /// What the server accepts.
+        max: usize,
+        /// What `len` and `max` count.
+        unit: &'static str,
+    },
+    /// More filters on one subscription than the server accepts.
+    #[error("{count} account filters, over the server's limit of {max}")]
+    TooManyAccountFilters {
+        /// How many filters were given.
+        count: usize,
+        /// What the server accepts.
+        max: usize,
+    },
+    /// More than one data size comparison, which the server refuses outright.
+    #[error("Repeated data size filter, which the server accepts only once")]
+    RepeatedDataSize,
+    /// A token account state comparison asked for uninitialized accounts.
+    #[error("Token account state may only be true; the server rejects false")]
+    FalseTokenAccountState,
     /// A data slice asked for no bytes, which yields empty account data.
     #[error("Zero-length accounts data slice at offset {0}")]
     ZeroLengthDataSlice(u64),
+    /// A data slice ran past the end of the offset space.
+    #[error("Accounts data slice at offset {offset} overflows with length {length}")]
+    DataSliceOverflow {
+        /// Where the slice starts.
+        offset: u64,
+        /// How many bytes it asked for.
+        length: u64,
+    },
+    /// Data slices were not given in ascending order of offset.
+    #[error("Accounts data slice at offset {0} follows one at offset {1}")]
+    DataSliceOutOfOrder(u64, u64),
+    /// Two data slices covered some of the same bytes.
+    #[error("Accounts data slice at offset {0} overlaps the one ending at {1}")]
+    DataSliceOverlap(u64, u64),
+}
+
+/// Reject data the server would refuse, naming what was measured so the
+/// message says which limit was hit.
+fn check_memcmp_len(
+    len: usize,
+    max: usize,
+    offset: u64,
+    unit: &'static str,
+) -> Result<(), PrefilterError> {
+    if len > max {
+        return Err(PrefilterError::MemcmpDataTooLarge {
+            offset,
+            len,
+            max,
+            unit,
+        });
+    }
+
+    Ok(())
 }
 
 impl AccountFilter {
+    /// The longest base58 memcmp string the server accepts.
+    const MAX_DATA_BASE58_SIZE: usize = 175;
+    /// The longest base64 memcmp string the server accepts.
+    const MAX_DATA_BASE64_SIZE: usize = 172;
+    /// The most bytes a memcmp comparison may decode to.
+    const MAX_DATA_SIZE: usize = 128;
+    /// The most filters the server accepts on one account subscription.
+    const MAX_FILTERS: usize = 4;
+
     /// Check that the server could act on this filter.
     ///
-    /// Encoding is validated here rather than at send time, so a bad config
-    /// fails at load instead of taking the subscription down mid-run.
+    /// Encoding and size are validated here rather than at send time, so a bad
+    /// config fails at load instead of taking the subscription down mid-run.
+    /// The limits mirror the ones the Yellowstone geyser plugin enforces when
+    /// it builds its filter, since a value over them is a hard error there.
     ///
     /// # Errors
     ///
-    /// See [`PrefilterError::BadMemcmpData`] and
-    /// [`PrefilterError::EmptyMemcmpData`].
+    /// See [`PrefilterError::BadMemcmpData`], [`PrefilterError::EmptyMemcmpData`],
+    /// [`PrefilterError::MemcmpDataTooLarge`], and
+    /// [`PrefilterError::FalseTokenAccountState`].
     ///
     pub fn validate(&self) -> Result<(), PrefilterError> {
-        let Self::Memcmp { offset, data } = self else {
-            return Ok(());
+        let (offset, data) = match self {
+            Self::Memcmp { offset, data } => (*offset, data),
+            // The server reads this as "only initialized accounts" and refuses
+            // `false` outright rather than treating it as "any state".
+            Self::TokenAccountState(false) => return Err(PrefilterError::FalseTokenAccountState),
+            Self::TokenAccountState(true) | Self::DataSize(_) | Self::Lamports(_) => return Ok(()),
         };
 
-        let decoded = match data {
-            MemcmpData::Bytes(bytes) => bytes.clone(),
+        // The string limits are on the encoded form, so they are checked before
+        // decoding, exactly as the server does.
+        let decoded: Cow<[u8]> = match data {
+            MemcmpData::Bytes(bytes) => Cow::Borrowed(bytes),
             MemcmpData::Base58(text) => {
-                bs58::decode(text)
-                    .into_vec()
-                    .map_err(|err| PrefilterError::BadMemcmpData {
+                check_memcmp_len(
+                    text.len(),
+                    Self::MAX_DATA_BASE58_SIZE,
+                    offset,
+                    "base58 characters",
+                )?;
+
+                Cow::Owned(bs58::decode(text).into_vec().map_err(|err| {
+                    PrefilterError::BadMemcmpData {
                         encoding: "base58",
-                        offset: *offset,
+                        offset,
                         message: err.to_string(),
-                    })?
+                    }
+                })?)
             },
             MemcmpData::Base64(text) => {
-                base64_decode(text).ok_or_else(|| PrefilterError::BadMemcmpData {
-                    encoding: "base64",
-                    offset: *offset,
-                    message: "not valid base64".to_owned(),
-                })?
+                check_memcmp_len(
+                    text.len(),
+                    Self::MAX_DATA_BASE64_SIZE,
+                    offset,
+                    "base64 characters",
+                )?;
+
+                Cow::Owned(
+                    base64_decode(text).ok_or_else(|| PrefilterError::BadMemcmpData {
+                        encoding: "base64",
+                        offset,
+                        message: "not valid base64".to_owned(),
+                    })?,
+                )
             },
         };
 
         if decoded.is_empty() {
-            return Err(PrefilterError::EmptyMemcmpData(*offset));
+            return Err(PrefilterError::EmptyMemcmpData(offset));
+        }
+
+        check_memcmp_len(decoded.len(), Self::MAX_DATA_SIZE, offset, "decoded bytes")?;
+
+        Ok(())
+    }
+
+    /// Check a whole filter list the way the server does.
+    ///
+    /// Two of the server's rules are about the list rather than any one entry:
+    /// how many filters it holds, and that a data size appears at most once. A
+    /// list whose entries each pass [`Self::validate`] can still be refused on
+    /// either count.
+    ///
+    /// # Errors
+    ///
+    /// See [`PrefilterError::TooManyAccountFilters`],
+    /// [`PrefilterError::RepeatedDataSize`], and [`Self::validate`].
+    ///
+    pub fn validate_all(filters: &[Self]) -> Result<(), PrefilterError> {
+        if filters.len() > Self::MAX_FILTERS {
+            return Err(PrefilterError::TooManyAccountFilters {
+                count: filters.len(),
+                max: Self::MAX_FILTERS,
+            });
+        }
+
+        let mut saw_data_size = false;
+
+        for filter in filters {
+            filter.validate()?;
+
+            if matches!(filter, Self::DataSize(_)) && std::mem::replace(&mut saw_data_size, true) {
+                return Err(PrefilterError::RepeatedDataSize);
+            }
         }
 
         Ok(())
     }
 }
 
-/// Decode standard base64 without pulling in a dependency for it.
+/// Decode canonical standard base64 without pulling in a dependency for it.
+///
+/// Strict on purpose. The server decodes with the `base64` crate's standard
+/// engine, which requires the padding to be present and correct and the bits
+/// the padding stands in for to be zero. Anything accepted here that the engine
+/// refuses would pass config load and then fail at subscribe time, which is the
+/// failure this validation exists to prevent.
 fn base64_decode(text: &str) -> Option<Vec<u8>> {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    let text = text.trim_end_matches('=');
-    let mut out = Vec::with_capacity(text.len() * 3 / 4);
+    if !text.len().is_multiple_of(4) {
+        return None;
+    }
+
+    let body = text.trim_end_matches('=');
+
+    if text.len() - body.len() > 2 {
+        return None;
+    }
+
+    let mut out = Vec::with_capacity(body.len() * 3 / 4);
     let mut acc: u32 = 0;
     let mut bits = 0_u32;
 
-    for byte in text.bytes() {
+    for byte in body.bytes() {
         let value = u32::try_from(TABLE.iter().position(|c| *c == byte)?)
             .expect("a table index is at most 63");
         acc = (acc << 6) | value;
@@ -895,6 +1066,12 @@ fn base64_decode(text: &str) -> Option<Vec<u8>> {
         }
     }
 
+    // Leftover bits belong to no byte, so a non-zero one means the same bytes
+    // have two spellings and the server takes neither.
+    if acc & ((1 << bits) - 1) != 0 {
+        return None;
+    }
+
     Some(out)
 }
 
@@ -903,11 +1080,58 @@ impl AccountsDataSlice {
     ///
     /// # Errors
     ///
-    /// See [`PrefilterError::ZeroLengthDataSlice`].
+    /// See [`PrefilterError::ZeroLengthDataSlice`] and
+    /// [`PrefilterError::DataSliceOverflow`].
     ///
     pub fn validate(&self) -> Result<(), PrefilterError> {
         if self.length == 0 {
             return Err(PrefilterError::ZeroLengthDataSlice(self.offset));
+        }
+
+        if self.offset.checked_add(self.length).is_none() {
+            return Err(PrefilterError::DataSliceOverflow {
+                offset: self.offset,
+                length: self.length,
+            });
+        }
+
+        Ok(())
+    }
+
+    /// Check a whole set of slices the way the server does.
+    ///
+    /// The server reads the windows as one ordered cut through the account
+    /// data: it requires ascending offsets and refuses any overlap, closing the
+    /// subscription otherwise. Those are properties of the set, so a list whose
+    /// entries each pass [`Self::validate`] can still be refused.
+    ///
+    /// # Errors
+    ///
+    /// See [`PrefilterError::DataSliceOutOfOrder`],
+    /// [`PrefilterError::DataSliceOverlap`], and [`Self::validate`].
+    ///
+    pub fn validate_all(slices: &[Self]) -> Result<(), PrefilterError> {
+        let mut previous: Option<Self> = None;
+
+        for slice in slices {
+            slice.validate()?;
+
+            if let Some(previous) = previous {
+                if slice.offset < previous.offset {
+                    return Err(PrefilterError::DataSliceOutOfOrder(
+                        slice.offset,
+                        previous.offset,
+                    ));
+                }
+
+                let end = previous.offset + previous.length;
+
+                if slice.offset < end {
+                    return Err(PrefilterError::DataSliceOverlap(slice.offset, end));
+                }
+            }
+
+            previous = Some(*slice);
         }
 
         Ok(())
@@ -1074,9 +1298,7 @@ impl PrefilterBuilder {
         self.mutate(|this| {
             let filters: Vec<_> = it.into_iter().collect();
 
-            for filter in &filters {
-                filter.validate()?;
-            }
+            AccountFilter::validate_all(&filters)?;
 
             set_opt(&mut this.account_filters, "account_filters", filters)
         })
@@ -1824,6 +2046,173 @@ mod tests {
         }
         .validate()
         .is_ok());
+    }
+
+    /// The server decodes base64 with a strict engine, so anything accepted
+    /// here that the engine refuses would pass config load and then fail when
+    /// the subscription is opened.
+    #[test]
+    fn base64_validation_rejects_non_canonical_encodings() {
+        let memcmp = |text: &str| AccountFilter::Memcmp {
+            offset: 0,
+            data: MemcmpData::Base64(text.to_owned()),
+        };
+
+        assert!(memcmp("AQID").validate().is_ok(), "three bytes, no padding");
+        assert!(memcmp("AQI=").validate().is_ok(), "two bytes, one pad");
+
+        for text in ["AQI", "AQ", "AAAAA", "AQJ=", "AQID===="] {
+            assert!(
+                matches!(
+                    memcmp(text).validate(),
+                    Err(PrefilterError::BadMemcmpData {
+                        encoding: "base64",
+                        ..
+                    })
+                ),
+                "{text} is not canonical base64"
+            );
+        }
+    }
+
+    /// The server reads this as "only initialized accounts" and refuses
+    /// `false`, rather than reading it as "any state".
+    #[test]
+    fn false_token_account_state_is_rejected() {
+        assert!(matches!(
+            AccountFilter::TokenAccountState(false).validate(),
+            Err(PrefilterError::FalseTokenAccountState)
+        ));
+
+        assert!(AccountFilter::TokenAccountState(true).validate().is_ok());
+    }
+
+    #[test]
+    fn oversized_memcmp_data_is_rejected() {
+        let memcmp = |data| AccountFilter::Memcmp { offset: 0, data };
+
+        assert!(matches!(
+            memcmp(MemcmpData::Base64(
+                "A".repeat(AccountFilter::MAX_DATA_BASE64_SIZE + 4)
+            ))
+            .validate(),
+            Err(PrefilterError::MemcmpDataTooLarge {
+                unit: "base64 characters",
+                max: 172,
+                ..
+            })
+        ));
+
+        assert!(matches!(
+            memcmp(MemcmpData::Base58(
+                "1".repeat(AccountFilter::MAX_DATA_BASE58_SIZE + 1)
+            ))
+            .validate(),
+            Err(PrefilterError::MemcmpDataTooLarge {
+                unit: "base58 characters",
+                max: 175,
+                ..
+            })
+        ));
+
+        assert!(matches!(
+            memcmp(MemcmpData::Bytes(vec![1; AccountFilter::MAX_DATA_SIZE + 1])).validate(),
+            Err(PrefilterError::MemcmpDataTooLarge {
+                unit: "decoded bytes",
+                len: 129,
+                max: 128,
+                ..
+            })
+        ));
+
+        assert!(
+            memcmp(MemcmpData::Bytes(vec![1; AccountFilter::MAX_DATA_SIZE]))
+                .validate()
+                .is_ok()
+        );
+    }
+
+    /// Two of the server's rules are about the list rather than any one entry.
+    #[test]
+    fn account_filter_list_limits_match_the_server() {
+        let filters = [
+            AccountFilter::DataSize(165),
+            AccountFilter::TokenAccountState(true),
+            AccountFilter::Lamports(LamportsCmp::Gt(0)),
+            AccountFilter::Lamports(LamportsCmp::Lt(9)),
+            AccountFilter::Lamports(LamportsCmp::Ne(3)),
+        ];
+
+        assert!(AccountFilter::validate_all(&filters[..4]).is_ok());
+
+        assert!(matches!(
+            AccountFilter::validate_all(&filters),
+            Err(PrefilterError::TooManyAccountFilters { count: 5, max: 4 })
+        ));
+
+        assert!(matches!(
+            AccountFilter::validate_all(&[
+                AccountFilter::DataSize(165),
+                AccountFilter::DataSize(82)
+            ]),
+            Err(PrefilterError::RepeatedDataSize)
+        ));
+    }
+
+    /// The server reads the windows as one ordered cut through the account
+    /// data, so order and overlap are properties of the whole list.
+    #[test]
+    fn data_slices_must_be_ordered_and_disjoint() {
+        let slice = |offset, length| AccountsDataSlice { offset, length };
+
+        assert!(AccountsDataSlice::validate_all(&[slice(0, 8), slice(8, 32)]).is_ok());
+
+        assert!(matches!(
+            AccountsDataSlice::validate_all(&[slice(8, 8), slice(0, 8)]),
+            Err(PrefilterError::DataSliceOutOfOrder(0, 8))
+        ));
+
+        assert!(matches!(
+            AccountsDataSlice::validate_all(&[slice(0, 8), slice(4, 8)]),
+            Err(PrefilterError::DataSliceOverlap(4, 8))
+        ));
+
+        assert!(matches!(
+            AccountsDataSlice::validate_all(&[slice(u64::MAX, 1)]),
+            Err(PrefilterError::DataSliceOverflow { .. })
+        ));
+    }
+
+    /// The server ANDs the list, so the order two prefilters happened to build
+    /// it in does not change what arrives and must not widen the merge.
+    #[test]
+    fn merging_reordered_account_filters_keeps_them() {
+        let with = |filters: Vec<AccountFilter>| AccountPrefilter {
+            filters,
+            ..Default::default()
+        };
+
+        let size = AccountFilter::DataSize(165);
+        let lamports = AccountFilter::Lamports(LamportsCmp::Gt(0));
+
+        let mut reordered = with(vec![size.clone(), lamports.clone()]);
+        reordered.merge(with(vec![lamports.clone(), size.clone()]));
+
+        assert_eq!(
+            reordered.filters,
+            vec![size, lamports.clone()],
+            "the same comparisons in another order narrow identically"
+        );
+
+        // Repetition still counts: these two lists do not ask for the same
+        // thing, so the merge has to drop the comparison.
+        let mut repeated = with(vec![lamports.clone(), lamports.clone()]);
+        repeated.merge(with(vec![
+            lamports,
+            AccountFilter::Lamports(LamportsCmp::Lt(9)),
+        ]));
+
+        assert!(repeated.filters.is_empty());
     }
 
     /// The server ANDs the filter list, so two prefilters asking for different

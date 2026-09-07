@@ -67,7 +67,9 @@ pub struct YellowstoneGrpcConfig {
     /// Applies to the whole subscription rather than to one parser, which is
     /// why it lives here and not on a `Prefilter`. Each entry is an
     /// `{ offset, length }` pair; the server returns those bytes for every
-    /// account update on this connection.
+    /// account update on this connection. The windows must be given in
+    /// ascending order of offset and must not overlap, which is checked on
+    /// connect.
     ///
     #[arg(skip)]
     #[serde(default)]
@@ -344,6 +346,12 @@ impl YellowstoneGrpcSource {
         let filters = self.filters.clone();
         let config = self.config.clone();
         let timeout = Duration::from_secs(config.timeout);
+
+        // The server refuses out-of-order or overlapping windows and answers
+        // with an error instead of a stream, so check before dialing and say
+        // which window is at fault.
+        AccountsDataSlice::validate_all(&config.accounts_data_slice)
+            .map_err(|err| ShipsternError::Other(Box::new(err)))?;
 
         let mut builder = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
             .x_token(config.x_token.clone())?
