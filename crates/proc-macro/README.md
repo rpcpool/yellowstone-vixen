@@ -9,8 +9,8 @@ Add this crate to your `Cargo.toml` (usually as a `proc-macro` dependency):
 ```toml
 [dependencies]
 borsh = { version = "^1.0.0", features = ["derive"] }
-shipstern-parser = { version = "0.8.0" }
-shipstern-proc-macro = { version = "0.8.0" }
+shipstern-parser = { version = "0.9.0" }
+shipstern-proc-macro = { version = "0.9.0" }
 ```
 
 Then, in your code:

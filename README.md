@@ -119,8 +119,8 @@ To use it, add the following dependencies to your `Cargo.toml`:
 ```toml
 [dependencies]
 borsh = "^1.0.0"
-shipstern-parser = { version = "0.8.0" }
-shipstern-proc-macro = { version = "0.8.0" }
+shipstern-parser = { version = "0.9.0" }
+shipstern-proc-macro = { version = "0.9.0" }
 ```
 
 Then, import and invoke the macro in your code. Specify the path to your Codama JSON IDL file relative to your crate root:
