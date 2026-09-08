@@ -7,6 +7,10 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- `shipstern.parse` and `shipstern.handle` are now `debug` spans instead of `info`, so they no longer spam `info`-level trace output ([#313](https://github.com/solana-rpc/shipstern/pull/313) by @ultrasilicon).
+
 ## [0.9.0] - 2026-09-08
 
 ### Changed

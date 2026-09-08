@@ -159,7 +159,7 @@ where
         let parsed = match self
             .0
             .parse(value)
-            .instrument(tracing::info_span!("shipstern.parse",))
+            .instrument(tracing::debug_span!("shipstern.parse",))
             .await
         {
             Ok(p) => p,
@@ -175,7 +175,7 @@ where
             .into_iter()
             .map(|h| async move {
                 h.handle(parsed, value)
-                    .instrument(tracing::info_span!("shipstern.handle",))
+                    .instrument(tracing::debug_span!("shipstern.handle",))
                     .await
             })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
