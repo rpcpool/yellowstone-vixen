@@ -1688,6 +1688,31 @@ slot-end = 2000
         assert_eq!(out.rewards[1].commission_bps, "");
     }
 
+    /// `TransactionError` reaches the wire as opaque bytes, so nothing in the
+    /// type system says which serializer wrote them. Agave's own
+    /// `solana-storage-proto` fills this exact proto field with
+    /// `wincode::serialize` as of 4.2 (it was bincode in 3.x), and a consumer
+    /// decoding with the 4.x reader has to get the error back intact.
+    #[test]
+    fn transaction_status_meta_error_bytes_round_trip() {
+        use solana_transaction::{InstructionError, TransactionError};
+        use solana_transaction_status::TransactionStatusMeta;
+
+        let err = TransactionError::InstructionError(3, InstructionError::Custom(6001));
+
+        let meta = TransactionStatusMeta {
+            status: Err(err.clone()),
+            ..Default::default()
+        };
+
+        let out = convert::transaction_status_meta(meta);
+
+        let bytes = out.err.expect("a failed transaction carries an error").err;
+        let decoded: TransactionError = wincode::deserialize(&bytes).expect("wincode decode");
+
+        assert_eq!(decoded, err);
+    }
+
     #[test]
     fn keyed_rewards_empty_input_yields_empty_proto() {
         use solana_runtime::bank::KeyedRewardsAndNumPartitions;
@@ -2697,7 +2722,7 @@ slot-end = 2000
 
 mod convert {
     use jetstreamer_firehose::firehose::EntryData;
-    use solana_message::VersionedMessage;
+    use solana_message::{Hash, VersionedMessage};
     use solana_runtime::bank::{KeyedRewardsAndNumPartitions, RewardType};
     use solana_transaction::versioned::VersionedTransaction;
     use solana_transaction_status::{TransactionStatusMeta, TransactionTokenBalance};
@@ -2806,9 +2831,9 @@ mod convert {
         header: solana_message::MessageHeader,
         account_keys: Vec<solana_pubkey::Pubkey>,
         /// Legacy and V0 call this `recent_blockhash`, V1 calls it
-        /// `lifetime_specifier`. Both are the same 32 bytes and the proto
+        /// `lifetime_specifier`. All three hold a [`Hash`] and the proto
         /// carries them in the same field.
-        lifetime: Vec<u8>,
+        lifetime: Hash,
         instructions: Vec<solana_message::compiled_instruction::CompiledInstruction>,
         versioned: bool,
         address_table_lookups: Vec<proto::MessageAddressTableLookup>,
@@ -2823,7 +2848,7 @@ mod convert {
                 VersionedMessage::Legacy(msg) => MessageParts {
                     header: msg.header,
                     account_keys: msg.account_keys,
-                    lifetime: msg.recent_blockhash.as_ref().to_vec(),
+                    lifetime: msg.recent_blockhash,
                     instructions: msg.instructions,
                     versioned: false,
                     address_table_lookups: vec![],
@@ -2832,7 +2857,7 @@ mod convert {
                 VersionedMessage::V0(msg) => MessageParts {
                     header: msg.header,
                     account_keys: msg.account_keys,
-                    lifetime: msg.recent_blockhash.as_ref().to_vec(),
+                    lifetime: msg.recent_blockhash,
                     instructions: msg.instructions,
                     versioned: true,
                     address_table_lookups: msg
@@ -2857,7 +2882,7 @@ mod convert {
                 VersionedMessage::V1(msg) => MessageParts {
                     header: msg.header,
                     account_keys: msg.account_keys,
-                    lifetime: msg.lifetime_specifier.as_ref().to_vec(),
+                    lifetime: msg.lifetime_specifier,
                     instructions: msg.instructions,
                     versioned: true,
                     address_table_lookups: vec![],
@@ -2882,7 +2907,7 @@ mod convert {
                     .iter()
                     .map(|k| k.as_ref().to_vec())
                     .collect(),
-                recent_blockhash: parts.lifetime,
+                recent_blockhash: parts.lifetime.to_bytes().to_vec(),
                 instructions: parts
                     .instructions
                     .into_iter()
@@ -2911,7 +2936,7 @@ mod convert {
 
         proto::TransactionStatusMeta {
             err: meta.status.err().map(|e| proto::TransactionError {
-                err: bincode::serialize(&e).unwrap_or_default(),
+                err: wincode::serialize(&e).unwrap_or_default(),
             }),
             fee: meta.fee,
             pre_balances: meta.pre_balances,
