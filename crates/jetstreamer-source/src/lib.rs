@@ -2440,6 +2440,72 @@ slot-end = 2000
             );
         }
 
+        /// The whole chain, on bytes a validator produced.
+        ///
+        /// The other tests each cover a segment: real bytes into the conversion,
+        /// or synthetic bytes from the conversion into core. Neither shows that
+        /// a real V1 transaction survives all the way to the field a consumer
+        /// reads, which is the claim that matters.
+        #[test]
+        fn real_devnet_v1_config_reaches_instruction_shared() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+            use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+            use yellowstone_grpc_proto::{
+                geyser::SubscribeUpdateTransactionInfo, solana::storage::confirmed_block as proto,
+            };
+
+            let raw = include_str!("../tests/fixtures/devnet_v1_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+
+            for name in ["v1_all_config_fields", "v1_over_1232", "v1_small"] {
+                let f = &fixtures[name];
+                let bytes = STANDARD
+                    .decode(f["transaction_base64"].as_str().expect("b64"))
+                    .expect("base64");
+
+                let tx: VersionedTransaction = wincode::deserialize(&bytes).expect("decode");
+                let VersionedMessage::V1(ref msg) = tx.message else {
+                    panic!("{name}: not V1")
+                };
+                let want = msg.config;
+                let signature = tx.signatures[0].as_ref().to_vec();
+
+                let txn = TransactionUpdate {
+                    slot: f["slot"].as_u64().expect("slot"),
+                    transaction: Some(SubscribeUpdateTransactionInfo {
+                        signature,
+                        is_vote: false,
+                        transaction: Some(convert::transaction(tx)),
+                        meta: Some(proto::TransactionStatusMeta {
+                            inner_instructions_none: true,
+                            log_messages_none: true,
+                            return_data_none: true,
+                            ..Default::default()
+                        }),
+                        index: 0,
+                    }),
+                };
+
+                let instructions = InstructionUpdate::build_from_txn(&txn)
+                    .unwrap_or_else(|e| panic!("{name}: core rejected a real V1 txn: {e:?}"));
+                assert!(!instructions.is_empty(), "{name}: no instructions");
+
+                let got = instructions[0]
+                    .shared
+                    .transaction_config
+                    .as_ref()
+                    .unwrap_or_else(|| panic!("{name}: real V1 config lost before parsers"));
+
+                assert_eq!(got.priority_fee, want.priority_fee, "{name}");
+                assert_eq!(got.compute_unit_limit, want.compute_unit_limit, "{name}");
+                assert_eq!(
+                    got.loaded_accounts_data_size_limit, want.loaded_accounts_data_size_limit,
+                    "{name}"
+                );
+                assert_eq!(got.heap_size, want.heap_size, "{name}");
+            }
+        }
+
         /// The one real fixture that sets every config field, checked against
         /// the values the validator actually wrote rather than against itself.
         #[test]
