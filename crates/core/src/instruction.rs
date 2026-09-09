@@ -1127,6 +1127,35 @@ mod tests {
         assert!(instructions[0].shared.transaction_config.is_none());
     }
 
+    /// A V1 message that sets no budget fields still arrives with `config`
+    /// present, and that presence is what marks it as V1. Parsers have to see
+    /// `Some(..)` here, not `None`, or an empty-config V1 transaction becomes
+    /// indistinguishable from a V0 one by the time it reaches them.
+    #[test]
+    fn v1_empty_inline_budget_still_reaches_parsers_as_present() {
+        let mut txn = transaction_v1_with_inline_budget();
+        txn.transaction
+            .as_mut()
+            .and_then(|info| info.transaction.as_mut())
+            .and_then(|tx| tx.message.as_mut())
+            .expect("v1 message")
+            .config = Some(TransactionConfig::default());
+
+        let instructions =
+            InstructionUpdate::build_from_txn(&txn).expect("v1 transaction should build");
+
+        let config = instructions[0]
+            .shared
+            .transaction_config
+            .as_ref()
+            .expect("an empty V1 config must survive as Some(..)");
+
+        assert_eq!(config.priority_fee, None);
+        assert_eq!(config.compute_unit_limit, None);
+        assert_eq!(config.loaded_accounts_data_size_limit, None);
+        assert_eq!(config.heap_size, None);
+    }
+
     fn transaction_v1_with_inline_budget() -> TransactionUpdate {
         TransactionUpdate {
             slot: 1,
