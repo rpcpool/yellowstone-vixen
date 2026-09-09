@@ -348,9 +348,9 @@ mod tests {
             .find(|e| e.extension_type == ExtensionType::PermissionedBurn as i32)
             .expect("PermissionedBurn must survive parsing");
 
-        assert!(
-            !ext.data.is_empty(),
-            "the extension payload must be carried through, not dropped"
-        );
+        // `PermissionedBurnConfig` is a single `MaybeNull<Address>`, so the
+        // payload is exactly the 32 authority bytes. Comparing them rules out
+        // a parser that keeps the type tag but hands back the wrong slice.
+        assert_eq!(ext.data, vec![7u8; 32], "authority bytes must round-trip");
     }
 }

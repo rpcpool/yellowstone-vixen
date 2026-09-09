@@ -2099,6 +2099,126 @@ slot-end = 2000
             assert_eq!(wincode::serialize(&decoded).expect("serialize"), wire);
         }
 
+        /// The join between the two halves of the V1 config story.
+        ///
+        /// Everything else proves one hop: either wire bytes into
+        /// [`convert::transaction`], or a hand-built proto message into
+        /// [`InstructionUpdate::build_from_txn`]. Nothing proved that the proto
+        /// message this crate actually emits is the one core can read, so a
+        /// mismatch between the two would have gone unnoticed.
+        ///
+        /// This runs the real conversion output straight into core.
+        #[test]
+        fn v1_config_survives_from_conversion_into_instruction_shared() {
+            use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+            use yellowstone_grpc_proto::{
+                geyser::SubscribeUpdateTransactionInfo, solana::storage::confirmed_block as proto,
+            };
+
+            for (label, config) in [
+                (
+                    "populated",
+                    TransactionConfig::empty()
+                        .with_priority_fee(4_242)
+                        .with_compute_unit_limit(300_000)
+                        .with_loaded_accounts_data_size_limit(98_304)
+                        .with_heap_size(131_072),
+                ),
+                ("empty", TransactionConfig::empty()),
+            ] {
+                let wire = wincode::serialize(&signed(v1_message(config))).expect("serialize");
+                let decoded: VersionedTransaction = wincode::deserialize(&wire).expect("decode");
+
+                // The exact proto message this crate hands the runtime.
+                let converted = convert::transaction(decoded);
+
+                let txn = TransactionUpdate {
+                    slot: 1,
+                    transaction: Some(SubscribeUpdateTransactionInfo {
+                        signature: vec![3u8; 64],
+                        is_vote: false,
+                        transaction: Some(converted),
+                        meta: Some(proto::TransactionStatusMeta {
+                            inner_instructions_none: true,
+                            log_messages_none: true,
+                            return_data_none: true,
+                            ..Default::default()
+                        }),
+                        index: 0,
+                    }),
+                };
+
+                let instructions = InstructionUpdate::build_from_txn(&txn)
+                    .unwrap_or_else(|e| panic!("{label} v1 should build: {e:?}"));
+
+                assert!(!instructions.is_empty(), "{label}: no instructions built");
+
+                let got = instructions[0]
+                    .shared
+                    .transaction_config
+                    .as_ref()
+                    .unwrap_or_else(|| panic!("{label}: config lost between conversion and core"));
+
+                assert_eq!(
+                    got.priority_fee, config.priority_fee,
+                    "{label} priority_fee"
+                );
+                assert_eq!(
+                    got.compute_unit_limit, config.compute_unit_limit,
+                    "{label} compute_unit_limit"
+                );
+                assert_eq!(
+                    got.loaded_accounts_data_size_limit, config.loaded_accounts_data_size_limit,
+                    "{label} loaded_accounts_data_size_limit"
+                );
+                assert_eq!(got.heap_size, config.heap_size, "{label} heap_size");
+            }
+        }
+
+        /// V0 must arrive at core with no config at all, or a consumer keying
+        /// on presence would read it as V1.
+        #[test]
+        fn v0_reaches_instruction_shared_without_a_config() {
+            use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+            use yellowstone_grpc_proto::{
+                geyser::SubscribeUpdateTransactionInfo, solana::storage::confirmed_block as proto,
+            };
+
+            // Three keys, because `instructions()` uses program_id_index 2 and
+            // core resolves account indices while building.
+            let converted = convert::transaction(signed(VersionedMessage::V0(v0::Message {
+                header: header(),
+                account_keys: vec![
+                    Pubkey::new_unique(),
+                    Pubkey::new_unique(),
+                    Pubkey::new_unique(),
+                ],
+                recent_blockhash: Hash::new_from_array([2u8; 32]),
+                instructions: instructions(),
+                address_table_lookups: vec![],
+            })));
+
+            let txn = TransactionUpdate {
+                slot: 1,
+                transaction: Some(SubscribeUpdateTransactionInfo {
+                    signature: vec![3u8; 64],
+                    is_vote: false,
+                    transaction: Some(converted),
+                    meta: Some(proto::TransactionStatusMeta {
+                        inner_instructions_none: true,
+                        log_messages_none: true,
+                        return_data_none: true,
+                        ..Default::default()
+                    }),
+                    index: 0,
+                }),
+            };
+
+            let instructions = InstructionUpdate::build_from_txn(&txn).expect("v0 should build");
+
+            assert!(instructions[0].shared.transaction_config.is_none());
+        }
+
         /// Upstream states in `solana-transaction`'s own tests that "v1
         /// transaction format is not compatible with bincode". Pinning that
         /// here stops anyone from later rewriting the round-trip above in terms
@@ -2207,39 +2327,297 @@ slot-end = 2000
             }
         }
 
+        /// Real V1 transactions captured from devnet, where `enable_tx_v1` is
+        /// active.
+        ///
+        /// This is the case the synthetic tests cannot cover: bytes produced by
+        /// a validator rather than by this test file. They are decoded with the
+        /// same `wincode::deserialize` call jetstreamer-firehose makes on
+        /// archive bytes, then converted, so everything between the wire and
+        /// the proto is exercised on real traffic. Only the CAR dataframe read
+        /// is skipped, and that is version-agnostic byte plumbing.
+        ///
+        /// The corpus spans the old 1232-byte cap deliberately: 196 bytes up to
+        /// 3276, with two fixtures above the cap that could not have existed
+        /// before V1.
+        #[test]
+        fn real_devnet_v1_transactions_convert_losslessly() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+            let raw = include_str!("../tests/fixtures/devnet_v1_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+
+            let mut seen_over_cap = 0;
+
+            for (name, f) in fixtures.as_object().expect("object") {
+                let bytes = STANDARD
+                    .decode(f["transaction_base64"].as_str().expect("b64"))
+                    .expect("base64");
+                let expected_len = f["serialized_len"].as_u64().expect("len") as usize;
+                assert_eq!(bytes.len(), expected_len, "{name}: fixture length drifted");
+
+                assert_eq!(
+                    bytes[0],
+                    solana_message::v1::V1_PREFIX,
+                    "{name}: not V1 on the wire"
+                );
+
+                let tx: VersionedTransaction = wincode::deserialize(&bytes)
+                    .unwrap_or_else(|e| panic!("{name}: real V1 bytes failed to decode: {e:?}"));
+
+                // The failure this whole change exists to prevent.
+                let VersionedMessage::V1(ref msg) = tx.message else {
+                    panic!("{name}: real V1 transaction decoded as something other than V1")
+                };
+
+                let out = convert::transaction(tx.clone());
+                let proto_msg = out.message.expect("message");
+
+                assert!(proto_msg.versioned, "{name}");
+                assert!(
+                    proto_msg.address_table_lookups.is_empty(),
+                    "{name}: V1 must carry no address table lookups"
+                );
+
+                let config = proto_msg
+                    .config
+                    .unwrap_or_else(|| panic!("{name}: real V1 lost its config"));
+                assert_eq!(config.priority_fee, msg.config.priority_fee, "{name}");
+                assert_eq!(
+                    config.compute_unit_limit, msg.config.compute_unit_limit,
+                    "{name}"
+                );
+                assert_eq!(
+                    config.loaded_accounts_data_size_limit,
+                    msg.config.loaded_accounts_data_size_limit,
+                    "{name}"
+                );
+                assert_eq!(config.heap_size, msg.config.heap_size, "{name}");
+
+                assert_eq!(
+                    proto_msg.recent_blockhash,
+                    msg.lifetime_specifier.as_ref().to_vec(),
+                    "{name}: lifetime specifier"
+                );
+                assert_eq!(
+                    proto_msg.account_keys,
+                    msg.account_keys
+                        .iter()
+                        .map(|k| k.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{name}: account keys"
+                );
+                assert_eq!(
+                    proto_msg.instructions.len(),
+                    msg.instructions.len(),
+                    "{name}: instruction count"
+                );
+                assert_eq!(
+                    out.signatures,
+                    tx.signatures
+                        .iter()
+                        .map(|s| s.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{name}: signatures"
+                );
+
+                // Re-serializing the decoded transaction reproduces the bytes
+                // the validator produced, so nothing was lost on the way in.
+                assert_eq!(
+                    wincode::serialize(&tx).expect("serialize"),
+                    bytes,
+                    "{name}: real V1 transaction did not round-trip"
+                );
+
+                if expected_len > 1232 {
+                    seen_over_cap += 1;
+                }
+            }
+
+            assert!(
+                seen_over_cap >= 2,
+                "corpus must keep transactions above the old 1232-byte cap"
+            );
+        }
+
+        /// The one real fixture that sets every config field, checked against
+        /// the values the validator actually wrote rather than against itself.
+        #[test]
+        fn real_devnet_v1_config_values_are_carried_through() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+            let raw = include_str!("../tests/fixtures/devnet_v1_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+            let f = &fixtures["v1_all_config_fields"];
+
+            let bytes = STANDARD
+                .decode(f["transaction_base64"].as_str().expect("b64"))
+                .expect("base64");
+            let tx: VersionedTransaction = wincode::deserialize(&bytes).expect("decode");
+
+            let config = convert::transaction(tx)
+                .message
+                .expect("message")
+                .config
+                .expect("config");
+
+            // Mask 0x1f: priority fee, CU limit, loaded-accounts size, heap.
+            assert!(config.priority_fee.is_some(), "priority_fee should be set");
+            assert!(config.compute_unit_limit.is_some());
+            assert!(config.loaded_accounts_data_size_limit.is_some());
+            assert!(config.heap_size.is_some(), "heap_size should be set");
+
+            // This fixture is 1296 bytes: a V1 transaction that also happens to
+            // exceed the pre-V1 transaction size cap.
+            assert_eq!(bytes.len(), 1296);
+        }
+
+        /// Malformed V1 input must fail loudly rather than decode into some
+        /// other shape.
+        ///
+        /// The dangerous outcome for this migration is not a decode error, it
+        /// is a corrupt message that still type-checks: a V1 transaction read
+        /// as V0, or a truncated one read as complete. Each case here is
+        /// asserted against observed upstream behaviour, so a dependency bump
+        /// that loosens any of them fails this test rather than silently
+        /// changing what shipstern emits.
+        #[test]
+        fn malformed_v1_input_is_rejected_rather_than_misread() {
+            let tx = signed(v1_message(
+                TransactionConfig::empty()
+                    .with_priority_fee(1)
+                    .with_heap_size(65_536),
+            ));
+            let wire = wincode::serialize(&tx).expect("serialize");
+
+            // Truncation at every interesting boundary: inside the header, at
+            // the config mask, mid-payload, and one byte short.
+            for cut in [1usize, 8, 40, 41, wire.len() / 2, wire.len() - 1] {
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&wire[..cut]);
+                assert!(
+                    decoded.is_err(),
+                    "truncating to {cut} of {} bytes decoded anyway",
+                    wire.len()
+                );
+            }
+
+            // Byte 0 is the V1 prefix, bytes 1..4 the header, 4..8 the config
+            // mask. An unknown mask bit means a config field this build cannot
+            // represent, so decoding must refuse rather than drop it.
+            {
+                let mut unknown_bit = wire.clone();
+                unknown_bit[7] |= 0b0100_0000;
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&unknown_bit);
+                assert!(decoded.is_err(), "unknown config-mask bit was accepted");
+            }
+
+            // The priority fee occupies two mask bits and both must be set.
+            {
+                let mut half = wire.clone();
+                half[4] = (half[4] & !0b11) | 0b01;
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&half);
+                assert!(decoded.is_err(), "half-set priority fee bits were accepted");
+            }
+
+            // A V1 message behind a Legacy/V0 signature count. Upstream keeps
+            // its own test for this shape; the risk is a reader that finds the
+            // 0x81 after the count and treats the whole thing as versioned.
+            {
+                let mut legacy_shaped = vec![0x00u8];
+                legacy_shaped.extend_from_slice(&wire);
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&legacy_shaped);
+                assert!(
+                    decoded.is_err(),
+                    "a V1 message behind a signature count must not decode"
+                );
+            }
+
+            // Observed, and pinned because it is the one permissive case:
+            // trailing bytes past the encoded transaction are ignored rather
+            // than rejected. Recorded so a change in that behaviour is visible.
+            {
+                let mut padded = wire.clone();
+                padded.push(0xff);
+                let decoded: VersionedTransaction =
+                    wincode::deserialize(&padded).expect("trailing bytes are tolerated");
+                assert!(matches!(decoded.message, VersionedMessage::V1(_)));
+            }
+        }
+
         /// V1 raised the transaction ceiling from 1232 bytes to 4096. Shipstern
-        /// only reads transactions, so it holds no size constant of its own -
-        /// this pins that it stays that way, across and beyond the old cap.
+        /// only reads transactions, so it holds no transaction-size constant of
+        /// its own; this pins that it stays that way across and beyond the old
+        /// cap, and that nothing is lost or reordered at any size.
+        ///
+        /// 4097 is included deliberately. `MAX_TRANSACTION_SIZE` is enforced by
+        /// the validator, not by the codec, so an oversized transaction still
+        /// round-trips here. Shipstern must not invent its own rejection.
         #[test]
         fn v1_conversion_is_size_agnostic_across_the_old_1232_cap() {
-            for target in [1232usize, 1233, 2048, 3072, 4095, 4096] {
+            for target in [1232usize, 1233, 2048, 3072, 4095, 4096, 4097] {
                 let tx = v1_transaction_of_wire_size(target);
                 let original = wincode::serialize(&tx).expect("serialize");
                 assert_eq!(original.len(), target);
 
-                // The wire bytes decode back to V1, not to V0.
+                let VersionedMessage::V1(ref want) = tx.message else {
+                    unreachable!("constructed as V1")
+                };
+
                 let decoded: VersionedTransaction =
                     wincode::deserialize(&original).expect("v1 bytes must decode");
-                assert!(
-                    matches!(decoded.message, VersionedMessage::V1(_)),
-                    "{target}-byte transaction decoded as something other than V1"
+
+                let VersionedMessage::V1(ref got) = decoded.message else {
+                    panic!("{target}-byte transaction decoded as something other than V1")
+                };
+
+                // Every field, not just the ones the conversion reads.
+                assert_eq!(got, want, "{target}: decoded message differs");
+                assert_eq!(decoded.signatures, tx.signatures, "{target}: signatures");
+                assert_eq!(
+                    decoded.message.serialize(),
+                    tx.message.serialize(),
+                    "{target}: message bytes"
                 );
 
                 let out = convert::transaction(decoded);
                 let msg = out.message.expect("message");
 
                 assert!(msg.versioned);
-                assert!(msg.config.is_some(), "{target}-byte V1 lost its config");
                 assert!(msg.address_table_lookups.is_empty());
-                assert_eq!(msg.instructions[0].data.len(), {
-                    let VersionedMessage::V1(ref m) = tx.message else {
-                        unreachable!()
-                    };
-                    m.instructions[0].data.len()
-                });
 
-                // Re-serializing the original transaction reproduces the input
-                // byte for byte, so nothing was lost on the way in.
+                let config = msg.config.expect("{target}-byte V1 lost its config");
+                assert_eq!(config.priority_fee, want.config.priority_fee);
+                assert_eq!(config.compute_unit_limit, want.config.compute_unit_limit);
+
+                // The payload that makes up the bulk of these sizes survives
+                // byte for byte, which is what a truncation bug would break.
+                assert_eq!(msg.instructions.len(), want.instructions.len());
+                assert_eq!(
+                    msg.instructions[0].data, want.instructions[0].data,
+                    "{target}: instruction data"
+                );
+                assert_eq!(
+                    msg.account_keys,
+                    want.account_keys
+                        .iter()
+                        .map(|k| k.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{target}: account keys"
+                );
+                assert_eq!(
+                    msg.recent_blockhash,
+                    want.lifetime_specifier.as_ref().to_vec(),
+                    "{target}: lifetime specifier"
+                );
+                assert_eq!(
+                    out.signatures,
+                    tx.signatures
+                        .iter()
+                        .map(|s| s.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{target}: signatures through conversion"
+                );
+
                 assert_eq!(
                     wincode::serialize(&tx).expect("serialize"),
                     original,
