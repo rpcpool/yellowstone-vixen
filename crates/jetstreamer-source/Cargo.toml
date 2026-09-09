@@ -48,6 +48,8 @@ solana-accounts-db = { workspace = true }
 # different layout that upstream explicitly documents as not the wire format.
 wincode = { workspace = true }
 solana-signature = ">=3.4.1, <3.5.0"
+base64 = { workspace = true }
+serde_json = { workspace = true }
 
 [features]
 default = []

@@ -277,7 +277,7 @@ mod tests {
     use shipstern_core::Parser;
     use shipstern_mock::account_fixture;
 
-    use super::{account, AccountParser};
+    use super::{account, AccountParser, TokenExtensionState};
 
     #[tokio::test]
     async fn test_mint_account_parsing_proto() {
@@ -297,5 +297,60 @@ mod tests {
 
         // Extensions count will depend on the fixture
         assert!(!ext_mint.extensions.is_empty());
+    }
+
+    /// `PermissionedBurn` is the extension spl-token-2022 11 adds, and the
+    /// reason the Token-2022 bump is part of this migration.
+    ///
+    /// It is built here rather than fetched: a census of 3851 mainnet
+    /// Token-2022 accounts carrying extensions found zero using it, so there
+    /// is nothing on chain to pull. The mint is assembled with Token-2022's
+    /// own writer, so the bytes are laid out exactly as the program writes
+    /// them.
+    #[test]
+    fn permissioned_burn_mint_parses_into_an_extension_entry() {
+        use spl_token_2022::{
+            extension::{
+                permissioned_burn::PermissionedBurnConfig, BaseStateWithExtensionsMut,
+                ExtensionType, PodStateWithExtensionsMut,
+            },
+            pod::PodMint,
+        };
+
+        let len =
+            ExtensionType::try_calculate_account_len::<PodMint>(&[ExtensionType::PermissionedBurn])
+                .expect("account len");
+        let mut buf = vec![0u8; len];
+
+        {
+            let mut state = PodStateWithExtensionsMut::<PodMint>::unpack_uninitialized(&mut buf)
+                .expect("uninitialized mint");
+            let ext = state
+                .init_extension::<PermissionedBurnConfig>(true)
+                .expect("init PermissionedBurn");
+            ext.authority = Some(solana_pubkey::Pubkey::new_from_array([7u8; 32]))
+                .try_into()
+                .expect("authority");
+            state.base.decimals = 6;
+            state.base.is_initialized = true.into();
+            state.init_account_type().expect("account type");
+        }
+
+        let state = TokenExtensionState::try_unpack(&buf).expect("mint should unpack");
+
+        let Some(account::Account::ExtendedMint(mint)) = state.account else {
+            panic!("expected an extended mint")
+        };
+
+        let ext = mint
+            .extensions
+            .iter()
+            .find(|e| e.extension_type == ExtensionType::PermissionedBurn as i32)
+            .expect("PermissionedBurn must survive parsing");
+
+        assert!(
+            !ext.data.is_empty(),
+            "the extension payload must be carried through, not dropped"
+        );
     }
 }

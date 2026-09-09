@@ -2119,6 +2119,94 @@ slot-end = 2000
             );
         }
 
+        /// Legacy and V0 transactions captured from mainnet-beta, decoded and
+        /// converted here so the two paths that must not change are pinned
+        /// against real traffic rather than only hand-built messages.
+        ///
+        /// The fixture holds nothing but transaction bytes and the slot and
+        /// signature they came from. Nothing here talks to a network.
+        #[test]
+        fn live_mainnet_legacy_and_v0_convert_unchanged() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+            let raw = include_str!("../tests/fixtures/mainnet_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+
+            let decode = |name: &str| -> (VersionedTransaction, Vec<u8>) {
+                let b64 = fixtures[name]["transaction_base64"]
+                    .as_str()
+                    .expect("fixture field");
+                let bytes = STANDARD.decode(b64).expect("base64");
+                let tx: VersionedTransaction = wincode::deserialize(&bytes)
+                    .unwrap_or_else(|e| panic!("{name} failed to decode: {e:?}"));
+                (tx, bytes)
+            };
+
+            {
+                let (tx, bytes) = decode("legacy");
+                assert!(matches!(tx.message, VersionedMessage::Legacy(_)));
+                let sigs = tx.signatures.clone();
+                let out = convert::transaction(tx);
+                let msg = out.message.expect("message");
+
+                assert!(!msg.versioned, "a legacy transaction must stay unversioned");
+                assert!(msg.config.is_none(), "legacy must never gain a config");
+                assert!(msg.address_table_lookups.is_empty());
+                assert_eq!(msg.recent_blockhash.len(), 32);
+                assert!(!msg.instructions.is_empty());
+                assert_eq!(
+                    out.signatures,
+                    sigs.iter().map(|s| s.as_ref().to_vec()).collect::<Vec<_>>()
+                );
+                assert_eq!(bytes.len(), 451, "fixture size drifted");
+            }
+
+            {
+                let (tx, _) = decode("v0");
+                assert!(matches!(tx.message, VersionedMessage::V0(_)));
+                let out = convert::transaction(tx);
+                let msg = out.message.expect("message");
+
+                assert!(msg.versioned);
+                assert!(
+                    msg.config.is_none(),
+                    "V0 must not gain a config, or it reads as V1 downstream"
+                );
+                assert!(msg.address_table_lookups.is_empty());
+            }
+
+            {
+                let (tx, _) = decode("v0_with_alt");
+                let VersionedMessage::V0(ref v0) = tx.message else {
+                    panic!("fixture is not V0")
+                };
+                let expected: Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> = v0
+                    .address_table_lookups
+                    .iter()
+                    .map(|l| {
+                        (
+                            l.account_key.as_ref().to_vec(),
+                            l.writable_indexes.clone(),
+                            l.readonly_indexes.clone(),
+                        )
+                    })
+                    .collect();
+                assert!(!expected.is_empty(), "fixture should carry lookups");
+
+                let out = convert::transaction(tx);
+                let msg = out.message.expect("message");
+
+                assert!(msg.versioned);
+                assert!(msg.config.is_none());
+                assert_eq!(msg.address_table_lookups.len(), expected.len());
+                for (got, want) in msg.address_table_lookups.iter().zip(&expected) {
+                    assert_eq!(got.account_key, want.0);
+                    assert_eq!(got.writable_indexes, want.1);
+                    assert_eq!(got.readonly_indexes, want.2);
+                }
+            }
+        }
+
         /// V1 raised the transaction ceiling from 1232 bytes to 4096. Shipstern
         /// only reads transactions, so it holds no size constant of its own -
         /// this pins that it stays that way, across and beyond the old cap.

@@ -502,10 +502,7 @@ async fn fetch_fixture<P: ProgramParser>(
             let signature = Signature::from_str(fixture)?;
             let rpc_client = get_rpc_client();
 
-            let params = json!([signature.to_string(), {
-                "encoding": "json",
-                "maxSupportedTransactionVersion": 0
-            }]);
+            let params = get_transaction_params(&signature.to_string());
 
             let tx = rpc_client
                 .send(RpcRequest::GetTransaction, params)
@@ -518,6 +515,20 @@ async fn fetch_fixture<P: ProgramParser>(
         },
         FixtureType::Invalid => Err("Invalid fixture".into()),
     }
+}
+
+/// Params for the `getTransaction` call that backs a signature fixture.
+///
+/// `maxSupportedTransactionVersion` is the JSON-RPC version ceiling: the node
+/// refuses to return any transaction newer than it. It sat at `0` from before
+/// V1 existed, which would make a V1 fixture unfetchable. It is not a
+/// deliberate V0-only constraint, so it tracks the newest version shipstern
+/// can parse.
+fn get_transaction_params(signature: &str) -> serde_json::Value {
+    json!([signature, {
+        "encoding": "json",
+        "maxSupportedTransactionVersion": 1
+    }])
 }
 
 fn write_fixture(
@@ -633,4 +644,20 @@ pub fn decode_bs58_to_bytes(bs58: &str) -> Result<Vec<u8>, String> {
         .into_vec()
         .map_err(|e| format!("Error decoding bs58: {e:?}"))?;
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_transaction_params;
+
+    /// A ceiling of 0 makes the node refuse every V1 transaction, so a V1
+    /// fixture could never be captured through this path.
+    #[test]
+    fn get_transaction_asks_for_v1_transactions() {
+        let params = get_transaction_params("sig");
+
+        assert_eq!(params[0], "sig");
+        assert_eq!(params[1]["maxSupportedTransactionVersion"], 1);
+        assert_eq!(params[1]["encoding"], "json");
+    }
 }

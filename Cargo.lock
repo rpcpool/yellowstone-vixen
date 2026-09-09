@@ -6994,6 +6994,7 @@ name = "shipstern-jetstream-source"
 version = "0.9.0"
 dependencies = [
  "async-trait",
+ "base64 0.22.1",
  "bincode",
  "clap 4.6.6",
  "futures-util",
@@ -7002,6 +7003,7 @@ dependencies = [
  "prometheus",
  "prost-types 0.14.4",
  "serde",
+ "serde_json",
  "shipstern",
  "shipstern-core",
  "solana-accounts-db",
@@ -7175,6 +7177,7 @@ dependencies = [
  "shipstern-spl-token-parser",
  "solana-program-error 3.0.1",
  "solana-program-pack 3.1.0",
+ "solana-pubkey 4.2.1",
  "spl-pod 0.7.4",
  "spl-token-2022 11.0.0",
  "spl-token-group-interface 0.7.2",
