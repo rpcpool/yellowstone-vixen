@@ -44,6 +44,7 @@ fn get_extension_d<'data, T: BaseState + Pack>(
         ExtensionType::ScaledUiAmount => state_with_ex.get_extension_bytes::<extension::scaled_ui_amount::ScaledUiAmountConfig>()?,
         ExtensionType::Pausable => state_with_ex.get_extension_bytes::<extension::pausable::PausableConfig>()?,
         ExtensionType::PausableAccount => state_with_ex.get_extension_bytes::<extension::pausable::PausableAccount>()?,
+        ExtensionType::PermissionedBurn => state_with_ex.get_extension_bytes::<extension::permissioned_burn::PermissionedBurnConfig>()?,
         ExtensionType::Uninitialized => &[],
     };
 
@@ -152,7 +153,8 @@ impl TryFrom<(ExtensionType, &[u8])> for NativeExtensionData {
             ET::Pausable => Ok(ED::PausableConfig(parse(d)?)),
             ET::PausableAccount => Ok(ED::PausableAccount(parse(d)?)),
 
-            ET::Uninitialized => Err(ProgramError::InvalidArgument),
+            // TODO: no proto message for PermissionedBurnConfig yet (spl-token-2022 11).
+            ET::PermissionedBurn | ET::Uninitialized => Err(ProgramError::InvalidArgument),
         }
     }
 }

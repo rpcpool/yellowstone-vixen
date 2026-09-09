@@ -162,13 +162,9 @@ impl InstructionParser {
                     },
                 )
             },
-
-            // Migrate and ExtendProgramChecked are newer variants we skip for now
-            _ => {
-                return Err(shipstern_parser::Error::new(
-                    "Unsupported BPF loader instruction variant".to_string(),
-                ))
-            },
+            // solana-loader-v3-interface 7 dropped Migrate and ExtendProgramChecked,
+            // so the match is now exhaustive; unknown discriminants fail earlier in
+            // `UpgradeableLoaderInstruction::try_from_slice`.
         };
 
         Ok(crate::BpfLoaderProgram {

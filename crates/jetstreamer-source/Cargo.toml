@@ -26,7 +26,7 @@ jetstreamer-firehose = { workspace = true }
 jetstreamer-utils = { workspace = true }
 prometheus = { workspace = true, optional = true }
 
-# Solana dependencies - aligned with workspace (3.x)
+# Solana dependencies - upgraded to 4.2 with the main workspace
 solana-transaction = { workspace = true }
 solana-msg = { workspace = true }
 solana-message = { workspace = true }
@@ -39,7 +39,7 @@ bincode = "1.3"
 
 [dev-dependencies]
 toml = { workspace = true }
-solana-reward-info = "3"
+solana-reward-info = "6"
 solana-hash = { workspace = true }
 
 [features]

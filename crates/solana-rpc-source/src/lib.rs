@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 use async_trait::async_trait;
 use shipstern::{
@@ -101,8 +101,10 @@ impl SourceTrait for SolanaAccountsRpcSource {
                             )
                         })?;
 
+                        // solana-client 4.x dropped `get_program_accounts_with_config`;
+                        // the config-taking call now yields RPC-encoded `UiAccount`s.
                         let accounts = client
-                            .get_program_accounts_with_config(
+                            .get_program_ui_accounts_with_config(
                                 &program_id,
                                 RpcProgramAccountsConfig {
                                     filters: None,
@@ -125,6 +127,21 @@ impl SourceTrait for SolanaAccountsRpcSource {
                             })?;
 
                         for (acc_pubkey, account) in accounts {
+                            let owner = Pubkey::from_str(&account.owner).map_err(|e| {
+                                format!(
+                                    "Failed to parse owner {} for source: solana-rpc, filter: \
+                                     {filter_id}: {e}",
+                                    account.owner
+                                )
+                            })?;
+
+                            let Some(data) = account.data.decode() else {
+                                return Err(format!(
+                                    "Failed to decode account data for {acc_pubkey} from source: \
+                                     solana-rpc, filter: {filter_id}"
+                                ));
+                            };
+
                             let update = SubscribeUpdate {
                                 filters: vec![filter_id.clone()],
                                 created_at: None,
@@ -132,10 +149,10 @@ impl SourceTrait for SolanaAccountsRpcSource {
                                     account: Some(SubscribeUpdateAccountInfo {
                                         pubkey: acc_pubkey.as_array().to_vec(),
                                         lamports: account.lamports,
-                                        owner: account.owner.as_array().to_vec(),
+                                        owner: owner.as_array().to_vec(),
                                         executable: account.executable,
                                         rent_epoch: account.rent_epoch,
-                                        data: account.data,
+                                        data,
                                         write_version: 0,
                                         txn_signature: None,
                                     }),

@@ -310,6 +310,7 @@ fn try_from_tx_meta<P: ProgramParser>(
         transaction,
         slot: _,
         block_time: _,
+        transaction_index: _,
     } = value;
     let EncodedTransactionWithStatusMeta {
         transaction,

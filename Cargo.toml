@@ -5,7 +5,11 @@ members = ["crates/*", "examples/*", "tests/*"]
 # proc-macro-test, changing InstructionParser::Output from Instructions
 # to ProgramEventOutput. Run its tests separately with:
 #   cd tests/proc-macro-events && cargo test
-exclude = ["examples/multi-dex-stream", "tests/idls", "tests/proc-macro-events"]
+exclude = [
+  "examples/multi-dex-stream",
+  "tests/idls",
+  "tests/proc-macro-events",
+]
 resolver = "2"
 
 [workspace.package]
@@ -17,7 +21,7 @@ repository = "https://github.com/solana-rpc/shipstern"
 publish = false
 
 [workspace.dependencies]
-agave-snapshots = "^3.0.0"
+agave-snapshots = "^4.2.0"
 async-trait = "^0.1"
 borsh = "1.5.7"
 bs58 = "^0.5.1"
@@ -38,47 +42,47 @@ pin-project-lite = "^0.2.0"
 prettyplease = "^0.2"
 proc-macro2 = "^1"
 prometheus = "^0.14.0"
-prost = "^0.14.0"
-prost-types = "^0.14.0"
+prost = "^0.14.4"
+prost-types = "^0.14.4"
 protobuf-src = "^1.0.0"
 regex = "^1.11.0"
 serde = "^1.0.198"
 serde_json = "^1.0.0"
 smallvec = "^1.14.0"
-solana-genesis-utils = "^3.0.0"
-solana-account = "^3.0.0"
-solana-accounts-db = "^3.0.0"
+solana-genesis-utils = "^4.2.0"
+solana-account = ">=4.3.1, <4.4.0"
+solana-accounts-db = "^4.2.0"
 solana-program-option = "^3.0.0"
-solana-account-decoder-client-types = "^3.0.0"
-solana-client = "^3.0.0"
+solana-account-decoder-client-types = "^4.2.0"
+solana-client = "^4.2.0"
 solana-commitment-config = "^3.0.0"
-solana-sdk = "^3.0.0"
-solana-rpc-client-api = "^3.0.0"
+solana-sdk = ">=4.0.1, <4.1.0"
+solana-rpc-client-api = "^4.2.0"
 solana-account-info = "^3.0.0"
 solana-cpi = "^3.0.0"
 solana-decode-error = "^3.0.0"
-solana-pubkey = { version = "^3.0.0", features = ["serde"] }
+solana-pubkey = { version = ">=4.2.0, <4.3.0", features = ["serde"] }
 solana-sdk-ids = "^3.0.0"
-solana-hash = { version = "^3.0.0", features = ["serde"] }
+solana-hash = { version = ">=4.4.0, <4.6.0", features = ["decode", "serde"] }
 solana-instruction = "^3.0.0"
-solana-loader-v3-interface = { version = "^6.0.0", features = ["bincode"] }
+solana-loader-v3-interface = { version = "^7.0.0", features = ["bincode"] }
 solana-msg = "^3.0.0"
-solana-message = "^3.0.0"
+solana-message = ">=4.2.3, <4.5.0"
 solana-program-entrypoint = "^3.0.0"
 solana-program-pack = "^3.0.0"
 solana-program-error = "^3.0.0"
-solana-transaction = "^3.0.0"
-solana-transaction-status = "^3.0.0"
-solana-ledger = "^3.0.0"
-solana-runtime = "^3.0.0"
+solana-transaction = ">=4.1.4, <4.2.0"
+solana-transaction-status = "^4.2.0"
+solana-ledger = "^4.2.0"
+solana-runtime = "^4.2.0"
 solana-clock = "^3.0.0"
 spl-pod = "^0.7.0"
 spl-stake-pool = "^2.0.0"
 spl-token = "^9.0.0"
-spl-token-2022 = "^10.0.0"
+spl-token-2022 = "^11.0.0"
 spl-type-length-value = "^0.9.0"
-spl-token-group-interface = "^0.7.0"
-spl-token-metadata-interface = "^0.8.0"
+spl-token-group-interface = "^0.7.2"
+spl-token-metadata-interface = "^1.0.0"
 rustls = "^0.23"
 strum = "^0.27"
 strum_macros = "^0.27"
@@ -97,8 +101,8 @@ quote = "1"
 zstd = "^0.13.0"
 bytemuck = "^1"
 tokio-util = "0.7"
-jetstreamer-firehose = "0.7"
-jetstreamer-utils = "0.7"
+jetstreamer-firehose = { git = "https://github.com/anza-xyz/jetstreamer", branch = "main" }
+jetstreamer-utils = { git = "https://github.com/anza-xyz/jetstreamer", branch = "main" }
 warp = "0.3"
 
 yellowstone-block-machine = { version = "0.4.0" }

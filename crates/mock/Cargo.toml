@@ -17,5 +17,7 @@ shipstern-core = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 regex.workspace = true
-solana-transaction-status.workspace = true
+# solana-transaction-status 4.x hides its whole API behind this feature; mock
+# must ask for it rather than rely on unification with solana-ledger.
+solana-transaction-status = { workspace = true, features = ["agave-unstable-api"] }
 futures.workspace = true

@@ -90,6 +90,7 @@ pub enum AuthorityType {
     GroupMemberPointer = 14,
     ScaledUiAmount = 15,
     Pause = 16,
+    PermissionedBurn = 17,
 }
 
 impl From<spl_token_2022::instruction::AuthorityType> for AuthorityType {
@@ -113,6 +114,7 @@ impl From<spl_token_2022::instruction::AuthorityType> for AuthorityType {
             A::GroupMemberPointer => Self::GroupMemberPointer,
             A::ScaledUiAmount => Self::ScaledUiAmount,
             A::Pause => Self::Pause,
+            A::PermissionedBurn => Self::PermissionedBurn,
         }
     }
 }

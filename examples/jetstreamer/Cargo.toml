@@ -1,10 +1,12 @@
 [package]
 name = "shipstern-example-jetstreamer"
+version.workspace = true
 description = "Example of using Jetstream source with Shipstern"
-publish = false
+authors.workspace = true
 edition.workspace = true
-license = "MIT"
-repository = "https://github.com/solana-rpc/shipstern"
+license.workspace = true
+repository.workspace = true
+publish = false
 
 [dependencies]
 anyhow = "1.0"
