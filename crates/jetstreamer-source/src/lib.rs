@@ -1550,8 +1550,9 @@ slot-end = 2000
 
     #[test]
     fn keyed_rewards_round_trip_through_proto() {
+        use solana_accounts_db::stake_rewards::StakeRewardInfo;
         use solana_pubkey::Pubkey;
-        use solana_reward_info::{RewardInfo, RewardType as SdkRewardType};
+        use solana_reward_info::RewardType as SdkRewardType;
         use solana_runtime::bank::KeyedRewardsAndNumPartitions;
         use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
 
@@ -1560,32 +1561,51 @@ slot-end = 2000
         let staking_pk = Pubkey::new_unique();
         let voting_pk = Pubkey::new_unique();
 
+        // `solana_runtime::reward_info::RewardInfo` sits behind a private module
+        // in 4.2, so the fixtures are built as `StakeRewardInfo` and converted
+        // through the public `From` impl.
         let input = KeyedRewardsAndNumPartitions {
             keyed_rewards: vec![
-                (fee_pk, RewardInfo {
-                    reward_type: SdkRewardType::Fee,
-                    lamports: 1,
-                    post_balance: 100,
-                    commission: None,
-                }),
-                (rent_pk, RewardInfo {
-                    reward_type: SdkRewardType::Rent,
-                    lamports: -2, // i64, can be negative
-                    post_balance: 200,
-                    commission: None,
-                }),
-                (staking_pk, RewardInfo {
-                    reward_type: SdkRewardType::Staking,
-                    lamports: 3,
-                    post_balance: 300,
-                    commission: Some(7),
-                }),
-                (voting_pk, RewardInfo {
-                    reward_type: SdkRewardType::Voting,
-                    lamports: 4,
-                    post_balance: 400,
-                    commission: Some(0),
-                }),
+                (
+                    fee_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Fee,
+                        lamports: 1,
+                        post_balance: 100,
+                        commission_bps: None,
+                    }
+                    .into(),
+                ),
+                (
+                    rent_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Rent,
+                        lamports: -2, // i64, can be negative
+                        post_balance: 200,
+                        commission_bps: None,
+                    }
+                    .into(),
+                ),
+                (
+                    staking_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Staking,
+                        lamports: 3,
+                        post_balance: 300,
+                        commission_bps: Some(700),
+                    }
+                    .into(),
+                ),
+                (
+                    voting_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Voting,
+                        lamports: 4,
+                        post_balance: 400,
+                        commission_bps: Some(0),
+                    }
+                    .into(),
+                ),
             ],
             num_partitions: Some(64),
         };
@@ -1613,15 +1633,15 @@ slot-end = 2000
         assert_eq!(out.rewards[1].lamports, -2);
         assert_eq!(out.rewards[2].post_balance, 300);
 
-        // Commission: stringified u8 when Some, empty when None.
-        assert_eq!(out.rewards[0].commission, "");
-        assert_eq!(out.rewards[2].commission, "7");
-        assert_eq!(out.rewards[3].commission, "0");
-
-        // Basis points: whole-percent x 100, empty when absent.
+        // Basis points come straight from the source, empty when absent.
         assert_eq!(out.rewards[0].commission_bps, "");
         assert_eq!(out.rewards[2].commission_bps, "700");
         assert_eq!(out.rewards[3].commission_bps, "0");
+
+        // Percent is back-derived, and only when the bps divide evenly.
+        assert_eq!(out.rewards[0].commission, "");
+        assert_eq!(out.rewards[2].commission, "7");
+        assert_eq!(out.rewards[3].commission, "0");
 
         // num_partitions wrapped in proto NumPartitions.
         assert_eq!(
@@ -1645,6 +1665,7 @@ slot-end = 2000
                     post_balance: 50,
                     reward_type: Some(RewardType::Voting),
                     commission: Some(7),
+                    commission_bps: Some(700),
                 },
                 Reward {
                     pubkey: "fee-payer".to_string(),
@@ -1652,6 +1673,7 @@ slot-end = 2000
                     post_balance: 10,
                     reward_type: Some(RewardType::Fee),
                     commission: None,
+                    commission_bps: None,
                 },
             ]),
             ..Default::default()
@@ -1712,15 +1734,25 @@ mod convert {
 
     /// Convert the firehose's `KeyedRewardsAndNumPartitions` into the proto
     /// `Rewards` shape that `SubscribeUpdateBlock` carries. The proto enum
-    /// uses `Unspecified=0, Fee=1, Rent=2, Staking=3, Voting=4`; the Solana
-    /// SDK enum has no `Unspecified`, so the mapping is total. `commission`
-    /// is encoded as a stringified `u8` (proto convention), or empty when
-    /// absent.
-    /// `commission_bps` is derived as `commission * 100`, which is lossless only
-    /// while upstream `commission` is a whole-percent `u8`. SIMD-0291 adds a real
-    /// `commission_bps: Option<u16>` to `RewardInfo` (present from
-    /// `solana-transaction-status-client-types` 4.1.0) that permits values which
-    /// are not multiples of 100. Forward that field instead on a 4.x bump.
+    /// uses `Unspecified=0, Fee=1, Rent=2, Staking=3, Voting=4,
+    /// DeactivatedStake=5`; the Solana SDK enum has no `Unspecified`, so the
+    /// mapping is total.
+    ///
+    /// Agave 4.2 dropped `RewardInfo::commission: Option<u8>` and left only
+    /// `commission_bps: Option<u16>` (SIMD-0291), so basis points are the sole
+    /// source here and are forwarded verbatim. The percent field is still
+    /// filled in for existing consumers, but only when the basis points divide
+    /// evenly: 1234 bps has no exact `u8` percent, and truncating it to 12
+    /// would report a commission the validator never set.
+    ///
+    /// Example output:
+    ///
+    /// ```text, ignore
+    /// commission_bps: Some(700)  -> commission: "7",  commission_bps: "700"
+    /// commission_bps: Some(1234) -> commission: "",   commission_bps: "1234"
+    /// commission_bps: None       -> commission: "",   commission_bps: ""
+    /// ```
+    ///
     pub fn keyed_rewards(keyed: &KeyedRewardsAndNumPartitions) -> proto::Rewards {
         let rewards = keyed
             .keyed_rewards
@@ -1731,6 +1763,7 @@ mod convert {
                     RewardType::Rent => proto::RewardType::Rent,
                     RewardType::Staking => proto::RewardType::Staking,
                     RewardType::Voting => proto::RewardType::Voting,
+                    RewardType::DeactivatedStake => proto::RewardType::DeactivatedStake,
                 } as i32;
 
                 proto::Reward {
@@ -1738,10 +1771,14 @@ mod convert {
                     lamports: info.lamports,
                     post_balance: info.post_balance,
                     reward_type,
-                    commission: info.commission.map(|c| c.to_string()).unwrap_or_default(),
+                    commission: info
+                        .commission_bps
+                        .filter(|bps| bps % 100 == 0)
+                        .map(|bps| (bps / 100).to_string())
+                        .unwrap_or_default(),
                     commission_bps: info
-                        .commission
-                        .map(|c| (u16::from(c) * 100).to_string())
+                        .commission_bps
+                        .map(|bps| bps.to_string())
                         .unwrap_or_default(),
                 }
             })
@@ -1755,33 +1792,56 @@ mod convert {
         }
     }
 
+    /// The fields of a message that depend on which version it is.
+    ///
+    /// Legacy, V0 and V1 agree on the header, account keys, lifetime specifier
+    /// and instructions. They disagree on exactly three things, so those are
+    /// named here and every match arm in [`transaction`] has to state all three
+    /// rather than inheriting a default.
+    ///
+    /// Example output:
+    ///
+    /// ```text, ignore
+    /// Legacy -> versioned: false, address_table_lookups: [],     config: None
+    /// V0     -> versioned: true,  address_table_lookups: [..],   config: None
+    /// V1     -> versioned: true,  address_table_lookups: [],     config: Some(..)
+    /// ```
+    ///
+    struct MessageParts {
+        header: solana_message::MessageHeader,
+        account_keys: Vec<solana_pubkey::Pubkey>,
+        /// Legacy and V0 call this `recent_blockhash`, V1 calls it
+        /// `lifetime_specifier`. Both are the same 32 bytes and the proto
+        /// carries them in the same field.
+        lifetime: Vec<u8>,
+        instructions: Vec<solana_message::compiled_instruction::CompiledInstruction>,
+        versioned: bool,
+        address_table_lookups: Vec<proto::MessageAddressTableLookup>,
+        config: Option<proto::TransactionConfig>,
+    }
+
     pub fn transaction(tx: VersionedTransaction) -> proto::Transaction {
         let signatures = tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect();
 
         let message = {
-            let (
-                header,
-                account_keys,
-                recent_blockhash,
-                instructions,
-                versioned,
-                address_table_lookups,
-            ) = match tx.message {
-                VersionedMessage::Legacy(msg) => (
-                    msg.header,
-                    msg.account_keys,
-                    msg.recent_blockhash,
-                    msg.instructions,
-                    false,
-                    vec![],
-                ),
-                VersionedMessage::V0(msg) => (
-                    msg.header,
-                    msg.account_keys,
-                    msg.recent_blockhash,
-                    msg.instructions,
-                    true,
-                    msg.address_table_lookups
+            let parts = match tx.message {
+                VersionedMessage::Legacy(msg) => MessageParts {
+                    header: msg.header,
+                    account_keys: msg.account_keys,
+                    lifetime: msg.recent_blockhash.as_ref().to_vec(),
+                    instructions: msg.instructions,
+                    versioned: false,
+                    address_table_lookups: vec![],
+                    config: None,
+                },
+                VersionedMessage::V0(msg) => MessageParts {
+                    header: msg.header,
+                    account_keys: msg.account_keys,
+                    lifetime: msg.recent_blockhash.as_ref().to_vec(),
+                    instructions: msg.instructions,
+                    versioned: true,
+                    address_table_lookups: msg
+                        .address_table_lookups
                         .into_iter()
                         .map(|l| proto::MessageAddressTableLookup {
                             account_key: l.account_key.as_ref().to_vec(),
@@ -1789,18 +1849,47 @@ mod convert {
                             readonly_indexes: l.readonly_indexes,
                         })
                         .collect(),
-                ),
+                    config: None,
+                },
+                // V1 (SIMD-0385) replaces ComputeBudget instructions with an
+                // inline config and drops address lookup tables entirely.
+                //
+                // `config` is wrapped unconditionally: the proto uses its
+                // presence, not its contents, to mark a message as V1, so a V1
+                // message whose fields are all unset still has to serialize as
+                // `Some(TransactionConfig::default())`. Collapsing that to
+                // `None` would downgrade the message to V0 on the wire.
+                VersionedMessage::V1(msg) => MessageParts {
+                    header: msg.header,
+                    account_keys: msg.account_keys,
+                    lifetime: msg.lifetime_specifier.as_ref().to_vec(),
+                    instructions: msg.instructions,
+                    versioned: true,
+                    address_table_lookups: vec![],
+                    config: Some(proto::TransactionConfig {
+                        priority_fee: msg.config.priority_fee,
+                        compute_unit_limit: msg.config.compute_unit_limit,
+                        loaded_accounts_data_size_limit: msg.config.loaded_accounts_data_size_limit,
+                        heap_size: msg.config.heap_size,
+                    }),
+                },
             };
 
             proto::Message {
                 header: Some(proto::MessageHeader {
-                    num_required_signatures: header.num_required_signatures as u32,
-                    num_readonly_signed_accounts: header.num_readonly_signed_accounts as u32,
-                    num_readonly_unsigned_accounts: header.num_readonly_unsigned_accounts as u32,
+                    num_required_signatures: parts.header.num_required_signatures as u32,
+                    num_readonly_signed_accounts: parts.header.num_readonly_signed_accounts as u32,
+                    num_readonly_unsigned_accounts: parts.header.num_readonly_unsigned_accounts
+                        as u32,
                 }),
-                account_keys: account_keys.iter().map(|k| k.as_ref().to_vec()).collect(),
-                recent_blockhash: recent_blockhash.as_ref().to_vec(),
-                instructions: instructions
+                account_keys: parts
+                    .account_keys
+                    .iter()
+                    .map(|k| k.as_ref().to_vec())
+                    .collect(),
+                recent_blockhash: parts.lifetime,
+                instructions: parts
+                    .instructions
                     .into_iter()
                     .map(|ix| proto::CompiledInstruction {
                         program_id_index: ix.program_id_index as u32,
@@ -1808,11 +1897,9 @@ mod convert {
                         data: ix.data,
                     })
                     .collect(),
-                versioned,
-                address_table_lookups,
-                // Firehose transactions are decoded from the Agave-3 SDK, which
-                // has no V1 message variant, so there is never an inline budget.
-                config: None,
+                versioned: parts.versioned,
+                address_table_lookups: parts.address_table_lookups,
+                config: parts.config,
             }
         };
 
@@ -1880,12 +1967,18 @@ mod convert {
                         Some(RewardType::Rent) => proto::RewardType::Rent as i32,
                         Some(RewardType::Staking) => proto::RewardType::Staking as i32,
                         Some(RewardType::Voting) => proto::RewardType::Voting as i32,
-                        _ => proto::RewardType::Unspecified as i32,
+                        Some(RewardType::DeactivatedStake) => {
+                            proto::RewardType::DeactivatedStake as i32
+                        },
+                        None => proto::RewardType::Unspecified as i32,
                     },
+                    // Unlike `RewardInfo`, `solana_transaction_status::Reward`
+                    // kept both fields, so each one is forwarded from its own
+                    // source rather than derived from the other.
                     commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
                     commission_bps: r
-                        .commission
-                        .map(|c| (u16::from(c) * 100).to_string())
+                        .commission_bps
+                        .map(|bps| bps.to_string())
                         .unwrap_or_default(),
                 })
                 .collect(),

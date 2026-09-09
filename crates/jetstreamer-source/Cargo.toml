@@ -41,6 +41,9 @@ bincode = "1.3"
 toml = { workspace = true }
 solana-reward-info = "6"
 solana-hash = { workspace = true }
+# `solana_runtime::reward_info` is a private module in 4.2, so `RewardInfo` is
+# unnameable. `StakeRewardInfo` is its only public constructor, via `From`.
+solana-accounts-db = { workspace = true }
 
 [features]
 default = []
