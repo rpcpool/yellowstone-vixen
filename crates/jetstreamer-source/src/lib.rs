@@ -1970,8 +1970,9 @@ slot-end = 2000
             assert!(msg.versioned);
         }
 
-        /// An explicit zero is a value the sender chose. It must not fold into
-        /// "unset", which would hand the runtime a default instead.
+        /// An explicit zero and an unset field encode differently: the config
+        /// mask carries a bit per field, so folding `Some(0)` into `None` drops
+        /// a bit the sender set and the message no longer round-trips.
         #[test]
         fn v1_zero_valued_config_fields_stay_present() {
             let out = convert::transaction(signed(v1_message(
@@ -2735,7 +2736,9 @@ mod convert {
     /// source here and are forwarded verbatim. The percent field is still
     /// filled in for existing consumers, but only when the basis points divide
     /// evenly: 1234 bps has no exact `u8` percent, and truncating it to 12
-    /// would report a commission the validator never set.
+    /// would report a commission the validator never set. The percent is kept
+    /// rather than dropped because `shipstern-block-meta-parser` exposes
+    /// `commission` on its own `Reward` and carries no `commission_bps`.
     ///
     /// Example output:
     ///
