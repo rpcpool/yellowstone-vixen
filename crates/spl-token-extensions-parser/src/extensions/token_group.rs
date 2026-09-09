@@ -110,25 +110,6 @@ pub mod token_group_instruction {
     }
 }
 
-#[inline]
-fn pod_u64_to_u64(v: spl_pod::primitives::PodU64) -> u64 {
-    // PodU64 is a little-endian wrapper
-    u64::from_le_bytes(v.0)
-}
-
-#[inline]
-fn opt_nonzero_pubkey_to_bytes(
-    v: spl_pod::optional_keys::OptionalNonZeroPubkey,
-) -> ::core::option::Option<Pubkey> {
-    let bytes: [u8; 32] = v.0.to_bytes();
-
-    if bytes == [0u8; 32] {
-        None
-    } else {
-        Some(Pubkey::new(bytes))
-    }
-}
-
 impl ExtensionInstructionParser for TokenGroupIx {
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
@@ -149,8 +130,11 @@ impl ExtensionInstructionParser for TokenGroupIx {
                         mint_authority: crate::Pubkey::new(ix.accounts[2].0),
                     },
                     args: InitializeGroupArgs {
-                        max_size: pod_u64_to_u64(args.max_size),
-                        update_authority: opt_nonzero_pubkey_to_bytes(args.update_authority),
+                        max_size: u64::from(args.max_size),
+                        update_authority: args
+                            .update_authority
+                            .get()
+                            .map(|key| Pubkey::new(key.to_bytes())),
                     },
                 })
             },
@@ -163,7 +147,7 @@ impl ExtensionInstructionParser for TokenGroupIx {
                         update_authority: crate::Pubkey::new(ix.accounts[1].0),
                     },
                     args: UpdateGroupMaxSizeArgs {
-                        max_size: pod_u64_to_u64(args.max_size),
+                        max_size: u64::from(args.max_size),
                     },
                 })
             },
@@ -176,7 +160,10 @@ impl ExtensionInstructionParser for TokenGroupIx {
                         current_authority: crate::Pubkey::new(ix.accounts[1].0),
                     },
                     args: UpdateGroupAuthorityArgs {
-                        new_authority: Some(crate::Pubkey::new(args.new_authority.0.to_bytes())),
+                        new_authority: args
+                            .new_authority
+                            .get()
+                            .map(|key| Pubkey::new(key.to_bytes())),
                     },
                 })
             },

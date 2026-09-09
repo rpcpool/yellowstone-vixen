@@ -14,18 +14,11 @@ use shipstern::{
 use shipstern_core::{Filters, Pubkey};
 use solana_account::ReadableAccount;
 use solana_accounts_db::{
-    accounts_db::{AccountsDbConfig, DEFAULT_MEMLOCK_BUDGET_SIZE},
-    accounts_index::{ScanConfig, ScanOrder},
-    is_loadable::IsLoadable,
+    accounts_db::AccountsDbConfig, is_loadable::IsLoadable,
     utils::create_all_accounts_run_and_snapshot_dirs,
 };
 use solana_genesis_utils::open_genesis_config;
-use solana_ledger::{
-    bank_forks_utils,
-    blockstore::Blockstore,
-    blockstore_options::{AccessType, BlockstoreOptions},
-    blockstore_processor::ProcessOptions,
-};
+use solana_ledger::{bank_forks_utils, blockstore_processor::ProcessOptions};
 use solana_pubkey::Pubkey as SolanaPubkey;
 use solana_runtime::bank::Bank;
 use tokio::sync::{mpsc, oneshot};
@@ -56,10 +49,10 @@ impl SolanaSnapshot {
             )))
         })?;
 
+        // `base_working_path` and `memlock_budget_size` were dropped from
+        // `AccountsDbConfig` in accounts-db 4.x.
         let accounts_db_config = AccountsDbConfig {
-            base_working_path: Some(ledger_path.clone()),
             skip_initial_hash_calc: true,
-            memlock_budget_size: DEFAULT_MEMLOCK_BUDGET_SIZE,
             ..AccountsDbConfig::default()
         };
 
@@ -87,35 +80,30 @@ impl SolanaSnapshot {
             })?;
         let account_paths = account_run_paths;
 
-        tracing::info!("Opening blockstore at {:?}", ledger_path);
-        let blockstore = Blockstore::open_with_options(&ledger_path, BlockstoreOptions {
-            access_type: AccessType::PrimaryForMaintenance,
-            ..BlockstoreOptions::default()
-        })
+        // ledger 4.x replaced `load_bank_forks` with a snapshot-only entry point
+        // that no longer opens the blockstore, and returns `None` when the
+        // snapshot archives directory holds nothing loadable.
+        tracing::info!("Loading bank forks");
+        let loaded = bank_forks_utils::try_load_bank_forks_from_snapshot(
+            &genesis_config,
+            &account_paths,
+            &snapshot_config,
+            &process_options,
+            None,
+            Arc::new(AtomicBool::new(false)),
+        )
         .map_err(|e| {
             ShipsternError::Io(std::io::Error::other(format!(
-                "Failed to open blockstore: {e}"
+                "Failed to load bank forks: {e}"
             )))
         })?;
 
-        tracing::info!("Loading bank forks");
-        let (bank_forks, _leader_schedule_cache, _starting_snapshot_hashes, ..) =
-            bank_forks_utils::load_bank_forks(
-                &genesis_config,
-                &blockstore,
-                account_paths,
-                &snapshot_config,
-                &process_options,
-                None,
-                None,
-                None,
-                Arc::new(AtomicBool::new(false)),
-            )
-            .map_err(|e| {
-                ShipsternError::Io(std::io::Error::other(format!(
-                    "Failed to load bank forks: {e}"
-                )))
-            })?;
+        let Some((bank_forks, _starting_snapshot_hashes)) = loaded else {
+            return Err(ShipsternError::Io(std::io::Error::other(format!(
+                "No loadable snapshot found under {:?}",
+                snapshot_config.full_snapshot_archives_dir
+            ))));
+        };
 
         let bank = bank_forks.read().unwrap().working_bank();
         let slot = bank.slot();
@@ -249,63 +237,56 @@ impl SourceTrait for SolanaSnapshotSource {
                     .iter()
                     .map(|owner| SolanaPubkey::new_from_array(**owner))
                     .collect::<Vec<_>>();
-                let scan_config = ScanConfig::new(ScanOrder::Sorted);
                 let mut is_closed = false;
                 let mut error: Option<ShipsternError> = None;
 
-                bank.rc
-                    .accounts
-                    .accounts_db
-                    .scan_accounts(
-                        &bank.ancestors,
-                        bank.bank_id(),
-                        |option| {
-                            if is_closed {
-                                return;
-                            }
-                            if let Some((pubkey, account, _slot)) = option {
-                                if !account.is_loadable() {
-                                    return;
-                                }
+                // runtime 4.x made `AccountsDb::scan_accounts` private; `Bank`
+                // exposes the same traversal through `scan_all_accounts`.
+                bank.scan_all_accounts(|option| {
+                    if is_closed {
+                        return;
+                    }
+                    if let Some((pubkey, account, _slot)) = option {
+                        if !account.is_loadable() {
+                            return;
+                        }
 
-                                let owner = account.owner();
-                                if !program_ids.contains(owner) {
-                                    return;
-                                }
+                        let owner = account.owner();
+                        if !program_ids.contains(owner) {
+                            return;
+                        }
 
-                                let event = Event::AccountUpdate {
-                                    account_update: SubscribeUpdateAccount {
-                                        account: Some(SubscribeUpdateAccountInfo {
-                                            pubkey: pubkey.to_bytes().to_vec(),
-                                            lamports: account.lamports(),
-                                            owner: account.owner().to_bytes().to_vec(),
-                                            executable: account.executable(),
-                                            rent_epoch: account.rent_epoch(),
-                                            data: account.data().to_vec(),
-                                            write_version: 0,
-                                            txn_signature: None,
-                                        }),
-                                        slot: snapshot_slot,
-                                        is_startup: true,
-                                    },
-                                    filters: filter_owner_key_lookup
-                                        .lookup_by_owner(&Pubkey::from(owner.to_bytes()))
-                                        .unwrap_or_default(),
-                                };
+                        let event = Event::AccountUpdate {
+                            account_update: SubscribeUpdateAccount {
+                                account: Some(SubscribeUpdateAccountInfo {
+                                    pubkey: pubkey.to_bytes().to_vec(),
+                                    lamports: account.lamports(),
+                                    owner: account.owner().to_bytes().to_vec(),
+                                    executable: account.executable(),
+                                    rent_epoch: account.rent_epoch(),
+                                    data: account.data().to_vec(),
+                                    write_version: 0,
+                                    txn_signature: None,
+                                }),
+                                slot: snapshot_slot,
+                                is_startup: true,
+                            },
+                            filters: filter_owner_key_lookup
+                                .lookup_by_owner(&Pubkey::from(owner.to_bytes()))
+                                .unwrap_or_default(),
+                        };
 
-                                if let Err(err) = scan_sync_tx.blocking_send(event) {
-                                    is_closed = true;
-                                    error = Some(ShipsternError::Io(std::io::Error::other(
-                                        format!("Error sending account update: {err:?}"),
-                                    )));
-                                }
-                            }
-                        },
-                        &scan_config,
-                    )
-                    .map_err(|e| {
-                        ShipsternError::Io(std::io::Error::other(format!("Scan failed: {e}")))
-                    })?;
+                        if let Err(err) = scan_sync_tx.blocking_send(event) {
+                            is_closed = true;
+                            error = Some(ShipsternError::Io(std::io::Error::other(format!(
+                                "Error sending account update: {err:?}"
+                            ))));
+                        }
+                    }
+                })
+                .map_err(|e| {
+                    ShipsternError::Io(std::io::Error::other(format!("Scan failed: {e}")))
+                })?;
 
                 if let Some(error) = error {
                     Err(error)

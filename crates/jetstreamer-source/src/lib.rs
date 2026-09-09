@@ -1550,8 +1550,9 @@ slot-end = 2000
 
     #[test]
     fn keyed_rewards_round_trip_through_proto() {
+        use solana_accounts_db::stake_rewards::StakeRewardInfo;
         use solana_pubkey::Pubkey;
-        use solana_reward_info::{RewardInfo, RewardType as SdkRewardType};
+        use solana_reward_info::RewardType as SdkRewardType;
         use solana_runtime::bank::KeyedRewardsAndNumPartitions;
         use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
 
@@ -1560,32 +1561,51 @@ slot-end = 2000
         let staking_pk = Pubkey::new_unique();
         let voting_pk = Pubkey::new_unique();
 
+        // `solana_runtime::reward_info::RewardInfo` sits behind a private module
+        // in 4.2, so the fixtures are built as `StakeRewardInfo` and converted
+        // through the public `From` impl.
         let input = KeyedRewardsAndNumPartitions {
             keyed_rewards: vec![
-                (fee_pk, RewardInfo {
-                    reward_type: SdkRewardType::Fee,
-                    lamports: 1,
-                    post_balance: 100,
-                    commission: None,
-                }),
-                (rent_pk, RewardInfo {
-                    reward_type: SdkRewardType::Rent,
-                    lamports: -2, // i64, can be negative
-                    post_balance: 200,
-                    commission: None,
-                }),
-                (staking_pk, RewardInfo {
-                    reward_type: SdkRewardType::Staking,
-                    lamports: 3,
-                    post_balance: 300,
-                    commission: Some(7),
-                }),
-                (voting_pk, RewardInfo {
-                    reward_type: SdkRewardType::Voting,
-                    lamports: 4,
-                    post_balance: 400,
-                    commission: Some(0),
-                }),
+                (
+                    fee_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Fee,
+                        lamports: 1,
+                        post_balance: 100,
+                        commission_bps: None,
+                    }
+                    .into(),
+                ),
+                (
+                    rent_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Rent,
+                        lamports: -2, // i64, can be negative
+                        post_balance: 200,
+                        commission_bps: None,
+                    }
+                    .into(),
+                ),
+                (
+                    staking_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Staking,
+                        lamports: 3,
+                        post_balance: 300,
+                        commission_bps: Some(700),
+                    }
+                    .into(),
+                ),
+                (
+                    voting_pk,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Voting,
+                        lamports: 4,
+                        post_balance: 400,
+                        commission_bps: Some(0),
+                    }
+                    .into(),
+                ),
             ],
             num_partitions: Some(64),
         };
@@ -1613,15 +1633,15 @@ slot-end = 2000
         assert_eq!(out.rewards[1].lamports, -2);
         assert_eq!(out.rewards[2].post_balance, 300);
 
-        // Commission: stringified u8 when Some, empty when None.
-        assert_eq!(out.rewards[0].commission, "");
-        assert_eq!(out.rewards[2].commission, "7");
-        assert_eq!(out.rewards[3].commission, "0");
-
-        // Basis points: whole-percent x 100, empty when absent.
+        // Basis points come straight from the source, empty when absent.
         assert_eq!(out.rewards[0].commission_bps, "");
         assert_eq!(out.rewards[2].commission_bps, "700");
         assert_eq!(out.rewards[3].commission_bps, "0");
+
+        // Percent is back-derived, and only when the bps divide evenly.
+        assert_eq!(out.rewards[0].commission, "");
+        assert_eq!(out.rewards[2].commission, "7");
+        assert_eq!(out.rewards[3].commission, "0");
 
         // num_partitions wrapped in proto NumPartitions.
         assert_eq!(
@@ -1645,6 +1665,7 @@ slot-end = 2000
                     post_balance: 50,
                     reward_type: Some(RewardType::Voting),
                     commission: Some(7),
+                    commission_bps: Some(700),
                 },
                 Reward {
                     pubkey: "fee-payer".to_string(),
@@ -1652,6 +1673,7 @@ slot-end = 2000
                     post_balance: 10,
                     reward_type: Some(RewardType::Fee),
                     commission: None,
+                    commission_bps: None,
                 },
             ]),
             ..Default::default()
@@ -1666,6 +1688,31 @@ slot-end = 2000
         assert_eq!(out.rewards[1].commission_bps, "");
     }
 
+    /// `TransactionError` reaches the wire as opaque bytes, so nothing in the
+    /// type system says which serializer wrote them. Agave's own
+    /// `solana-storage-proto` fills this exact proto field with
+    /// `wincode::serialize` as of 4.2 (it was bincode in 3.x), and a consumer
+    /// decoding with the 4.x reader has to get the error back intact.
+    #[test]
+    fn transaction_status_meta_error_bytes_round_trip() {
+        use solana_transaction::{InstructionError, TransactionError};
+        use solana_transaction_status::TransactionStatusMeta;
+
+        let err = TransactionError::InstructionError(3, InstructionError::Custom(6001));
+
+        let meta = TransactionStatusMeta {
+            status: Err(err.clone()),
+            ..Default::default()
+        };
+
+        let out = convert::transaction_status_meta(meta);
+
+        let bytes = out.err.expect("a failed transaction carries an error").err;
+        let decoded: TransactionError = wincode::deserialize(&bytes).expect("wincode decode");
+
+        assert_eq!(decoded, err);
+    }
+
     #[test]
     fn keyed_rewards_empty_input_yields_empty_proto() {
         use solana_runtime::bank::KeyedRewardsAndNumPartitions;
@@ -1678,11 +1725,1004 @@ slot-end = 2000
         assert!(out.rewards.is_empty());
         assert!(out.num_partitions.is_none());
     }
+
+    /// A commission that is not a whole number of percent has no exact `u8`
+    /// representation. Basis points must survive untouched, and the percent
+    /// field must go empty rather than report a rate nobody set.
+    #[test]
+    fn keyed_rewards_preserve_exact_basis_points() {
+        use solana_accounts_db::stake_rewards::StakeRewardInfo;
+        use solana_pubkey::Pubkey;
+        use solana_reward_info::RewardType as SdkRewardType;
+        use solana_runtime::bank::KeyedRewardsAndNumPartitions;
+
+        let odd = Pubkey::new_unique();
+        let round = Pubkey::new_unique();
+
+        let input = KeyedRewardsAndNumPartitions {
+            keyed_rewards: vec![
+                (
+                    odd,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Voting,
+                        lamports: 1,
+                        post_balance: 10,
+                        commission_bps: Some(1234),
+                    }
+                    .into(),
+                ),
+                (
+                    round,
+                    StakeRewardInfo {
+                        reward_type: SdkRewardType::Voting,
+                        lamports: 2,
+                        post_balance: 20,
+                        commission_bps: Some(1200),
+                    }
+                    .into(),
+                ),
+            ],
+            num_partitions: None,
+        };
+
+        let out = convert::keyed_rewards(&input);
+
+        // 1234 bps stays 1234 bps, and is never rounded down to 1200.
+        assert_eq!(out.rewards[0].commission_bps, "1234");
+        assert_eq!(out.rewards[0].commission, "");
+
+        // 1200 bps divides evenly, so the percent field is still filled in.
+        assert_eq!(out.rewards[1].commission_bps, "1200");
+        assert_eq!(out.rewards[1].commission, "12");
+    }
+
+    /// Agave 4.2 added `RewardType::DeactivatedStake`, and the proto gained a
+    /// matching `DeactivatedStake = 5`. The old wildcard arm mapped it to
+    /// `Unspecified`, which silently lost the reward type.
+    #[test]
+    fn deactivated_stake_reward_type_survives_both_conversions() {
+        use solana_accounts_db::stake_rewards::StakeRewardInfo;
+        use solana_pubkey::Pubkey;
+        use solana_reward_info::RewardType as SdkRewardType;
+        use solana_runtime::bank::KeyedRewardsAndNumPartitions;
+        use solana_transaction_status::{
+            Reward, RewardType as StatusRewardType, TransactionStatusMeta,
+        };
+        use yellowstone_grpc_proto::solana::storage::confirmed_block as proto;
+
+        let keyed = convert::keyed_rewards(&KeyedRewardsAndNumPartitions {
+            keyed_rewards: vec![(
+                Pubkey::new_unique(),
+                StakeRewardInfo {
+                    reward_type: SdkRewardType::DeactivatedStake,
+                    lamports: -5,
+                    post_balance: 0,
+                    commission_bps: None,
+                }
+                .into(),
+            )],
+            num_partitions: None,
+        });
+        assert_eq!(
+            keyed.rewards[0].reward_type,
+            proto::RewardType::DeactivatedStake as i32
+        );
+
+        let meta = convert::transaction_status_meta(TransactionStatusMeta {
+            rewards: Some(vec![Reward {
+                pubkey: "staker".to_string(),
+                lamports: -5,
+                post_balance: 0,
+                reward_type: Some(StatusRewardType::DeactivatedStake),
+                commission: None,
+                commission_bps: None,
+            }]),
+            ..Default::default()
+        });
+        assert_eq!(
+            meta.rewards[0].reward_type,
+            proto::RewardType::DeactivatedStake as i32
+        );
+    }
+
+    mod transaction_versions {
+        use solana_hash::Hash;
+        use solana_message::{
+            compiled_instruction::CompiledInstruction,
+            legacy,
+            v0::{self, MessageAddressTableLookup},
+            v1::{self, TransactionConfig},
+            MessageHeader, VersionedMessage,
+        };
+        use solana_pubkey::Pubkey;
+        use solana_signature::Signature;
+        use solana_transaction::versioned::VersionedTransaction;
+
+        use crate::convert;
+
+        fn header() -> MessageHeader {
+            MessageHeader {
+                num_required_signatures: 1,
+                num_readonly_signed_accounts: 0,
+                num_readonly_unsigned_accounts: 1,
+            }
+        }
+
+        fn instructions() -> Vec<CompiledInstruction> {
+            vec![CompiledInstruction {
+                program_id_index: 2,
+                accounts: vec![0, 1],
+                data: vec![7, 7, 7],
+            }]
+        }
+
+        fn signed(message: VersionedMessage) -> VersionedTransaction {
+            VersionedTransaction {
+                signatures: vec![Signature::from([3u8; 64])],
+                message,
+            }
+        }
+
+        fn v1_message(config: TransactionConfig) -> VersionedMessage {
+            VersionedMessage::V1(v1::Message {
+                header: header(),
+                config,
+                lifetime_specifier: Hash::new_from_array([9u8; 32]),
+                account_keys: vec![
+                    Pubkey::new_unique(),
+                    Pubkey::new_unique(),
+                    Pubkey::new_unique(),
+                ],
+                instructions: instructions(),
+            })
+        }
+
+        #[test]
+        fn legacy_is_unversioned_and_carries_no_config() {
+            let blockhash = Hash::new_from_array([1u8; 32]);
+            let out = convert::transaction(signed(VersionedMessage::Legacy(legacy::Message {
+                header: header(),
+                account_keys: vec![Pubkey::new_unique(), Pubkey::new_unique()],
+                recent_blockhash: blockhash,
+                instructions: instructions(),
+            })));
+
+            let msg = out.message.expect("message");
+            assert!(!msg.versioned);
+            assert!(msg.config.is_none(), "legacy must never gain a config");
+            assert!(msg.address_table_lookups.is_empty());
+            assert_eq!(msg.recent_blockhash, blockhash.as_ref().to_vec());
+        }
+
+        #[test]
+        fn v0_keeps_lookups_and_carries_no_config() {
+            let lookup_key = Pubkey::new_unique();
+            let out = convert::transaction(signed(VersionedMessage::V0(v0::Message {
+                header: header(),
+                account_keys: vec![Pubkey::new_unique(), Pubkey::new_unique()],
+                recent_blockhash: Hash::new_from_array([2u8; 32]),
+                instructions: instructions(),
+                address_table_lookups: vec![MessageAddressTableLookup {
+                    account_key: lookup_key,
+                    writable_indexes: vec![4, 5],
+                    readonly_indexes: vec![6],
+                }],
+            })));
+
+            let msg = out.message.expect("message");
+            assert!(msg.versioned);
+            assert!(
+                msg.config.is_none(),
+                "a config on V0 would make it read as V1 downstream"
+            );
+            assert_eq!(msg.address_table_lookups.len(), 1);
+            assert_eq!(
+                msg.address_table_lookups[0].account_key,
+                lookup_key.as_ref().to_vec()
+            );
+            assert_eq!(msg.address_table_lookups[0].writable_indexes, vec![4, 5]);
+            assert_eq!(msg.address_table_lookups[0].readonly_indexes, vec![6]);
+        }
+
+        #[test]
+        fn v1_preserves_every_config_field_and_drops_no_message_data() {
+            let message = v1_message(
+                TransactionConfig::empty()
+                    .with_priority_fee(5_000)
+                    .with_compute_unit_limit(200_000)
+                    .with_loaded_accounts_data_size_limit(65_536)
+                    .with_heap_size(262_144),
+            );
+            let VersionedMessage::V1(ref original) = message else {
+                unreachable!("constructed as V1")
+            };
+            let expected_keys: Vec<Vec<u8>> = original
+                .account_keys
+                .iter()
+                .map(|k| k.as_ref().to_vec())
+                .collect();
+            let expected_lifetime = original.lifetime_specifier.as_ref().to_vec();
+
+            let out = convert::transaction(signed(message.clone()));
+
+            let msg = out.message.expect("message");
+            assert!(msg.versioned);
+            assert!(
+                msg.address_table_lookups.is_empty(),
+                "V1 has no address lookup tables"
+            );
+
+            let config = msg.config.expect("V1 config must be present");
+            assert_eq!(config.priority_fee, Some(5_000));
+            assert_eq!(config.compute_unit_limit, Some(200_000));
+            assert_eq!(config.loaded_accounts_data_size_limit, Some(65_536));
+            assert_eq!(config.heap_size, Some(262_144));
+
+            assert_eq!(msg.account_keys, expected_keys);
+            assert_eq!(msg.recent_blockhash, expected_lifetime);
+            assert_eq!(msg.instructions.len(), 1);
+            assert_eq!(msg.instructions[0].program_id_index, 2);
+            assert_eq!(msg.instructions[0].accounts, vec![0, 1]);
+            assert_eq!(msg.instructions[0].data, vec![7, 7, 7]);
+
+            let hdr = msg.header.expect("header");
+            assert_eq!(hdr.num_required_signatures, 1);
+            assert_eq!(hdr.num_readonly_unsigned_accounts, 1);
+
+            assert_eq!(out.signatures, vec![vec![3u8; 64]]);
+        }
+
+        /// The proto marks a message as V1 by the *presence* of `config`, not by
+        /// its contents. A V1 message that sets no budget fields still has to
+        /// arrive as `Some(..)`; collapsing it to `None` is the silent V1 -> V0
+        /// downgrade this whole change exists to prevent.
+        #[test]
+        fn v1_with_an_empty_config_is_still_v1() {
+            let out = convert::transaction(signed(v1_message(TransactionConfig::empty())));
+
+            let msg = out.message.expect("message");
+            let config = msg
+                .config
+                .expect("an empty V1 config must still be present");
+
+            assert_eq!(config.priority_fee, None);
+            assert_eq!(config.compute_unit_limit, None);
+            assert_eq!(config.loaded_accounts_data_size_limit, None);
+            assert_eq!(config.heap_size, None);
+
+            // `versioned` alone cannot tell V1 from V0, so it is never the
+            // discriminator: both are true here.
+            assert!(msg.versioned);
+        }
+
+        /// An explicit zero and an unset field encode differently: the config
+        /// mask carries a bit per field, so folding `Some(0)` into `None` drops
+        /// a bit the sender set and the message no longer round-trips.
+        #[test]
+        fn v1_zero_valued_config_fields_stay_present() {
+            let out = convert::transaction(signed(v1_message(
+                TransactionConfig::empty()
+                    .with_priority_fee(0)
+                    .with_compute_unit_limit(0)
+                    .with_loaded_accounts_data_size_limit(0),
+            )));
+
+            let config = out
+                .message
+                .expect("message")
+                .config
+                .expect("config present");
+
+            assert_eq!(config.priority_fee, Some(0));
+            assert_eq!(config.compute_unit_limit, Some(0));
+            assert_eq!(config.loaded_accounts_data_size_limit, Some(0));
+            // Left unset by the builder, so it stays absent.
+            assert_eq!(config.heap_size, None);
+        }
+
+        /// Build a V1 transaction whose wire encoding is exactly `target` bytes
+        /// by padding the single instruction's data.
+        fn v1_transaction_of_wire_size(target: usize) -> VersionedTransaction {
+            let mut tx = signed(v1_message(
+                TransactionConfig::empty()
+                    .with_priority_fee(1)
+                    .with_compute_unit_limit(2),
+            ));
+
+            let base = wincode::serialize(&tx).expect("serialize").len();
+            let pad = target
+                .checked_sub(base)
+                .expect("target smaller than the empty-payload encoding");
+
+            let VersionedMessage::V1(ref mut msg) = tx.message else {
+                unreachable!("constructed as V1")
+            };
+            msg.instructions[0]
+                .data
+                .extend(std::iter::repeat_n(0xab, pad));
+
+            let encoded = wincode::serialize(&tx).expect("serialize");
+            assert_eq!(encoded.len(), target, "helper must hit the size exactly");
+
+            tx
+        }
+
+        /// The decoder boundary Jetstreamer actually crosses.
+        ///
+        /// `Transaction::as_parsed` in jetstreamer-firehose is a single call to
+        /// `wincode::deserialize` into a `VersionedTransaction`, so feeding wire
+        /// bytes through the same call and into [`convert::transaction`] covers
+        /// every step between the archive and the proto except the CAR
+        /// dataframe read, which is version-agnostic byte plumbing.
+        ///
+        /// These bytes are constructed locally rather than captured from a
+        /// cluster, but they are produced by the same `solana-message` 4.4.1
+        /// and `solana-transaction` 4.1.6 wincode schema that decodes real
+        /// traffic, so the encoding itself is the real wire format.
+        #[test]
+        fn v1_wire_bytes_survive_the_firehose_decode_path() {
+            let original = signed(v1_message(
+                TransactionConfig::empty()
+                    .with_priority_fee(12_345)
+                    .with_compute_unit_limit(1_400_000)
+                    .with_loaded_accounts_data_size_limit(131_072)
+                    .with_heap_size(65_536),
+            ));
+
+            let wire = wincode::serialize(&original).expect("serialize");
+
+            // V1 inverts the Legacy/V0 layout: the message comes first, and the
+            // signatures are appended as a fixed-length array with no ShortU16
+            // count, since the header already says how many there are.
+            assert_eq!(
+                wire[0],
+                solana_message::v1::V1_PREFIX,
+                "V1 wire bytes start with the 0x81 prefix, not a signature count"
+            );
+            let sig_bytes = original.signatures.len() * 64;
+            assert_eq!(
+                &wire[wire.len() - sig_bytes..],
+                original.signatures[0].as_ref(),
+                "signatures are the trailing bytes of a V1 transaction"
+            );
+
+            // The exact call jetstreamer-firehose makes on archive bytes.
+            let decoded: VersionedTransaction =
+                wincode::deserialize(&wire).expect("wire bytes must decode");
+
+            // The failure this guards against is a decoder that reads the
+            // versioned bit, ignores the version number and yields V0.
+            let VersionedMessage::V1(ref decoded_msg) = decoded.message else {
+                panic!("V1 wire bytes decoded as {:?}", decoded.message)
+            };
+            assert_eq!(decoded_msg.config.priority_fee, Some(12_345));
+
+            let out = convert::transaction(decoded.clone());
+            let msg = out.message.expect("message");
+            let config = msg.config.expect("config must survive the decode path");
+            assert_eq!(config.priority_fee, Some(12_345));
+            assert_eq!(config.compute_unit_limit, Some(1_400_000));
+            assert_eq!(config.loaded_accounts_data_size_limit, Some(131_072));
+            assert_eq!(config.heap_size, Some(65_536));
+            assert!(msg.versioned);
+            assert!(msg.address_table_lookups.is_empty());
+
+            // Message bytes and signatures both reconstruct exactly.
+            assert_eq!(
+                decoded.message.serialize(),
+                original.message.serialize(),
+                "reconstructed message bytes differ from the original"
+            );
+            assert_eq!(decoded.signatures, original.signatures);
+            assert_eq!(
+                out.signatures,
+                original
+                    .signatures
+                    .iter()
+                    .map(|s| s.as_ref().to_vec())
+                    .collect::<Vec<_>>()
+            );
+            assert_eq!(wincode::serialize(&decoded).expect("serialize"), wire);
+        }
+
+        /// The join between the two halves of the V1 config story.
+        ///
+        /// Everything else proves one hop: either wire bytes into
+        /// [`convert::transaction`], or a hand-built proto message into
+        /// [`InstructionUpdate::build_from_txn`]. Nothing proved that the proto
+        /// message this crate actually emits is the one core can read, so a
+        /// mismatch between the two would have gone unnoticed.
+        ///
+        /// This runs the real conversion output straight into core.
+        #[test]
+        fn v1_config_survives_from_conversion_into_instruction_shared() {
+            use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+            use yellowstone_grpc_proto::{
+                geyser::SubscribeUpdateTransactionInfo, solana::storage::confirmed_block as proto,
+            };
+
+            for (label, config) in [
+                (
+                    "populated",
+                    TransactionConfig::empty()
+                        .with_priority_fee(4_242)
+                        .with_compute_unit_limit(300_000)
+                        .with_loaded_accounts_data_size_limit(98_304)
+                        .with_heap_size(131_072),
+                ),
+                ("empty", TransactionConfig::empty()),
+            ] {
+                let wire = wincode::serialize(&signed(v1_message(config))).expect("serialize");
+                let decoded: VersionedTransaction = wincode::deserialize(&wire).expect("decode");
+
+                // The exact proto message this crate hands the runtime.
+                let converted = convert::transaction(decoded);
+
+                let txn = TransactionUpdate {
+                    slot: 1,
+                    transaction: Some(SubscribeUpdateTransactionInfo {
+                        signature: vec![3u8; 64],
+                        is_vote: false,
+                        transaction: Some(converted),
+                        meta: Some(proto::TransactionStatusMeta {
+                            inner_instructions_none: true,
+                            log_messages_none: true,
+                            return_data_none: true,
+                            ..Default::default()
+                        }),
+                        index: 0,
+                    }),
+                };
+
+                let instructions = InstructionUpdate::build_from_txn(&txn)
+                    .unwrap_or_else(|e| panic!("{label} v1 should build: {e:?}"));
+
+                assert!(!instructions.is_empty(), "{label}: no instructions built");
+
+                let got = instructions[0]
+                    .shared
+                    .transaction_config
+                    .as_ref()
+                    .unwrap_or_else(|| panic!("{label}: config lost between conversion and core"));
+
+                assert_eq!(
+                    got.priority_fee, config.priority_fee,
+                    "{label} priority_fee"
+                );
+                assert_eq!(
+                    got.compute_unit_limit, config.compute_unit_limit,
+                    "{label} compute_unit_limit"
+                );
+                assert_eq!(
+                    got.loaded_accounts_data_size_limit, config.loaded_accounts_data_size_limit,
+                    "{label} loaded_accounts_data_size_limit"
+                );
+                assert_eq!(got.heap_size, config.heap_size, "{label} heap_size");
+            }
+        }
+
+        /// V0 must arrive at core with no config at all, or a consumer keying
+        /// on presence would read it as V1.
+        #[test]
+        fn v0_reaches_instruction_shared_without_a_config() {
+            use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+            use yellowstone_grpc_proto::{
+                geyser::SubscribeUpdateTransactionInfo, solana::storage::confirmed_block as proto,
+            };
+
+            // Three keys, because `instructions()` uses program_id_index 2 and
+            // core resolves account indices while building.
+            let converted = convert::transaction(signed(VersionedMessage::V0(v0::Message {
+                header: header(),
+                account_keys: vec![
+                    Pubkey::new_unique(),
+                    Pubkey::new_unique(),
+                    Pubkey::new_unique(),
+                ],
+                recent_blockhash: Hash::new_from_array([2u8; 32]),
+                instructions: instructions(),
+                address_table_lookups: vec![],
+            })));
+
+            let txn = TransactionUpdate {
+                slot: 1,
+                transaction: Some(SubscribeUpdateTransactionInfo {
+                    signature: vec![3u8; 64],
+                    is_vote: false,
+                    transaction: Some(converted),
+                    meta: Some(proto::TransactionStatusMeta {
+                        inner_instructions_none: true,
+                        log_messages_none: true,
+                        return_data_none: true,
+                        ..Default::default()
+                    }),
+                    index: 0,
+                }),
+            };
+
+            let instructions = InstructionUpdate::build_from_txn(&txn).expect("v0 should build");
+
+            assert!(instructions[0].shared.transaction_config.is_none());
+        }
+
+        /// Upstream states in `solana-transaction`'s own tests that "v1
+        /// transaction format is not compatible with bincode". Pinning that
+        /// here stops anyone from later rewriting the round-trip above in terms
+        /// of bincode and believing it still proves wire compatibility.
+        #[test]
+        fn bincode_does_not_produce_v1_wire_bytes() {
+            let tx = signed(v1_message(
+                TransactionConfig::empty().with_priority_fee(9_000),
+            ));
+
+            let wire = wincode::serialize(&tx).expect("wincode");
+            let bincoded = bincode::serialize(&tx).expect("bincode");
+
+            assert_ne!(
+                wire, bincoded,
+                "if these ever match, the bincode caveat is gone and this test should be \
+                 revisited rather than deleted"
+            );
+        }
+
+        /// Legacy and V0 transactions captured from mainnet-beta, decoded and
+        /// converted here so the two paths that must not change are pinned
+        /// against real traffic rather than only hand-built messages.
+        ///
+        /// The fixture holds nothing but transaction bytes and the slot and
+        /// signature they came from. Nothing here talks to a network.
+        #[test]
+        fn live_mainnet_legacy_and_v0_convert_unchanged() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+            let raw = include_str!("../tests/fixtures/mainnet_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+
+            let decode = |name: &str| -> (VersionedTransaction, Vec<u8>) {
+                let b64 = fixtures[name]["transaction_base64"]
+                    .as_str()
+                    .expect("fixture field");
+                let bytes = STANDARD.decode(b64).expect("base64");
+                let tx: VersionedTransaction = wincode::deserialize(&bytes)
+                    .unwrap_or_else(|e| panic!("{name} failed to decode: {e:?}"));
+                (tx, bytes)
+            };
+
+            {
+                let (tx, bytes) = decode("legacy");
+                assert!(matches!(tx.message, VersionedMessage::Legacy(_)));
+                let sigs = tx.signatures.clone();
+                let out = convert::transaction(tx);
+                let msg = out.message.expect("message");
+
+                assert!(!msg.versioned, "a legacy transaction must stay unversioned");
+                assert!(msg.config.is_none(), "legacy must never gain a config");
+                assert!(msg.address_table_lookups.is_empty());
+                assert_eq!(msg.recent_blockhash.len(), 32);
+                assert!(!msg.instructions.is_empty());
+                assert_eq!(
+                    out.signatures,
+                    sigs.iter().map(|s| s.as_ref().to_vec()).collect::<Vec<_>>()
+                );
+                assert_eq!(bytes.len(), 451, "fixture size drifted");
+            }
+
+            {
+                let (tx, _) = decode("v0");
+                assert!(matches!(tx.message, VersionedMessage::V0(_)));
+                let out = convert::transaction(tx);
+                let msg = out.message.expect("message");
+
+                assert!(msg.versioned);
+                assert!(
+                    msg.config.is_none(),
+                    "V0 must not gain a config, or it reads as V1 downstream"
+                );
+                assert!(msg.address_table_lookups.is_empty());
+            }
+
+            {
+                let (tx, _) = decode("v0_with_alt");
+                let VersionedMessage::V0(ref v0) = tx.message else {
+                    panic!("fixture is not V0")
+                };
+                let expected: Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> = v0
+                    .address_table_lookups
+                    .iter()
+                    .map(|l| {
+                        (
+                            l.account_key.as_ref().to_vec(),
+                            l.writable_indexes.clone(),
+                            l.readonly_indexes.clone(),
+                        )
+                    })
+                    .collect();
+                assert!(!expected.is_empty(), "fixture should carry lookups");
+
+                let out = convert::transaction(tx);
+                let msg = out.message.expect("message");
+
+                assert!(msg.versioned);
+                assert!(msg.config.is_none());
+                assert_eq!(msg.address_table_lookups.len(), expected.len());
+                for (got, want) in msg.address_table_lookups.iter().zip(&expected) {
+                    assert_eq!(got.account_key, want.0);
+                    assert_eq!(got.writable_indexes, want.1);
+                    assert_eq!(got.readonly_indexes, want.2);
+                }
+            }
+        }
+
+        /// Real V1 transactions captured from devnet, where `enable_tx_v1` is
+        /// active.
+        ///
+        /// This is the case the synthetic tests cannot cover: bytes produced by
+        /// a validator rather than by this test file. They are decoded with the
+        /// same `wincode::deserialize` call jetstreamer-firehose makes on
+        /// archive bytes, then converted, so everything between the wire and
+        /// the proto is exercised on real traffic. Only the CAR dataframe read
+        /// is skipped, and that is version-agnostic byte plumbing.
+        ///
+        /// The corpus spans the old 1232-byte cap deliberately: 196 bytes up to
+        /// 3276, with two fixtures above the cap that could not have existed
+        /// before V1.
+        #[test]
+        fn real_devnet_v1_transactions_convert_losslessly() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+            let raw = include_str!("../tests/fixtures/devnet_v1_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+
+            let mut seen_over_cap = 0;
+
+            for (name, f) in fixtures.as_object().expect("object") {
+                let bytes = STANDARD
+                    .decode(f["transaction_base64"].as_str().expect("b64"))
+                    .expect("base64");
+                let expected_len = f["serialized_len"].as_u64().expect("len") as usize;
+                assert_eq!(bytes.len(), expected_len, "{name}: fixture length drifted");
+
+                assert_eq!(
+                    bytes[0],
+                    solana_message::v1::V1_PREFIX,
+                    "{name}: not V1 on the wire"
+                );
+
+                let tx: VersionedTransaction = wincode::deserialize(&bytes)
+                    .unwrap_or_else(|e| panic!("{name}: real V1 bytes failed to decode: {e:?}"));
+
+                // The failure this whole change exists to prevent.
+                let VersionedMessage::V1(ref msg) = tx.message else {
+                    panic!("{name}: real V1 transaction decoded as something other than V1")
+                };
+
+                let out = convert::transaction(tx.clone());
+                let proto_msg = out.message.expect("message");
+
+                assert!(proto_msg.versioned, "{name}");
+                assert!(
+                    proto_msg.address_table_lookups.is_empty(),
+                    "{name}: V1 must carry no address table lookups"
+                );
+
+                let config = proto_msg
+                    .config
+                    .unwrap_or_else(|| panic!("{name}: real V1 lost its config"));
+                assert_eq!(config.priority_fee, msg.config.priority_fee, "{name}");
+                assert_eq!(
+                    config.compute_unit_limit, msg.config.compute_unit_limit,
+                    "{name}"
+                );
+                assert_eq!(
+                    config.loaded_accounts_data_size_limit,
+                    msg.config.loaded_accounts_data_size_limit,
+                    "{name}"
+                );
+                assert_eq!(config.heap_size, msg.config.heap_size, "{name}");
+
+                assert_eq!(
+                    proto_msg.recent_blockhash,
+                    msg.lifetime_specifier.as_ref().to_vec(),
+                    "{name}: lifetime specifier"
+                );
+                assert_eq!(
+                    proto_msg.account_keys,
+                    msg.account_keys
+                        .iter()
+                        .map(|k| k.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{name}: account keys"
+                );
+                assert_eq!(
+                    proto_msg.instructions.len(),
+                    msg.instructions.len(),
+                    "{name}: instruction count"
+                );
+                assert_eq!(
+                    out.signatures,
+                    tx.signatures
+                        .iter()
+                        .map(|s| s.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{name}: signatures"
+                );
+
+                // Re-serializing the decoded transaction reproduces the bytes
+                // the validator produced, so nothing was lost on the way in.
+                assert_eq!(
+                    wincode::serialize(&tx).expect("serialize"),
+                    bytes,
+                    "{name}: real V1 transaction did not round-trip"
+                );
+
+                if expected_len > 1232 {
+                    seen_over_cap += 1;
+                }
+            }
+
+            assert!(
+                seen_over_cap >= 2,
+                "corpus must keep transactions above the old 1232-byte cap"
+            );
+        }
+
+        /// The whole chain, on bytes a validator produced.
+        ///
+        /// The other tests each cover a segment: real bytes into the conversion,
+        /// or synthetic bytes from the conversion into core. Neither shows that
+        /// a real V1 transaction survives all the way to the field a consumer
+        /// reads, which is the claim that matters.
+        #[test]
+        fn real_devnet_v1_config_reaches_instruction_shared() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+            use shipstern_core::{instruction::InstructionUpdate, TransactionUpdate};
+            use yellowstone_grpc_proto::{
+                geyser::SubscribeUpdateTransactionInfo, solana::storage::confirmed_block as proto,
+            };
+
+            let raw = include_str!("../tests/fixtures/devnet_v1_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+
+            for name in ["v1_all_config_fields", "v1_over_1232", "v1_small"] {
+                let f = &fixtures[name];
+                let bytes = STANDARD
+                    .decode(f["transaction_base64"].as_str().expect("b64"))
+                    .expect("base64");
+
+                let tx: VersionedTransaction = wincode::deserialize(&bytes).expect("decode");
+                let VersionedMessage::V1(ref msg) = tx.message else {
+                    panic!("{name}: not V1")
+                };
+                let want = msg.config;
+                let signature = tx.signatures[0].as_ref().to_vec();
+
+                let txn = TransactionUpdate {
+                    slot: f["slot"].as_u64().expect("slot"),
+                    transaction: Some(SubscribeUpdateTransactionInfo {
+                        signature,
+                        is_vote: false,
+                        transaction: Some(convert::transaction(tx)),
+                        meta: Some(proto::TransactionStatusMeta {
+                            inner_instructions_none: true,
+                            log_messages_none: true,
+                            return_data_none: true,
+                            ..Default::default()
+                        }),
+                        index: 0,
+                    }),
+                };
+
+                let instructions = InstructionUpdate::build_from_txn(&txn)
+                    .unwrap_or_else(|e| panic!("{name}: core rejected a real V1 txn: {e:?}"));
+                assert!(!instructions.is_empty(), "{name}: no instructions");
+
+                let got = instructions[0]
+                    .shared
+                    .transaction_config
+                    .as_ref()
+                    .unwrap_or_else(|| panic!("{name}: real V1 config lost before parsers"));
+
+                assert_eq!(got.priority_fee, want.priority_fee, "{name}");
+                assert_eq!(got.compute_unit_limit, want.compute_unit_limit, "{name}");
+                assert_eq!(
+                    got.loaded_accounts_data_size_limit, want.loaded_accounts_data_size_limit,
+                    "{name}"
+                );
+                assert_eq!(got.heap_size, want.heap_size, "{name}");
+            }
+        }
+
+        /// The one real fixture that sets every config field, checked against
+        /// the values the validator actually wrote rather than against itself.
+        #[test]
+        fn real_devnet_v1_config_values_are_carried_through() {
+            use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+            let raw = include_str!("../tests/fixtures/devnet_v1_transactions.json");
+            let fixtures: serde_json::Value = serde_json::from_str(raw).expect("fixture json");
+            let f = &fixtures["v1_all_config_fields"];
+
+            let bytes = STANDARD
+                .decode(f["transaction_base64"].as_str().expect("b64"))
+                .expect("base64");
+            let tx: VersionedTransaction = wincode::deserialize(&bytes).expect("decode");
+
+            let config = convert::transaction(tx)
+                .message
+                .expect("message")
+                .config
+                .expect("config");
+
+            // Mask 0x1f: priority fee, CU limit, loaded-accounts size, heap.
+            assert!(config.priority_fee.is_some(), "priority_fee should be set");
+            assert!(config.compute_unit_limit.is_some());
+            assert!(config.loaded_accounts_data_size_limit.is_some());
+            assert!(config.heap_size.is_some(), "heap_size should be set");
+
+            // This fixture is 1296 bytes: a V1 transaction that also happens to
+            // exceed the pre-V1 transaction size cap.
+            assert_eq!(bytes.len(), 1296);
+        }
+
+        /// Malformed V1 input must fail loudly rather than decode into some
+        /// other shape.
+        ///
+        /// The dangerous outcome for this migration is not a decode error, it
+        /// is a corrupt message that still type-checks: a V1 transaction read
+        /// as V0, or a truncated one read as complete. Each case here is
+        /// asserted against observed upstream behaviour, so a dependency bump
+        /// that loosens any of them fails this test rather than silently
+        /// changing what shipstern emits.
+        #[test]
+        fn malformed_v1_input_is_rejected_rather_than_misread() {
+            let tx = signed(v1_message(
+                TransactionConfig::empty()
+                    .with_priority_fee(1)
+                    .with_heap_size(65_536),
+            ));
+            let wire = wincode::serialize(&tx).expect("serialize");
+
+            // Truncation at every interesting boundary: inside the header, at
+            // the config mask, mid-payload, and one byte short.
+            for cut in [1usize, 8, 40, 41, wire.len() / 2, wire.len() - 1] {
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&wire[..cut]);
+                assert!(
+                    decoded.is_err(),
+                    "truncating to {cut} of {} bytes decoded anyway",
+                    wire.len()
+                );
+            }
+
+            // Byte 0 is the V1 prefix, bytes 1..4 the header, 4..8 the config
+            // mask. An unknown mask bit means a config field this build cannot
+            // represent, so decoding must refuse rather than drop it.
+            {
+                let mut unknown_bit = wire.clone();
+                unknown_bit[7] |= 0b0100_0000;
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&unknown_bit);
+                assert!(decoded.is_err(), "unknown config-mask bit was accepted");
+            }
+
+            // The priority fee occupies two mask bits and both must be set.
+            {
+                let mut half = wire.clone();
+                half[4] = (half[4] & !0b11) | 0b01;
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&half);
+                assert!(decoded.is_err(), "half-set priority fee bits were accepted");
+            }
+
+            // A V1 message behind a Legacy/V0 signature count. Upstream keeps
+            // its own test for this shape; the risk is a reader that finds the
+            // 0x81 after the count and treats the whole thing as versioned.
+            {
+                let mut legacy_shaped = vec![0x00u8];
+                legacy_shaped.extend_from_slice(&wire);
+                let decoded: Result<VersionedTransaction, _> = wincode::deserialize(&legacy_shaped);
+                assert!(
+                    decoded.is_err(),
+                    "a V1 message behind a signature count must not decode"
+                );
+            }
+
+            // Observed, and pinned because it is the one permissive case:
+            // trailing bytes past the encoded transaction are ignored rather
+            // than rejected. Recorded so a change in that behaviour is visible.
+            {
+                let mut padded = wire.clone();
+                padded.push(0xff);
+                let decoded: VersionedTransaction =
+                    wincode::deserialize(&padded).expect("trailing bytes are tolerated");
+                assert!(matches!(decoded.message, VersionedMessage::V1(_)));
+            }
+        }
+
+        /// V1 raised the transaction ceiling from 1232 bytes to 4096. Shipstern
+        /// only reads transactions, so it holds no transaction-size constant of
+        /// its own; this pins that it stays that way across and beyond the old
+        /// cap, and that nothing is lost or reordered at any size.
+        ///
+        /// 4097 is included deliberately. `MAX_TRANSACTION_SIZE` is enforced by
+        /// the validator, not by the codec, so an oversized transaction still
+        /// round-trips here. Shipstern must not invent its own rejection.
+        #[test]
+        fn v1_conversion_is_size_agnostic_across_the_old_1232_cap() {
+            for target in [1232usize, 1233, 2048, 3072, 4095, 4096, 4097] {
+                let tx = v1_transaction_of_wire_size(target);
+                let original = wincode::serialize(&tx).expect("serialize");
+                assert_eq!(original.len(), target);
+
+                let VersionedMessage::V1(ref want) = tx.message else {
+                    unreachable!("constructed as V1")
+                };
+
+                let decoded: VersionedTransaction =
+                    wincode::deserialize(&original).expect("v1 bytes must decode");
+
+                let VersionedMessage::V1(ref got) = decoded.message else {
+                    panic!("{target}-byte transaction decoded as something other than V1")
+                };
+
+                // Every field, not just the ones the conversion reads.
+                assert_eq!(got, want, "{target}: decoded message differs");
+                assert_eq!(decoded.signatures, tx.signatures, "{target}: signatures");
+                assert_eq!(
+                    decoded.message.serialize(),
+                    tx.message.serialize(),
+                    "{target}: message bytes"
+                );
+
+                let out = convert::transaction(decoded);
+                let msg = out.message.expect("message");
+
+                assert!(msg.versioned);
+                assert!(msg.address_table_lookups.is_empty());
+
+                let config = msg.config.expect("{target}-byte V1 lost its config");
+                assert_eq!(config.priority_fee, want.config.priority_fee);
+                assert_eq!(config.compute_unit_limit, want.config.compute_unit_limit);
+
+                // The payload that makes up the bulk of these sizes survives
+                // byte for byte, which is what a truncation bug would break.
+                assert_eq!(msg.instructions.len(), want.instructions.len());
+                assert_eq!(
+                    msg.instructions[0].data, want.instructions[0].data,
+                    "{target}: instruction data"
+                );
+                assert_eq!(
+                    msg.account_keys,
+                    want.account_keys
+                        .iter()
+                        .map(|k| k.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{target}: account keys"
+                );
+                assert_eq!(
+                    msg.recent_blockhash,
+                    want.lifetime_specifier.as_ref().to_vec(),
+                    "{target}: lifetime specifier"
+                );
+                assert_eq!(
+                    out.signatures,
+                    tx.signatures
+                        .iter()
+                        .map(|s| s.as_ref().to_vec())
+                        .collect::<Vec<_>>(),
+                    "{target}: signatures through conversion"
+                );
+
+                assert_eq!(
+                    wincode::serialize(&tx).expect("serialize"),
+                    original,
+                    "{target}-byte V1 did not round-trip"
+                );
+            }
+        }
+    }
 }
 
 mod convert {
     use jetstreamer_firehose::firehose::EntryData;
-    use solana_message::VersionedMessage;
+    use solana_message::{Hash, VersionedMessage};
     use solana_runtime::bank::{KeyedRewardsAndNumPartitions, RewardType};
     use solana_transaction::versioned::VersionedTransaction;
     use solana_transaction_status::{TransactionStatusMeta, TransactionTokenBalance};
@@ -1712,15 +2752,27 @@ mod convert {
 
     /// Convert the firehose's `KeyedRewardsAndNumPartitions` into the proto
     /// `Rewards` shape that `SubscribeUpdateBlock` carries. The proto enum
-    /// uses `Unspecified=0, Fee=1, Rent=2, Staking=3, Voting=4`; the Solana
-    /// SDK enum has no `Unspecified`, so the mapping is total. `commission`
-    /// is encoded as a stringified `u8` (proto convention), or empty when
-    /// absent.
-    /// `commission_bps` is derived as `commission * 100`, which is lossless only
-    /// while upstream `commission` is a whole-percent `u8`. SIMD-0291 adds a real
-    /// `commission_bps: Option<u16>` to `RewardInfo` (present from
-    /// `solana-transaction-status-client-types` 4.1.0) that permits values which
-    /// are not multiples of 100. Forward that field instead on a 4.x bump.
+    /// uses `Unspecified=0, Fee=1, Rent=2, Staking=3, Voting=4,
+    /// DeactivatedStake=5`; the Solana SDK enum has no `Unspecified`, so the
+    /// mapping is total.
+    ///
+    /// Agave 4.2 dropped `RewardInfo::commission: Option<u8>` and left only
+    /// `commission_bps: Option<u16>` (SIMD-0291), so basis points are the sole
+    /// source here and are forwarded verbatim. The percent field is still
+    /// filled in for existing consumers, but only when the basis points divide
+    /// evenly: 1234 bps has no exact `u8` percent, and truncating it to 12
+    /// would report a commission the validator never set. The percent is kept
+    /// rather than dropped because `shipstern-block-meta-parser` exposes
+    /// `commission` on its own `Reward` and carries no `commission_bps`.
+    ///
+    /// Example output:
+    ///
+    /// ```text, ignore
+    /// commission_bps: Some(700)  -> commission: "7",  commission_bps: "700"
+    /// commission_bps: Some(1234) -> commission: "",   commission_bps: "1234"
+    /// commission_bps: None       -> commission: "",   commission_bps: ""
+    /// ```
+    ///
     pub fn keyed_rewards(keyed: &KeyedRewardsAndNumPartitions) -> proto::Rewards {
         let rewards = keyed
             .keyed_rewards
@@ -1731,6 +2783,7 @@ mod convert {
                     RewardType::Rent => proto::RewardType::Rent,
                     RewardType::Staking => proto::RewardType::Staking,
                     RewardType::Voting => proto::RewardType::Voting,
+                    RewardType::DeactivatedStake => proto::RewardType::DeactivatedStake,
                 } as i32;
 
                 proto::Reward {
@@ -1738,10 +2791,14 @@ mod convert {
                     lamports: info.lamports,
                     post_balance: info.post_balance,
                     reward_type,
-                    commission: info.commission.map(|c| c.to_string()).unwrap_or_default(),
+                    commission: info
+                        .commission_bps
+                        .filter(|bps| bps % 100 == 0)
+                        .map(|bps| (bps / 100).to_string())
+                        .unwrap_or_default(),
                     commission_bps: info
-                        .commission
-                        .map(|c| (u16::from(c) * 100).to_string())
+                        .commission_bps
+                        .map(|bps| bps.to_string())
                         .unwrap_or_default(),
                 }
             })
@@ -1755,33 +2812,56 @@ mod convert {
         }
     }
 
+    /// The fields of a message that depend on which version it is.
+    ///
+    /// Legacy, V0 and V1 agree on the header, account keys, lifetime specifier
+    /// and instructions. They disagree on exactly three things, so those are
+    /// named here and every match arm in [`transaction`] has to state all three
+    /// rather than inheriting a default.
+    ///
+    /// Example output:
+    ///
+    /// ```text, ignore
+    /// Legacy -> versioned: false, address_table_lookups: [],     config: None
+    /// V0     -> versioned: true,  address_table_lookups: [..],   config: None
+    /// V1     -> versioned: true,  address_table_lookups: [],     config: Some(..)
+    /// ```
+    ///
+    struct MessageParts {
+        header: solana_message::MessageHeader,
+        account_keys: Vec<solana_pubkey::Pubkey>,
+        /// Legacy and V0 call this `recent_blockhash`, V1 calls it
+        /// `lifetime_specifier`. All three hold a [`Hash`] and the proto
+        /// carries them in the same field.
+        lifetime: Hash,
+        instructions: Vec<solana_message::compiled_instruction::CompiledInstruction>,
+        versioned: bool,
+        address_table_lookups: Vec<proto::MessageAddressTableLookup>,
+        config: Option<proto::TransactionConfig>,
+    }
+
     pub fn transaction(tx: VersionedTransaction) -> proto::Transaction {
         let signatures = tx.signatures.iter().map(|s| s.as_ref().to_vec()).collect();
 
         let message = {
-            let (
-                header,
-                account_keys,
-                recent_blockhash,
-                instructions,
-                versioned,
-                address_table_lookups,
-            ) = match tx.message {
-                VersionedMessage::Legacy(msg) => (
-                    msg.header,
-                    msg.account_keys,
-                    msg.recent_blockhash,
-                    msg.instructions,
-                    false,
-                    vec![],
-                ),
-                VersionedMessage::V0(msg) => (
-                    msg.header,
-                    msg.account_keys,
-                    msg.recent_blockhash,
-                    msg.instructions,
-                    true,
-                    msg.address_table_lookups
+            let parts = match tx.message {
+                VersionedMessage::Legacy(msg) => MessageParts {
+                    header: msg.header,
+                    account_keys: msg.account_keys,
+                    lifetime: msg.recent_blockhash,
+                    instructions: msg.instructions,
+                    versioned: false,
+                    address_table_lookups: vec![],
+                    config: None,
+                },
+                VersionedMessage::V0(msg) => MessageParts {
+                    header: msg.header,
+                    account_keys: msg.account_keys,
+                    lifetime: msg.recent_blockhash,
+                    instructions: msg.instructions,
+                    versioned: true,
+                    address_table_lookups: msg
+                        .address_table_lookups
                         .into_iter()
                         .map(|l| proto::MessageAddressTableLookup {
                             account_key: l.account_key.as_ref().to_vec(),
@@ -1789,18 +2869,47 @@ mod convert {
                             readonly_indexes: l.readonly_indexes,
                         })
                         .collect(),
-                ),
+                    config: None,
+                },
+                // V1 (SIMD-0385) replaces ComputeBudget instructions with an
+                // inline config and drops address lookup tables entirely.
+                //
+                // `config` is wrapped unconditionally: the proto uses its
+                // presence, not its contents, to mark a message as V1, so a V1
+                // message whose fields are all unset still has to serialize as
+                // `Some(TransactionConfig::default())`. Collapsing that to
+                // `None` would downgrade the message to V0 on the wire.
+                VersionedMessage::V1(msg) => MessageParts {
+                    header: msg.header,
+                    account_keys: msg.account_keys,
+                    lifetime: msg.lifetime_specifier,
+                    instructions: msg.instructions,
+                    versioned: true,
+                    address_table_lookups: vec![],
+                    config: Some(proto::TransactionConfig {
+                        priority_fee: msg.config.priority_fee,
+                        compute_unit_limit: msg.config.compute_unit_limit,
+                        loaded_accounts_data_size_limit: msg.config.loaded_accounts_data_size_limit,
+                        heap_size: msg.config.heap_size,
+                    }),
+                },
             };
 
             proto::Message {
                 header: Some(proto::MessageHeader {
-                    num_required_signatures: header.num_required_signatures as u32,
-                    num_readonly_signed_accounts: header.num_readonly_signed_accounts as u32,
-                    num_readonly_unsigned_accounts: header.num_readonly_unsigned_accounts as u32,
+                    num_required_signatures: parts.header.num_required_signatures as u32,
+                    num_readonly_signed_accounts: parts.header.num_readonly_signed_accounts as u32,
+                    num_readonly_unsigned_accounts: parts.header.num_readonly_unsigned_accounts
+                        as u32,
                 }),
-                account_keys: account_keys.iter().map(|k| k.as_ref().to_vec()).collect(),
-                recent_blockhash: recent_blockhash.as_ref().to_vec(),
-                instructions: instructions
+                account_keys: parts
+                    .account_keys
+                    .iter()
+                    .map(|k| k.as_ref().to_vec())
+                    .collect(),
+                recent_blockhash: parts.lifetime.to_bytes().to_vec(),
+                instructions: parts
+                    .instructions
                     .into_iter()
                     .map(|ix| proto::CompiledInstruction {
                         program_id_index: ix.program_id_index as u32,
@@ -1808,11 +2917,9 @@ mod convert {
                         data: ix.data,
                     })
                     .collect(),
-                versioned,
-                address_table_lookups,
-                // Firehose transactions are decoded from the Agave-3 SDK, which
-                // has no V1 message variant, so there is never an inline budget.
-                config: None,
+                versioned: parts.versioned,
+                address_table_lookups: parts.address_table_lookups,
+                config: parts.config,
             }
         };
 
@@ -1829,7 +2936,7 @@ mod convert {
 
         proto::TransactionStatusMeta {
             err: meta.status.err().map(|e| proto::TransactionError {
-                err: bincode::serialize(&e).unwrap_or_default(),
+                err: wincode::serialize(&e).unwrap_or_default(),
             }),
             fee: meta.fee,
             pre_balances: meta.pre_balances,
@@ -1880,12 +2987,18 @@ mod convert {
                         Some(RewardType::Rent) => proto::RewardType::Rent as i32,
                         Some(RewardType::Staking) => proto::RewardType::Staking as i32,
                         Some(RewardType::Voting) => proto::RewardType::Voting as i32,
-                        _ => proto::RewardType::Unspecified as i32,
+                        Some(RewardType::DeactivatedStake) => {
+                            proto::RewardType::DeactivatedStake as i32
+                        },
+                        None => proto::RewardType::Unspecified as i32,
                     },
+                    // Unlike `RewardInfo`, `solana_transaction_status::Reward`
+                    // kept both fields, so each one is forwarded from its own
+                    // source rather than derived from the other.
                     commission: r.commission.map(|c| c.to_string()).unwrap_or_default(),
                     commission_bps: r
-                        .commission
-                        .map(|c| (u16::from(c) * 100).to_string())
+                        .commission_bps
+                        .map(|bps| bps.to_string())
                         .unwrap_or_default(),
                 })
                 .collect(),
