@@ -118,10 +118,21 @@ To use it, add the following dependencies to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-borsh = "^1.0.0"
+borsh = { version = "^1.0.0", features = ["derive"] }
+shipstern-core = { version = "0.10.0" }
 shipstern-parser = { version = "0.10.0" }
 shipstern-proc-macro = { version = "0.10.0" }
 ```
+
+The generated code imports `shipstern_core` and derives `BorshDeserialize` / `BorshSerialize`, so both `shipstern-core` and the Borsh `derive` feature are required.
+
+To parse events, including self-CPI events, enable the `program-events` feature. Note that it also changes `InstructionParser::Output` from `Instructions` to `ProgramEventOutput`:
+
+```toml
+shipstern-proc-macro = { version = "0.10.0", features = ["program-events"] }
+```
+
+The macro reads a **Codama** JSON IDL, not a raw Anchor IDL, and it must carry the full node structure that `codama-nodes` requires. See [Generate a Shipstern Parser from a Codama IDL](./docs/codama-parser-generation.md).
 
 Then, import and invoke the macro in your code. Specify the path to your Codama JSON IDL file relative to your crate root:
 
@@ -208,7 +219,7 @@ This applies to every `cargo` invocation inside this workspace. The file is giti
 - [**Mock Testing for Parsers**](./crates/mock/README.md): Load and replay devnet accounts or transactions offline.
 - [**Usage Examples**](./examples/): A variety of example projects that demonstrate how to use the features.
 - [**Example Shipstern Configuration**](./Shipstern.example.toml): Starter TOML file for pipeline configuration.
-- [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Use Codama to automatically generate Shipstern parsers from Anchor or custom IDL files.
+- [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Generate a Shipstern parser from a Codama IDL with the `include_shipstern_parser!` macro, including how to declare self-CPI event envelopes in Codama.
 
 ## Maintainers
 

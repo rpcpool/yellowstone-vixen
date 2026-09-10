@@ -4,7 +4,7 @@ Integration tests for `shipstern-proc-macro`. Each test module loads an IDL via 
 
 | Module | IDL | What it covers |
 |---|---|---|
-| `perpetuals` | `idls/perp_idl.json` | Instruction parsing + schema snapshot |
+| `perpetuals` | `idls/perpetuals.json` | Instruction parsing + schema snapshot |
 | `pump_fun` | `idls/pump_fun.json` | Instruction parsing + schema snapshot |
 | `dynamic_bonding_curve` | `idls/dynamic_bonding_curve.json` | Account parsing + schema snapshot |
 | `order_engine` | `idls/order_engine.json` | IDL with no accounts + schema snapshot |
