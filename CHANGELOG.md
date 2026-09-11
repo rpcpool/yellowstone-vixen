@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `shipstern-proc-macro`: the deprecation note on `cpi_event_discriminator` and `cpi_event_payload_offset` no longer names a removal version. The 0.9.0 entry below promised their removal for the 0.10 release, which did not happen; they are still parsed and honoured as the fallback for IDLs that declare no CPI event envelope, and no removal version is established. That entry is corrected in place, since it promised a removal consumers may have planned around.
+
 ## [0.10.0] - 2026-09-10
 
 ### Changed
@@ -34,7 +40,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Deprecated
 
-- `shipstern-proc-macro`: the `cpi_event_discriminator` and `cpi_event_payload_offset` macro arguments are ignored, with a deprecation warning at the call site, when the IDL declares a CPI event envelope. They still apply to IDLs that declare none. Both arguments are removed in 0.10 ([#299](https://github.com/solana-rpc/shipstern/pull/299) by @senzenn).
+- `shipstern-proc-macro`: the `cpi_event_discriminator` and `cpi_event_payload_offset` macro arguments are ignored, with a deprecation warning at the call site, when the IDL declares a CPI event envelope. They still apply to IDLs that declare none. No removal version is currently established ([#299](https://github.com/solana-rpc/shipstern/pull/299) by @senzenn).
 
 ### Added
 

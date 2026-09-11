@@ -1,126 +1,174 @@
-# Generate a Shipstern Parser with Codama
-### How-to generate Shipstern parser with Codama
+# Generate a Shipstern Parser from a Codama IDL
 
-This guide walks you through generating a [Shipstern](https://github.com/solana-rpc/shipstern) Parser using [Codama](https://github.com/abklabs/codama), a tool for rendering Rust SDKs and parser implementations from IDLs.
+Shipstern generates a parser from a [Codama](https://github.com/codama-idl/codama) IDL at
+compile time, through the `include_shipstern_parser!` proc macro. Nothing is written to
+disk and no build script is involved.
 
-Shipstern is a framework for building real-time program data pipelines in Rust. This guide helps you scaffold a parser that can be used in the Shipstern runtime to decode and process Solana program data.
-
-## ✅ Prerequisites
-
-1. **You must have an idl.json file—either an Anchor-generated IDL or a custom one.**
-
-2. **Install [pnpm](https://pnpm.io/) (or use npm/yarn if preferred).**
-
-3. **Initialize a JavaScript Project (for Codegen)**
-
-    From within the parser directory (where the `idl.json` file is located), run:
-
-    ```bash
-    pnpm init
-    ```
-
-## 📦 Installation
-Install the required Codama packages:
-
-```bash
-pnpm install @codama/renderers-shipstern-parser
+```
+Codama JSON ──> include_shipstern_parser! ──> generated parser
+  (complete)        (compile time)       (accounts, instructions, events)
 ```
 
-For the parser generation script, you’ll also need:
+## Quick start
 
-```bash
-pnpm install \
-  @codama/nodes \
-  @codama/nodes-from-anchor \
-  @codama/renderers-core \
-  @codama/visitors-core
-```
+**1. Convert your IDL to Codama JSON.** The macro reads Codama nodes, not a raw Anchor IDL.
 
-## 🛠 Setup
-
-**1. Create a Parser Generation Script**
-
-In the same directory, create a new file called `codama.cjs`:
+One wrinkle makes this more than a one-liner. The macro deserialises through `codama-nodes`
+(pinned to `=0.9.1`), whose serde requires most node fields to be present rather than
+defaulting them, while Codama's JavaScript tooling omits empty and default-valued fields.
+Feeding `JSON.stringify(rootNodeFromAnchor(idl))` straight to the macro fails with
+`missing field 'additionalPrograms'` or `missing field 'accounts'`, depending on which
+collection happens to be empty. Codama also freezes its nodes, so the tree has to be cloned
+before those fields can be added.
 
 ```javascript
-// codama.cjs
+// convert.cjs
+const fs = require("node:fs");
 const path = require("node:path");
-const { rootNode } = require("@codama/nodes");
 const { rootNodeFromAnchor } = require("@codama/nodes-from-anchor");
-const { readJson } = require("@codama/renderers-core");
-const { visit } = require("@codama/visitors-core");
-const { renderVisitor } = require("@codama/renderers-shipstern-parser");
 
-const projectName = "example-parser";
-const idl = readJson(path.join(__dirname, "idl.json"));
+const DEFAULTS = {
+    rootNode: { additionalPrograms: [] },
+    programNode: { accounts: [], definedTypes: [], errors: [], pdas: [], docs: [] },
+    instructionNode: {
+        accounts: [], arguments: [], discriminators: [],
+        docs: [], subInstructions: [], remainingAccounts: [],
+    },
+    accountNode: { discriminators: [], docs: [] },
+    eventNode: { discriminators: [], docs: [] },
+    definedTypeNode: { docs: [] },
+    structFieldTypeNode: { docs: [] },
+    instructionArgumentNode: { docs: [] },
+    instructionAccountNode: { docs: [] },
+    errorNode: { docs: [] },
+};
 
-// Use the appropriate node constructor based on your IDL type:
-const node = rootNodeFromAnchor(idl); // for Anchor/Shank idls
-// const node = rootNode(idl.program); // for Codama idls
+function backfill(node) {
+    if (Array.isArray(node)) return node.forEach(backfill);
+    if (!node || typeof node !== "object") return;
 
-visit(
-    node,
-    renderVisitor({
-        projectFolder: __dirname,
-        projectName,
-    }),
-);
+    for (const [key, value] of Object.entries(DEFAULTS[node.kind] ?? {})) {
+        if (!(key in node)) node[key] = value;
+    }
+
+    Object.values(node).forEach(backfill);
+}
+
+const idl = JSON.parse(fs.readFileSync(path.join(__dirname, "idl.json"), "utf8"));
+
+// Codama freezes its nodes, so round-trip through JSON for a mutable tree.
+const tree = JSON.parse(JSON.stringify(rootNodeFromAnchor(idl)));
+backfill(tree);
+
+fs.writeFileSync(path.join(__dirname, "codama.json"), JSON.stringify(tree, null, 2));
 ```
-
-> 💡 Tip: The `projectName` is going to be used for the cargo crate name of the generated parser
-
-**2. Run the Code Generation Script**
 
 ```bash
-node codama.cjs
+pnpm install @codama/nodes-from-anchor
+node convert.cjs
 ```
 
-Your folder structure should look like this:
+If your IDL is already in complete Codama form, skip this step. `tests/idls/*.json` in this
+repository are all in that shape and make a useful reference.
 
-```bash
-example-parser/
-├── proto/
-│  └── example_parser.proto
-├── src/
-│  ├── generated_parser/  # Shipstern parser logic
-│  │  ├── accounts_parser.rs
-│  │  ├── instructions_parser.rs
-│  │  ├── mod.rs
-│  │  └── proto_helpers.rs
-│  ├── generated_sdk/  # Program sdk client logic
-│  │  ├── accounts/
-│  │  ├── instructions/
-│  │  ├── types/
-│  │  ├── ...
-│  └── lib.rs
-├── build.rs
-├── Cargo.toml
-├── codama.cjs
-└── idl.json
+If your IDL is already in complete Codama form, continue to step 2.
+
+**2. Add the dependencies.**
+
+```toml
+[dependencies]
+borsh = { version = "^1.0.0", features = ["derive"] }
+shipstern-core = { version = "0.10.0" }
+shipstern-parser = { version = "0.10.0" }
+shipstern-proc-macro = { version = "0.10.0" }
 ```
 
-**3. Build and Verify**
-Before building your project, ensure there is a const export of the program address in `generated_sdk/programs.rs`:
+`shipstern-core` and the Borsh `derive` feature are both required: the generated code
+imports `shipstern_core` and derives `BorshDeserialize` / `BorshSerialize` on every type.
+
+To parse events, including self-CPI events, add the `program-events` feature:
+
+```toml
+shipstern-proc-macro = { version = "0.10.0", features = ["program-events"] }
+```
+
+**3. Invoke the macro.** The path is resolved relative to your crate root
+(`CARGO_MANIFEST_DIR`).
 
 ```rust
-pub const DCA_ID: Pubkey = pubkey!("DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M");
+use shipstern_proc_macro::include_shipstern_parser;
+
+include_shipstern_parser!("path/to/codama.json");
 ```
 
-```bash
-cargo build
+**4. Use the generated module.** It is named after the program, in snake_case, and
+contains `PROGRAM_ID`, `InstructionParser`, `AccountParser`, and the argument and account
+types.
+
+```rust
+let parsed = my_program::InstructionParser.parse(&update).await?;
 ```
 
-If successful, you now have a working parser for Solana account data using Shipstern.
+## What Shipstern reads from the IDL
 
-## 🎉 You’re Done!
-You’ve successfully generated a custom Shipstern parser. It can now be fully integrated into a Shipstern pipeline for parsing and handling account state or instructions updates from your Solana program, or be used with the Shipstern streams gRPC server.
+The macro consumes a subset of the Codama tree. Anything not listed here is ignored, so
+changing it will not affect the generated parser.
 
-## 🧠 Notes
-- Codama enables reproducible parser generation from your program’s IDL. Any time your program updates, just re-run the script.
+| Codama node | Becomes |
+|---|---|
+| `program.name` | the generated module name, in snake_case |
+| `program.publicKey` | `PROGRAM_ID` |
+| `program.instructions[].discriminators` | the instruction dispatch key |
+| `program.instructions[].arguments` | the `*Args` struct |
+| `program.instructions[].accounts` | the `*Accounts` struct |
+| `program.accounts[]` | account types and `AccountParser` |
+| `program.definedTypes[]` | shared types, referenced through `definedTypeLinkNode` |
+| `events[]` | event types, **only** with the `program-events` feature |
 
-- Generated code is idiomatic Rust and integrates directly with shipstern-core.
+Ignored: `pdas` and `docs` are not read at all. `errors` is only normalised on load, where a
+string `"code": "6000"` is coerced to a number; it is never rendered into the parser.
 
-- Parsers are composable and can be used in a source → parser → sink pipeline for high-throughput indexing.
+### Discriminators
+
+Instructions and accounts do not accept the same discriminator kinds.
+
+| Declared on | `constantDiscriminatorNode` | `fieldDiscriminatorNode` | `sizeDiscriminatorNode` |
+|---|---|---|---|
+| instruction | yes, bytes or number value | yes | yes, for dispatch only |
+| account | yes | yes | yes |
+| event | yes, and a chain of two or more declares the CPI envelope | no | no |
+
+A size-discriminated instruction routes on data length like any other, but carries no
+discriminator bytes, so no `*_DISCRIMINATOR` constant is emitted for it. When *every*
+instruction in a program is size-discriminated the whole `impl Instructions` block is
+skipped, and referencing a `*_DISCRIMINATOR` on it will not compile. See
+`tests/proc-macro/tests/size_only_instructions.rs`.
+
+Where several instructions share a discriminator, the generated parser disambiguates by
+account count, trying the variant with the most accounts first. When variants share both
+the discriminator and the account count, supply a `CustomInstructionParser`; see the
+[README](../README.md#handling-discriminator-collisions).
+
+## The `program-events` feature
+
+Event parsing is feature-gated. Without `program-events`, the macro emits no event types
+and no self-CPI handling at all, however the IDL declares its events.
+
+Enabling it also **changes the parser's output type**: `InstructionParser::Output` becomes
+`ProgramEventOutput`, which carries the decoded instruction alongside any events found on
+the transaction's inner instructions, instead of `Instructions` alone.
+
+```rust
+// with program-events
+ProgramEventOutput {
+    instruction: Some(Instructions { .. }),
+    program_events: [Events { .. }],
+}
+```
+
+Because this changes a public type, enabling the feature anywhere in a workspace affects
+every crate that shares the dependency through Cargo's feature unification. Keep crates
+that need different settings in separate workspaces.
 
 ## Self-CPI events (`emit_cpi!`)
 
@@ -159,11 +207,43 @@ The rules:
   tag bytes and the payload offset, or the build fails.
 - An event with a single discriminator declares no envelope. It keeps matching
   at offset 0 and stays reachable from `emit!` log lines.
-- When no event declares an envelope, Anchor's default 8-byte tag is used.
+- When no event declares an envelope and no macro argument supplies one, Anchor's
+  default 8-byte tag is used.
 
 `e445a52e51cb9a1d` is the little-endian serialisation of
 `sha256("anchor:event")[..8]`, whose natural byte order is `1d9acb512ea545e4`.
 Write the wire bytes, not the digest prefix.
+
+### Setting the envelope through Codama
+
+The discriminator chain is the whole configuration surface. A padded envelope, taken from
+`tests/idls/padded_cpi_event_envelope.json`, declares a one-byte tag at offset 0 and the
+event's own two-byte discriminator at offset 4:
+
+```json
+"discriminators": [
+  { "kind": "constantDiscriminatorNode", "offset": 0,
+    "constant": { "kind": "constantValueNode",
+      "type": { "kind": "fixedSizeTypeNode", "size": 1, "type": { "kind": "bytesTypeNode" } },
+      "value": { "kind": "bytesValueNode", "data": "fe", "encoding": "base16" } } },
+  { "kind": "constantDiscriminatorNode", "offset": 4,
+    "constant": { "kind": "constantValueNode",
+      "type": { "kind": "fixedSizeTypeNode", "size": 2, "type": { "kind": "bytesTypeNode" } },
+      "value": { "kind": "bytesValueNode", "data": "a1a2", "encoding": "base16" } } }
+]
+```
+
+That gives a `payload_offset` of 4, so the wire layout is:
+
+```
+offset   0    1              4        6
+        | fe | 00 00 00     | a1 a2 | borsh payload |
+        | tag| three pad    | disc  |               |
+```
+
+`tests/proc-macro-events/tests/padded_cpi_event_envelope.rs` covers both directions: the
+CPI path strips the declared offset of 4 rather than a fixed 8, and the log path still
+matches the same event once its discriminators are rebased.
 
 ### The envelope must not mask an instruction
 
@@ -199,10 +279,38 @@ generated decoders do not.
    discriminator starting at offset 0 is indistinguishable from
    envelope-plus-discriminator, and is treated as the latter.
 
-### Macro arguments are deprecated
+### Legacy macro arguments
 
 `cpi_event_discriminator` and `cpi_event_payload_offset` on
-`include_shipstern_parser!` remain as a fallback for IDLs that declare no
-envelope. When the IDL declares one it wins and the arguments are ignored, with
-a deprecation warning at the call site. Both are removed in 0.10; move the
-envelope into the IDL.
+`include_shipstern_parser!` remain a fallback for IDLs that declare no envelope:
+
+```rust
+include_shipstern_parser!(
+    "path/to/codama.json",
+    cpi_event_discriminator = 0xfe,
+    cpi_event_payload_offset = 1,
+);
+```
+
+Precedence is:
+
+1. an envelope declared in the IDL, which wins whenever present
+2. these arguments, which apply only when the IDL declares none
+3. Anchor's default 8-byte tag, when neither is supplied
+
+When the IDL declares an envelope the arguments are ignored and a deprecation warning
+fires at the call site. No removal version is currently established. Prefer declaring the
+envelope in the IDL, which is the supported path.
+
+## Generating a standalone parser crate
+
+There is also a Codama renderer that writes a complete parser crate to disk, rather than
+expanding a macro in your own crate. It is a separate tool with its own workflow.
+
+> **Note:** the renderer has not been republished under the Shipstern name. The package
+> `@codama/renderers-shipstern-parser` referenced by earlier versions of this guide does
+> not exist on npm. The last published release is `@codama/renderers-vixen-parser` 1.2.8
+> (October 2025). Running it against a small Anchor IDL on the current toolchain emitted
+> only the `generated_sdk/` half and exited non-zero, without producing the
+> `generated_parser/` or `proto/` output this workflow depends on. Whether that is
+> specific to that IDL was not investigated further. Use the proc macro above.

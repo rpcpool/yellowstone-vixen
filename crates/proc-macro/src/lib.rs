@@ -29,6 +29,38 @@ pub fn shipstern(attr: TokenStream, item: TokenStream) -> TokenStream {
         .into()
 }
 
+///
+/// Generate a Shipstern parser from a Codama JSON IDL at compile time.
+///
+/// The path is resolved relative to the invoking crate's root
+/// (`CARGO_MANIFEST_DIR`). Nothing is written to disk. The generated module is
+/// named after the program and carries `PROGRAM_ID`, `InstructionParser`,
+/// `AccountParser`, and the argument and account types.
+///
+/// ```rust, ignore
+/// include_shipstern_parser!("idls/my_program.json");
+/// ```
+///
+/// The input must be Codama JSON, not a raw Anchor IDL. Event and self-CPI
+/// parsing additionally requires the `program-events` feature, which changes
+/// `InstructionParser::Output` from `Instructions` to `ProgramEventOutput`.
+///
+/// A self-CPI event envelope declared in the IDL always wins. The optional
+/// `cpi_event_discriminator` and `cpi_event_payload_offset` arguments are a
+/// fallback for IDLs that declare none, and passing them alongside an
+/// IDL-declared envelope emits a deprecation warning:
+///
+/// ```rust, ignore
+/// include_shipstern_parser!(
+///     "idls/custom_events.json",
+///     cpi_event_discriminator = 0xfe,
+///     cpi_event_payload_offset = 1,
+/// );
+/// ```
+///
+/// `docs/codama-parser-generation.md` is the reference for the envelope: how to
+/// declare one in Codama, the full precedence rules, and the byte layout.
+///
 #[proc_macro]
 pub fn include_shipstern_parser(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as IncludeShipsternParserInput);
@@ -43,28 +75,16 @@ pub fn include_shipstern_parser(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Input for `include_shipstern_parser!`.
 ///
-/// The macro accepts a Codama IDL path, plus optional parser config:
+/// Parsed input of `include_shipstern_parser!`: the IDL path plus the optional
+/// CPI event overrides.
 ///
-/// ```ignore
-/// include_shipstern_parser!(
-///     "../idls/custom_events.json",
-///     cpi_event_discriminator = 0xfe,
-///     cpi_event_payload_offset = 1,
-/// );
-/// ```
+/// The user-facing contract, including how the envelope resolves against an
+/// IDL-declared one, is documented on
+/// [`include_shipstern_parser`]. The overrides are applied to a default
+/// [`ParserConfig`](crate::render::shipstern_parser::ParserConfig) by
+/// [`Self::parser_config`], which `parse::program_envelope` may then overwrite.
 ///
-/// Supported config options:
-/// - `cpi_event_discriminator = 0xfe`: hex bytes that identify self-CPI event instructions.
-///   The string form (`"fe"`) is also accepted for multi-byte discriminators.
-/// - `cpi_event_payload_offset = 1`: byte offset where event payload decoding starts.
-///
-/// When omitted, the parser uses Anchor's default self-CPI event envelope:
-/// an 8-byte Anchor event instruction discriminator, followed by the event
-/// discriminator and payload. Override these options for non-Anchor programs
-/// that wrap events differently, such as Pinocchio programs that emit events
-/// through a custom one-byte self-CPI instruction envelope.
 struct IncludeShipsternParserInput {
     idl_path: LitStr,
     cpi_event_discriminator: Option<HexBytesLiteral>,
@@ -292,7 +312,8 @@ fn cpi_event_args_deprecation() -> proc_macro2::TokenStream {
         const _: () = {
             #[deprecated(
                 note = "the IDL declares a CPI event envelope, so cpi_event_discriminator and \
-                        cpi_event_payload_offset are ignored; these arguments are removed in 0.10"
+                        cpi_event_payload_offset are ignored; prefer declaring the envelope in \
+                        the IDL"
             )]
             const CPI_EVENT_ARGS_IGNORED: () = ();
 
